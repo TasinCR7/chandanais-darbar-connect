@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://chandanais-darbar-connect.lovable.app/sitemap.xml
