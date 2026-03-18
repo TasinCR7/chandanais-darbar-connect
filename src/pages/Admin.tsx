@@ -217,8 +217,8 @@ const Admin = () => {
   };
 
   const fetchGallery = async () => {
-    const { data } = await supabase
-      .from("gallery")
+    const { data } = await (supabase
+      .from("gallery" as any) as any)
       .select("*")
       .order("created_at", { ascending: false });
     if (data) setGallery(data as GalleryItem[]);
@@ -234,17 +234,17 @@ const Admin = () => {
     const filePath = `${fileName}`;
 
     try {
-      const { error: uploadError } = await supabase.storage
-        .from("gallery")
+      const { error: uploadError } = await (supabase.storage
+        .from("gallery" as any) as any)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("gallery")
+      const { data: { publicUrl } } = (supabase.storage
+        .from("gallery" as any) as any)
         .getPublicUrl(filePath);
 
-      const { error: dbError } = await supabase.from("gallery").insert({
+      const { error: dbError } = await (supabase.from("gallery" as any) as any).insert({
         url: publicUrl,
         caption: galleryCaption.trim() || null,
         category: galleryCategory,
@@ -266,9 +266,9 @@ const Admin = () => {
     // Extract filename from URL
     const fileName = url.split("/").pop();
     if (fileName) {
-      await supabase.storage.from("gallery").remove([fileName]);
+      await (supabase.storage.from("gallery" as any) as any).remove([fileName]);
     }
-    await supabase.from("gallery").delete().eq("id", id);
+    await (supabase.from("gallery" as any) as any).delete().eq("id", id);
     fetchGallery();
   };
 
