@@ -20,6 +20,14 @@ interface Notice {
   created_at: string;
 }
 
+interface GalleryItem {
+  id: string;
+  url: string;
+  caption: string | null;
+  category: string;
+  created_at: string;
+}
+
 interface Submission {
   id: string;
   type: string;
@@ -42,9 +50,13 @@ const Admin = () => {
 
   const [notices, setNotices] = useState<Notice[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
+  const [galleryCaption, setGalleryCaption] = useState("");
   const { toast } = useToast();
 
   // Auth listener
@@ -147,6 +159,7 @@ const Admin = () => {
     if (isAdmin) {
       fetchNotices();
       fetchSubmissions();
+      fetchGallery();
     }
   }, [isAdmin]);
 
@@ -201,6 +214,62 @@ const Admin = () => {
   const deleteSubmission = async (id: string) => {
     await supabase.from("submissions").delete().eq("id", id);
     fetchSubmissions();
+  };
+
+  const fetchGallery = async () => {
+    const { data } = await supabase
+      .from("gallery")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setGallery(data as GalleryItem[]);
+  };
+
+  const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from("gallery")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("gallery")
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from("gallery").insert({
+        url: publicUrl,
+        caption: galleryCaption.trim() || null,
+        category: galleryCategory,
+      });
+
+      if (dbError) throw dbError;
+
+      toast({ title: "সফল ✅", description: "ছবি আপলোড করা হয়েছে।" });
+      setGalleryCaption("");
+      fetchGallery();
+    } catch (error: any) {
+      toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteGalleryItem = async (id: string, url: string) => {
+    // Extract filename from URL
+    const fileName = url.split("/").pop();
+    if (fileName) {
+      await supabase.storage.from("gallery").remove([fileName]);
+    }
+    await supabase.from("gallery").delete().eq("id", id);
+    fetchGallery();
   };
 
   const unreadCount = submissions.filter((s) => !s.is_read).length;
@@ -312,6 +381,10 @@ const Admin = () => {
                   <HandHeart size={14} className="mr-1 sm:mr-2 shrink-0" />
                   <span className="truncate">দোয়া ({doas.length})</span>
                 </TabsTrigger>
+                <TabsTrigger value="gallery" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                  <Eye size={14} className="mr-1 sm:mr-2 shrink-0" />
+                  <span className="truncate">গ্যালারি ({gallery.length})</span>
+                </TabsTrigger>
               </TabsList>
 
               {/* Notices Tab */}
@@ -415,6 +488,74 @@ const Admin = () => {
               {/* Doa Tab */}
               <TabsContent value="doa">
                 <SubmissionList items={doas} onMarkRead={markAsRead} onDelete={deleteSubmission} onReply={submitReply} emptyText="কোনো দোয়ার আবেদন আসেনি।" showReply />
+              </TabsContent>
+
+              {/* Gallery Tab */}
+              <TabsContent value="gallery" className="space-y-6">
+                <div className="bg-card border border-gold/20 rounded-lg p-6 space-y-6">
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-heading font-semibold text-gold">নতুন ছবি আপলোড</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                         <label className="text-sm font-medium">ক্যাপশন</label>
+                         <Input 
+                            value={galleryCaption} 
+                            onChange={(e) => setGalleryCaption(e.target.value)}
+                            placeholder="ছবির বর্ণনা..."
+                            className="border-gold/30 focus:border-gold"
+                         />
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-sm font-medium">ক্যাটেগরি</label>
+                         <select 
+                            value={galleryCategory} 
+                            onChange={(e) => setGalleryCategory(e.target.value)}
+                            className="w-full flex h-10 rounded-md border border-gold/30 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
+                         >
+                            <option value="দরবার শরীফ">দরবার শরীফ</option>
+                            <option value="ওরশ শরীফ">ওরশ শরীফ</option>
+                            <option value="মাহফিল">মাহফিল</option>
+                         </select>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-gold/20 rounded-lg p-8 hover:border-gold/40 transition-colors">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={uploadImage}
+                        disabled={uploading}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label 
+                        htmlFor="image-upload" 
+                        className={`cursor-pointer flex flex-col items-center gap-2 ${uploading ? 'opacity-50' : ''}`}
+                      >
+                         <Plus size={32} className="text-gold" />
+                         <span className="font-medium text-gold">{uploading ? "আপলোড হচ্ছে..." : "ছবি সিলেক্ট করুন"}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {gallery.map((item) => (
+                    <div key={item.id} className="relative group rounded-lg overflow-hidden border border-gold/20 aspect-square">
+                      <img src={item.url} alt={item.caption || ""} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                         <p className="text-white text-xs truncate mb-2">{item.caption || "কোনো বর্ণনা নেই"}</p>
+                         <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            className="h-8 w-full"
+                            onClick={() => deleteGalleryItem(item.id, item.url)}
+                         >
+                           <Trash2 size={14} className="mr-2" /> ডিলিট
+                         </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
             </Tabs>
           </motion.div>
