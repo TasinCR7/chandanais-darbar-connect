@@ -47,24 +47,69 @@ const Admin = () => {
 
   // Auth listener
   useEffect(() => {
+    let mounted = true;
+
+    const checkAdmin = async (userId: string) => {
+      try {
+        const { data, error } = await supabase.rpc("has_role", {
+          _user_id: userId,
+          _role: "admin",
+        });
+        if (error) console.error("Error checking role:", error);
+        if (mounted) setIsAdmin(!!data);
+      } catch (err) {
+        console.error("Exception checking role:", err);
+        if (mounted) setIsAdmin(false);
+      } finally {
+        if (mounted) setAuthLoading(false);
+      }
+    };
+
+    const loadSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        const currentUser = session?.user ?? null;
+        if (mounted) setUser(currentUser);
+
+        if (currentUser) {
+          await checkAdmin(currentUser.id);
+        } else {
+          if (mounted) {
+            setIsAdmin(false);
+            setAuthLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Session error:", error);
+        if (mounted) {
+          setIsAdmin(false);
+          setAuthLoading(false);
+        }
+      }
+    };
+
+    loadSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          const { data } = await supabase.rpc("has_role", {
-            _user_id: currentUser.id,
-            _role: "admin",
-          });
-          setIsAdmin(!!data);
+          await checkAdmin(currentUser.id);
         } else {
           setIsAdmin(false);
+          setAuthLoading(false);
         }
-        setAuthLoading(false);
       }
     );
-    supabase.auth.getSession();
-    return () => subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogin = async () => {
