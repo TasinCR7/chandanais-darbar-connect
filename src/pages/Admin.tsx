@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Plus, Trash2, LogIn, LogOut, HelpCircle, AlertTriangle, Eye, Send } from "lucide-react";
+import { Bell, Plus, Trash2, LogIn, LogOut, HelpCircle, AlertTriangle, Eye, Send, HandHeart } from "lucide-react";
 import SEO from "@/components/SEO";
 import type { User } from "@supabase/supabase-js";
 
@@ -25,6 +25,7 @@ interface Submission {
   name: string;
   phone: string | null;
   subject: string;
+  address?: string | null;
   details: string;
   is_read: boolean;
   created_at: string;
@@ -203,6 +204,7 @@ const Admin = () => {
   const unreadCount = submissions.filter((s) => !s.is_read).length;
   const questions = submissions.filter((s) => s.type === "question");
   const complaints = submissions.filter((s) => s.type === "complaint");
+  const doas = submissions.filter((s) => s.type === "doa");
 
   if (authLoading) {
     return (
@@ -291,18 +293,22 @@ const Admin = () => {
             </div>
 
             <Tabs defaultValue="notices" className="space-y-6">
-              <TabsList className="bg-card border border-gold/20 w-full flex">
-                <TabsTrigger value="notices" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3">
+              <TabsList className="bg-card border border-gold/20 w-full flex flex-wrap h-auto p-1">
+                <TabsTrigger value="notices" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3 py-2">
                   <Bell size={14} className="mr-1 sm:mr-2 shrink-0" />
                   <span className="truncate">নোটিশ</span>
                 </TabsTrigger>
-                <TabsTrigger value="questions" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3">
+                <TabsTrigger value="questions" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3 py-2">
                   <HelpCircle size={14} className="mr-1 sm:mr-2 shrink-0" />
                   <span className="truncate">প্রশ্ন ({questions.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="complaints" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3">
+                <TabsTrigger value="complaints" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3 py-2">
                   <AlertTriangle size={14} className="mr-1 sm:mr-2 shrink-0" />
                   <span className="truncate">অভিযোগ ({complaints.length})</span>
+                </TabsTrigger>
+                <TabsTrigger value="doa" className="data-[state=active]:bg-gold/20 flex-1 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                  <HandHeart size={14} className="mr-1 sm:mr-2 shrink-0" />
+                  <span className="truncate">দোয়া ({doas.length})</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -372,6 +378,11 @@ const Admin = () => {
               <TabsContent value="complaints">
                 <SubmissionList items={complaints} onMarkRead={markAsRead} onDelete={deleteSubmission} onReply={submitReply} emptyText="কোনো অভিযোগ আসেনি।" showReply />
               </TabsContent>
+
+              {/* Doa Tab */}
+              <TabsContent value="doa">
+                <SubmissionList items={doas} onMarkRead={markAsRead} onDelete={deleteSubmission} onReply={submitReply} emptyText="কোনো দোয়ার আবেদন আসেনি।" showReply />
+              </TabsContent>
             </Tabs>
           </motion.div>
         </div>
@@ -427,7 +438,7 @@ const SubmissionList = ({
               )}
             </div>
             <p className="text-xs text-muted-foreground mb-1 break-words">
-              {s.subject} • {s.phone || "ফোন দেওয়া হয়নি"} • {new Date(s.created_at).toLocaleDateString("bn-BD")}
+              {s.subject} • {s.phone || "ফোন নেই"} {s.address ? `• ${s.address}` : ""} • {new Date(s.created_at).toLocaleDateString("bn-BD")}
             </p>
             <p className="text-sm text-foreground mt-2 whitespace-pre-wrap break-words">{s.details}</p>
 
@@ -500,6 +511,7 @@ interface Submission {
   name: string;
   phone: string | null;
   subject: string;
+  address?: string | null;
   details: string;
   is_read: boolean;
   reply?: string | null;
