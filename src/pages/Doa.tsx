@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HandHeart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const doaSubjects = [
   "রোগমুক্তি / সুস্থতা",
@@ -31,7 +32,7 @@ const Doa = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const trimmedName = formData.name.trim();
@@ -57,27 +58,28 @@ const Doa = () => {
 
     setIsSubmitting(true);
 
-    // Build WhatsApp message
-    const message = [
-      `🤲 *দোয়া আবেদন*`,
-      ``,
-      `*নাম:* ${trimmedName}`,
-      formData.phone.trim() ? `*মোবাইল:* ${formData.phone.trim()}` : "",
-      `*দোয়ার বিষয়:* ${formData.subject}`,
-      formData.address.trim() ? `*ঠিকানা:* ${formData.address.trim()}` : "",
-      ``,
-      `*বিস্তারিত:*`,
-      trimmedDetails,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const { error } = await supabase.from("submissions").insert({
+      type: "doa",
+      name: trimmedName,
+      phone: formData.phone.trim() || null,
+      subject: formData.subject,
+      address: formData.address.trim() || null,
+      details: trimmedDetails,
+    });
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+    if (error) {
+      toast({
+        title: "ত্রুটি হয়েছে",
+        description: "আবেদন পাঠাতে সমস্যা হয়েছে, আবার চেষ্টা করুন।",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     toast({
-      title: "দোয়া আবেদন প্রস্তুত ✅",
-      description: "WhatsApp-এ পাঠানোর জন্য প্রস্তুত হয়েছে।",
+      title: "দোয়া আবেদন পাঠানো হয়েছে ✅",
+      description: "আপনার আবেদন সফলভাবে জমা হয়েছে।",
     });
 
     setFormData({ name: "", phone: "", subject: "", address: "", details: "" });
