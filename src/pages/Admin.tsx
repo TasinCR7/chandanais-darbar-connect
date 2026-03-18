@@ -137,6 +137,8 @@ const Admin = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setUser(null);
+    setIsAdmin(false);
   };
 
   const fetchNotices = async () => {
