@@ -28,6 +28,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .from("notices")
         .select("title, message")
         .eq("is_active", true)
+        .eq("type", "scrolling")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();

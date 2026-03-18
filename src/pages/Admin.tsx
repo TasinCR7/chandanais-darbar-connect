@@ -15,6 +15,7 @@ interface Notice {
   id: string;
   title: string;
   message: string | null;
+  type: 'scrolling' | 'detailed';
   is_active: boolean;
   created_at: string;
 }
@@ -131,7 +132,7 @@ const Admin = () => {
       .from("notices")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) setNotices(data);
+    if (data) setNotices(data as Notice[]);
   };
 
   const fetchSubmissions = async () => {
@@ -149,18 +150,19 @@ const Admin = () => {
     }
   }, [isAdmin]);
 
-  const addNotice = async () => {
+  const addNotice = async (type: 'scrolling' | 'detailed') => {
     if (!title.trim()) return;
     setLoading(true);
     const { error } = await supabase.from("notices").insert({
       title: title.trim(),
       message: message.trim() || null,
+      type: type,
       is_active: true,
     });
     if (error) {
       toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "সফল ✅", description: "নোটিশ যোগ করা হয়েছে।" });
+      toast({ title: "সফল ✅", description: type === 'scrolling' ? "স্ক্রলিং নোটিশ যোগ করা হয়েছে।" : "বিস্তারিত নোটিশ যোগ করা হয়েছে।" });
       setTitle("");
       setMessage("");
       fetchNotices();
@@ -314,29 +316,55 @@ const Admin = () => {
 
               {/* Notices Tab */}
               <TabsContent value="notices" className="space-y-6">
-                <div className="bg-card border border-gold/20 rounded-lg p-6 space-y-4">
-                  <h2 className="text-lg font-heading font-semibold text-foreground">নতুন নোটিশ যোগ করুন</h2>
-                  <Input
-                    placeholder="নোটিশ শিরোনাম *"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="border-gold/30 focus:border-gold"
-                  />
-                  <Textarea
-                    placeholder="বিস্তারিত বার্তা (ঐচ্ছিক)"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="border-gold/30 focus:border-gold"
-                    rows={3}
-                  />
-                  <Button
-                    onClick={addNotice}
-                    disabled={loading || !title.trim()}
-                    className="bg-gold-gradient text-primary-foreground gold-glow-hover"
-                  >
-                    <Plus size={16} className="mr-2" />
-                    নোটিশ যোগ করুন
-                  </Button>
+                <div className="bg-card border border-gold/20 rounded-lg p-6 space-y-6">
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-heading font-semibold text-gold flex items-center gap-2">
+                       <Bell size={18} /> স্ক্রলিং নোটিশ (উপরে থাকবে)
+                    </h2>
+                    <p className="text-xs text-muted-foreground">এটি ওয়েবসাইটের একদম উপরে সরু লাইনে স্ক্রল করবে।</p>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="অল্প কথায় নোটিশটি লিখুন *"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="border-gold/30 focus:border-gold flex-1"
+                      />
+                      <Button
+                        onClick={() => addNotice('scrolling')}
+                        disabled={loading || !title.trim()}
+                        className="bg-gold-gradient text-primary-foreground shrink-0"
+                      >
+                        যোগ করুন
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gold/10 pt-6 space-y-4">
+                    <h2 className="text-lg font-heading font-semibold text-gold flex items-center gap-2">
+                       <Plus size={18} /> বিস্তারিত নোটিশ (বড় বক্স)
+                    </h2>
+                    <p className="text-xs text-muted-foreground">এটি হোমপেজে বড় বক্স আকারে বিস্তারিত দেখা যাবে।</p>
+                    <Input
+                      placeholder="বিস্তারিত নোটিশের শিরোনাম *"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="border-gold/30 focus:border-gold"
+                    />
+                    <Textarea
+                      placeholder="বিস্তারিত বার্তা লিখুন"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="border-gold/30 focus:border-gold"
+                      rows={3}
+                    />
+                    <Button
+                      onClick={() => addNotice('detailed')}
+                      disabled={loading || !title.trim()}
+                      className="bg-gold-gradient text-primary-foreground gold-glow-hover"
+                    >
+                      বিস্তারিত নোটিশ যোগ করুন
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -349,7 +377,12 @@ const Admin = () => {
                   {notices.map((n) => (
                     <div key={n.id} className="bg-card border border-gold/20 rounded-lg p-4">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground break-words">{n.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground break-words">{n.title}</p>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${n.type === 'scrolling' ? 'bg-blue-500/20 text-blue-400' : 'bg-gold/20 text-gold'}`}>
+                            {n.type === 'scrolling' ? 'স্ক্রলিং' : 'বিস্তারিত'}
+                          </span>
+                        </div>
                         {n.message && <p className="text-sm text-muted-foreground mt-1 break-words">{n.message}</p>}
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(n.created_at).toLocaleDateString("bn-BD")}
