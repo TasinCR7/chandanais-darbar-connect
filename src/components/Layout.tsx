@@ -12,6 +12,7 @@ const navLinks = [
   { path: "/events", label: "ওরশ ও অনুষ্ঠান" },
   { path: "/hadia", label: "হাদিয়া ও নজরানা" },
   { path: "/gallery", label: "গ্যালারি" },
+  { path: "/notices", label: "নোটিশ" },
   { path: "/doa", label: "দোয়া আবেদন" },
   { path: "/qna", label: "প্রশ্ন ও অভিযোগ" },
   { path: "/contact", label: "যোগাযোগ" },

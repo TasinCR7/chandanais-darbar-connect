@@ -17,6 +17,7 @@ import QnA from "./pages/QnA";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import Notices from "./pages/Notices";
 
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/doa" element={<Doa />} />
               <Route path="/qna" element={<QnA />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/notices" element={<Notices />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
