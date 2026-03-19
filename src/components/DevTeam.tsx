@@ -6,7 +6,7 @@ const teamMembers = [
     name: "Tasin",
     role: "Lead Developer",
     roleBn: "লিড ডেভেলপার",
-    avatar: "T",
+    image: "/assets/team/tasin.png",
     color: "from-primary to-gold-dark",
   },
   {
@@ -42,7 +42,7 @@ const DevTeam = () => {
           <div className="section-divider mt-6" />
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto">
           {teamMembers.map((member, i) => (
             <motion.div
               key={i}
@@ -50,20 +50,34 @@ const DevTeam = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="group relative bg-background border border-border rounded-xl p-6 text-center hover:border-primary/40 transition-all duration-300"
+              className="group relative bg-background border border-border rounded-xl p-6 text-center hover:border-primary/40 transition-all duration-300 w-full sm:w-64"
             >
               {/* Glow effect on hover */}
               <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                 style={{ boxShadow: '0 0 30px hsl(var(--gold) / 0.1)' }}
               />
 
-              {/* Avatar */}
-              <div className={`relative w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br ${member.color} flex items-center justify-center shadow-lg`}>
-                <span className="text-2xl font-bold text-primary-foreground">
-                  {member.avatar}
-                </span>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-card border-2 border-primary rounded-full flex items-center justify-center">
-                  <Code2 size={12} className="text-primary" />
+              {/* Avatar Section (Photo or Initials) */}
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                {member.image ? (
+                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors duration-300 shadow-lg">
+                    <img 
+                      src={member.image} 
+                      alt={member.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                ) : (
+                  <div className={`w-full h-full rounded-full bg-gradient-to-br ${member.color} flex items-center justify-center shadow-lg border-2 border-white/5`}>
+                    <span className="text-2xl font-bold text-primary-foreground">
+                      {member.avatar}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Small Dev Icon */}
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-card border-2 border-primary rounded-full flex items-center justify-center shadow-md">
+                  <Code2 size={14} className="text-primary" />
                 </div>
               </div>
 
