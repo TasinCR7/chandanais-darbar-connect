@@ -114,16 +114,14 @@ const Admin = () => {
         setUser(currentUser);
         
         if (currentUser) {
-          // If we haven't checked admin yet, do it now
-          if (!isInitialized.current) {
-            const { data } = await supabase.rpc("has_role", {
-              _user_id: currentUser.id,
-              _role: "admin",
-            });
-            if (mounted) {
-              setIsAdmin(!!data);
-              setAuthLoading(false);
-            }
+          // Always check admin status on auth state changes if we have a user
+          const { data } = await supabase.rpc("has_role", {
+            _user_id: currentUser.id,
+            _role: "admin",
+          });
+          if (mounted) {
+            setIsAdmin(!!data);
+            setAuthLoading(false);
           }
         } else {
           setIsAdmin(false);
