@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Phone, Bell, Settings } from "lucide-react";
+import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -190,9 +190,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
             <div>
               <h4 className="text-gold font-heading font-semibold mb-4">যোগাযোগ</h4>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Phone size={14} className="text-gold" />
-                <span>০১৭১১-২৩৪৫৬৭</span>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Phone size={14} className="text-gold" />
+                  <span>০১৭১১-২৩৪৫৬৭</span>
+                </div>
+                <a 
+                  href="https://maps.app.goo.gl/pWk7MFAWh51PiMeX6" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-muted-foreground text-sm hover:text-gold transition-colors inline-flex"
+                >
+                  <MapPin size={14} className="text-gold" />
+                  <span>ম্যাপে দেখুন</span>
+                </a>
               </div>
             </div>
           </div>

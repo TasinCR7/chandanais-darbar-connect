@@ -79,7 +79,7 @@ const Contact = () => {
           >
             <iframe
               title="চন্দনাইশ দরবার শরীফ মানচিত্র"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29562.42!2d91.95!3d22.22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30ad2e!2sChandanaish!5e0!3m2!1sen!2sbd!4v1"
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1351.2555801026124!2d92.0172438419116!3d22.210989333116487!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30ad17f9c4c7b08f:0x6756e9af87130438!2z4Kaa4Kao4KeN4Kam4Kao4Ka-4KaH4Ka2IOCmpuCmsOCmrOCmvuCmsCDgprbgprDgp4Dgpqs!5e1!3m2!1sbn!2sbd!4v1773926592389!5m2!1sbn!2sbd"
               className="w-full h-full border-0"
               loading="lazy"
               allowFullScreen
