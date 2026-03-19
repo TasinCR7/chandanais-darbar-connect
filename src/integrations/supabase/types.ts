@@ -21,6 +21,7 @@ export type Database = {
           is_active: boolean
           message: string | null
           title: string
+          type: "scrolling" | "detailed"
           updated_at: string
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           title: string
+          type: "scrolling" | "detailed"
           updated_at?: string
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           title?: string
+          type?: "scrolling" | "detailed"
           updated_at?: string
         }
         Relationships: []

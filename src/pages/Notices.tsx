@@ -27,7 +27,7 @@ const Notices = () => {
         .order("created_at", { ascending: false });
       
       if (data) {
-        setNotices(data as any as Notice[]);
+        setNotices(data as Notice[]);
       }
       setLoading(false);
     };

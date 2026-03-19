@@ -309,9 +309,9 @@ const Admin = () => {
     // Extract filename from URL
     const fileName = url.split("/").pop();
     if (fileName) {
-      await (supabase.storage.from("gallery" as any) as any).remove([fileName]);
+      await supabase.storage.from("gallery").remove([fileName]);
     }
-    await (supabase.from("gallery" as any) as any).delete().eq("id", id);
+    await supabase.from("gallery").delete().eq("id", id);
     fetchGallery();
   };
 
