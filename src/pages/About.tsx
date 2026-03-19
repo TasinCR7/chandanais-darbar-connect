@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { BookOpen, GraduationCap, Users, Star, Heart, MapPin, Calendar } from "lucide-react";
+import DevTeam from "@/components/DevTeam";
 
 const biographySections = [
   {
@@ -241,6 +242,9 @@ const About = () => {
         </div>
       </div>
     </div>
+
+    {/* Dev Team */}
+    <DevTeam />
     </>
   );
 };
