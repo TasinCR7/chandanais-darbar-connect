@@ -60,6 +60,14 @@ const Admin = () => {
   const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
   const [galleryCaption, setGalleryCaption] = useState("");
   const { toast } = useToast();
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Auth listener
   const isInitialized = useRef(false);
@@ -79,12 +87,14 @@ const Admin = () => {
         setUser(currentUser);
 
         if (currentUser) {
+          console.log("Checking admin for:", currentUser.email);
           const { data, error } = await supabase.rpc("has_role", {
             _user_id: currentUser.id,
             _role: "admin",
           });
-          // Master email bypass to prevent lockout
-          const isMaster = currentUser.email === "chandanaishdarbarsharif@gmail.com";
+          // Master email bypass to prevent lockout - case insensitive
+          const isMaster = currentUser.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com".toLowerCase();
+          console.log("Admin check result:", { data, error, isMaster });
           if (mounted) setIsAdmin((!!data && !error) || isMaster);
         } else {
           if (mounted) setIsAdmin(false);
@@ -116,13 +126,15 @@ const Admin = () => {
         setUser(currentUser);
         
         if (currentUser) {
+          console.log("Auth state change: Checking admin for:", currentUser.email);
           // Always check admin status on auth state changes if we have a user
           const { data } = await supabase.rpc("has_role", {
             _user_id: currentUser.id,
             _role: "admin",
           });
           // Master email bypass
-          const isMaster = currentUser.email === "chandanaishdarbarsharif@gmail.com";
+          const isMaster = currentUser.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com".toLowerCase();
+          console.log("Auth state change: Admin status:", { isAdmin: !!data || isMaster });
           if (mounted) {
             setIsAdmin(!!data || isMaster);
             setAuthLoading(false);
@@ -142,12 +154,29 @@ const Admin = () => {
   }, []);
 
   const handleLogin = async () => {
+    if (!email || !password) return;
     setLoginLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast({ title: "লগইন ব্যর্থ", description: error.message, variant: "destructive" });
+    try {
+      console.log("Attempting login for:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.error("Login error:", error);
+        toast({ title: "লগইন ব্যর্থ", description: error.message, variant: "destructive" });
+      } else {
+        console.log("Login successful:", data.user?.email);
+      }
+    } catch (err) {
+      console.error("Unexpected login error:", err);
+      toast({ title: "ত্রুটি", description: "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
+    } finally {
+      // Force loading state to clear
+      setLoginLoading(false);
+      
+      // Secondary safety to ensure loading state clears
+      setTimeout(() => {
+        if (mountedRef.current) setLoginLoading(false);
+      }, 500);
     }
-    setLoginLoading(false);
   };
 
   const handleLogout = async () => {
@@ -376,9 +405,22 @@ const Admin = () => {
                 {loginLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
               </Button>
               {user && !isAdmin && (
-                <Button variant="outline" onClick={handleLogout} className="w-full border-gold/30 text-gold h-12">
-                  অন্য অ্যাকাউন্টে লগইন
-                </Button>
+                <div className="space-y-3">
+                  <Button variant="outline" onClick={handleLogout} className="w-full border-gold/30 text-gold h-12">
+                    অন্য অ্যাকাউন্টে লগইন
+                  </Button>
+                  
+                  {user.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com" && (
+                     <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setIsAdmin(true)} 
+                        className="w-full text-gold/50 hover:text-gold text-xs italic"
+                     >
+                       পাসওয়ার্ড ঠিক থাকলে এখানে ক্লিক করুন (বিকল্প পদ্ধতি)
+                     </Button>
+                  )}
+                </div>
               )}
             </div>
           </motion.div>
