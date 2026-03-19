@@ -43,16 +43,16 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
           >
-            <p className="font-arabic text-gold text-xl md:text-2xl mb-4">
+            <p className="font-arabic text-gold text-base md:text-2xl mb-4">
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </p>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold text-cream mb-4 leading-tight">
+            <h1 className="text-3xl md:text-6xl lg:text-7xl font-heading font-bold text-cream mb-4 leading-tight px-2">
               চন্দনাইশ দরবার শরীফ
             </h1>
-            <p className="text-gold text-lg md:text-xl mb-2">
+            <p className="text-gold text-base md:text-xl mb-2">
               সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
             </p>
-            <p className="text-muted-foreground max-w-3xl mx-auto mb-8 text-lg md:text-2xl font-medium leading-relaxed">
+            <p className="text-muted-foreground max-w-3xl mx-auto mb-8 text-base md:text-2xl font-medium leading-relaxed px-4">
               গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র দরবার
             </p>
           </motion.div>

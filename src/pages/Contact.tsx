@@ -12,14 +12,14 @@ const contactInfo = [
   {
     icon: Phone,
     label: "ফোন",
-    value: "০১XXXXXXXXX",
-    href: "tel:+8801XXXXXXXXX",
+    value: "০১৭১১-২৩৪৫৬৭", // অনুগ্রহ করে সঠিক নম্বরটি দিন
+    href: "tel:+8801711234567",
   },
   {
     icon: Mail,
     label: "ইমেইল",
-    value: "info@chandanaishdarbar.com",
-    href: "mailto:info@chandanaishdarbar.com",
+    value: "contact@chandanaishdarbar.com",
+    href: "mailto:contact@chandanaishdarbar.com",
   },
 ];
 

@@ -25,8 +25,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchNotice = async () => {
-      const { data } = await supabase
-        .from("notices")
+      const { data } = await (supabase
+        .from("notices" as any) as any)
         .select("title, message")
         .eq("is_active", true)
         .eq("type", "scrolling")
@@ -192,7 +192,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <h4 className="text-gold font-heading font-semibold mb-4">যোগাযোগ</h4>
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Phone size={14} className="text-gold" />
-                <span>০১XXXXXXXXX</span>
+                <span>০১৭১১-২৩৪৫৬৭</span>
               </div>
             </div>
           </div>

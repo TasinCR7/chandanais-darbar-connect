@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bell, Plus, Trash2, LogIn, LogOut, HelpCircle, AlertTriangle, Eye, Send, HandHeart } from "lucide-react";
 import SEO from "@/components/SEO";
 import type { User } from "@supabase/supabase-js";
+import PremiumLoader from "@/components/PremiumLoader";
 
 interface Notice {
   id: string;
@@ -51,8 +52,9 @@ const Admin = () => {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
+  const [scrollingTitle, setScrollingTitle] = useState("");
+  const [detailedTitle, setDetailedTitle] = useState("");
+  const [detailedMessage, setDetailedMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
@@ -60,59 +62,69 @@ const Admin = () => {
   const { toast } = useToast();
 
   // Auth listener
+  const isInitialized = useRef(false);
+
   useEffect(() => {
     let mounted = true;
 
-    const checkAdmin = async (userId: string) => {
+    const syncAuth = async () => {
+      if (isInitialized.current) return;
+      isInitialized.current = true;
+
       try {
-        const { data, error } = await supabase.rpc("has_role", {
-          _user_id: userId,
-          _role: "admin",
-        });
-        if (error) console.error("Error checking role:", error);
-        if (mounted) setIsAdmin(!!data);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+
+        if (currentUser) {
+          const { data, error } = await supabase.rpc("has_role", {
+            _user_id: currentUser.id,
+            _role: "admin",
+          });
+          if (mounted) setIsAdmin(!!data && !error);
+        } else {
+          if (mounted) setIsAdmin(false);
+        }
       } catch (err) {
-        console.error("Exception checking role:", err);
+        console.error("Auth sync error:", err);
         if (mounted) setIsAdmin(false);
       } finally {
         if (mounted) setAuthLoading(false);
       }
     };
 
-    const loadSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        const currentUser = session?.user ?? null;
-        if (mounted) setUser(currentUser);
+    syncAuth();
 
-        if (currentUser) {
-          await checkAdmin(currentUser.id);
-        } else {
-          if (mounted) {
-            setIsAdmin(false);
-            setAuthLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error("Session error:", error);
-        if (mounted) {
-          setIsAdmin(false);
-          setAuthLoading(false);
-        }
+    // Safety timeout to ensure loading state clears NO MATTER WHAT
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        setAuthLoading(current => {
+          if (current) console.warn("Auth check timed out, forcing load completion");
+          return false;
+        });
       }
-    };
-
-    loadSession();
+    }, 6000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
+        
         if (currentUser) {
-          await checkAdmin(currentUser.id);
+          // If we haven't checked admin yet, do it now
+          if (!isInitialized.current) {
+            const { data } = await supabase.rpc("has_role", {
+              _user_id: currentUser.id,
+              _role: "admin",
+            });
+            if (mounted) {
+              setIsAdmin(!!data);
+              setAuthLoading(false);
+            }
+          }
         } else {
           setIsAdmin(false);
           setAuthLoading(false);
@@ -122,6 +134,7 @@ const Admin = () => {
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
@@ -146,7 +159,7 @@ const Admin = () => {
       .from("notices")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) setNotices(data as Notice[]);
+    if (data) setNotices(data as unknown as Notice[]);
   };
 
   const fetchSubmissions = async () => {
@@ -166,33 +179,59 @@ const Admin = () => {
   }, [isAdmin]);
 
   const addNotice = async (type: 'scrolling' | 'detailed') => {
-    if (!title.trim()) return;
+    const currentTitle = type === 'scrolling' ? scrollingTitle : detailedTitle;
+    const currentMessage = type === 'scrolling' ? "" : detailedMessage;
+
+    if (!currentTitle.trim()) return;
+
     setLoading(true);
     const { error } = await supabase.from("notices").insert({
-      title: title.trim(),
-      message: message.trim() || null,
+      title: currentTitle.trim(),
+      message: currentMessage.trim() || null,
       type: type,
       is_active: true,
     });
+
     if (error) {
-      toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+      toast({ 
+        title: "ত্রুটি", 
+        description: "নোটিশ যোগ করতে সমস্যা হয়েছে: " + error.message, 
+        variant: "destructive" 
+      });
     } else {
-      toast({ title: "সফল ✅", description: type === 'scrolling' ? "স্ক্রলিং নোটিশ যোগ করা হয়েছে।" : "বিস্তারিত নোটিশ যোগ করা হয়েছে।" });
-      setTitle("");
-      setMessage("");
+      toast({ 
+        title: "সফল ✅", 
+        description: type === 'scrolling' ? "স্ক্রলিং নোটিশ সফলভাবে যোগ করা হয়েছে।" : "বিস্তারিত নোটিশ সফলভাবে যোগ করা হয়েছে।",
+        className: "bg-green-500/10 border-green-500/50"
+      });
+      if (type === 'scrolling') setScrollingTitle("");
+      else {
+        setDetailedTitle("");
+        setDetailedMessage("");
+      }
       fetchNotices();
     }
     setLoading(false);
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("notices").update({ is_active: !current }).eq("id", id);
-    fetchNotices();
+    const { error } = await supabase.from("notices").update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "অবস্থা পরিবর্তন করতে সমস্যা হয়েছে।", variant: "destructive" });
+    } else {
+      toast({ title: current ? "নিষ্ক্রিয় করা হয়েছে" : "সক্রিয় করা হয়েছে", duration: 2000 });
+      fetchNotices();
+    }
   };
 
   const deleteNotice = async (id: string) => {
-    await supabase.from("notices").delete().eq("id", id);
-    fetchNotices();
+    const { error } = await supabase.from("notices").delete().eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "ডিলিট করতে সমস্যা হয়েছে।", variant: "destructive" });
+    } else {
+      toast({ title: "ডিলিট করা হয়েছে", variant: "destructive", duration: 2000 });
+      fetchNotices();
+    }
   };
 
   const markAsRead = async (id: string) => {
@@ -281,8 +320,8 @@ const Admin = () => {
 
   if (authLoading) {
     return (
-      <div className="py-20 flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">লোড হচ্ছে...</p>
+      <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4 islamic-pattern">
+        <PremiumLoader />
       </div>
     );
   }
@@ -397,18 +436,19 @@ const Admin = () => {
                        <Bell size={18} /> স্ক্রলিং নোটিশ (উপরে থাকবে)
                     </h2>
                     <p className="text-xs text-muted-foreground">এটি ওয়েবসাইটের একদম উপরে সরু লাইনে স্ক্রল করবে।</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Input
                         placeholder="অল্প কথায় নোটিশটি লিখুন *"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="border-gold/30 focus:border-gold flex-1"
+                        value={scrollingTitle}
+                        onChange={(e) => setScrollingTitle(e.target.value)}
+                        className="border-gold/30 focus:border-gold flex-1 h-12"
                       />
                       <Button
                         onClick={() => addNotice('scrolling')}
-                        disabled={loading || !title.trim()}
-                        className="bg-gold-gradient text-primary-foreground shrink-0"
+                        disabled={loading || !scrollingTitle.trim()}
+                        className="bg-gold-gradient text-primary-foreground shrink-0 h-12 px-6 font-bold"
                       >
+                        {loading && <div className="mr-2 w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                         যোগ করুন
                       </Button>
                     </div>
@@ -421,59 +461,100 @@ const Admin = () => {
                     <p className="text-xs text-muted-foreground">এটি হোমপেজে বড় বক্স আকারে বিস্তারিত দেখা যাবে।</p>
                     <Input
                       placeholder="বিস্তারিত নোটিশের শিরোনাম *"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="border-gold/30 focus:border-gold"
+                      value={detailedTitle}
+                      onChange={(e) => setDetailedTitle(e.target.value)}
+                      className="border-gold/30 focus:border-gold h-12"
                     />
                     <Textarea
                       placeholder="বিস্তারিত বার্তা লিখুন"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="border-gold/30 focus:border-gold"
-                      rows={3}
+                      value={detailedMessage}
+                      onChange={(e) => setDetailedMessage(e.target.value)}
+                      className="border-gold/30 focus:border-gold min-h-[100px]"
+                      rows={4}
                     />
                     <Button
                       onClick={() => addNotice('detailed')}
-                      disabled={loading || !title.trim()}
-                      className="bg-gold-gradient text-primary-foreground gold-glow-hover"
+                      disabled={loading || !detailedTitle.trim()}
+                      className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 font-bold"
                     >
+                      {loading && <div className="mr-2 w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                       বিস্তারিত নোটিশ যোগ করুন
                     </Button>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <h2 className="text-lg font-heading font-semibold text-foreground">
-                    সকল নোটিশ ({notices.length})
-                  </h2>
-                  {notices.length === 0 && (
-                    <p className="text-muted-foreground text-sm text-center py-8">কোনো নোটিশ নেই।</p>
-                  )}
-                  {notices.map((n) => (
-                    <div key={n.id} className="bg-card border border-gold/20 rounded-lg p-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground break-words">{n.title}</p>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${n.type === 'scrolling' ? 'bg-blue-500/20 text-blue-400' : 'bg-gold/20 text-gold'}`}>
-                            {n.type === 'scrolling' ? 'স্ক্রলিং' : 'বিস্তারিত'}
-                          </span>
-                        </div>
-                        {n.message && <p className="text-sm text-muted-foreground mt-1 break-words">{n.message}</p>}
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(n.created_at).toLocaleDateString("bn-BD")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gold/10">
-                        <div className="flex items-center gap-2 flex-1">
-                          <Switch checked={n.is_active} onCheckedChange={() => toggleActive(n.id, n.is_active)} />
-                          <span className="text-xs text-muted-foreground">{n.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}</span>
-                        </div>
-                        <button onClick={() => deleteNotice(n.id)} className="text-destructive hover:text-destructive/80 p-1">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-heading font-semibold text-foreground flex items-center gap-2">
+                      <Bell size={20} className="text-gold" />
+                      সকল নোটিশ ({notices.length})
+                    </h2>
+                  </div>
+                  
+                  {notices.length === 0 ? (
+                    <div className="text-center py-12 bg-card/50 border border-gold/10 rounded-xl">
+                      <Bell size={40} className="mx-auto text-gold/20 mb-3" />
+                      <p className="text-muted-foreground text-sm font-medium">বর্তমানে কোনো নোটিশ নেই।</p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="grid gap-4">
+                      {notices.map((n) => (
+                        <motion.div 
+                          key={n.id} 
+                          layout
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="bg-card/50 backdrop-blur-sm border border-gold/20 rounded-xl p-5 hover:border-gold/40 transition-all group"
+                        >
+                          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div className="space-y-2 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                  n.type === 'scrolling' 
+                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
+                                    : 'bg-gold/10 text-gold border border-gold/20'
+                                }`}>
+                                  {n.type === 'scrolling' ? 'স্ক্রলিং' : 'বিস্তারিত'}
+                                </span>
+                                <p className="font-bold text-foreground text-lg">{n.title}</p>
+                              </div>
+                              {n.message && (
+                                <p className="text-sm text-muted-foreground leading-relaxed bg-black/20 p-3 rounded-lg border border-gold/5">
+                                  {n.message}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium">
+                                <span>ID: {n.id.slice(0, 8)}</span>
+                                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                <span>{new Date(n.created_at).toLocaleDateString("bn-BD", { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 shrink-0 pt-4 md:pt-0 md:border-l md:border-gold/10 md:pl-4">
+                              <div className="flex items-center gap-2">
+                                <Switch 
+                                  checked={n.is_active} 
+                                  onCheckedChange={() => toggleActive(n.id, n.is_active)}
+                                  className="data-[state=checked]:bg-gold"
+                                />
+                                <span className={`text-xs font-semibold ${n.is_active ? "text-gold" : "text-muted-foreground"}`}>
+                                  {n.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}
+                                </span>
+                              </div>
+                              <div className="w-px h-6 bg-gold/10 hidden md:block" />
+                              <button 
+                                onClick={() => deleteNotice(n.id)} 
+                                className="text-destructive/50 hover:text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-all"
+                                title="ডিলিট করুন"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 

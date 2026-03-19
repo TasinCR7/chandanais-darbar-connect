@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS public.notices (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     title text NOT NULL,
     message text,
+    type text DEFAULT 'detailed' NOT NULL, -- 'scrolling' (top bar) or 'detailed' (home box)
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -98,6 +99,37 @@ WITH CHECK (true);
 -- Only admins can view, update (reply, mark read) or delete submissions
 CREATE POLICY "Allow admins to manage submissions" 
 ON public.submissions 
+FOR ALL 
+TO authenticated 
+USING (public.has_role(auth.uid(), 'admin'))
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+
+-- ==========================================
+-- 4. GALLERY (Images & Media)
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS public.gallery (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    url text NOT NULL,
+    caption text,
+    category text NOT NULL DEFAULT 'দরবার শরীফ',
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read gallery
+CREATE POLICY "Allow public read on gallery" 
+ON public.gallery 
+FOR SELECT 
+TO public 
+USING (true);
+
+-- Only admins can manage gallery
+CREATE POLICY "Allow admins to manage gallery" 
+ON public.gallery 
 FOR ALL 
 TO authenticated 
 USING (public.has_role(auth.uid(), 'admin'))
