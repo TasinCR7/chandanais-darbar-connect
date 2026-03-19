@@ -6,7 +6,7 @@ const teamMembers = [
     name: "Tasin",
     role: "Lead Developer",
     roleBn: "লিড ডেভেলপার",
-    avatar: "R",
+    avatar: "T",
     color: "from-primary to-gold-dark",
   },
   {
