@@ -3,7 +3,7 @@ import { Code2, Github, Globe } from "lucide-react";
 
 const teamMembers = [
   {
-    name: "মোঃ রিয়াদ",
+    name: "Tasin",
     role: "Lead Developer",
     roleBn: "লিড ডেভেলপার",
     avatar: "R",
