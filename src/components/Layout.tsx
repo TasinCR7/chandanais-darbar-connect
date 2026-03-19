@@ -25,8 +25,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchNotice = async () => {
-      const { data } = await (supabase
-        .from("notices" as any) as any)
+      const { data } = await supabase
+        .from("notices")
         .select("title, message")
         .eq("is_active", true)
         .eq("type", "scrolling")

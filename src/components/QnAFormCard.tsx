@@ -103,7 +103,7 @@ const QnAFormCard = ({
           <div>
             <label className="text-sm font-semibold text-foreground mb-1.5 block">মোবাইল নম্বর</label>
             <Input
-              placeholder="০১XXXXXXXXX"
+              placeholder="০১৭১১-২৩৪৫৬৭"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               maxLength={15}

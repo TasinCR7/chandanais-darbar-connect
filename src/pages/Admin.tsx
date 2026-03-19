@@ -258,8 +258,8 @@ const Admin = () => {
   };
 
   const fetchGallery = async () => {
-    const { data } = await (supabase
-      .from("gallery" as any) as any)
+    const { data } = await supabase
+      .from("gallery")
       .select("*")
       .order("created_at", { ascending: false });
     if (data) setGallery(data as GalleryItem[]);
@@ -275,17 +275,17 @@ const Admin = () => {
     const filePath = `${fileName}`;
 
     try {
-      const { error: uploadError } = await (supabase.storage
-        .from("gallery" as any) as any)
+      const { error: uploadError } = await supabase.storage
+        .from("gallery")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = (supabase.storage
-        .from("gallery" as any) as any)
+      const { data: { publicUrl } } = supabase.storage
+        .from("gallery")
         .getPublicUrl(filePath);
 
-      const { error: dbError } = await (supabase.from("gallery" as any) as any).insert({
+      const { error: dbError } = await supabase.from("gallery").insert({
         url: publicUrl,
         caption: galleryCaption.trim() || null,
         category: galleryCategory,

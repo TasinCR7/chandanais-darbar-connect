@@ -33,14 +33,14 @@ const Hadia = () => {
 
             <div className="space-y-4">
               <a
-                href="tel:+8801XXXXXXXXX"
+                href="tel:+8801711234567"
                 className="flex items-center justify-center gap-3 bg-emerald hover:bg-emerald-light text-gold border border-gold/30 rounded-lg p-4 transition-all duration-300 gold-glow-hover"
               >
                 <Phone size={20} />
                 <span className="font-semibold">ফোনে যোগাযোগ করুন</span>
               </a>
               <a
-                href="https://wa.me/8801XXXXXXXXX"
+                href="https://wa.me/8801711234567"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-3 bg-emerald hover:bg-emerald-light text-gold border border-gold/30 rounded-lg p-4 transition-all duration-300 gold-glow-hover"
