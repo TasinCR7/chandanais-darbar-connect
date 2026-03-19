@@ -83,7 +83,9 @@ const Admin = () => {
             _user_id: currentUser.id,
             _role: "admin",
           });
-          if (mounted) setIsAdmin(!!data && !error);
+          // Master email bypass to prevent lockout
+          const isMaster = currentUser.email === "chandanaishdarbarsharif@gmail.com";
+          if (mounted) setIsAdmin((!!data && !error) || isMaster);
         } else {
           if (mounted) setIsAdmin(false);
         }
@@ -119,8 +121,10 @@ const Admin = () => {
             _user_id: currentUser.id,
             _role: "admin",
           });
+          // Master email bypass
+          const isMaster = currentUser.email === "chandanaishdarbarsharif@gmail.com";
           if (mounted) {
-            setIsAdmin(!!data);
+            setIsAdmin(!!data || isMaster);
             setAuthLoading(false);
           }
         } else {
