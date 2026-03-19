@@ -13,7 +13,6 @@ const LatestNotice = () => {
         .from("notices")
         .select("title, message")
         .eq("is_active", true)
-        .eq("type", "detailed")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
