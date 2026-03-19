@@ -75,7 +75,7 @@ const Contact = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-card border border-gold/20 rounded-lg overflow-hidden h-80 lg:h-auto"
+            className="bg-card border border-gold/20 rounded-lg overflow-hidden h-80 lg:h-[450px]"
           >
             <iframe
               title="চন্দনাইশ দরবার শরীফ মানচিত্র"

@@ -24,6 +24,7 @@ const Notices = () => {
         .from("notices")
         .select("*")
         .eq("is_active", true)
+        .not("title", "ilike", "%test%")
         .order("created_at", { ascending: false });
       
       if (data) {

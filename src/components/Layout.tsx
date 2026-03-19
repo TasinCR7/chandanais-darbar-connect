@@ -30,6 +30,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .select("title, message")
         .eq("is_active", true)
         .eq("type", "scrolling")
+        .not("title", "ilike", "%test%")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
