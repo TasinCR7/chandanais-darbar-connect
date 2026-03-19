@@ -33,22 +33,21 @@ function getNextUrs(): UrsEvent & { targetDate: Date } {
   return { ...first, targetDate: target };
 }
 
+const monthlyUrsDates = [
+  "2026-03-22", "2026-04-21", "2026-05-20", "2026-06-18",
+  "2026-07-18", "2026-08-16", "2026-09-17", "2026-10-17",
+  "2026-11-16", "2026-12-16", "2027-01-14", "2027-02-13"
+];
+
 function getNextMonthlyUrs(): Date {
   const now = new Date();
-  const target = new Date(now);
-  target.setHours(0, 0, 0, 0);
-
-  const formatter = new Intl.DateTimeFormat('en-US', { calendar: 'islamic-umalqura', day: 'numeric' });
-  
-  for (let i = 0; i < 35; i++) {
-    if (formatter.format(target) === '3') {
-      if (target.getTime() + 24 * 60 * 60 * 1000 > now.getTime()) {
-        return target;
-      }
+  for (const dateStr of monthlyUrsDates) {
+    const target = new Date(dateStr + "T00:00:00");
+    if (target > now) {
+      return target;
     }
-    target.setDate(target.getDate() + 1);
   }
-  return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // fallback
+  return new Date(monthlyUrsDates[0]); // fallback to first next year
 }
 
 function calcTimeLeft(target: Date) {
