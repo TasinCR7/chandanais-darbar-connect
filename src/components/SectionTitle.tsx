@@ -22,7 +22,7 @@ const SectionTitle = ({ title, subtitle, arabic, subtitleClassName }: SectionTit
       {title}
     </h2>
     {subtitle && (
-      <p className={`text-muted-foreground max-w-2xl mx-auto ${subtitleClassName || ""}`}>
+      <p className={`max-w-2xl mx-auto ${subtitleClassName || "text-muted-foreground"}`}>
         {subtitle}
       </p>
     )}
