@@ -10,7 +10,7 @@ const teamMembers = [
     color: "from-primary to-gold-dark",
   },
   {
-    name: "মোঃ তানভীর",
+    name: "Lemon",
     role: "Frontend Developer",
     roleBn: "ফ্রন্টএন্ড ডেভেলপার",
     avatar: "T",
