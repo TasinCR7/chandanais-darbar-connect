@@ -8,6 +8,7 @@ import SEO from "@/components/SEO";
 interface AdminLoginProps {
   onLogin: (email: string, password: string) => void;
   loading: boolean;
+  isVerifying?: boolean;
   user: any;
   isAdmin: boolean;
   onLogout: () => void;
@@ -17,6 +18,7 @@ interface AdminLoginProps {
 const AdminLogin = ({ 
   onLogin, 
   loading, 
+  isVerifying,
   user, 
   isAdmin, 
   onLogout, 
@@ -146,10 +148,10 @@ const AdminLogin = ({
                 disabled={loading || (loginMethod === "email" ? (!email || !password) : (!phone || !password))}
                 className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4 transition-all duration-300"
               >
-                {loading ? (
+                {loading || isVerifying ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    লগইন হচ্ছে...
+                    {isVerifying && !loading ? "সেশন চেক করা হচ্ছে..." : "লগইন হচ্ছে..."}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">

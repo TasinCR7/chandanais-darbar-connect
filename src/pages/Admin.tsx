@@ -14,8 +14,10 @@ import SubmissionManager from "@/components/admin/SubmissionManager";
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [verifying, setVerifying] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+
 
   const [notices, setNotices] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -25,73 +27,76 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
-  
-  const mountedRef = useRef(true);
-  const isInitialized = useRef(false);
 
   useEffect(() => {
-    mountedRef.current = true;
+    let isMounted = true;
     
-    const syncAuth = async () => {
-      if (isInitialized.current) return;
-      isInitialized.current = true;
+    // Safety fallback: hide verifying indicator after 3 seconds
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) setVerifying(false);
+    }, 3000);
+
+    const checkAdminStatus = async (currentUser: User | null) => {
+      if (!currentUser) return false;
+      const isMaster = currentUser.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com".toLowerCase();
+      if (isMaster) return true;
 
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mountedRef.current) return;
-
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-
-        if (currentUser) {
-          console.log("Checking admin for:", currentUser.email);
-          const { data, error } = await supabase.rpc("has_role", {
-            _user_id: currentUser.id,
-            _role: "admin",
-          });
-          // Master email bypass - robust case insensitive
-          const isMaster = currentUser.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com".toLowerCase();
-          console.log("Admin check result:", { data, error, isMaster });
-          if (mountedRef.current) setIsAdmin((!!data && !error) || isMaster);
-        } else {
-          if (mountedRef.current) setIsAdmin(false);
-        }
+        const { data, error } = await supabase.rpc("has_role", { _user_id: currentUser.id, _role: "admin" });
+        return !!data && !error;
       } catch (err) {
-        console.error("Auth sync error:", err);
-      } finally {
-        if (mountedRef.current) setAuthLoading(false);
+        return false;
       }
     };
 
-    syncAuth();
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        const currentUser = session?.user ?? null;
+        if (currentUser) {
+          setUser(currentUser);
+          const isAdminUser = await checkAdminStatus(currentUser);
+          if (isMounted) setIsAdmin(isAdminUser);
+        }
+      } catch (err) {
+        console.error("Auth error:", err);
+      } finally {
+        if (isMounted) {
+          setVerifying(false);
+          clearTimeout(safetyTimer);
+        }
+      }
+    };
+
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mountedRef.current) return;
+      async (_event, session) => {
+        if (!isMounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        
         if (currentUser) {
-          const { data } = await supabase.rpc("has_role", {
-            _user_id: currentUser.id,
-            _role: "admin",
-          });
-          const isMaster = currentUser.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com".toLowerCase();
-          if (mountedRef.current) {
-            setIsAdmin(!!data || isMaster);
-            setAuthLoading(false);
+          const isAdminUser = await checkAdminStatus(currentUser);
+          if (isMounted) {
+            setIsAdmin(isAdminUser);
+            setVerifying(false);
           }
         } else {
-          if (mountedRef.current) {
-            setIsAdmin(false);
-            setAuthLoading(false);
+          for (let i = 0; i < 1; i++) { // Dummy loop to keep structure similar if needed
+             if (isMounted) {
+              setIsAdmin(false);
+              setVerifying(false);
+            }
           }
         }
       }
     );
 
     return () => {
-      mountedRef.current = false;
+      isMounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
@@ -106,14 +111,21 @@ const Admin = () => {
     } catch (err) {
       toast({ title: "ত্রুটি", description: "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
-      if (mountedRef.current) setLoginLoading(false);
+      setLoginLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsAdmin(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setUser(null);
+      setIsAdmin(false);
+      setVerifying(false);
+      toast({ title: "লগআউট সফল", description: "আপনি সফলভাবে লগআউট করেছেন।" });
+    }
   };
 
   // Special bypass for master email or phone
@@ -165,7 +177,7 @@ const Admin = () => {
         fetchNotices();
       }
     } finally {
-      if (mountedRef.current) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -227,7 +239,7 @@ const Admin = () => {
     } catch (err: any) {
       toast({ title: "আপলোড ব্যর্থ", description: err.message, variant: "destructive" });
     } finally {
-      if (mountedRef.current) setUploading(false);
+      setUploading(false);
     }
   };
 
@@ -240,19 +252,13 @@ const Admin = () => {
     fetchGallery();
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4 islamic-pattern">
-        <PremiumLoader />
-      </div>
-    );
-  }
 
   if (!user || !isAdmin) {
     return (
       <AdminLogin 
         onLogin={handleLogin}
         loading={loginLoading}
+        isVerifying={verifying}
         user={user}
         isAdmin={isAdmin}
         onLogout={handleLogout}
