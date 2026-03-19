@@ -161,7 +161,10 @@ const UrsCountdown = () => {
         <h4 className="text-cream text-base sm:text-lg font-heading font-bold mb-1">
           প্রতি আরবি মাসের ৩ তারিখ ওরশ
         </h4>
-        <p className="font-arabic text-gold/60 text-sm mb-4">عُرْس شھری</p>
+        <p className="text-gold font-semibold text-xs mb-1">
+          পরবর্তী: {monthlyTarget.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long' })}
+        </p>
+        <p className="font-arabic text-gold/40 text-xs mb-4">عُرْس شَهْرِي</p>
 
         <div className="flex justify-center gap-2 sm:gap-4 items-start">
           <SmallTimeBox value={monthlyTimeLeft.days} label="দিন" />
