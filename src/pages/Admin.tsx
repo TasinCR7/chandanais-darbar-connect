@@ -53,8 +53,6 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [scrollingTitle, setScrollingTitle] = useState("");
-  const [detailedTitle, setDetailedTitle] = useState("");
-  const [detailedMessage, setDetailedMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
@@ -178,17 +176,14 @@ const Admin = () => {
     }
   }, [isAdmin]);
 
-  const addNotice = async (type: 'scrolling' | 'detailed') => {
-    const currentTitle = type === 'scrolling' ? scrollingTitle : detailedTitle;
-    const currentMessage = type === 'scrolling' ? "" : detailedMessage;
-
-    if (!currentTitle.trim()) return;
+  const addNotice = async () => {
+    if (!scrollingTitle.trim()) return;
 
     setLoading(true);
     const { error } = await supabase.from("notices").insert({
-      title: currentTitle.trim(),
-      message: currentMessage.trim() || null,
-      type: type,
+      title: scrollingTitle.trim(),
+      message: null,
+      type: 'scrolling',
       is_active: true,
     });
 
@@ -201,14 +196,10 @@ const Admin = () => {
     } else {
       toast({ 
         title: "সফল ✅", 
-        description: type === 'scrolling' ? "স্ক্রলিং নোটিশ সফলভাবে যোগ করা হয়েছে।" : "বিস্তারিত নোটিশ সফলভাবে যোগ করা হয়েছে।",
+        description: "স্ক্রলিং নোটিশ সফলভাবে যোগ করা হয়েছে।",
         className: "bg-green-500/10 border-green-500/50"
       });
-      if (type === 'scrolling') setScrollingTitle("");
-      else {
-        setDetailedTitle("");
-        setDetailedMessage("");
-      }
+      setScrollingTitle("");
       fetchNotices();
     }
     setLoading(false);
@@ -444,7 +435,7 @@ const Admin = () => {
                         className="border-gold/30 focus:border-gold flex-1 h-12"
                       />
                       <Button
-                        onClick={() => addNotice('scrolling')}
+                        onClick={addNotice}
                         disabled={loading || !scrollingTitle.trim()}
                         className="bg-gold-gradient text-primary-foreground shrink-0 h-12 px-6 font-bold"
                       >
@@ -452,34 +443,6 @@ const Admin = () => {
                         যোগ করুন
                       </Button>
                     </div>
-                  </div>
-
-                  <div className="border-t border-gold/10 pt-6 space-y-4">
-                    <h2 className="text-lg font-heading font-semibold text-gold flex items-center gap-2">
-                       <Plus size={18} /> বিস্তারিত নোটিশ (বড় বক্স)
-                    </h2>
-                    <p className="text-xs text-muted-foreground">এটি হোমপেজে বড় বক্স আকারে বিস্তারিত দেখা যাবে।</p>
-                    <Input
-                      placeholder="বিস্তারিত নোটিশের শিরোনাম *"
-                      value={detailedTitle}
-                      onChange={(e) => setDetailedTitle(e.target.value)}
-                      className="border-gold/30 focus:border-gold h-12"
-                    />
-                    <Textarea
-                      placeholder="বিস্তারিত বার্তা লিখুন"
-                      value={detailedMessage}
-                      onChange={(e) => setDetailedMessage(e.target.value)}
-                      className="border-gold/30 focus:border-gold min-h-[100px]"
-                      rows={4}
-                    />
-                    <Button
-                      onClick={() => addNotice('detailed')}
-                      disabled={loading || !detailedTitle.trim()}
-                      className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 font-bold"
-                    >
-                      {loading && <div className="mr-2 w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                      বিস্তারিত নোটিশ যোগ করুন
-                    </Button>
                   </div>
                 </div>
 

@@ -6,7 +6,6 @@ import SectionTitle from "@/components/SectionTitle";
 import EventCard from "@/components/EventCard";
 import UrsCountdown from "@/components/UrsCountdown";
 import SEO from "@/components/SEO";
-import LatestNotice from "@/components/LatestNotice";
 
 const upcomingEvents = [
   { title: "বাবাজান কেবলা চন্দনাইশী সহধর্মিণীর ওরশ", date: "পৌষ ৩০", calendarType: "bengali" as const },
@@ -80,7 +79,7 @@ const Index = () => {
         </div>
       </section>
 
-      <LatestNotice />
+
 
       {/* Welcome / About Section */}
       <section className="py-20 islamic-pattern">
