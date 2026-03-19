@@ -86,6 +86,7 @@ const About = () => {
           arabic="سِيرَة غَوْثِ الزَّمَان"
           title="গাউছেজামানের জীবনী"
           subtitle="হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ চন্দনাইশী মাইজভান্ডারী (ক:)"
+          subtitleClassName="text-xl md:text-2xl text-gold font-bold mt-4"
         />
 
         <div className="max-w-4xl mx-auto space-y-10">

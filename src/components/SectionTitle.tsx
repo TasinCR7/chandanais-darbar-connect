@@ -4,9 +4,10 @@ interface SectionTitleProps {
   title: string;
   subtitle?: string;
   arabic?: string;
+  subtitleClassName?: string;
 }
 
-const SectionTitle = ({ title, subtitle, arabic }: SectionTitleProps) => (
+const SectionTitle = ({ title, subtitle, arabic, subtitleClassName }: SectionTitleProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -21,7 +22,9 @@ const SectionTitle = ({ title, subtitle, arabic }: SectionTitleProps) => (
       {title}
     </h2>
     {subtitle && (
-      <p className="text-muted-foreground max-w-2xl mx-auto">{subtitle}</p>
+      <p className={`text-muted-foreground max-w-2xl mx-auto ${subtitleClassName || ""}`}>
+        {subtitle}
+      </p>
     )}
     <div className="section-divider mt-6" />
   </motion.div>
