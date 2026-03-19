@@ -242,6 +242,9 @@ const About = () => {
         </div>
       </div>
     </div>
+
+    {/* Dev Team */}
+    <DevTeam />
     </>
   );
 };
