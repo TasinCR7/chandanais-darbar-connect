@@ -1,7 +1,16 @@
 import { motion } from "framer-motion";
 import { Code2, Github, Globe } from "lucide-react";
 
-const teamMembers = [
+interface TeamMember {
+  name: string;
+  role: string;
+  roleBn: string;
+  image?: string;
+  avatar?: string;
+  color: string;
+}
+
+const teamMembers: TeamMember[] = [
   {
     name: "Tasin",
     role: "Lead Developer",
@@ -13,7 +22,7 @@ const teamMembers = [
     name: "Lemon",
     role: "Frontend Developer",
     roleBn: "ফ্রন্টএন্ড ডেভেলপার",
-    avatar: "L",
+    image: "/assets/team/lemon.jpg",
     color: "from-emerald to-emerald-light",
   },
 ];
