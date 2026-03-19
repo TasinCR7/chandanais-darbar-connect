@@ -16,13 +16,6 @@ const teamMembers = [
     avatar: "L",
     color: "from-emerald to-emerald-light",
   },
-  {
-    name: "মোঃ সাকিব",
-    role: "UI/UX Designer",
-    roleBn: "ইউআই/ইউএক্স ডিজাইনার",
-    avatar: "S",
-    color: "from-gold-dark to-primary",
-  },
 ];
 
 const DevTeam = () => {
