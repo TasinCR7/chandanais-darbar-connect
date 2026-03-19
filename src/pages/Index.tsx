@@ -51,7 +51,7 @@ const Index = () => {
             <p className="text-gold text-base md:text-xl mb-2">
               সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
             </p>
-            <p className="text-muted-foreground max-w-3xl mx-auto mb-8 text-base md:text-2xl font-medium leading-relaxed px-4">
+            <p className="text-cream max-w-4xl mx-auto mb-8 text-lg md:text-2xl font-bold leading-relaxed px-4 italic">
               গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র দরবার
             </p>
           </motion.div>
