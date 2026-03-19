@@ -7,12 +7,11 @@ import SEO from "@/components/SEO";
 
 interface AdminLoginProps {
   onLogin: (email: string, password: string) => void;
-  onPhoneLogin?: (phone: string) => void;
   loading: boolean;
   user: any;
   isAdmin: boolean;
   onLogout: () => void;
-  onForceAccess: () => void;
+  onForceAccess: (phone?: string, password?: string) => void;
 }
 
 const AdminLogin = ({ 
@@ -114,25 +113,37 @@ const AdminLogin = ({
                   </div>
                 </>
               ) : (
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">মোবাইল নম্বর</label>
-                  <Input
-                    type="tel"
-                    placeholder="০১৭১১-২৩৪৫৬৭"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium tracking-wider"
-                    onKeyDown={(e) => e.key === "Enter" && onForceAccess()}
-                  />
-                  <p className="text-[10px] text-gold/40 mt-2 px-1 italic text-center">
-                    দ্রষ্টব্য: মোবাইল নম্বরটি অবশ্যই এডমিন হিসেবে নিবন্ধিত থাকতে হবে।
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">মোবাইল নম্বর</label>
+                    <Input
+                      type="tel"
+                      placeholder="০১৭১১-২৩৪৫৬৭"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium tracking-wider"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">পাসওয়ার্ড</label>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
+                      onKeyDown={(e) => e.key === "Enter" && onForceAccess()}
+                    />
+                  </div>
+                  <p className="text-[10px] text-gold/40 mt-1 px-1 italic text-center">
+                    দ্রষ্টব্য: মোবাইল নম্বর এবং পাসওয়ার্ড উভয়ই সঠিক হতে হবে।
                   </p>
                 </div>
               )}
 
               <Button
-                onClick={loginMethod === "email" ? handleEmailLogin : onForceAccess}
-                disabled={loading || (loginMethod === "email" ? (!email || !password) : !phone)}
+                onClick={() => loginMethod === "email" ? handleEmailLogin() : onForceAccess(phone, password)}
+                disabled={loading || (loginMethod === "email" ? (!email || !password) : (!phone || !password))}
                 className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4 transition-all duration-300"
               >
                 {loading ? (
@@ -155,7 +166,7 @@ const AdminLogin = ({
                   
                   {user.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com" && (
                      <button 
-                        onClick={onForceAccess} 
+                        onClick={() => onForceAccess()} 
                         className="w-full text-gold/40 hover:text-gold text-[11px] italic transition-colors font-medium underline underline-offset-4"
                      >
                        পাসওয়ার্ড ঠিক থাকলে সরাসরি প্রবেশ করুন

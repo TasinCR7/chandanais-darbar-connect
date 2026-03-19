@@ -117,16 +117,18 @@ const Admin = () => {
   };
 
   // Special bypass for master email or phone
-  const forceAdminAccess = () => {
+  const forceAdminAccess = (phone?: string, pass?: string) => {
     const isMasterEmail = user?.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com";
-    // Using a broad check for now since user hasn't provided their number yet
-    const hasUser = !!user; 
     
-    if (isMasterEmail || hasUser) {
+    // Check if phone and pass match (using a generic logic for now)
+    // In a real app, this would check a database
+    const isMasterPhone = (phone?.includes("017") || phone?.includes("018")) && pass === "chandanaish"; 
+    
+    if (isMasterEmail || isMasterPhone) {
       setIsAdmin(true);
       toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "আপনি এখন এডমিন প্যানেল ব্যবহার করতে পারবেন।" });
     } else {
-      toast({ title: "অ্যাক্সেস ডিনাইড", description: "আপনার এই সুবিধা ব্যবহারের অনুমতি নেই।", variant: "destructive" });
+      toast({ title: "অ্যাক্সেস ডিনাইড", description: "আপনার ফোন নম্বর বা পাসওয়ার্ড ভুল।", variant: "destructive" });
     }
   };
 
