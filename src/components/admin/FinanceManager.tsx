@@ -33,6 +33,7 @@ const FinanceManager = () => {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchFinances = async () => {
