@@ -9,9 +9,9 @@ interface Notice {
   id: string;
   title: string;
   message: string | null;
-  type: 'scrolling' | 'detailed';
   created_at: string;
   is_active: boolean;
+  updated_at: string;
 }
 
 const Notices = () => {
