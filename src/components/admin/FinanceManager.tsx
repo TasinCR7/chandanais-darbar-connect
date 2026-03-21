@@ -52,18 +52,49 @@ const FinanceManager = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("finances").insert([{
-      type: formType, category, amount: parseFloat(amount),
-      description: description || null, date
-    }]);
-    if (!error) {
-      toast({ title: "সফল", description: `${formType === "income" ? "আয়" : "ব্যয়"} যোগ করা হয়েছে।` });
-      setCategory(""); setAmount(""); setDescription("");
-      fetchFinances();
+
+    if (editingId) {
+      const { error } = await supabase.from("finances").update({
+        type: formType, category, amount: parseFloat(amount),
+        description: description || null, date
+      }).eq("id", editingId);
+      if (!error) {
+        toast({ title: "সফল", description: "লেনদেন আপডেট করা হয়েছে।" });
+        resetForm();
+        fetchFinances();
+      } else {
+        toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+      }
     } else {
-      toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+      const { error } = await supabase.from("finances").insert([{
+        type: formType, category, amount: parseFloat(amount),
+        description: description || null, date
+      }]);
+      if (!error) {
+        toast({ title: "সফল", description: `${formType === "income" ? "আয়" : "ব্যয়"} যোগ করা হয়েছে।` });
+        resetForm();
+        fetchFinances();
+      } else {
+        toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+      }
     }
     setLoading(false);
+  };
+
+  const resetForm = () => {
+    setCategory(""); setAmount(""); setDescription("");
+    setDate(new Date().toISOString().split("T")[0]);
+    setFormType("income");
+    setEditingId(null);
+  };
+
+  const startEdit = (f: Finance) => {
+    setEditingId(f.id);
+    setFormType(f.type as "income" | "expense");
+    setCategory(f.category);
+    setAmount(String(f.amount));
+    setDescription(f.description || "");
+    setDate(f.date);
   };
 
   const deleteFinance = async (id: string) => {
