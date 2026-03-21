@@ -10,7 +10,7 @@ import AdminLogin from "@/components/admin/AdminLogin";
 import NoticeManager from "@/components/admin/NoticeManager";
 import GalleryManager from "@/components/admin/GalleryManager";
 import SubmissionManager from "@/components/admin/SubmissionManager";
-
+import FinanceManager from "@/components/admin/FinanceManager";
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -301,6 +301,7 @@ const Admin = () => {
             <TabsTrigger value="notices" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">নোটিশ</TabsTrigger>
             <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আবেদনপত্র</TabsTrigger>
             <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
+            <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
           </TabsList>
 
           <TabsContent value="notices">
@@ -333,6 +334,10 @@ const Admin = () => {
                 onUpload={uploadGalleryImage}
                 onDelete={deleteGalleryItem}
              />
+          </TabsContent>
+
+          <TabsContent value="finance">
+             <FinanceManager />
           </TabsContent>
         </Tabs>
       </div>

@@ -9,9 +9,9 @@ interface Notice {
   id: string;
   title: string;
   message: string | null;
-  type: 'scrolling' | 'detailed';
   created_at: string;
   is_active: boolean;
+  updated_at: string;
 }
 
 const Notices = () => {
@@ -79,12 +79,8 @@ const Notices = () => {
                           day: 'numeric'
                         })}
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                        notice.type === 'scrolling' 
-                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-                          : 'bg-gold/10 text-gold border border-gold/20'
-                      }`}>
-                        {notice.type === 'scrolling' ? 'জরুরি' : 'বিস্তারিত'}
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-gold/10 text-gold border border-gold/20">
+                        নোটিশ
                       </span>
                     </div>
 
