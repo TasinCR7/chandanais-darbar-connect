@@ -502,7 +502,10 @@ const FinanceManager = () => {
                   <td className="p-3 text-foreground">{f.category}</td>
                   <td className="p-3 text-right font-mono font-bold text-foreground">৳{Number(f.amount).toLocaleString("bn-BD")}</td>
                   <td className="p-3 text-muted-foreground">{f.description || "-"}</td>
-                  <td className="p-3">
+                  <td className="p-3 flex items-center gap-1">
+                    <button onClick={() => startEdit(f)} className="text-amber-500/60 hover:text-amber-500 transition-colors">
+                      <Pencil size={16} />
+                    </button>
                     <button onClick={() => deleteFinance(f.id)} className="text-red-500/60 hover:text-red-500 transition-colors">
                       <Trash2 size={16} />
                     </button>
