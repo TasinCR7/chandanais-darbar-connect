@@ -104,89 +104,189 @@ const FinanceManager = () => {
   // PDF generation
   const generatePDF = async () => {
     const title = viewMode === "monthly"
-      ? `আয়-ব্যয় রিপোর্ট — ${selectedMonth}`
+      ? `মাসিক আয়-ব্যয় রিপোর্ট — ${selectedMonth}`
       : `বার্ষিক আয়-ব্যয় রিপোর্ট — ${selectedMonth.slice(0, 4)}`;
-
-    // Create a hidden container for the invoice HTML
-    const container = document.createElement("div");
-    container.style.cssText = "position:fixed;left:-9999px;top:0;width:800px;padding:40px;background:#fff;font-family:sans-serif;color:#111;";
     
+    const invoiceNo = `INV-${selectedMonth.replace("-", "")}-${Date.now().toString(36).toUpperCase().slice(-4)}`;
+    const today = new Date().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" });
+
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;left:-9999px;top:0;width:820px;background:#fff;color:#1a1a1a;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;";
+
+    const incomeItems = filteredFinances.filter(f => f.type === "income");
+    const expenseItems = filteredFinances.filter(f => f.type === "expense");
+
+    // Category-wise summary
+    const catSummary = (type: "income" | "expense") => {
+      const cats = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+      return cats
+        .map(c => ({ name: c, total: filteredFinances.filter(f => f.type === type && f.category === c).reduce((s, f) => s + Number(f.amount), 0) }))
+        .filter(c => c.total > 0);
+    };
+
     container.innerHTML = `
-      <div style="text-align:center;margin-bottom:24px;">
-        <h1 style="font-size:22px;margin:0;color:#1a5c2e;">☪ চন্দনাইশ দরবার শরীফ</h1>
-        <p style="font-size:13px;color:#666;margin:4px 0 0;">${title}</p>
-        <p style="font-size:11px;color:#999;margin:2px 0 0;">তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}</p>
-      </div>
-      <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <div style="flex:1;background:#e8f5e9;border-radius:8px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#555;">মোট আয়</div>
-          <div style="font-size:20px;font-weight:bold;color:#2e7d32;">৳${totalIncome.toLocaleString("bn-BD")}</div>
+      <div style="padding:0;">
+        <!-- Header with gradient -->
+        <div style="background:linear-gradient(135deg, #0d4a2e 0%, #1a7a4a 50%, #0d4a2e 100%);padding:36px 44px;color:white;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-30px;right:-30px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
+          <div style="position:absolute;bottom:-40px;left:40%;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.03);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;">
+            <div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                <div style="width:44px;height:44px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">☪</div>
+                <div>
+                  <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">চন্দনাইশ দরবার শরীফ</h1>
+                  <p style="margin:2px 0 0;font-size:12px;opacity:0.75;letter-spacing:1px;">CHANDANAISH DARBAR SHARIF</p>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 18px;">
+                <p style="margin:0;font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;">ইনভয়েস নম্বর</p>
+                <p style="margin:2px 0 0;font-size:16px;font-weight:700;font-family:monospace;">${invoiceNo}</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="flex:1;background:#ffebee;border-radius:8px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#555;">মোট ব্যয়</div>
-          <div style="font-size:20px;font-weight:bold;color:#c62828;">৳${totalExpense.toLocaleString("bn-BD")}</div>
+
+        <!-- Sub header -->
+        <div style="background:#f8faf9;padding:16px 44px;border-bottom:2px solid #e8ece9;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <span style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">রিপোর্ট টাইপ</span>
+            <p style="margin:2px 0 0;font-size:14px;font-weight:600;color:#333;">${title}</p>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">তৈরির তারিখ</span>
+            <p style="margin:2px 0 0;font-size:14px;font-weight:600;color:#333;">${today}</p>
+          </div>
         </div>
-        <div style="flex:1;background:#fff8e1;border-radius:8px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#555;">ব্যালেন্স</div>
-          <div style="font-size:20px;font-weight:bold;color:${balance >= 0 ? '#2e7d32' : '#c62828'};">৳${balance.toLocaleString("bn-BD")}</div>
+
+        <div style="padding:28px 44px;">
+          <!-- Summary Cards -->
+          <div style="display:flex;gap:14px;margin-bottom:28px;">
+            <div style="flex:1;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:20px;position:relative;overflow:hidden;">
+              <div style="position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:rgba(46,125,50,0.08);"></div>
+              <p style="margin:0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;">মোট আয়</p>
+              <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:#2e7d32;">৳${totalIncome.toLocaleString("bn-BD")}</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#66bb6a;">${incomeItems.length}টি লেনদেন</p>
+            </div>
+            <div style="flex:1;background:linear-gradient(135deg,#ffebee,#ffcdd2);border-radius:14px;padding:20px;position:relative;overflow:hidden;">
+              <div style="position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:rgba(198,40,40,0.08);"></div>
+              <p style="margin:0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;">মোট ব্যয়</p>
+              <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:#c62828;">৳${totalExpense.toLocaleString("bn-BD")}</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#ef5350;">${expenseItems.length}টি লেনদেন</p>
+            </div>
+            <div style="flex:1;background:linear-gradient(135deg,#fff8e1,#ffecb3);border-radius:14px;padding:20px;position:relative;overflow:hidden;">
+              <div style="position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:rgba(183,150,30,0.08);"></div>
+              <p style="margin:0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;">নিট ব্যালেন্স</p>
+              <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:${balance >= 0 ? '#2e7d32' : '#c62828'};">৳${balance.toLocaleString("bn-BD")}</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#999;">${filteredFinances.length}টি মোট লেনদেন</p>
+            </div>
+          </div>
+
+          <!-- Category Summary -->
+          <div style="display:flex;gap:14px;margin-bottom:28px;">
+            ${[{ type: "income" as const, label: "আয়ের বিভাগ", color: "#2e7d32", bg: "#f1f8e9" }, { type: "expense" as const, label: "ব্যয়ের বিভাগ", color: "#c62828", bg: "#fef2f2" }].map(({ type, label, color, bg }) => {
+              const items = catSummary(type);
+              return `<div style="flex:1;border:1.5px solid #e8ece9;border-radius:12px;padding:16px;">
+                <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:${color};">📊 ${label}</p>
+                ${items.length > 0 ? items.map(c => `
+                  <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #eee;font-size:12px;">
+                    <span style="color:#555;">${c.name}</span>
+                    <span style="font-weight:700;color:${color};">৳${c.total.toLocaleString("bn-BD")}</span>
+                  </div>
+                `).join("") : `<p style="color:#bbb;font-size:12px;text-align:center;margin:10px 0;">তথ্য নেই</p>`}
+              </div>`;
+            }).join("")}
+          </div>
+
+          <!-- Transaction Table -->
+          <div style="border:1.5px solid #e8ece9;border-radius:12px;overflow:hidden;">
+            <div style="background:#f8faf9;padding:12px 16px;border-bottom:1.5px solid #e8ece9;">
+              <p style="margin:0;font-size:14px;font-weight:700;color:#333;">📋 বিস্তারিত লেনদেন তালিকা</p>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead>
+                <tr style="background:#f0f4f1;">
+                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">#</th>
+                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">তারিখ</th>
+                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">ধরন</th>
+                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">বিভাগ</th>
+                  <th style="padding:10px 14px;text-align:right;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">পরিমাণ</th>
+                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">বিবরণ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filteredFinances.length === 0 
+                  ? `<tr><td colspan="6" style="padding:30px;text-align:center;color:#bbb;font-size:13px;">কোনো লেনদেন পাওয়া যায়নি</td></tr>`
+                  : filteredFinances.map((f, i) => `
+                  <tr style="background:${i % 2 === 0 ? '#fff' : '#fafcfa'};">
+                    <td style="padding:10px 14px;color:#aaa;font-size:11px;border-bottom:1px solid #f0f0f0;">${String(i + 1).padStart(2, '0')}</td>
+                    <td style="padding:10px 14px;font-weight:500;border-bottom:1px solid #f0f0f0;">${new Date(f.date).toLocaleDateString("bn-BD")}</td>
+                    <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;">
+                      <span style="background:${f.type === 'income' ? '#e8f5e9' : '#ffebee'};color:${f.type === 'income' ? '#2e7d32' : '#c62828'};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;">
+                        ${f.type === "income" ? "আয়" : "ব্যয়"}
+                      </span>
+                    </td>
+                    <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;">${f.category}</td>
+                    <td style="padding:10px 14px;text-align:right;font-weight:700;font-family:'Courier New',monospace;border-bottom:1px solid #f0f0f0;color:${f.type === 'income' ? '#2e7d32' : '#c62828'};">৳${Number(f.amount).toLocaleString("bn-BD")}</td>
+                    <td style="padding:10px 14px;color:#888;border-bottom:1px solid #f0f0f0;">${f.description || "—"}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+              ${filteredFinances.length > 0 ? `
+              <tfoot>
+                <tr style="background:#f0f4f1;font-weight:700;">
+                  <td colspan="4" style="padding:12px 14px;text-align:right;font-size:13px;border-top:2px solid #dde3de;">মোট:</td>
+                  <td style="padding:12px 14px;text-align:right;font-size:14px;border-top:2px solid #dde3de;font-family:'Courier New',monospace;color:#1a5c2e;">
+                    আয় ৳${totalIncome.toLocaleString("bn-BD")} | ব্যয় ৳${totalExpense.toLocaleString("bn-BD")}
+                  </td>
+                  <td style="padding:12px 14px;border-top:2px solid #dde3de;"></td>
+                </tr>
+              </tfoot>` : ""}
+            </table>
+          </div>
         </div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead>
-          <tr style="background:#f5f5f5;">
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;">তারিখ</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;">ধরন</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;">বিভাগ</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:right;">পরিমাণ</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;">বিবরণ</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${filteredFinances.map(f => `
-            <tr>
-              <td style="padding:8px;border:1px solid #eee;">${new Date(f.date).toLocaleDateString("bn-BD")}</td>
-              <td style="padding:8px;border:1px solid #eee;">
-                <span style="background:${f.type === 'income' ? '#e8f5e9' : '#ffebee'};color:${f.type === 'income' ? '#2e7d32' : '#c62828'};padding:2px 8px;border-radius:10px;font-size:11px;">
-                  ${f.type === "income" ? "আয়" : "ব্যয়"}
-                </span>
-              </td>
-              <td style="padding:8px;border:1px solid #eee;">${f.category}</td>
-              <td style="padding:8px;border:1px solid #eee;text-align:right;font-weight:bold;">৳${Number(f.amount).toLocaleString("bn-BD")}</td>
-              <td style="padding:8px;border:1px solid #eee;color:#777;">${f.description || "-"}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-      <div style="margin-top:20px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px;">
-        চন্দনাইশ দরবার শরীফ — স্বয়ংক্রিয়ভাবে তৈরি ইনভয়েস
+
+        <!-- Footer -->
+        <div style="background:#f8faf9;padding:20px 44px;border-top:2px solid #e8ece9;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <p style="margin:0;font-size:10px;color:#aaa;">এই ইনভয়েসটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে</p>
+              <p style="margin:2px 0 0;font-size:10px;color:#ccc;">চন্দনাইশ দরবার শরীফ ম্যানেজমেন্ট সিস্টেম © ${new Date().getFullYear()}</p>
+            </div>
+            <div style="text-align:right;">
+              <p style="margin:0;font-size:10px;color:#aaa;">ইনভয়েস: ${invoiceNo}</p>
+              <p style="margin:2px 0 0;font-size:10px;color:#ccc;">পৃষ্ঠা ১</p>
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
     document.body.appendChild(container);
 
     try {
-      const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      let position = 0;
       const pageHeight = pdf.internal.pageSize.getHeight();
-      
+
       if (pdfHeight <= pageHeight) {
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       } else {
-        // Multi-page support
+        let position = 0;
         while (position < pdfHeight) {
           pdf.addImage(imgData, "PNG", 0, -position, pdfWidth, pdfHeight);
           position += pageHeight;
           if (position < pdfHeight) pdf.addPage();
         }
       }
-      
-      pdf.save(`invoice-${selectedMonth}.pdf`);
-      toast({ title: "ডাউনলোড সফল", description: "PDF ইনভয়েস ডাউনলোড হয়েছে।" });
+
+      pdf.save(`invoice-${invoiceNo}.pdf`);
+      toast({ title: "✅ ডাউনলোড সফল", description: "প্রফেশনাল PDF ইনভয়েস ডাউনলোড হয়েছে।" });
     } catch {
       toast({ title: "ত্রুটি", description: "PDF তৈরিতে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
