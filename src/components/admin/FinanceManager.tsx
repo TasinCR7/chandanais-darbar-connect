@@ -102,41 +102,96 @@ const FinanceManager = () => {
   };
 
   // PDF generation
-  const generatePDF = () => {
+  const generatePDF = async () => {
     const title = viewMode === "monthly"
       ? `আয়-ব্যয় রিপোর্ট — ${selectedMonth}`
       : `বার্ষিক আয়-ব্যয় রিপোর্ট — ${selectedMonth.slice(0, 4)}`;
 
-    const rows = filteredFinances.map(f =>
-      `${f.date} | ${f.type === "income" ? "আয়" : "ব্যয়"} | ${f.category} | ৳${Number(f.amount).toLocaleString("bn-BD")} | ${f.description || "-"}`
-    );
+    // Create a hidden container for the invoice HTML
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;left:-9999px;top:0;width:800px;padding:40px;background:#fff;font-family:sans-serif;color:#111;";
+    
+    container.innerHTML = `
+      <div style="text-align:center;margin-bottom:24px;">
+        <h1 style="font-size:22px;margin:0;color:#1a5c2e;">☪ চন্দনাইশ দরবার শরীফ</h1>
+        <p style="font-size:13px;color:#666;margin:4px 0 0;">${title}</p>
+        <p style="font-size:11px;color:#999;margin:2px 0 0;">তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}</p>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;">
+        <div style="flex:1;background:#e8f5e9;border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:#555;">মোট আয়</div>
+          <div style="font-size:20px;font-weight:bold;color:#2e7d32;">৳${totalIncome.toLocaleString("bn-BD")}</div>
+        </div>
+        <div style="flex:1;background:#ffebee;border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:#555;">মোট ব্যয়</div>
+          <div style="font-size:20px;font-weight:bold;color:#c62828;">৳${totalExpense.toLocaleString("bn-BD")}</div>
+        </div>
+        <div style="flex:1;background:#fff8e1;border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:#555;">ব্যালেন্স</div>
+          <div style="font-size:20px;font-weight:bold;color:${balance >= 0 ? '#2e7d32' : '#c62828'};">৳${balance.toLocaleString("bn-BD")}</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:#f5f5f5;">
+            <th style="padding:8px;border:1px solid #ddd;text-align:left;">তারিখ</th>
+            <th style="padding:8px;border:1px solid #ddd;text-align:left;">ধরন</th>
+            <th style="padding:8px;border:1px solid #ddd;text-align:left;">বিভাগ</th>
+            <th style="padding:8px;border:1px solid #ddd;text-align:right;">পরিমাণ</th>
+            <th style="padding:8px;border:1px solid #ddd;text-align:left;">বিবরণ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredFinances.map(f => `
+            <tr>
+              <td style="padding:8px;border:1px solid #eee;">${new Date(f.date).toLocaleDateString("bn-BD")}</td>
+              <td style="padding:8px;border:1px solid #eee;">
+                <span style="background:${f.type === 'income' ? '#e8f5e9' : '#ffebee'};color:${f.type === 'income' ? '#2e7d32' : '#c62828'};padding:2px 8px;border-radius:10px;font-size:11px;">
+                  ${f.type === "income" ? "আয়" : "ব্যয়"}
+                </span>
+              </td>
+              <td style="padding:8px;border:1px solid #eee;">${f.category}</td>
+              <td style="padding:8px;border:1px solid #eee;text-align:right;font-weight:bold;">৳${Number(f.amount).toLocaleString("bn-BD")}</td>
+              <td style="padding:8px;border:1px solid #eee;color:#777;">${f.description || "-"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <div style="margin-top:20px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px;">
+        চন্দনাইশ দরবার শরীফ — স্বয়ংক্রিয়ভাবে তৈরি ইনভয়েস
+      </div>
+    `;
 
-    const content = [
-      "চন্দনাইশ দরবার শরীফ",
-      title,
-      "=".repeat(60),
-      "",
-      `মোট আয়: ৳${totalIncome.toLocaleString("bn-BD")}`,
-      `মোট ব্যয়: ৳${totalExpense.toLocaleString("bn-BD")}`,
-      `ব্যালেন্স: ৳${balance.toLocaleString("bn-BD")}`,
-      "",
-      "=".repeat(60),
-      "তারিখ | ধরন | বিভাগ | পরিমাণ | বিবরণ",
-      "-".repeat(60),
-      ...rows,
-      "",
-      "-".repeat(60),
-      `তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}`,
-    ].join("\n");
+    document.body.appendChild(container);
 
-    const blob = new Blob(["\uFEFF" + content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoice-${selectedMonth}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "ডাউনলোড সফল", description: "ইনভয়েস ফাইল ডাউনলোড হয়েছে।" });
+    try {
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      let position = 0;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      if (pdfHeight <= pageHeight) {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      } else {
+        // Multi-page support
+        while (position < pdfHeight) {
+          pdf.addImage(imgData, "PNG", 0, -position, pdfWidth, pdfHeight);
+          position += pageHeight;
+          if (position < pdfHeight) pdf.addPage();
+        }
+      }
+      
+      pdf.save(`invoice-${selectedMonth}.pdf`);
+      toast({ title: "ডাউনলোড সফল", description: "PDF ইনভয়েস ডাউনলোড হয়েছে।" });
+    } catch {
+      toast({ title: "ত্রুটি", description: "PDF তৈরিতে সমস্যা হয়েছে।", variant: "destructive" });
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
   return (
