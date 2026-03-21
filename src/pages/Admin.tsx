@@ -10,7 +10,7 @@ import AdminLogin from "@/components/admin/AdminLogin";
 import NoticeManager from "@/components/admin/NoticeManager";
 import GalleryManager from "@/components/admin/GalleryManager";
 import SubmissionManager from "@/components/admin/SubmissionManager";
-
+import FinanceManager from "@/components/admin/FinanceManager";
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
