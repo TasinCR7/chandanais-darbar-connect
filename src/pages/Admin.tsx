@@ -335,6 +335,10 @@ const Admin = () => {
                 onDelete={deleteGalleryItem}
              />
           </TabsContent>
+
+          <TabsContent value="finance">
+             <FinanceManager />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
