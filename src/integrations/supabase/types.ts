@@ -21,7 +21,6 @@ export type Database = {
           is_active: boolean
           message: string | null
           title: string
-          type: "scrolling" | "detailed"
           updated_at: string
         }
         Insert: {
@@ -30,7 +29,6 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           title: string
-          type: "scrolling" | "detailed"
           updated_at?: string
         }
         Update: {
@@ -39,14 +37,12 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           title?: string
-          type?: "scrolling" | "detailed"
           updated_at?: string
         }
         Relationships: []
       }
       submissions: {
         Row: {
-          address: string | null
           created_at: string
           details: string
           id: string
@@ -59,7 +55,6 @@ export type Database = {
           type: string
         }
         Insert: {
-          address?: string | null
           created_at?: string
           details: string
           id?: string
@@ -72,7 +67,6 @@ export type Database = {
           type: string
         }
         Update: {
-          address?: string | null
           created_at?: string
           details?: string
           id?: string
@@ -83,30 +77,6 @@ export type Database = {
           reply?: string | null
           subject?: string
           type?: string
-        }
-        Relationships: []
-      }
-      gallery: {
-        Row: {
-          id: string
-          url: string
-          caption: string | null
-          category: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          url: string
-          caption?: string | null
-          category: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          url?: string
-          caption?: string | null
-          category?: string
-          created_at?: string
         }
         Relationships: []
       }
