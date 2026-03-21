@@ -431,10 +431,19 @@ const FinanceManager = () => {
         </div>
       </div>
 
-      {/* Add Form */}
-      <div className="bg-card border border-gold/20 rounded-2xl p-6">
+      {/* Add/Edit Form */}
+      <div className={`bg-card border rounded-2xl p-6 ${editingId ? "border-amber-500/40" : "border-gold/20"}`}>
         <h3 className="text-lg font-heading font-bold text-foreground mb-4 flex items-center gap-2">
-          <Plus size={20} className="text-gold" /> নতুন এন্ট্রি যোগ করুন
+          {editingId ? (
+            <>
+              <Pencil size={20} className="text-amber-500" /> এন্ট্রি সম্পাদনা করুন
+              <button onClick={resetForm} className="ml-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 bg-muted px-3 py-1.5 rounded-lg transition-colors">
+                <X size={14} /> বাতিল
+              </button>
+            </>
+          ) : (
+            <><Plus size={20} className="text-gold" /> নতুন এন্ট্রি যোগ করুন</>
+          )}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <select value={formType} onChange={e => { setFormType(e.target.value as "income" | "expense"); setCategory(""); }}
@@ -454,8 +463,8 @@ const FinanceManager = () => {
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
             className="bg-background border border-gold/20 rounded-xl px-3 py-2.5 text-sm" />
           <button onClick={addFinance} disabled={loading}
-            className="bg-gold-gradient text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50">
-            {loading ? "যোগ হচ্ছে..." : "যোগ করুন"}
+            className={`rounded-xl px-4 py-2.5 text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 ${editingId ? "bg-amber-500 text-white" : "bg-gold-gradient text-primary-foreground"}`}>
+            {loading ? "প্রক্রিয়া..." : editingId ? "আপডেট করুন" : "যোগ করুন"}
           </button>
         </div>
         <input type="text" placeholder="বিবরণ (ঐচ্ছিক)" value={description} onChange={e => setDescription(e.target.value)}
