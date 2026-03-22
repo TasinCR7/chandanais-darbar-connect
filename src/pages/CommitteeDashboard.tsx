@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, LogOut, MessageSquare, ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, LogOut, MessageSquare, ThumbsUp, ThumbsDown, Vote, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,8 @@ import PremiumLoader from "@/components/PremiumLoader";
 export default function CommitteeDashboard() {
   const [member, setMember] = useState<{ id: string; name: string; designation: string } | null>(null);
   const [topics, setTopics] = useState<any[]>([]);
-  const [userVotes, setUserVotes] = useState<Record<string, string>>({});
+  const [votesData, setVotesData] = useState<any[]>([]);
+  const [commentsList, setCommentsList] = useState<any[]>([]);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -35,26 +36,17 @@ export default function CommitteeDashboard() {
       }
       setMember(memberData);
 
-      // 2. Load Active Voting Topics
-      const { data: topicsData } = await supabase
-        .from("vote_topics")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
+      // 2. Load Active Voting Topics, All Votes, and All Comments
+      const [topicsRes, votesRes, commentsRes] = await Promise.all([
+        supabase.from("vote_topics").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("votes").select("*"),
+        supabase.from("committee_comments").select("*").order("created_at", { ascending: false }),
+      ]);
         
-      if (topicsData) setTopics(topicsData);
+      if (topicsRes.data) setTopics(topicsRes.data);
+      if (votesRes.data) setVotesData(votesRes.data);
+      if (commentsRes.data) setCommentsList(commentsRes.data);
 
-      // 3. Load User's Past Votes
-      const { data: votesData } = await supabase
-        .from("votes")
-        .select("topic_id, vote")
-        .eq("user_id", authId);
-        
-      if (votesData) {
-        const votesMap: Record<string, string> = {};
-        votesData.forEach(v => votesMap[v.topic_id] = v.vote);
-        setUserVotes(votesMap);
-      }
     } catch (err) {
       console.error(err);
       toast({ title: "ত্রুটি", description: "ড্যাশবোর্ড লোড করতে সমস্যা হয়েছে।", variant: "destructive" });
@@ -80,15 +72,21 @@ export default function CommitteeDashboard() {
   const castVote = async (topicId: string, choice: string) => {
     if (!member) return;
     try {
-      const { error } = await supabase.from("votes").insert({
-        topic_id: topicId,
-        user_id: member.id,
-        vote: choice
-      });
-      if (error) throw error;
+      const existing = votesData.find(v => v.topic_id === topicId && v.user_id === member.id);
       
-      setUserVotes(prev => ({ ...prev, [topicId]: choice }));
+      if (existing) {
+        // Update vote
+        const { error } = await supabase.from("votes").update({ vote: choice }).eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        // Insert vote
+        const { error } = await supabase.from("votes").insert({ topic_id: topicId, user_id: member.id, vote: choice });
+        if (error) throw error;
+      }
+      
       toast({ title: "ভোট গ্রহণ করা হয়েছে", description: "আপনার মূল্যবান মতামতের জন্য ধন্যবাদ।" });
+      const authId = localStorage.getItem("committee_auth");
+      if (authId) loadDashboard(authId);
     } catch (err: any) {
       toast({ title: "ভোট গ্রহণ ব্যর্থ", description: err.message, variant: "destructive" });
     }
@@ -106,6 +104,8 @@ export default function CommitteeDashboard() {
       
       toast({ title: "মন্তব্য পাঠানো হয়েছে", description: "আপনার মতামতের জন্য অশেষ ধন্যবাদ।" });
       setComment("");
+      const authId = localStorage.getItem("committee_auth");
+      if (authId) loadDashboard(authId);
     } catch (err: any) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
     } finally {
@@ -113,10 +113,31 @@ export default function CommitteeDashboard() {
     }
   };
 
+  const handleDeleteComment = async (id: string) => {
+    try {
+      await supabase.from("committee_comments").delete().eq("id", id);
+      toast({ title: "মুছে ফেলা হয়েছে" });
+      const authId = localStorage.getItem("committee_auth");
+      if (authId) loadDashboard(authId);
+    } catch (err: any) {
+      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const getVoteCounts = (topicId: string) => {
+    const topicVotes = votesData.filter(v => v.topic_id === topicId);
+    return {
+      satisfied: topicVotes.filter(v => v.vote === "সন্তুষ্ট" || v.vote === "satisfied").length,
+      unsatisfied: topicVotes.filter(v => v.vote === "অসন্তুষ্ট" || v.vote === "unsatisfied").length,
+      total: topicVotes.length,
+      myVote: topicVotes.find(v => v.user_id === member?.id)?.vote || null,
+    };
+  };
+
   if (loading) return <PremiumLoader />;
 
   return (
-    <div className="min-h-screen py-24 islamic-pattern font-bengali">
+    <div className="min-h-screen py-24 font-bengali">
       <SEO title="কমিটি ড্যাশবোর্ড" description="কমিটি মেম্বারদের প্রাইভেট পোর্টাল" />
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
         
@@ -152,16 +173,22 @@ export default function CommitteeDashboard() {
           {/* Voting Area */}
           <div className="md:col-span-2 space-y-6">
             <div className="flex items-center justify-between mb-2 px-2">
-               <h2 className="text-xl font-heading font-bold text-gold">কাজের মূল্যায়ন ও ভোটিং</h2>
+               <h2 className="text-xl font-heading font-bold text-gold flex items-center gap-2">
+                 <Vote size={22} /> কাজের মূল্যায়ন ও ভোটিং
+               </h2>
             </div>
             
             {topics.length === 0 ? (
               <div className="bg-card/40 backdrop-blur-md border border-gold/10 rounded-3xl p-10 text-center">
+                <Vote className="w-12 h-12 text-gold/20 mx-auto mb-3" />
                 <p className="text-muted-foreground">বর্তমানে কোনো ভোটিং বিষয় চালু নেই।</p>
               </div>
             ) : (
               topics.map(topic => {
-                const hasVoted = userVotes[topic.id];
+                const counts = getVoteCounts(topic.id);
+                const totalVotes = counts.satisfied + counts.unsatisfied;
+                const satisfiedPct = totalVotes > 0 ? Math.round((counts.satisfied / totalVotes) * 100) : 0;
+                
                 return (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
@@ -183,29 +210,45 @@ export default function CommitteeDashboard() {
                       </p>
                     )}
 
-                    {hasVoted ? (
-                      <div className="mt-4 p-4 rounded-xl bg-gold/5 border border-gold/20 flex flex-col items-center justify-center gap-2">
-                        <CheckCircle2 size={24} className="text-green-500" />
-                        <p className="text-sm font-bold text-gold/80">
-                          আপনি ইতিমধ্যে "<span className="text-cream">{hasVoted}</span>" ভোট দিয়েছেন।
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-4 mt-6">
-                        <Button 
-                          onClick={() => castVote(topic.id, "সন্তুষ্ট")}
-                          className="h-14 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 border border-emerald-500/20 shadow-lg shadow-emerald-500/5 font-bold text-lg"
-                        >
-                          <ThumbsUp size={20} className="mr-2" /> সন্তুষ্ট
-                        </Button>
-                        <Button 
-                          onClick={() => castVote(topic.id, "অসন্তুষ্ট")}
-                          className="h-14 rounded-xl bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/20 shadow-lg shadow-red-500/5 font-bold text-lg"
-                        >
-                          <ThumbsDown size={20} className="mr-2 mt-1" /> অসন্তুষ্ট
-                        </Button>
+                    {/* Progress bar */}
+                    {totalVotes > 0 && (
+                      <div className="my-4">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1.5 font-bold">
+                          <span className="text-emerald-400">সন্তুষ্ট: {counts.satisfied}</span>
+                          <span className="text-red-400">অসন্তুষ্ট: {counts.unsatisfied}</span>
+                        </div>
+                        <div className="h-2.5 bg-black/40 rounded-full overflow-hidden border border-gold/10">
+                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500 shadow-lg shadow-emerald-500/20" style={{ width: `${satisfiedPct}%` }} />
+                        </div>
+                        <p className="text-[10px] text-gold/40 mt-1 uppercase tracking-widest text-center font-bold">সর্বমোট ভোট: {totalVotes}</p>
                       </div>
                     )}
+
+                    {/* Vote buttons */}
+                    <div className="flex gap-3 mt-6 relative z-10">
+                      <Button
+                        onClick={() => castVote(topic.id, "সন্তুষ্ট")}
+                        variant={counts.myVote === "সন্তুষ্ট" || counts.myVote === "satisfied" ? "default" : "outline"}
+                        className={`flex-1 rounded-xl h-11 font-bold ${
+                          counts.myVote === "সন্তুষ্ট" || counts.myVote === "satisfied" 
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-500/20" 
+                            : "border-emerald-600/30 text-emerald-400 hover:bg-emerald-500/10"
+                        }`}
+                      >
+                        <ThumbsUp size={16} className="mr-2" /> সন্তুষ্ট
+                      </Button>
+                      <Button
+                        onClick={() => castVote(topic.id, "অসন্তুষ্ট")}
+                        variant={counts.myVote === "অসন্তুষ্ট" || counts.myVote === "unsatisfied" ? "default" : "outline"}
+                        className={`flex-1 rounded-xl h-11 font-bold ${
+                          counts.myVote === "অসন্তুষ্ট" || counts.myVote === "unsatisfied" 
+                            ? "bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-500/20" 
+                            : "border-red-600/30 text-red-400 hover:bg-red-500/10"
+                        }`}
+                      >
+                        <ThumbsDown size={16} className="mr-2 mt-1" /> অসন্তুষ্ট
+                      </Button>
+                    </div>
                   </motion.div>
                 );
               })
@@ -214,11 +257,12 @@ export default function CommitteeDashboard() {
 
           {/* Comment / Suggestion Area */}
           <div className="space-y-6">
-            <h2 className="text-xl font-heading font-bold text-gold px-2">মতামত ও পরামর্শ</h2>
+            <h2 className="text-xl font-heading font-bold text-gold px-2 flex items-center gap-2">
+              <MessageSquare size={22} /> মতামত ও প্রস্তাবনা
+            </h2>
+            
+            {/* New Comment */}
             <div className="bg-card/40 backdrop-blur-md border border-gold/20 rounded-3xl p-6 shadow-xl sticky top-24">
-              <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center mb-4">
-                <MessageSquare size={20} className="text-gold" />
-              </div>
               <h3 className="text-base font-bold text-cream mb-2">আপনার মন্তব্য লিখুন</h3>
               <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
                 দরবার শরীফের যেকোনো বিষয়ে আপনার ব্যক্তিগত মতামত, অভিযোগ বা পরামর্শ এডমিনকে জানাতে পারেন।
@@ -227,18 +271,47 @@ export default function CommitteeDashboard() {
               <Textarea 
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="এখানে আপনার মতামত বিস্তারিত লিখুন..."
-                className="min-h-[160px] bg-black/40 border-gold/20 rounded-xl mb-4 focus:border-gold/50 text-cream resize-none"
+                placeholder="এখানে বিস্তারিত লিখুন..."
+                className="min-h-[140px] bg-black/40 border-gold/20 rounded-xl mb-4 focus:border-gold/50 text-cream resize-none"
               />
               
               <Button 
                 onClick={submitComment}
                 disabled={submitLoading || !comment.trim()}
-                className="w-full h-12 bg-gold-gradient text-primary-foreground font-bold rounded-xl gold-glow-hover"
+                className="w-full h-11 bg-gold-gradient text-primary-foreground font-bold rounded-xl gold-glow-hover"
               >
-                {submitLoading ? "পাঠানো হচ্ছে..." : "মতামত জমা দিন"}
+                {submitLoading ? "পাঠানো হচ্ছে..." : (
+                  <>
+                    <Send size={16} className="mr-2" /> জমা দিন
+                  </>
+                )}
               </Button>
             </div>
+
+            {/* Current Comments */}
+            {commentsList.length > 0 && (
+              <div className="space-y-3">
+                {commentsList.map(c => (
+                  <motion.div key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="bg-card/30 border border-gold/10 rounded-xl p-4 shadow-md">
+                    <p className="text-cream/90 text-sm leading-relaxed">{c.message}</p>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-[10px] text-gold/40 uppercase tracking-widest font-bold">
+                        {new Date(c.created_at).toLocaleDateString("bn-BD")}
+                      </span>
+                      {c.user_id === member?.id && (
+                        <button 
+                          onClick={() => handleDeleteComment(c.id)} 
+                          className="text-[10px] text-destructive/60 hover:text-destructive flex items-center gap-1 font-bold uppercase transition-colors"
+                        >
+                          <Trash2 size={12} /> মুছুন
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>
