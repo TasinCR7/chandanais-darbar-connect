@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, GripVertical, Eye, EyeOff } from "lucide-react";
+import { compressImage } from "@/utils/imageCompression";
+
 
 interface Member {
   id: string;
@@ -64,9 +66,10 @@ const CommitteeManager = () => {
 
       if (imageFile) {
         setUploading(true);
-        const ext = imageFile.name.split(".").pop();
+        const compressedFile = await compressImage(imageFile);
+        const ext = compressedFile.name.split(".").pop() || "webp";
         const path = `committee/${Date.now()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage.from("gallery").upload(path, imageFile);
+        const { error: uploadErr } = await supabase.storage.from("gallery").upload(path, compressedFile);
         if (uploadErr) throw uploadErr;
         const { data: { publicUrl } } = supabase.storage.from("gallery").getPublicUrl(path);
         imageUrl = publicUrl;

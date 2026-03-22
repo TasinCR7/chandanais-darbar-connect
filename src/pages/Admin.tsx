@@ -4,6 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { compressImage } from "@/utils/imageCompression";
+
 
 // Lazy-loaded admin sub-modules
 import AdminLogin from "@/components/admin/AdminLogin";
@@ -220,14 +222,16 @@ const Admin = () => {
 
   const uploadGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const rawFile = e.target.files[0];
 
     setUploading(true);
     try {
-      const { error: uploadError } = await supabase.storage.from("gallery").upload(filePath, file);
+      const compressedFile = await compressImage(rawFile);
+      const fileExt = compressedFile.name.split(".").pop() || "webp";
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from("gallery").upload(filePath, compressedFile);
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from("gallery").getPublicUrl(filePath);
