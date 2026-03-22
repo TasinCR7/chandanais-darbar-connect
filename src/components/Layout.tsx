@@ -17,6 +17,7 @@ const navLinks = [
   { path: "/doa", label: "দোয়া আবেদন" },
   { path: "/qna", label: "প্রশ্ন ও অভিযোগ" },
   { path: "/contact", label: "যোগাযোগ" },
+  { path: "/committee-login", label: "কমিটি লগইন" },
 ];
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
