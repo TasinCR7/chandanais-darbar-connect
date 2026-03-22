@@ -148,7 +148,6 @@ const FinanceManager = () => {
     const incomeItems = filteredFinances.filter(f => f.type === "income");
     const expenseItems = filteredFinances.filter(f => f.type === "expense");
 
-    // Category-wise summary
     const catSummary = (type: "income" | "expense") => {
       const cats = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
       return cats
@@ -156,124 +155,174 @@ const FinanceManager = () => {
         .filter(c => c.total > 0);
     };
 
+    const incomeCats = catSummary("income");
+    const expenseCats = catSummary("expense");
+
     container.innerHTML = `
-      <div style="padding:0;">
-        <!-- Header with gradient -->
-        <div style="background:linear-gradient(135deg, #0d4a2e 0%, #1a7a4a 50%, #0d4a2e 100%);padding:36px 44px;color:white;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:-30px;right:-30px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
-          <div style="position:absolute;bottom:-40px;left:40%;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.03);"></div>
+      <div style="padding:0;position:relative;">
+        <!-- Watermark -->
+        <div style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:100px;font-weight:900;color:rgba(10,61,38,0.02);pointer-events:none;z-index:0;white-space:nowrap;letter-spacing:10px;">চন্দনাইশ দরবার</div>
+
+        <!-- Top accent -->
+        <div style="height:6px;background:linear-gradient(90deg,#0a3d26,#b8860b,#ffd700,#b8860b,#0a3d26);"></div>
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#071f15 0%,#0a3d26 30%,#145c3a 60%,#0d4a2e 100%);padding:44px 48px 38px;color:white;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;border:1px solid rgba(255,215,0,0.06);"></div>
+          <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;border:1px solid rgba(255,215,0,0.04);"></div>
+          <div style="position:absolute;bottom:-80px;left:25%;width:300px;height:300px;border-radius:50%;border:1px solid rgba(255,255,255,0.02);"></div>
+          <!-- Islamic pattern dots -->
+          <div style="position:absolute;top:12px;left:48px;display:flex;gap:6px;">
+            ${Array.from({length:8}).map(() => `<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,215,0,0.15);"></div>`).join("")}
+          </div>
+
           <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;">
             <div>
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-                <div style="width:44px;height:44px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">☪</div>
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
+                <div style="width:56px;height:56px;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(184,134,11,0.1));border:2px solid rgba(255,215,0,0.25);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">☪</div>
                 <div>
-                  <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-0.5px;">চন্দনাইশ দরবার শরীফ</h1>
-                  <p style="margin:2px 0 0;font-size:12px;opacity:0.75;letter-spacing:1px;">CHANDANAISH DARBAR SHARIF</p>
+                  <h1 style="margin:0;font-size:28px;font-weight:900;letter-spacing:-0.5px;text-shadow:0 2px 8px rgba(0,0,0,0.3);">চন্দনাইশ দরবার শরীফ</h1>
+                  <p style="margin:4px 0 0;font-size:10px;opacity:0.5;letter-spacing:3px;font-weight:600;text-transform:uppercase;">Chandanaish Darbar Sharif</p>
                 </div>
               </div>
+              <p style="margin:6px 0 0 72px;font-size:12px;color:rgba(255,215,0,0.6);font-style:italic;font-weight:500;">সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া</p>
             </div>
             <div style="text-align:right;">
-              <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 18px;">
-                <p style="margin:0;font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;">ইনভয়েস নম্বর</p>
-                <p style="margin:2px 0 0;font-size:16px;font-weight:700;font-family:monospace;">${invoiceNo}</p>
+              <div style="background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(184,134,11,0.06));border:1.5px solid rgba(255,215,0,0.2);border-radius:14px;padding:16px 22px;backdrop-filter:blur(10px);">
+                <p style="margin:0;font-size:9px;opacity:0.5;text-transform:uppercase;letter-spacing:2px;font-weight:700;">ইনভয়েস নং</p>
+                <p style="margin:6px 0 2px;font-size:18px;font-weight:900;font-family:'Courier New',monospace;color:#ffd700;letter-spacing:1.5px;">${invoiceNo}</p>
+                <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);margin:6px 0;"></div>
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.5);font-weight:500;">${today}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Sub header -->
-        <div style="background:#f8faf9;padding:16px 44px;border-bottom:2px solid #e8ece9;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <span style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">রিপোর্ট টাইপ</span>
-            <p style="margin:2px 0 0;font-size:14px;font-weight:600;color:#333;">${title}</p>
+        <!-- Report type strip -->
+        <div style="background:linear-gradient(180deg,#f0f5f2,#f8faf9);padding:16px 48px;border-bottom:1.5px solid #dde8e0;display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;gap:36px;align-items:center;">
+            <div>
+              <span style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:2px;font-weight:700;">রিপোর্ট</span>
+              <p style="margin:2px 0 0;font-size:15px;font-weight:800;color:#0a3d26;">${title}</p>
+            </div>
+            <div style="width:1px;height:30px;background:#dde8e0;"></div>
+            <div>
+              <span style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:2px;font-weight:700;">মোট এন্ট্রি</span>
+              <p style="margin:2px 0 0;font-size:15px;font-weight:800;color:#0a3d26;">${filteredFinances.length}টি</p>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <span style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">তৈরির তারিখ</span>
-            <p style="margin:2px 0 0;font-size:14px;font-weight:600;color:#333;">${today}</p>
-          </div>
+          <div style="background:linear-gradient(135deg,#0a3d26,#145c3a);color:white;padding:6px 16px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">আর্থিক প্রতিবেদন</div>
         </div>
 
-        <div style="padding:28px 44px;">
+        <div style="padding:32px 48px;position:relative;z-index:1;">
           <!-- Summary Cards -->
-          <div style="display:flex;gap:14px;margin-bottom:28px;">
-            <div style="flex:1;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:14px;padding:20px;position:relative;overflow:hidden;">
-              <div style="position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:rgba(46,125,50,0.08);"></div>
-              <p style="margin:0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;">মোট আয়</p>
-              <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:#2e7d32;">৳${totalIncome.toLocaleString("bn-BD")}</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#66bb6a;">${incomeItems.length}টি লেনদেন</p>
+          <div style="display:flex;gap:14px;margin-bottom:30px;">
+            <div style="flex:1;background:linear-gradient(160deg,#f0faf3 0%,#dff0e4 100%);border:1.5px solid #b8dcc3;border-radius:18px;padding:24px 22px;position:relative;overflow:hidden;">
+              <div style="position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:rgba(27,94,32,0.04);"></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="width:8px;height:8px;border-radius:50%;background:#4caf50;box-shadow:0 0 6px rgba(76,175,80,0.4);"></div>
+                <p style="margin:0;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:2px;font-weight:700;">মোট আয়</p>
+              </div>
+              <p style="margin:0;font-size:30px;font-weight:900;color:#1b5e20;letter-spacing:-1px;line-height:1;">৳${totalIncome.toLocaleString("bn-BD")}</p>
+              <p style="margin:8px 0 0;font-size:11px;color:#66bb6a;font-weight:600;">${incomeItems.length}টি লেনদেন</p>
             </div>
-            <div style="flex:1;background:linear-gradient(135deg,#ffebee,#ffcdd2);border-radius:14px;padding:20px;position:relative;overflow:hidden;">
-              <div style="position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:rgba(198,40,40,0.08);"></div>
-              <p style="margin:0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;">মোট ব্যয়</p>
-              <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:#c62828;">৳${totalExpense.toLocaleString("bn-BD")}</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#ef5350;">${expenseItems.length}টি লেনদেন</p>
+            <div style="flex:1;background:linear-gradient(160deg,#fef5f5 0%,#fde5e5 100%);border:1.5px solid #f0bfbf;border-radius:18px;padding:24px 22px;position:relative;overflow:hidden;">
+              <div style="position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:rgba(183,28,28,0.04);"></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="width:8px;height:8px;border-radius:50%;background:#ef5350;box-shadow:0 0 6px rgba(239,83,80,0.4);"></div>
+                <p style="margin:0;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:2px;font-weight:700;">মোট ব্যয়</p>
+              </div>
+              <p style="margin:0;font-size:30px;font-weight:900;color:#b71c1c;letter-spacing:-1px;line-height:1;">৳${totalExpense.toLocaleString("bn-BD")}</p>
+              <p style="margin:8px 0 0;font-size:11px;color:#ef5350;font-weight:600;">${expenseItems.length}টি লেনদেন</p>
             </div>
-            <div style="flex:1;background:linear-gradient(135deg,#fff8e1,#ffecb3);border-radius:14px;padding:20px;position:relative;overflow:hidden;">
-              <div style="position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:rgba(183,150,30,0.08);"></div>
-              <p style="margin:0;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:600;">নিট ব্যালেন্স</p>
-              <p style="margin:6px 0 0;font-size:26px;font-weight:800;color:${balance >= 0 ? '#2e7d32' : '#c62828'};">৳${balance.toLocaleString("bn-BD")}</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#999;">${filteredFinances.length}টি মোট লেনদেন</p>
+            <div style="flex:1;background:linear-gradient(160deg,#fefaf0 0%,#fdf0d5 100%);border:1.5px solid #e8d5a0;border-radius:18px;padding:24px 22px;position:relative;overflow:hidden;">
+              <div style="position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:rgba(184,134,11,0.04);"></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="width:8px;height:8px;border-radius:50%;background:#daa520;box-shadow:0 0 6px rgba(218,165,32,0.4);"></div>
+                <p style="margin:0;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:2px;font-weight:700;">নিট ব্যালেন্স</p>
+              </div>
+              <p style="margin:0;font-size:30px;font-weight:900;color:${balance >= 0 ? '#1b5e20' : '#b71c1c'};letter-spacing:-1px;line-height:1;">৳${balance.toLocaleString("bn-BD")}</p>
+              <p style="margin:8px 0 0;font-size:11px;color:#999;font-weight:600;">আয় − ব্যয়</p>
             </div>
           </div>
 
           <!-- Category Summary -->
-          <div style="display:flex;gap:14px;margin-bottom:28px;">
-            ${[{ type: "income" as const, label: "আয়ের বিভাগ", color: "#2e7d32", bg: "#f1f8e9" }, { type: "expense" as const, label: "ব্যয়ের বিভাগ", color: "#c62828", bg: "#fef2f2" }].map(({ type, label, color, bg }) => {
-              const items = catSummary(type);
-              return `<div style="flex:1;border:1.5px solid #e8ece9;border-radius:12px;padding:16px;">
-                <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:${color};">📊 ${label}</p>
-                ${items.length > 0 ? items.map(c => `
-                  <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #eee;font-size:12px;">
-                    <span style="color:#555;">${c.name}</span>
-                    <span style="font-weight:700;color:${color};">৳${c.total.toLocaleString("bn-BD")}</span>
+          <div style="display:flex;gap:14px;margin-bottom:30px;">
+            <div style="flex:1;border:1.5px solid #c8e6c9;border-radius:16px;overflow:hidden;">
+              <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:14px 20px;">
+                <p style="margin:0;font-size:13px;font-weight:800;color:white;letter-spacing:0.3px;">আয়ের বিভাগ</p>
+              </div>
+              <div style="padding:8px 20px 14px;">
+                ${incomeCats.length > 0 ? incomeCats.map((c, i) => `
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;${i < incomeCats.length - 1 ? 'border-bottom:1px solid #e8f5e9;' : ''}">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="width:6px;height:6px;border-radius:50%;background:#4caf50;"></div>
+                      <span style="color:#444;font-size:12px;font-weight:600;">${c.name}</span>
+                    </div>
+                    <span style="font-weight:800;color:#1b5e20;font-size:13px;font-family:'Courier New',monospace;">৳${c.total.toLocaleString("bn-BD")}</span>
                   </div>
-                `).join("") : `<p style="color:#bbb;font-size:12px;text-align:center;margin:10px 0;">তথ্য নেই</p>`}
-              </div>`;
-            }).join("")}
+                `).join("") : `<p style="color:#ccc;font-size:12px;text-align:center;margin:18px 0;">কোনো তথ্য নেই</p>`}
+              </div>
+            </div>
+            <div style="flex:1;border:1.5px solid #ffcdd2;border-radius:16px;overflow:hidden;">
+              <div style="background:linear-gradient(135deg,#b71c1c,#c62828);padding:14px 20px;">
+                <p style="margin:0;font-size:13px;font-weight:800;color:white;letter-spacing:0.3px;">ব্যয়ের বিভাগ</p>
+              </div>
+              <div style="padding:8px 20px 14px;">
+                ${expenseCats.length > 0 ? expenseCats.map((c, i) => `
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;${i < expenseCats.length - 1 ? 'border-bottom:1px solid #ffebee;' : ''}">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="width:6px;height:6px;border-radius:50%;background:#ef5350;"></div>
+                      <span style="color:#444;font-size:12px;font-weight:600;">${c.name}</span>
+                    </div>
+                    <span style="font-weight:800;color:#b71c1c;font-size:13px;font-family:'Courier New',monospace;">৳${c.total.toLocaleString("bn-BD")}</span>
+                  </div>
+                `).join("") : `<p style="color:#ccc;font-size:12px;text-align:center;margin:18px 0;">কোনো তথ্য নেই</p>`}
+              </div>
+            </div>
           </div>
 
           <!-- Transaction Table -->
-          <div style="border:1.5px solid #e8ece9;border-radius:12px;overflow:hidden;">
-            <div style="background:#f8faf9;padding:12px 16px;border-bottom:1.5px solid #e8ece9;">
-              <p style="margin:0;font-size:14px;font-weight:700;color:#333;">📋 বিস্তারিত লেনদেন তালিকা</p>
+          <div style="border:1.5px solid #d0ddd4;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+            <div style="background:linear-gradient(135deg,#071f15,#0a3d26,#145c3a);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;">
+              <p style="margin:0;font-size:15px;font-weight:800;color:white;">বিস্তারিত লেনদেন তালিকা</p>
+              <span style="font-size:10px;color:rgba(255,215,0,0.6);font-weight:600;">${filteredFinances.length}টি রেকর্ড</span>
             </div>
             <table style="width:100%;border-collapse:collapse;font-size:12px;">
               <thead>
-                <tr style="background:#f0f4f1;">
-                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">#</th>
-                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">তারিখ</th>
-                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">ধরন</th>
-                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">বিভাগ</th>
-                  <th style="padding:10px 14px;text-align:right;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">পরিমাণ</th>
-                  <th style="padding:10px 14px;text-align:left;font-weight:700;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #dde3de;">বিবরণ</th>
+                <tr style="background:linear-gradient(180deg,#f4f7f5,#edf2ee);">
+                  <th style="padding:12px 18px;text-align:left;font-weight:800;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #c8d6cc;">#</th>
+                  <th style="padding:12px 18px;text-align:left;font-weight:800;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #c8d6cc;">তারিখ</th>
+                  <th style="padding:12px 18px;text-align:left;font-weight:800;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #c8d6cc;">ধরন</th>
+                  <th style="padding:12px 18px;text-align:left;font-weight:800;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #c8d6cc;">বিভাগ</th>
+                  <th style="padding:12px 18px;text-align:right;font-weight:800;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #c8d6cc;">পরিমাণ</th>
+                  <th style="padding:12px 18px;text-align:left;font-weight:800;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #c8d6cc;">বিবরণ</th>
                 </tr>
               </thead>
               <tbody>
                 ${filteredFinances.length === 0 
-                  ? `<tr><td colspan="6" style="padding:30px;text-align:center;color:#bbb;font-size:13px;">কোনো লেনদেন পাওয়া যায়নি</td></tr>`
+                  ? `<tr><td colspan="6" style="padding:44px;text-align:center;color:#bbb;font-size:13px;font-style:italic;">কোনো লেনদেন পাওয়া যায়নি</td></tr>`
                   : filteredFinances.map((f, i) => `
-                  <tr style="background:${i % 2 === 0 ? '#fff' : '#fafcfa'};">
-                    <td style="padding:10px 14px;color:#aaa;font-size:11px;border-bottom:1px solid #f0f0f0;">${String(i + 1).padStart(2, '0')}</td>
-                    <td style="padding:10px 14px;font-weight:500;border-bottom:1px solid #f0f0f0;">${new Date(f.date).toLocaleDateString("bn-BD")}</td>
-                    <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;">
-                      <span style="background:${f.type === 'income' ? '#e8f5e9' : '#ffebee'};color:${f.type === 'income' ? '#2e7d32' : '#c62828'};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;">
+                  <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f8faf9'};">
+                    <td style="padding:12px 18px;color:#bbb;font-size:11px;font-weight:700;border-bottom:1px solid #eef2ef;">${String(i + 1).padStart(2, '0')}</td>
+                    <td style="padding:12px 18px;font-weight:700;color:#222;border-bottom:1px solid #eef2ef;">${new Date(f.date).toLocaleDateString("bn-BD")}</td>
+                    <td style="padding:12px 18px;border-bottom:1px solid #eef2ef;">
+                      <span style="display:inline-block;background:${f.type === 'income' ? 'linear-gradient(135deg,#e8f5e9,#c8e6c9)' : 'linear-gradient(135deg,#ffebee,#ffcdd2)'};color:${f.type === 'income' ? '#1b5e20' : '#b71c1c'};padding:5px 14px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:0.5px;">
                         ${f.type === "income" ? "আয়" : "ব্যয়"}
                       </span>
                     </td>
-                    <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;">${f.category}</td>
-                    <td style="padding:10px 14px;text-align:right;font-weight:700;font-family:'Courier New',monospace;border-bottom:1px solid #f0f0f0;color:${f.type === 'income' ? '#2e7d32' : '#c62828'};">৳${Number(f.amount).toLocaleString("bn-BD")}</td>
-                    <td style="padding:10px 14px;color:#888;border-bottom:1px solid #f0f0f0;">${f.description || "—"}</td>
+                    <td style="padding:12px 18px;color:#444;font-weight:600;border-bottom:1px solid #eef2ef;">${f.category}</td>
+                    <td style="padding:12px 18px;text-align:right;font-weight:900;font-family:'Courier New',monospace;border-bottom:1px solid #eef2ef;color:${f.type === 'income' ? '#1b5e20' : '#b71c1c'};font-size:13px;">৳${Number(f.amount).toLocaleString("bn-BD")}</td>
+                    <td style="padding:12px 18px;color:#999;font-size:11px;border-bottom:1px solid #eef2ef;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.description || "—"}</td>
                   </tr>
                 `).join("")}
               </tbody>
               ${filteredFinances.length > 0 ? `
               <tfoot>
-                <tr style="background:#f0f4f1;font-weight:700;">
-                  <td colspan="4" style="padding:12px 14px;text-align:right;font-size:13px;border-top:2px solid #dde3de;">মোট:</td>
-                  <td style="padding:12px 14px;text-align:right;font-size:14px;border-top:2px solid #dde3de;font-family:'Courier New',monospace;color:#1a5c2e;">
-                    আয় ৳${totalIncome.toLocaleString("bn-BD")} | ব্যয় ৳${totalExpense.toLocaleString("bn-BD")}
-                  </td>
-                  <td style="padding:12px 14px;border-top:2px solid #dde3de;"></td>
+                <tr style="background:linear-gradient(135deg,#071f15,#0a3d26);">
+                  <td colspan="4" style="padding:16px 18px;text-align:right;font-size:12px;color:rgba(255,255,255,0.7);font-weight:700;letter-spacing:0.5px;">মোট সারাংশ:</td>
+                  <td style="padding:16px 18px;text-align:right;font-size:14px;font-family:'Courier New',monospace;color:#ffd700;font-weight:900;">৳${balance.toLocaleString("bn-BD")}</td>
+                  <td style="padding:16px 18px;color:rgba(255,255,255,0.5);font-size:10px;">আয় ৳${totalIncome.toLocaleString("bn-BD")} − ব্যয় ৳${totalExpense.toLocaleString("bn-BD")}</td>
                 </tr>
               </tfoot>` : ""}
             </table>
@@ -281,18 +330,20 @@ const FinanceManager = () => {
         </div>
 
         <!-- Footer -->
-        <div style="background:#f8faf9;padding:20px 44px;border-top:2px solid #e8ece9;">
+        <div style="background:linear-gradient(135deg,#071f15,#0a3d26);padding:24px 48px;margin-top:4px;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
-              <p style="margin:0;font-size:10px;color:#aaa;">এই ইনভয়েসটি স্বয়ংক্রিয়ভাবে তৈরি করা হয়েছে</p>
-              <p style="margin:2px 0 0;font-size:10px;color:#ccc;">চন্দনাইশ দরবার শরীফ ম্যানেজমেন্ট সিস্টেম © ${new Date().getFullYear()}</p>
+              <p style="margin:0;font-size:11px;color:rgba(255,215,0,0.6);font-weight:600;">চন্দনাইশ দরবার শরীফ</p>
+              <p style="margin:4px 0 0;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.5px;">স্বয়ংক্রিয়ভাবে তৈরি প্রতিবেদন • ম্যানেজমেন্ট সিস্টেম © ${new Date().getFullYear()}</p>
             </div>
             <div style="text-align:right;">
-              <p style="margin:0;font-size:10px;color:#aaa;">ইনভয়েস: ${invoiceNo}</p>
-              <p style="margin:2px 0 0;font-size:10px;color:#ccc;">পৃষ্ঠা ১</p>
+              <p style="margin:0;font-size:10px;color:rgba(255,215,0,0.5);font-family:'Courier New',monospace;font-weight:600;">${invoiceNo}</p>
             </div>
           </div>
         </div>
+
+        <!-- Bottom accent -->
+        <div style="height:6px;background:linear-gradient(90deg,#0a3d26,#b8860b,#ffd700,#b8860b,#0a3d26);"></div>
       </div>
     `;
 
@@ -318,7 +369,7 @@ const FinanceManager = () => {
       }
 
       pdf.save(`invoice-${invoiceNo}.pdf`);
-      toast({ title: "✅ ডাউনলোড সফল", description: "প্রফেশনাল PDF ইনভয়েস ডাউনলোড হয়েছে।" });
+      toast({ title: "✅ ডাউনলোড সফল", description: "প্রিমিয়াম PDF ইনভয়েস ডাউনলোড হয়েছে।" });
     } catch {
       toast({ title: "ত্রুটি", description: "PDF তৈরিতে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
