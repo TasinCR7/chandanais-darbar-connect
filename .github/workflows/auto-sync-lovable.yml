@@ -1,0 +1,42 @@
+name: Auto Sync from Lovable
+
+on:
+  schedule:
+    # Runs automatically every hour to check for new Lovable updates
+    - cron: '0 * * * *'
+  # Also allows you to manually trigger it from the GitHub website if needed instantly
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  auto-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Website Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Configure Git Settings
+        run: |
+          git config --global user.name "Auto Sync Bot"
+          git config --global user.email "action@github.com"
+
+      - name: Connect to Lovable 
+        run: git remote add lovable https://github.com/TasinCR7/chandanais-darbar-connect-4ca30118.git
+
+      - name: Download Latest Lovable Code
+        run: git fetch lovable main
+
+      - name: Merge Code
+        run: |
+          # This command automatically merges Lovable's code with your original code.
+          # If there is a "Merge Conflict" (Lovable overwrites your custom code), 
+          # GitHub will stop this and email you to fix it manually, keeping your site safe!
+          git merge lovable/main --no-edit --allow-unrelated-histories -m "Auto-sync from Lovable repository"
+          
+      - name: Push to Live Website
+        run: git push origin main
