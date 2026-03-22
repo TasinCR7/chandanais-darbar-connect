@@ -35,21 +35,23 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Layout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/pir" element={<Pir />} />
-                <Route path="/rules" element={<Rules />} />
-                <Route path="/events" element={<Events />} />
-                <Route path="/hadia" element={<Hadia />} />
-                <Route path="/gallery" element={<Gallery />} />
-                <Route path="/doa" element={<Doa />} />
-                <Route path="/qna" element={<QnA />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/notices" element={<Notices />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<PremiumLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/pir" element={<Pir />} />
+                  <Route path="/rules" element={<Rules />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/hadia" element={<Hadia />} />
+                  <Route path="/gallery" element={<Gallery />} />
+                  <Route path="/doa" element={<Doa />} />
+                  <Route path="/qna" element={<QnA />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/notices" element={<Notices />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </Layout>
           </BrowserRouter>
         </TooltipProvider>
