@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      committee_comments: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       committee_members: {
         Row: {
           created_at: string
@@ -24,6 +45,7 @@ export type Database = {
           is_active: boolean
           name: string
           phone: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -34,6 +56,7 @@ export type Database = {
           is_active?: boolean
           name: string
           phone?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -44,6 +67,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           phone?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -187,6 +211,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vote_topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          topic_id: string
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          topic_id: string
+          user_id: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          topic_id?: string
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "vote_topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
