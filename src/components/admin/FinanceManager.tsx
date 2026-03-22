@@ -307,8 +307,8 @@ const FinanceManager = () => {
         </div>
       </div>
 
-      {/* Hidden Invoice Template for PDF Generation */}
-      <div className="hidden">
+      {/* Hidden Invoice Template for PDF Generation - Positioned off-screen so html2canvas can capture it */}
+      <div className="absolute -left-[9999px] top-0 pointer-events-none">
         <div ref={invoiceRef} className="p-10 bg-[#0a0a0a] text-white w-[800px] font-bengali">
           <div className="text-center mb-10 border-b border-gold/30 pb-6">
             <h1 className="text-3xl font-bold text-gold mb-2">চন্দনাইশ দরবার শরীফ</h1>
