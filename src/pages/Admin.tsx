@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Modular Components
+// Lazy-loaded admin sub-modules
 import AdminLogin from "@/components/admin/AdminLogin";
-import NoticeManager from "@/components/admin/NoticeManager";
-import GalleryManager from "@/components/admin/GalleryManager";
-import SubmissionManager from "@/components/admin/SubmissionManager";
-import FinanceManager from "@/components/admin/FinanceManager";
+const NoticeManager = lazy(() => import("@/components/admin/NoticeManager"));
+const GalleryManager = lazy(() => import("@/components/admin/GalleryManager"));
+const SubmissionManager = lazy(() => import("@/components/admin/SubmissionManager"));
+const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
+const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -84,11 +85,9 @@ const Admin = () => {
             setVerifying(false);
           }
         } else {
-          for (let i = 0; i < 1; i++) { // Dummy loop to keep structure similar if needed
-             if (isMounted) {
-              setIsAdmin(false);
-              setVerifying(false);
-            }
+          if (isMounted) {
+            setIsAdmin(false);
+            setVerifying(false);
           }
         }
       }
@@ -168,10 +167,10 @@ const Admin = () => {
   }, [isAdmin]);
 
   // Operations
-  const addNotice = async (type: 'scrolling' | 'detailed', title: string, message?: string) => {
+  const addNotice = async (_type: 'scrolling' | 'detailed', title: string, message?: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from("notices").insert([{ title, message, type, is_active: true }]);
+      const { error } = await supabase.from("notices").insert([{ title, message, is_active: true }]);
       if (!error) {
         toast({ title: "সফল", description: "নোটিশটি যোগ করা হয়েছে।" });
         fetchNotices();
@@ -262,7 +261,6 @@ const Admin = () => {
         user={user}
         isAdmin={isAdmin}
         onLogout={handleLogout}
-        onForceAccess={forceAdminAccess}
       />
     );
   }
@@ -302,29 +300,35 @@ const Admin = () => {
             <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আবেদনপত্র</TabsTrigger>
             <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
             <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
+            <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
           </TabsList>
 
           <TabsContent value="notices">
-             <NoticeManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <NoticeManager 
                 notices={notices} 
                 loading={loading} 
                 onAddNotice={addNotice} 
                 onToggleActive={toggleNotice} 
                 onDeleteNotice={deleteNotice} 
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="submissions">
-             <SubmissionManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <SubmissionManager 
                 submissions={submissions} 
                 onMarkRead={markSubmissionRead} 
                 onDelete={deleteSubmission} 
                 onReply={submitReply} 
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="gallery">
-             <GalleryManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <GalleryManager 
                 gallery={gallery}
                 uploading={uploading}
                 galleryCaption={galleryCaption}
@@ -333,11 +337,20 @@ const Admin = () => {
                 setGalleryCategory={setGalleryCategory}
                 onUpload={uploadGalleryImage}
                 onDelete={deleteGalleryItem}
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="finance">
-             <FinanceManager />
+            <Suspense fallback={<PremiumLoader />}>
+              <FinanceManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="committee">
+            <Suspense fallback={<PremiumLoader />}>
+              <CommitteeManager />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
