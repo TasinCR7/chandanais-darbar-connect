@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import heroBg from "@/assets/hero-new.jpg";
 
 const navLinks = [
   { path: "/", label: "হোম" },
@@ -39,10 +40,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sticky Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
+    <div className="min-h-screen relative bg-background">
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `url(${heroBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.15
+        }}
+      />
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Sticky Navigation */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20">
+          <div className="container mx-auto px-4 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <span className="text-gold font-heading font-bold text-lg leading-tight">
               চন্দনাইশ দরবার শরীফ
@@ -218,6 +229,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 };
