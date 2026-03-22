@@ -84,11 +84,9 @@ const Admin = () => {
             setVerifying(false);
           }
         } else {
-          for (let i = 0; i < 1; i++) { // Dummy loop to keep structure similar if needed
-             if (isMounted) {
-              setIsAdmin(false);
-              setVerifying(false);
-            }
+          if (isMounted) {
+            setIsAdmin(false);
+            setVerifying(false);
           }
         }
       }
