@@ -81,26 +81,29 @@ export default function CommitteeDashboard() {
     navigate("/committee-login");
   };
 
-  const castVote = async (topicId: string, choice: string) => {
+  const castVote = async (topicId: string, voteType: string) => {
     if (!member) return;
-    try {
-      const existing = votesData.find(v => v.topic_id === topicId && v.user_id === member.id);
-      
-      if (existing) {
-        // Update vote
-        const { error } = await supabase.from("votes").update({ vote: choice }).eq("id", existing.id);
-        if (error) throw error;
-      } else {
-        // Insert vote
-        const { error } = await supabase.from("votes").insert({ topic_id: topicId, user_id: member.id, vote: choice });
-        if (error) throw error;
-      }
-      
-      toast({ title: "ভোট গ্রহণ করা হয়েছে", description: "আপনার মূল্যবান মতামতের জন্য ধন্যবাদ।" });
+    
+    // Prevent voting if already voted
+    const topic = topics.find(t => t.id === topicId);
+    if (topic && getVoteCounts(topic).myVote) {
+      toast({ title: "সতর্কতা", description: "আপনি ইতিমধ্যে এই বিষয়ে আপনার মতামত প্রদান করেছেন।", variant: "destructive" });
+      return;
+    }
+
+    // Since we are enforcing one vote per topic, we do not need to delete previous votes.
+    const { error } = await supabase.from("votes").insert({
+      topic_id: topicId,
+      user_id: member.id,
+      vote: voteType
+    });
+
+    if (!error) {
+      toast({ title: "সফল", description: "আপনার মতামত সংরক্ষিত হয়েছে।" });
       const authId = localStorage.getItem("committee_auth");
       if (authId) loadDashboard(authId);
-    } catch (err: unknown) {
-      toast({ title: "ভোট গ্রহণ ব্যর্থ", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } else {
+      toast({ title: "ব্যর্থ", description: "ভোট সেভ করা সম্ভব হয়নি।", variant: "destructive" });
     }
   };
 
@@ -112,12 +115,14 @@ export default function CommitteeDashboard() {
         user_id: member.id,
         message: comment.trim()
       });
-      if (error) throw error;
-      
-      toast({ title: "মন্তব্য পাঠানো হয়েছে", description: "আপনার মতামতের জন্য অশেষ ধন্যবাদ।" });
-      setComment("");
-      const authId = localStorage.getItem("committee_auth");
-      if (authId) loadDashboard(authId);
+      if (!error) {
+        toast({ title: "সফল", description: "আপনার মন্তব্য পাঠানো হয়েছে।" });
+        setComment("");
+        const authId = localStorage.getItem("committee_auth");
+        if (authId) loadDashboard(authId);
+      } else {
+        toast({ title: "ব্যর্থ", description: "মন্তব্য পাঠানো সম্ভব হয়নি।", variant: "destructive" });
+      }
     } catch (err: unknown) {
       toast({ title: "ত্রুটি", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     } finally {
@@ -125,16 +130,6 @@ export default function CommitteeDashboard() {
     }
   };
 
-  const handleDeleteComment = async (id: string) => {
-    try {
-      await supabase.from("committee_comments").delete().eq("id", id);
-      toast({ title: "মুছে ফেলা হয়েছে" });
-      const authId = localStorage.getItem("committee_auth");
-      if (authId) loadDashboard(authId);
-    } catch (err: unknown) {
-      toast({ title: "ত্রুটি", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
-    }
-  };
 
   const parseTopicData = (topic: TopicRecord) => {
     const desc = topic.description || "";
@@ -286,11 +281,12 @@ export default function CommitteeDashboard() {
                           key={idx}
                           onClick={() => castVote(topic.id, opt)}
                           variant={counts.myVote === opt ? "default" : "outline"}
+                          disabled={!!counts.myVote}
                           className={`flex-1 min-w-[120px] rounded-xl h-11 font-bold transition-all duration-300 ${
                             counts.myVote === opt
                               ? "bg-gold-gradient text-primary-foreground border-0 shadow-lg shadow-gold/20 scale-[1.02]" 
                               : "border-gold/20 text-gold/70 hover:bg-gold/10"
-                          }`}
+                          } ${!!counts.myVote && counts.myVote !== opt ? "opacity-40 cursor-not-allowed" : ""}`}
                         >
                           {counts.myVote === opt && <ShieldCheck size={14} className="mr-1.5" />}
                           {opt}
@@ -347,14 +343,6 @@ export default function CommitteeDashboard() {
                       <span className="text-[10px] text-gold/40 uppercase tracking-widest font-bold">
                         {new Date(c.created_at).toLocaleDateString("bn-BD")}
                       </span>
-                      {c.user_id === member?.id && (
-                        <button 
-                          onClick={() => handleDeleteComment(c.id)} 
-                          className="text-[10px] text-destructive/60 hover:text-destructive flex items-center gap-1 font-bold uppercase transition-colors"
-                        >
-                          <Trash2 size={12} /> মুছুন
-                        </button>
-                      )}
                     </div>
                   </motion.div>
                 ))}

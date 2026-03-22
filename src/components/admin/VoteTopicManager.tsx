@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Vote } from "lucide-react";
+import { Plus, Trash2, Vote, MessageSquare } from "lucide-react";
 
 interface VoteTopic {
   id: string;
@@ -22,6 +22,7 @@ const VoteTopicManager = () => {
   const [description, setDescription] = useState("");
   const [type, setType] = useState<"monthly" | "yearly">("monthly");
   const [optionsStr, setOptionsStr] = useState("");
+  const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -30,7 +31,15 @@ const VoteTopicManager = () => {
     if (data) setTopics(data as VoteTopic[]);
   };
 
-  useEffect(() => { fetchTopics(); }, []);
+  const fetchComments = async () => {
+    const { data } = await supabase.from("committee_comments").select("*").order("created_at", { ascending: false });
+    if (data) setComments(data);
+  };
+
+  useEffect(() => { 
+    fetchTopics(); 
+    fetchComments();
+  }, []);
 
   const addTopic = async () => {
     if (!title.trim()) return;
@@ -58,8 +67,12 @@ const VoteTopicManager = () => {
       setOptionsStr("");
       fetchTopics();
     } else {
-      console.error(error);
-      toast({ title: "ব্যর্থ", description: "ভোট যোগ করা সম্ভব হয়নি।", variant: "destructive" });
+      console.error("Supabase Insert Error:", error);
+      toast({ 
+        title: "ব্যর্থ", 
+        description: `Error: ${error.message} \nDetails: ${error.details || ""}`, 
+        variant: "destructive" 
+      });
     }
     setLoading(false);
   };
@@ -73,6 +86,12 @@ const VoteTopicManager = () => {
     await supabase.from("vote_topics").delete().eq("id", id);
     fetchTopics();
     toast({ title: "মুছে ফেলা হয়েছে" });
+  };
+
+  const deleteComment = async (id: string) => {
+    await supabase.from("committee_comments").delete().eq("id", id);
+    fetchComments();
+    toast({ title: "মতামত মুছে ফেলা হয়েছে" });
   };
 
   const parseTopicData = (topic: VoteTopic) => {
@@ -164,6 +183,34 @@ const VoteTopicManager = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* Comments Moderation list */}
+      <div className="space-y-3 mt-12 pt-8 border-t border-gold/10 relative">
+        <h3 className="text-lg font-heading font-bold text-gold mb-6 flex items-center gap-2">
+          <MessageSquare size={20} className="text-gold" />
+          সদস্যদের মতামত ও প্রস্তাবনা
+        </h3>
+        
+        {comments.length === 0 ? (
+          <p className="text-muted-foreground text-sm py-4 text-center bg-card/20 rounded-xl border border-dashed border-white/10">কোনো মতামত নেই।</p>
+        ) : (
+          comments.map(c => (
+            <div key={c.id} className="bg-card/40 border border-gold/10 rounded-xl p-4 flex flex-col gap-2 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -mr-16 -mt-16 blur-2xl transition-all group-hover:bg-gold/10" />
+              <p className="text-cream/90 text-sm leading-relaxed relative z-10">{c.message}</p>
+              <div className="flex items-center justify-between mt-2 relative z-10">
+                <span className="text-[10px] text-gold/40 uppercase tracking-widest font-bold">
+                  {new Date(c.created_at).toLocaleDateString("bn-BD")}
+                </span>
+                <Button size="sm" variant="ghost" onClick={() => deleteComment(c.id)}
+                  className="text-destructive/80 hover:bg-destructive/10 hover:text-destructive h-8 px-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors">
+                  <Trash2 size={14} className="mr-1.5" /> মুছুন
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
