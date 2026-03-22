@@ -18,6 +18,7 @@ interface CommitteeMember {
 const Committee = () => {
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetch = async () => {
@@ -66,16 +67,21 @@ const Committee = () => {
                   className="bg-card border border-gold/20 rounded-2xl p-6 text-center hover:border-gold/40 transition-all duration-300 hover:shadow-lg hover:shadow-gold/5"
                 >
                   {/* Avatar */}
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gold/30 bg-muted">
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gold/30 bg-muted relative">
                     {member.image_url ? (
-                      <img
-                        src={member.image_url}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                      <>
+                        <div className={`absolute inset-0 bg-gold/20 animate-pulse transition-opacity duration-300 ${imageLoaded[member.id] ? 'opacity-0 z-0' : 'opacity-100 z-10'}`} />
+                        <img
+                          src={member.image_url}
+                          alt={member.name}
+                          loading="lazy"
+                          decoding="async"
+                          onLoad={() => setImageLoaded(prev => ({ ...prev, [member.id]: true }))}
+                          className={`absolute inset-0 w-full h-full object-cover z-20 transition-opacity duration-700 ${imageLoaded[member.id] ? 'opacity-100' : 'opacity-0'}`}
+                        />
+                      </>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gold/10">
+                      <div className="w-full h-full flex items-center justify-center bg-gold/10 relative z-10">
                         <Users className="w-10 h-10 text-gold/40" />
                       </div>
                     )}
