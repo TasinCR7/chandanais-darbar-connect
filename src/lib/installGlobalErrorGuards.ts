@@ -58,6 +58,15 @@ const suppressBrowserEvent = (event: Event) => {
   event.stopImmediatePropagation?.();
 };
 
+const handleIgnorableError = (event: Event, ...values: unknown[]) => {
+  if (!isIgnorableExtensionError(...values)) {
+    return false;
+  }
+
+  suppressBrowserEvent(event);
+  return true;
+};
+
 export const installGlobalErrorGuards = () => {
   if (typeof window === "undefined") {
     return;
@@ -71,11 +80,13 @@ export const installGlobalErrorGuards = () => {
 
   guardedWindow[ERROR_GUARD_FLAG] = true;
 
+  const previousOnError = window.onerror;
+  const previousOnUnhandledRejection = window.onunhandledrejection;
+
   window.addEventListener(
     "unhandledrejection",
     (event) => {
-      if (isIgnorableExtensionError(event.reason)) {
-        suppressBrowserEvent(event);
+      if (handleIgnorableError(event, event.reason)) {
         console.warn("Ignored external browser extension rejection:", event.reason);
       }
     },
@@ -85,11 +96,28 @@ export const installGlobalErrorGuards = () => {
   window.addEventListener(
     "error",
     (event) => {
-      if (isIgnorableExtensionError(event.error, event.message, event.filename)) {
-        suppressBrowserEvent(event);
+      if (handleIgnorableError(event, event.error, event.message, event.filename)) {
         console.warn("Ignored external browser extension error:", event.error ?? event.message);
       }
     },
     { capture: true }
   );
+
+  window.onunhandledrejection = (event) => {
+    if (handleIgnorableError(event, event.reason)) {
+      console.warn("Ignored external browser extension rejection:", event.reason);
+      return true;
+    }
+
+    return previousOnUnhandledRejection?.call(window, event);
+  };
+
+  window.onerror = (message, source, lineno, colno, error) => {
+    if (isIgnorableExtensionError(error, message, source)) {
+      console.warn("Ignored external browser extension error:", error ?? message);
+      return true;
+    }
+
+    return previousOnError?.call(window, message, source, lineno, colno, error) ?? false;
+  };
 };
