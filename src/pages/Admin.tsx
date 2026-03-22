@@ -100,15 +100,18 @@ const Admin = () => {
     };
   }, []);
 
-  const handleLogin = async (email: string, pass: string) => {
+  const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      const credentials = method === "email" 
+        ? { email: identifier, password: pass }
+        : { phone: identifier, password: pass };
+      const { error } = await supabase.auth.signInWithPassword(credentials);
       if (error) {
         toast({ title: "লগইন ব্যর্থ", description: error.message, variant: "destructive" });
       }
     } catch (err) {
-      toast({ title: "ত্রুটি", description: "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
+      toast({ title: "ত্রুটি", description: "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setLoginLoading(false);
     }
