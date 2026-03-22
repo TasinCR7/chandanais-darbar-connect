@@ -96,19 +96,29 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="max-w-3xl mx-auto text-center"
+            className="max-w-4xl mx-auto"
           >
-            <div className="bg-card border border-gold/20 rounded-lg p-8 md:p-12">
-              <Star size={24} className="text-gold mx-auto mb-4" />
-              <p className="text-foreground leading-relaxed mb-6">
-                গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
-                ছিলেন মাইজভান্ডারী সিলসিলার একজন মহান আউলিয়া। তাঁর প্রতিষ্ঠিত এই দরবার শরীফ 
-                আজও ভক্তদের আধ্যাত্মিক পথপ্রদর্শনের কেন্দ্রবিন্দু হিসেবে কাজ করে যাচ্ছে।
-              </p>
-              <p className="text-muted-foreground text-sm">
-                বর্তমানে শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী মাইজভান্ডারী (মাদ্দাঃ) 
-                এই দরবারের খেদমত পরিচালনা করছেন।
-              </p>
+            <div className="bg-card border border-gold/20 rounded-lg overflow-hidden">
+              <div className="w-full">
+                <img
+                  src={darbarBuilding}
+                  alt="চন্দনাইশ দরবার শরীফ মাজার"
+                  className="w-full h-64 md:h-80 object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="p-8 md:p-12 text-center">
+                <Star size={24} className="text-gold mx-auto mb-4" />
+                <p className="text-foreground leading-relaxed mb-6">
+                  গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
+                  ছিলেন মাইজভান্ডারী সিলসিলার একজন মহান আউলিয়া। তাঁর প্রতিষ্ঠিত এই দরবার শরীফ 
+                  আজও ভক্তদের আধ্যাত্মিক পথপ্রদর্শনের কেন্দ্রবিন্দু হিসেবে কাজ করে যাচ্ছে।
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  বর্তমানে শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী মাইজভান্ডারী (মাদ্দাঃ) 
+                  এই দরবারের খেদমত পরিচালনা করছেন।
+                </p>
+              </div>
             </div>
           </motion.div>
         </div>
