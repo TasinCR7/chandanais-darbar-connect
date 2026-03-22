@@ -9,7 +9,14 @@ import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
 import PremiumLoader from "@/components/PremiumLoader";
 
-interface TopicRecord { id: string; title: string; description: string | null; type: string; created_at: string; }
+interface TopicRecord { 
+  id: string; 
+  title: string; 
+  description: string | null; 
+  type: string; 
+  options?: string[] | null;
+  created_at: string; 
+}
 interface VoteRecord { id: string; topic_id: string; user_id: string; vote: string; }
 interface CommentRecord { id: string; user_id: string; message: string; created_at: string; }
 
@@ -129,13 +136,42 @@ export default function CommitteeDashboard() {
     }
   };
 
-  const getVoteCounts = (topicId: string) => {
-    const topicVotes = votesData.filter(v => v.topic_id === topicId);
+  const parseTopicData = (topic: TopicRecord) => {
+    const desc = topic.description || "";
+    const match = desc.match(/^\[POLL_OPTIONS: (.*?)\]\s*(.*)/s);
+    if (match) {
+      return {
+        options: match[1].split(",").map(o => o.trim()),
+        displayDescription: match[2] || null
+      };
+    }
     return {
-      satisfied: topicVotes.filter(v => v.vote === "সন্তুষ্ট" || v.vote === "satisfied").length,
-      unsatisfied: topicVotes.filter(v => v.vote === "অসন্তুষ্ট" || v.vote === "unsatisfied").length,
+      options: topic.options || null,
+      displayDescription: topic.description
+    };
+  };
+
+  const getVoteCounts = (topic: TopicRecord) => {
+    const topicVotes = votesData.filter(v => v.topic_id === topic.id);
+    const myVote = topicVotes.find(v => v.user_id === member?.id)?.vote || null;
+    
+    // Fallback: Parse options from description if column is empty
+    const { options: parsedOptions } = parseTopicData(topic);
+    
+    // Default options if none provided
+    const defaultOptions = ["সন্তুষ্ট", "অসন্তুষ্ট"];
+    const options = (parsedOptions && parsedOptions.length > 0) ? parsedOptions : defaultOptions;
+    
+    const distribution: Record<string, number> = {};
+    options.forEach(opt => {
+      distribution[opt] = topicVotes.filter(v => v.vote === opt).length;
+    });
+
+    return {
+      distribution,
       total: topicVotes.length,
-      myVote: topicVotes.find(v => v.user_id === member?.id)?.vote || null,
+      myVote,
+      options
     };
   };
 
@@ -190,16 +226,14 @@ export default function CommitteeDashboard() {
               </div>
             ) : (
               topics.map(topic => {
-                const counts = getVoteCounts(topic.id);
-                const totalVotes = counts.satisfied + counts.unsatisfied;
-                const satisfiedPct = totalVotes > 0 ? Math.round((counts.satisfied / totalVotes) * 100) : 0;
+                const counts = getVoteCounts(topic);
                 
                 return (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     key={topic.id} 
-                    className="bg-card/40 border border-gold/20 rounded-2xl p-6 shadow-xl relative overflow-hidden group"
+                    className="bg-card/40 border border-gold/20 rounded-2xl p-6 shadow-xl relative overflow-hidden group mb-6 last:mb-0"
                   >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -mr-16 -mt-16 blur-2xl transition-all group-hover:bg-gold/10" />
                     
@@ -209,50 +243,59 @@ export default function CommitteeDashboard() {
                       </span>
                     </div>
                     <h3 className="text-lg font-bold text-cream mb-2 leading-snug">{topic.title}</h3>
-                    {topic.description && (
+                    {parseTopicData(topic).displayDescription && (
                       <p className="text-sm text-muted-foreground mb-6 leading-relaxed bg-black/20 p-3 rounded-lg border border-gold/5">
-                        {topic.description}
+                        {parseTopicData(topic).displayDescription}
                       </p>
                     )}
 
-                    {/* Progress bar */}
-                    {totalVotes > 0 && (
-                      <div className="my-4">
-                        <div className="flex justify-between text-xs text-muted-foreground mb-1.5 font-bold">
-                          <span className="text-emerald-400">সন্তুষ্ট: {counts.satisfied}</span>
-                          <span className="text-red-400">অসন্তুষ্ট: {counts.unsatisfied}</span>
-                        </div>
-                        <div className="h-2.5 bg-black/40 rounded-full overflow-hidden border border-gold/10">
-                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500 shadow-lg shadow-emerald-500/20" style={{ width: `${satisfiedPct}%` }} />
-                        </div>
-                        <p className="text-[10px] text-gold/40 mt-1 uppercase tracking-widest text-center font-bold">সর্বমোট ভোট: {totalVotes}</p>
+                    {/* Results distribution */}
+                    {counts.total > 0 && (
+                      <div className="space-y-3 my-6">
+                        {counts.options.map((opt, idx) => {
+                          const count = counts.distribution[opt] || 0;
+                          const pct = Math.round((count / counts.total) * 100);
+                          const isMyVote = counts.myVote === opt;
+                          
+                          return (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex justify-between text-[11px] font-bold">
+                                <span className={isMyVote ? "text-gold" : "text-muted-foreground"}>
+                                  {opt} {isMyVote && " (আপনার ভোট)"}
+                                </span>
+                                <span className="text-gold/60">{count} ভোট ({pct}%)</span>
+                              </div>
+                              <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-gold/5">
+                                <motion.div 
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${pct}%` }}
+                                  className={`h-full rounded-full ${isMyVote ? "bg-gold" : "bg-gold/30"}`} 
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <p className="text-[10px] text-gold/30 uppercase tracking-widest text-center pt-1 font-bold">সর্বমোট ভোট: {counts.total}</p>
                       </div>
                     )}
 
                     {/* Vote buttons */}
-                    <div className="flex gap-3 mt-6 relative z-10">
-                      <Button
-                        onClick={() => castVote(topic.id, "সন্তুষ্ট")}
-                        variant={counts.myVote === "সন্তুষ্ট" || counts.myVote === "satisfied" ? "default" : "outline"}
-                        className={`flex-1 rounded-xl h-11 font-bold ${
-                          counts.myVote === "সন্তুষ্ট" || counts.myVote === "satisfied" 
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-500/20" 
-                            : "border-emerald-600/30 text-emerald-400 hover:bg-emerald-500/10"
-                        }`}
-                      >
-                        <ThumbsUp size={16} className="mr-2" /> সন্তুষ্ট
-                      </Button>
-                      <Button
-                        onClick={() => castVote(topic.id, "অসন্তুষ্ট")}
-                        variant={counts.myVote === "অসন্তুষ্ট" || counts.myVote === "unsatisfied" ? "default" : "outline"}
-                        className={`flex-1 rounded-xl h-11 font-bold ${
-                          counts.myVote === "অসন্তুষ্ট" || counts.myVote === "unsatisfied" 
-                            ? "bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-500/20" 
-                            : "border-red-600/30 text-red-400 hover:bg-red-500/10"
-                        }`}
-                      >
-                        <ThumbsDown size={16} className="mr-2 mt-1" /> অসন্তুষ্ট
-                      </Button>
+                    <div className="flex flex-wrap gap-2 mt-6 relative z-10">
+                      {counts.options.map((opt, idx) => (
+                        <Button
+                          key={idx}
+                          onClick={() => castVote(topic.id, opt)}
+                          variant={counts.myVote === opt ? "default" : "outline"}
+                          className={`flex-1 min-w-[120px] rounded-xl h-11 font-bold transition-all duration-300 ${
+                            counts.myVote === opt
+                              ? "bg-gold-gradient text-primary-foreground border-0 shadow-lg shadow-gold/20 scale-[1.02]" 
+                              : "border-gold/20 text-gold/70 hover:bg-gold/10"
+                          }`}
+                        >
+                          {counts.myVote === opt && <ShieldCheck size={14} className="mr-1.5" />}
+                          {opt}
+                        </Button>
+                      ))}
                     </div>
                   </motion.div>
                 );

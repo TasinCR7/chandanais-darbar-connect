@@ -110,7 +110,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               exit={{ opacity: 0, height: 0 }}
               className="lg:hidden bg-background/95 backdrop-blur-md border-b border-gold/20 overflow-hidden"
             >
-              <div className="container mx-auto px-4 py-4 flex flex-col gap-3">
+              <div className="container mx-auto px-4 py-4 flex flex-col gap-1.5 Max-h-[70vh] overflow-y-auto">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
@@ -118,28 +118,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     onClick={() => setMenuOpen(false)}
                     className={`text-sm font-medium py-2 px-3 rounded-md transition-colors duration-300 ${
                       location.pathname === link.path
-                        ? "text-gold bg-muted"
+                        ? "text-gold bg-gold/10"
                         : "text-muted-foreground hover:text-gold"
                     }`}
                   >
                     {link.label}
                   </Link>
                 ))}
-                <Link
-                  to="/hadia"
-                  onClick={() => setMenuOpen(false)}
-                  className="bg-gold-gradient text-primary-foreground px-4 py-2 rounded-md text-sm font-semibold text-center mt-2"
-                >
-                  হাদিয়া দিন
-                </Link>
-                <Link
-                  to="/admin"
-                  onClick={() => setMenuOpen(false)}
-                  className="text-muted-foreground hover:text-gold text-sm font-medium py-2 px-3 rounded-md transition-colors duration-300 flex items-center gap-2"
-                >
-                  <Settings size={16} />
-                  এডমিন
-                </Link>
+                <div className="pt-2">
+                  <Link
+                    to="/hadia"
+                    onClick={() => setMenuOpen(false)}
+                    className="bg-gold-gradient text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-bold text-center block shadow-lg shadow-gold/20"
+                  >
+                    হাদিয়া দিন
+                  </Link>
+                </div>
               </div>
             </motion.nav>
           )}
@@ -148,13 +142,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Notice Bar */}
       {notice && (
-        <div className="fixed top-16 left-0 right-0 z-40 bg-card border-b border-gold/20 overflow-hidden">
-          <div className="flex items-center h-10">
-            <div className="bg-gold/20 p-1.5 rounded-md shrink-0 ml-4 z-10">
-              <Bell size={16} className="text-gold" />
+        <div className="fixed top-16 left-0 right-0 z-40 bg-card/95 backdrop-blur-sm border-b border-gold/20 overflow-hidden shadow-sm">
+          <div className="flex items-center h-10 px-4">
+            <div className="bg-gold-gradient p-1.5 rounded-lg shrink-0 z-10 shadow-sm shadow-gold/20 ring-1 ring-gold/30">
+              <Bell size={14} className="text-primary-foreground" />
             </div>
-            <div className="overflow-hidden flex-1 ml-3">
-              <p className="text-sm text-gold font-medium whitespace-nowrap animate-marquee">
+            <div className="overflow-hidden flex-1 relative h-full flex items-center">
+              {/* Fade masks for marquee */}
+              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-card to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card to-transparent z-10" />
+              
+              <p className="text-[13px] md:text-sm text-gold font-medium whitespace-nowrap animate-marquee pl-4">
                 {notice.title}{notice.message ? ` — ${notice.message}` : ""}
               </p>
             </div>
