@@ -12,6 +12,7 @@ const GalleryManager = lazy(() => import("@/components/admin/GalleryManager"));
 const SubmissionManager = lazy(() => import("@/components/admin/SubmissionManager"));
 const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"));
+const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
