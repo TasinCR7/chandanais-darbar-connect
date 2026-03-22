@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star } from "lucide-react";
 import heroImage from "@/assets/hero-darbar.jpg";
-import darbarBuilding from "@/assets/darbar-building.png";
+
 import SectionTitle from "@/components/SectionTitle";
 import EventCard from "@/components/EventCard";
 import UrsCountdown from "@/components/UrsCountdown";
