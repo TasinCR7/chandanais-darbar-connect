@@ -168,7 +168,7 @@ const Admin = () => {
   }, [isAdmin]);
 
   // Operations
-  const addNotice = async (type: 'scrolling' | 'detailed', title: string, message?: string) => {
+  const addNotice = async (_type: 'scrolling' | 'detailed', title: string, message?: string) => {
     setLoading(true);
     try {
       const { error } = await supabase.from("notices").insert([{ title, message, type, is_active: true }]);
