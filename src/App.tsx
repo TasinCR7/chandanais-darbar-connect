@@ -22,6 +22,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Notices = lazy(() => import("./pages/Notices"));
+const Committee = lazy(() => import("./pages/Committee"));
 
 
 const queryClient = new QueryClient();
