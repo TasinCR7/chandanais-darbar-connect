@@ -18,7 +18,8 @@ interface CommitteeMember {
 const Committee = () => {
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
+  const [imageStatus, setImageStatus] = useState<Record<string, "loaded" | "error">>({});
+
 
   useEffect(() => {
     const fetch = async () => {
@@ -68,21 +69,24 @@ const Committee = () => {
                 >
                   {/* Avatar */}
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gold/30 bg-muted relative">
-                    {member.image_url ? (
+                    {member.image_url && imageStatus[member.id] !== "error" ? (
                       <>
-                        <div className={`absolute inset-0 bg-gold/20 animate-pulse transition-opacity duration-300 ${imageLoaded[member.id] ? 'opacity-0 z-0' : 'opacity-100 z-10'}`} />
+                        <div className={`absolute inset-0 bg-gold/20 animate-pulse transition-opacity duration-300 ${imageStatus[member.id] === 'loaded' ? 'opacity-0 z-0' : 'opacity-100 z-10'}`} />
                         <img
                           src={member.image_url}
                           alt={member.name}
                           loading="lazy"
                           decoding="async"
-                          onLoad={() => setImageLoaded(prev => ({ ...prev, [member.id]: true }))}
-                          className={`absolute inset-0 w-full h-full object-cover z-20 transition-opacity duration-700 ${imageLoaded[member.id] ? 'opacity-100' : 'opacity-0'}`}
+                          onLoad={() => setImageStatus(prev => ({ ...prev, [member.id]: "loaded" }))}
+                          onError={() => setImageStatus(prev => ({ ...prev, [member.id]: "error" }))}
+                          className={`absolute inset-0 w-full h-full object-cover z-20 transition-opacity duration-700 ${imageStatus[member.id] === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
                         />
                       </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gold/10 relative z-10">
-                        <Users className="w-10 h-10 text-gold/40" />
+                        <span className="text-3xl font-bold text-gold/40">
+                          {member.name ? member.name.charAt(0).toUpperCase() : "?"}
+                        </span>
                       </div>
                     )}
                   </div>

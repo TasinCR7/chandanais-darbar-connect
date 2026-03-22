@@ -16,6 +16,18 @@ interface Member {
   is_active: boolean;
 }
 
+const AvatarImage = ({ url, name, className }: { url: string | null; name: string; className: string }) => {
+  const [error, setError] = useState(false);
+  if (!url || url === "null" || error) {
+    return (
+      <div className={`${className} flex items-center justify-center text-gold/60 text-lg font-bold bg-muted`}>
+        {name ? name.charAt(0).toUpperCase() : "?"}
+      </div>
+    );
+  }
+  return <img src={url} alt={name} className={className} onError={() => setError(true)} />;
+};
+
 const CommitteeManager = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,13 +156,7 @@ const CommitteeManager = () => {
               
               {/* Avatar */}
               <div className="w-12 h-12 rounded-full overflow-hidden border border-gold/20 bg-muted shrink-0">
-                {m.image_url ? (
-                  <img src={m.image_url} alt={m.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gold/30 text-lg font-bold">
-                    {m.name[0]}
-                  </div>
-                )}
+                <AvatarImage url={m.image_url} name={m.name} className="w-full h-full object-cover" />
               </div>
 
               <div className="flex-1 min-w-0">
