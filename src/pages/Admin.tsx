@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Modular Components
+// Lazy-loaded admin sub-modules
 import AdminLogin from "@/components/admin/AdminLogin";
-import NoticeManager from "@/components/admin/NoticeManager";
-import GalleryManager from "@/components/admin/GalleryManager";
-import SubmissionManager from "@/components/admin/SubmissionManager";
-import FinanceManager from "@/components/admin/FinanceManager";
+const NoticeManager = lazy(() => import("@/components/admin/NoticeManager"));
+const GalleryManager = lazy(() => import("@/components/admin/GalleryManager"));
+const SubmissionManager = lazy(() => import("@/components/admin/SubmissionManager"));
+const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -302,26 +302,31 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="notices">
-             <NoticeManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <NoticeManager 
                 notices={notices} 
                 loading={loading} 
                 onAddNotice={addNotice} 
                 onToggleActive={toggleNotice} 
                 onDeleteNotice={deleteNotice} 
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="submissions">
-             <SubmissionManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <SubmissionManager 
                 submissions={submissions} 
                 onMarkRead={markSubmissionRead} 
                 onDelete={deleteSubmission} 
                 onReply={submitReply} 
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="gallery">
-             <GalleryManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <GalleryManager 
                 gallery={gallery}
                 uploading={uploading}
                 galleryCaption={galleryCaption}
@@ -330,11 +335,14 @@ const Admin = () => {
                 setGalleryCategory={setGalleryCategory}
                 onUpload={uploadGalleryImage}
                 onDelete={deleteGalleryItem}
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="finance">
-             <FinanceManager />
+            <Suspense fallback={<PremiumLoader />}>
+              <FinanceManager />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
