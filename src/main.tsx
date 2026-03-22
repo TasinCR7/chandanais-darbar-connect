@@ -1,7 +1,13 @@
-import { installGlobalErrorGuards } from "./lib/installGlobalErrorGuards";
+import {
+  installGlobalErrorGuards,
+  isIgnorableExtensionError,
+} from "./lib/installGlobalErrorGuards";
 import "./index.css";
 
 installGlobalErrorGuards();
+
+const BOOTSTRAP_RETRY_LIMIT = 3;
+const BOOTSTRAP_RETRY_DELAY_MS = 150;
 
 const renderBootstrapFallback = () => {
   const root = document.getElementById("root");
@@ -21,15 +27,32 @@ const renderBootstrapFallback = () => {
   ].join("");
 };
 
-const bootstrap = async () => {
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const bootstrap = async (attempt = 1): Promise<void> => {
   try {
     const [{ createRoot }, { default: App }] = await Promise.all([
       import("react-dom/client"),
       import("./App.tsx"),
     ]);
 
-    createRoot(document.getElementById("root")!).render(<App />);
+    createRoot(document.getElementById("root")!, {
+      onRecoverableError: (error) => {
+        if (isIgnorableExtensionError(error)) {
+          console.warn("Ignored recoverable external browser extension error:", error);
+          return;
+        }
+
+        console.error("Recoverable React rendering error:", error);
+      },
+    }).render(<App />);
   } catch (error) {
+    if (isIgnorableExtensionError(error) && attempt < BOOTSTRAP_RETRY_LIMIT) {
+      console.warn(`Ignored bootstrap extension error on attempt ${attempt}; retrying...`, error);
+      await wait(BOOTSTRAP_RETRY_DELAY_MS * attempt);
+      return bootstrap(attempt + 1);
+    }
+
     console.error("Application bootstrap failed:", error);
     renderBootstrapFallback();
   }
