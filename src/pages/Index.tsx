@@ -26,15 +26,7 @@ const Index = () => {
         canonical="/"
       />
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt="চন্দনাইশ দরবার শরীফ"
-            className="w-full h-full object-cover"
-            loading="eager"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background" />
-        </div>
+        <div className="absolute inset-0 bg-background" />
 
         <div className="relative z-10 container mx-auto px-4 text-center">
           <motion.div
