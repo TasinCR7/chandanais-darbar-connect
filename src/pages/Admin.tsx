@@ -305,6 +305,7 @@ const Admin = () => {
             <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
             <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
             <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
+            <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
           </TabsList>
 
           <TabsContent value="notices">
