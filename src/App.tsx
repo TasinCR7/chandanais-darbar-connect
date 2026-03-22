@@ -51,6 +51,7 @@ const App = () => (
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/notices" element={<Notices />} />
                   <Route path="/committee" element={<Committee />} />
+                  <Route path="/committee-login" element={<CommitteeDashboard />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
