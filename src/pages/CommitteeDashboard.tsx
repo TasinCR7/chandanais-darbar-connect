@@ -9,11 +9,15 @@ import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
 import PremiumLoader from "@/components/PremiumLoader";
 
+interface TopicRecord { id: string; title: string; description: string | null; type: string; created_at: string; }
+interface VoteRecord { id: string; topic_id: string; user_id: string; vote: string; }
+interface CommentRecord { id: string; user_id: string; message: string; created_at: string; }
+
 export default function CommitteeDashboard() {
   const [member, setMember] = useState<{ id: string; name: string; designation: string } | null>(null);
-  const [topics, setTopics] = useState<any[]>([]);
-  const [votesData, setVotesData] = useState<any[]>([]);
-  const [commentsList, setCommentsList] = useState<any[]>([]);
+  const [topics, setTopics] = useState<TopicRecord[]>([]);
+  const [votesData, setVotesData] = useState<VoteRecord[]>([]);
+  const [commentsList, setCommentsList] = useState<CommentRecord[]>([]);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -62,6 +66,7 @@ export default function CommitteeDashboard() {
     } else {
       loadDashboard(authId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const handleLogout = () => {
@@ -87,8 +92,8 @@ export default function CommitteeDashboard() {
       toast({ title: "ভোট গ্রহণ করা হয়েছে", description: "আপনার মূল্যবান মতামতের জন্য ধন্যবাদ।" });
       const authId = localStorage.getItem("committee_auth");
       if (authId) loadDashboard(authId);
-    } catch (err: any) {
-      toast({ title: "ভোট গ্রহণ ব্যর্থ", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "ভোট গ্রহণ ব্যর্থ", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     }
   };
 
@@ -106,8 +111,8 @@ export default function CommitteeDashboard() {
       setComment("");
       const authId = localStorage.getItem("committee_auth");
       if (authId) loadDashboard(authId);
-    } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "ত্রুটি", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     } finally {
       setSubmitLoading(false);
     }
@@ -119,8 +124,8 @@ export default function CommitteeDashboard() {
       toast({ title: "মুছে ফেলা হয়েছে" });
       const authId = localStorage.getItem("committee_auth");
       if (authId) loadDashboard(authId);
-    } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "ত্রুটি", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     }
   };
 
