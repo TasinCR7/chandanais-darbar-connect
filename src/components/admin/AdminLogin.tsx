@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { LogIn, Mail, ArrowRight } from "lucide-react";
+import { LogIn, Mail, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
 
 interface AdminLoginProps {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (identifier: string, password: string, method: "email" | "phone") => void;
   loading: boolean;
   isVerifying?: boolean;
   user: any;
@@ -22,11 +22,19 @@ const AdminLogin = ({
   isAdmin, 
   onLogout, 
 }: AdminLoginProps) => {
+  const [method, setMethod] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleEmailLogin = () => {
-    onLogin(email, password);
+  const handleSubmit = () => {
+    if (method === "email") {
+      onLogin(email, password, "email");
+    } else {
+      // Ensure phone has country code
+      const formattedPhone = phone.startsWith("+") ? phone : `+88${phone}`;
+      onLogin(formattedPhone, password, "phone");
+    }
   };
 
   return (
@@ -64,21 +72,58 @@ const AdminLogin = ({
           )}
 
           <div className="space-y-6 relative z-10">
-            <div className="flex items-center gap-2 justify-center text-gold/60 text-sm font-medium">
-              <Mail size={16} /> ইমেইল দিয়ে লগইন করুন
+            {/* Method Toggle */}
+            <div className="flex bg-black/20 rounded-xl p-1 border border-gold/10">
+              <button
+                onClick={() => setMethod("email")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                  method === "email" 
+                    ? "bg-gold-gradient text-primary-foreground shadow-lg" 
+                    : "text-gold/60 hover:text-gold"
+                }`}
+              >
+                <Mail size={16} /> ইমেইল
+              </button>
+              <button
+                onClick={() => setMethod("phone")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                  method === "phone" 
+                    ? "bg-gold-gradient text-primary-foreground shadow-lg" 
+                    : "text-gold/60 hover:text-gold"
+                }`}
+              >
+                <Phone size={16} /> মোবাইল
+              </button>
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">ইমেইল এড্রেস</label>
-                <Input
-                  type="email"
-                  placeholder="example@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
-                />
-              </div>
+              {method === "email" ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">ইমেইল এড্রেস</label>
+                  <Input
+                    type="email"
+                    placeholder="example@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">মোবাইল নম্বর</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/60 font-bold text-sm">+88</span>
+                    <Input
+                      type="tel"
+                      placeholder="01XXXXXXXXX"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ""))}
+                      className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl pl-14 pr-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">পাসওয়ার্ড</label>
                 <Input
@@ -87,13 +132,13 @@ const AdminLogin = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
-                  onKeyDown={(e) => e.key === "Enter" && handleEmailLogin()}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 />
               </div>
 
               <Button
-                onClick={handleEmailLogin}
-                disabled={loading || !email || !password}
+                onClick={handleSubmit}
+                disabled={loading || !(method === "email" ? email : phone) || !password}
                 className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4 transition-all duration-300"
               >
                 {loading || isVerifying ? (
