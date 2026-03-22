@@ -97,7 +97,7 @@ const Index = () => {
             transition={{ duration: 0.8 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <div className="bg-card border border-gold/20 rounded-lg p-8 md:p-12">
+            <div className="bg-card/40 backdrop-blur-sm border border-gold/20 rounded-lg p-8 md:p-12">
               <Star size={24} className="text-gold mx-auto mb-4" />
               <p className="text-foreground leading-relaxed mb-6">
                 গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
@@ -114,7 +114,7 @@ const Index = () => {
       </section>
 
       {/* Urs Countdown */}
-      <section className="py-20 bg-card">
+      <section className="py-20 bg-card/40 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <SectionTitle
             title="ওরশ কাউন্টডাউন"

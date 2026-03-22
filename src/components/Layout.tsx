@@ -47,10 +47,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           backgroundImage: `url(${heroBg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.15
+          opacity: 0.3
         }}
       />
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none bg-background/80"
+      />
+      <div className="relative z-10 flex flex-col min-h-screen bg-transparent">
         {/* Sticky Navigation */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20">
           <div className="container mx-auto px-4 flex items-center justify-between h-16">
