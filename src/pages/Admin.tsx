@@ -357,6 +357,12 @@ const Admin = () => {
               <CommitteeManager />
             </Suspense>
           </TabsContent>
+
+          <TabsContent value="voting">
+            <Suspense fallback={<PremiumLoader />}>
+              <VoteTopicManager />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
