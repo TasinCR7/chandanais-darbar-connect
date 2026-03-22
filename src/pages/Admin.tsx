@@ -346,6 +346,12 @@ const Admin = () => {
               <FinanceManager />
             </Suspense>
           </TabsContent>
+
+          <TabsContent value="committee">
+            <Suspense fallback={<PremiumLoader />}>
+              <CommitteeManager />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
