@@ -43,7 +43,7 @@ const collectMessages = (value: unknown, seen = new WeakSet<object>()): string[]
   return [String(value)];
 };
 
-const isIgnorableExtensionError = (...values: unknown[]) => {
+export const isIgnorableExtensionError = (...values: unknown[]) => {
   const message = values
     .flatMap((value) => collectMessages(value))
     .join("\n")
