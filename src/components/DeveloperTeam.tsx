@@ -1,18 +1,19 @@
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
+import tasinAvatar from "@/assets/tasin-avatar.png";
 
 const teamMembers = [
   {
     name: "Tasin",
     roleEn: "Lead Developer",
     roleBn: "লিড ডেভেলপার",
-    imageUrl: "https://avatars.githubusercontent.com/u/100523293?v=4", // fallback avatar for Tasin
+    imageUrl: tasinAvatar,
   },
   {
     name: "Lemon",
     roleEn: "Frontend Developer",
     roleBn: "ফ্রন্টএন্ড ডেভেলপার",
-    imageUrl: "https://avatars.githubusercontent.com/u/user-fallback?v=4", // fallback avatar
+    imageUrl: null, // fallback avatar
   }
 ];
 
@@ -61,8 +62,10 @@ const DeveloperTeam = () => {
               <div className="relative mb-6">
                 <div className="w-24 h-24 rounded-full border-2 border-gold/30 p-1 group-hover:border-gold transition-colors duration-300 overflow-hidden">
                   <div className="w-full h-full rounded-full bg-muted overflow-hidden">
-                    {/* Placeholder image logic; will default to UI gradient if URL fails */}
-                    {member.name === "Tasin" ? (
+                    {/* Render exact image if available, else fallback */}
+                    {member.imageUrl ? (
+                      <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
+                    ) : member.name === "Tasin" ? (
                       <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-bold text-2xl">T</div>
                     ) : (
                       <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-bold text-2xl">L</div>
