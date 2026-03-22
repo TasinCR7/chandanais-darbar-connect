@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star } from "lucide-react";
-import heroImage from "@/assets/hero-darbar.jpg";
+import heroImage from "@/assets/hero-new.png";
 import SectionTitle from "@/components/SectionTitle";
 import EventCard from "@/components/EventCard";
 import UrsCountdown from "@/components/UrsCountdown";
@@ -26,7 +26,11 @@ const Index = () => {
         canonical="/"
       />
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-background" />
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background" />
 
         <div className="relative z-10 container mx-auto px-4 text-center">
           <motion.div
