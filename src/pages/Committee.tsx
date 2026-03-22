@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Phone } from "lucide-react";
+import { Users, Phone, Vote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
