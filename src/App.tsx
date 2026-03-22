@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -6,19 +7,21 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import Pir from "./pages/Pir";
-import Rules from "./pages/Rules";
-import Events from "./pages/Events";
-import Hadia from "./pages/Hadia";
-import Gallery from "./pages/Gallery";
-import Doa from "./pages/Doa";
-import QnA from "./pages/QnA";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
-import Notices from "./pages/Notices";
+import PremiumLoader from "./components/PremiumLoader";
+
+const Index = lazy(() => import("./pages/Index"));
+const About = lazy(() => import("./pages/About"));
+const Pir = lazy(() => import("./pages/Pir"));
+const Rules = lazy(() => import("./pages/Rules"));
+const Events = lazy(() => import("./pages/Events"));
+const Hadia = lazy(() => import("./pages/Hadia"));
+const Gallery = lazy(() => import("./pages/Gallery"));
+const Doa = lazy(() => import("./pages/Doa"));
+const QnA = lazy(() => import("./pages/QnA"));
+const Contact = lazy(() => import("./pages/Contact"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Notices = lazy(() => import("./pages/Notices"));
 
 
 const queryClient = new QueryClient();
