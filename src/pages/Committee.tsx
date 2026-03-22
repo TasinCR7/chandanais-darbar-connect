@@ -48,6 +48,13 @@ const Committee = () => {
             subtitle="চন্দনাইশ দরবার শরীফ পরিচালনা কমিটির সম্মানিত সদস্যবৃন্দ"
           />
 
+          <div className="flex justify-center mt-4 mb-6">
+            <Link to="/committee-login"
+              className="inline-flex items-center gap-2 bg-gold-gradient text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-gold/10 hover:shadow-gold/20 transition-all">
+              <Vote size={16} /> কমিটি সদস্য লগইন
+            </Link>
+          </div>
+
           {loading ? (
             <PremiumLoader />
           ) : members.length === 0 ? (
