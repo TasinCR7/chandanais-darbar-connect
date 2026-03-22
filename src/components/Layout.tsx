@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import DeveloperTeam from "./DeveloperTeam";
 
 const navLinks = [
   { path: "/", label: "হোম" },
@@ -163,6 +164,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content */}
       <main className={notice ? "pt-[104px]" : "pt-16"}>{children}</main>
+
+      <div className="border-t border-gold/20" />
+      <DeveloperTeam />
 
       {/* Footer */}
       <footer className="border-t border-gold/20 bg-card islamic-pattern">
