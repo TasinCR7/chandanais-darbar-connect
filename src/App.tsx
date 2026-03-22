@@ -22,6 +22,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Notices = lazy(() => import("./pages/Notices"));
+const Committee = lazy(() => import("./pages/Committee"));
 
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
                   <Route path="/qna" element={<QnA />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/notices" element={<Notices />} />
+                  <Route path="/committee" element={<Committee />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
