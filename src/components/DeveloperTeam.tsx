@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
 import tasinAvatar from "@/assets/tasin-avatar.png";
+import lemonAvatar from "@/assets/lemon-avatar.jpg";
 
 const teamMembers = [
   {
@@ -13,7 +14,7 @@ const teamMembers = [
     name: "Lemon",
     roleEn: "Frontend Developer",
     roleBn: "ফ্রন্টএন্ড ডেভেলপার",
-    imageUrl: null, // fallback avatar
+    imageUrl: lemonAvatar,
   }
 ];
 
