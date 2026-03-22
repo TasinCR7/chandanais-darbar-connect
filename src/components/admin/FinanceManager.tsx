@@ -308,55 +308,72 @@ const FinanceManager = () => {
         </div>
       </div>
 
-      {/* Hidden Premium Invoice Template for PDF */}
+      {/* Hidden Ultra-Premium Invoice Template for PDF */}
       <div className="absolute -left-[9999px] top-0 pointer-events-none">
-        <div ref={invoiceRef} className="bg-white text-slate-800 w-[794px] min-h-[1123px] font-bengali p-12 relative flex flex-col items-center shadow-none">
-          {/* Outer Gold Border Overlay */}
-          <div className="absolute inset-4 border-[3px] border-double border-[#D4AF37]/50 rounded-2xl pointer-events-none z-10" />
+        <div ref={invoiceRef} className="bg-white text-slate-900 w-[794px] min-h-[1123px] font-bengali relative flex flex-col shadow-none box-border">
           
-          {/* Subtle Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none z-0">
-            <span className="font-arabic text-[150px] font-bold">الله</span>
+          {/* Top Letterhead Bar */}
+          <div className="h-6 w-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37]" />
+          <div className="h-2 w-full bg-slate-900" />
+
+          {/* Majestic Watermark (Islamic Geometric Star SVG) */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none z-0 overflow-hidden">
+            <svg viewBox="0 0 100 100" className="w-[600px] h-[600px] text-slate-900" fill="currentColor">
+              <path d="M50 0 L55 35 L90 20 L65 50 L90 80 L55 65 L50 100 L45 65 L10 80 L35 50 L10 20 L45 35 Z" />
+              <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="2" />
+              <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" strokeWidth="1" />
+            </svg>
           </div>
 
-          <div className="w-full relative z-20 flex-1 flex flex-col">
-            {/* Header section */}
-            <div className="text-center mb-10 pb-6 border-b-2 border-[#D4AF37]/30">
-              <h2 className="font-arabic text-xl md:text-2xl text-slate-600 mb-4">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</h2>
-              <h1 className="text-4xl font-black text-[#B8860B] mb-2 font-heading tracking-wide">চন্দনাইশ দরবার শরীফ</h1>
-              <p className="text-sm font-bold tracking-widest text-slate-500 uppercase">সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া</p>
-              
-              <div className="mt-8 flex justify-between items-end text-left">
-                <div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">রিপোর্টের ধরন</p>
-                  <p className="text-lg font-bold text-slate-700 bg-slate-50 px-4 py-2 border border-slate-100 rounded-lg inline-block">
-                    {viewMode === "monthly" ? `মাসিক ফাইন্যান্সিয়াল রিপোর্ট: ${selectedMonth}` : `বার্ষিক ফাইন্যান্সিয়াল রিপোর্ট: ${selectedMonth.slice(0, 4)}`}
+          <div className="w-full relative z-20 flex-1 flex flex-col px-14 py-12">
+            
+            {/* Ultra Premium Header */}
+            <div className="flex justify-between items-start mb-12 border-b-2 border-slate-900 pb-8">
+              <div className="flex-1">
+                <h2 className="font-arabic text-xl text-slate-600 mb-3 tracking-widest pl-1">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</h2>
+                <h1 className="text-4xl font-black text-slate-900 mb-2 font-heading tracking-tight leading-none">চন্দনাইশ দরবার শরীফ</h1>
+                <p className="text-sm font-bold tracking-widest text-[#D4AF37] uppercase">সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া</p>
+                
+                <div className="mt-6">
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">ঠিকানা</p>
+                  <p className="text-sm font-medium text-slate-700 leading-tight mt-1">
+                    চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ<br/>
+                    ইমেইল: info@chandanaishdarbar.org<br/>
+                    ফোন: +880 1700-000000
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">রিপোর্ট ইস্যুর তারিখ</p>
-                  <p className="text-md font-bold text-slate-700">{new Date().toLocaleDateString("bn-BD")}</p>
-                  <p className="text-xs font-medium text-slate-400 mt-1">Ref: CDS-FIN-{Date.now().toString().slice(-6)}</p>
+              </div>
+              
+              <div className="text-right w-64">
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg shadow-sm">
+                  <h3 className="text-slate-900 font-bold text-lg mb-1 tracking-wide">ফাইন্যান্সিয়াল রিপোর্ট</h3>
+                  <p className="text-[#D4AF37] font-bold text-sm">
+                    {viewMode === "monthly" ? selectedMonth : selectedMonth.slice(0, 4)}
+                  </p>
+                  <div className="w-full h-px bg-slate-200 my-3" />
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">ইস্যু তারিখ</p>
+                  <p className="text-sm font-bold text-slate-800">{new Date().toLocaleDateString("bn-BD")}</p>
+                  <p className="text-[10px] font-mono text-slate-400 mt-2">Ref: CDS-{Date.now().toString().slice(-6)}</p>
                 </div>
               </div>
             </div>
 
             {/* Financial Summary */}
-            <div className="grid grid-cols-3 gap-6 mb-12">
-              <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100/50 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-                <p className="text-xs text-emerald-600/70 font-bold uppercase tracking-widest mb-2">মোট আয়</p>
-                <p className="text-2xl font-black text-emerald-700 font-mono">৳ {totalIncome.toLocaleString("bn-BD")}</p>
+            <div className="grid grid-cols-3 gap-0 mb-12 border-2 border-slate-900 rounded-lg overflow-hidden shadow-sm">
+              <div className="bg-white p-6 relative border-r border-slate-200">
+                <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">মোট আয়</p>
+                <p className="text-2xl font-black text-slate-900 font-mono">৳ {totalIncome.toLocaleString("bn-BD")}</p>
               </div>
-              <div className="bg-rose-50/50 p-6 rounded-2xl border border-rose-100/50 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
-                <p className="text-xs text-rose-600/70 font-bold uppercase tracking-widest mb-2">মোট ব্যয়</p>
-                <p className="text-2xl font-black text-rose-700 font-mono">৳ {totalExpense.toLocaleString("bn-BD")}</p>
+              <div className="bg-white p-6 relative border-r border-slate-200">
+                <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">মোট ব্যয়</p>
+                <p className="text-2xl font-black text-slate-900 font-mono">৳ {totalExpense.toLocaleString("bn-BD")}</p>
               </div>
-              <div className="bg-[#FAF8F5] p-6 rounded-2xl border border-[#D4AF37]/20 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]" />
-                <p className="text-xs text-[#B8860B]/70 font-bold uppercase tracking-widest mb-2">তহবিল ব্যালেন্স</p>
-                <p className={`text-2xl font-black font-mono ${balance >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+              <div className="bg-slate-50 p-6 relative">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[#D4AF37]" />
+                <p className="text-xs text-[#D4AF37] font-bold uppercase tracking-widest mb-1">অবশিষ্ট ব্যালেন্স</p>
+                <p className={`text-2xl font-black font-mono ${balance >= 0 ? "text-slate-900" : "text-rose-600"}`}>
                   ৳ {balance.toLocaleString("bn-BD")}
                 </p>
               </div>
@@ -364,69 +381,94 @@ const FinanceManager = () => {
 
             {/* Transaction Matrix */}
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 border-l-4 border-[#D4AF37] pl-3">লেনদেন বিবরণী</h3>
-              <table className="w-full text-sm border-collapse">
+              <h3 className="text-sm font-bold text-[#D4AF37] uppercase tracking-widest mb-3 pr-4 flex items-center">
+                <span className="w-4 h-4 bg-[#D4AF37] mr-2 inline-block"></span>
+                লেনদেন বিবরণী
+                <span className="flex-1 ml-4 border-t border-dashed border-slate-300"></span>
+              </h3>
+              <table className="w-full text-sm border-2 border-slate-900">
                 <thead>
-                  <tr className="bg-slate-50 text-slate-600 border-y-2 border-slate-200">
-                    <th className="py-4 px-4 text-left font-bold uppercase text-xs tracking-wider">তারিখ</th>
-                    <th className="py-4 px-4 text-left font-bold uppercase text-xs tracking-wider">লেনদেনের ধরন</th>
-                    <th className="py-4 px-4 text-left font-bold uppercase text-xs tracking-wider">বিভাগ/খাত</th>
-                    <th className="py-4 px-4 text-left font-bold uppercase text-xs tracking-wider w-[250px]">বিস্তারিত বিবরণ</th>
-                    <th className="py-4 px-4 text-right font-bold uppercase text-xs tracking-wider">পরিমাণ (৳)</th>
+                  <tr className="bg-slate-900 text-white">
+                    <th className="py-3 px-4 text-left font-bold uppercase text-xs tracking-wider border-r border-slate-700">তারিখ</th>
+                    <th className="py-3 px-4 text-left font-bold uppercase text-xs tracking-wider border-r border-slate-700">ধরন</th>
+                    <th className="py-3 px-4 text-left font-bold uppercase text-xs tracking-wider border-r border-slate-700">বিভাগ/খাত</th>
+                    <th className="py-3 px-4 text-left font-bold uppercase text-xs tracking-wider border-r border-slate-700 w-[250px]">বিবরণ</th>
+                    <th className="py-3 px-4 text-right font-bold uppercase text-xs tracking-wider">পরিমাণ (৳)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredFinances.map((f, i) => (
-                    <tr key={i} className="border-b border-slate-100 transition-colors odd:bg-white even:bg-slate-50/30">
-                      <td className="py-4 px-4 whitespace-nowrap text-slate-600 font-medium">
+                    <tr key={i} className="border-b border-slate-200 last:border-0 odd:bg-white even:bg-slate-50/50">
+                      <td className="py-3 px-4 text-slate-700 font-medium border-r border-slate-200">
                         {new Date(f.date).toLocaleDateString("bn-BD")}
                       </td>
-                      <td className="py-4 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
-                          f.type === "income" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                        }`}>
+                      <td className="py-3 px-4 border-r border-slate-200">
+                        <span className={`font-bold ${f.type === "income" ? "text-emerald-600" : "text-rose-600"}`}>
                           {f.type === "income" ? "আয়" : "ব্যয়"}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-slate-700 font-medium">{f.category}</td>
-                      <td className="py-4 px-4 text-slate-500 text-xs leading-relaxed max-w-[250px] break-words">
-                        {f.description || "কোনো বিবরণ নেই"}
+                      <td className="py-3 px-4 text-slate-800 font-medium border-r border-slate-200">{f.category}</td>
+                      <td className="py-3 px-4 text-slate-500 text-xs max-w-[250px] border-r border-slate-200">
+                        {f.description || "-"}
                       </td>
-                      <td className="py-4 px-4 text-right font-black font-mono text-slate-800">
+                      <td className="py-3 px-4 text-right font-black font-mono text-slate-900">
                         {Number(f.amount).toLocaleString("bn-BD")}
                       </td>
                     </tr>
                   ))}
                   {filteredFinances.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-400 font-medium bg-slate-50/50 border-b border-slate-100">
-                        এই নির্বাচিত সময়ে কোনো লেনদেন নেই।
+                      <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
+                        কোনো লেনদেন পাওয়া যায়নি।
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+
+              {/* End of Report Bar */}
+              <div className="mt-4 border-t-2 border-slate-900 flex justify-between items-center pt-2">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">End of Report</p>
+                <p className="text-xs font-bold text-slate-900 font-mono">Total Valid Entries: {filteredFinances.length}</p>
+              </div>
             </div>
 
-            {/* Premium Footer */}
-            <div className="mt-auto pt-16 flex justify-between items-end pb-4">
-              <div className="text-xs text-slate-400 font-medium space-y-1">
-                <p>This is a computer-generated certified financial report.</p>
-                <p>&copy; {new Date().getFullYear()} Chandanaish Darbar Sharif. All rights reserved.</p>
+            {/* Official Footer with SVG Stamp */}
+            <div className="mt-auto pt-12 flex justify-between items-end">
+              <div className="text-xs text-slate-500 leading-relaxed font-medium">
+                <p className="font-bold text-slate-800 mb-1">গুরুত্বপূর্ণ নোটিশ:</p>
+                <p>১. এটি একটি স্বয়ংক্রিয় কম্পিউটার জেনারেটেড রিপোর্ট।</p>
+                <p>২. উল্লিখিত হিসেবে কোনো অসংগতি থাকলে কতৃপক্ষের সাথে যোগাযোগ করুন।</p>
+                <p className="mt-2 text-[10px] text-slate-400">&copy; {new Date().getFullYear()} Chandanaish Darbar Sharif.</p>
               </div>
               
-              <div className="text-center w-64">
-                <div className="h-16 flex items-center justify-center relative">
-                  <span className="font-arabic text-3xl text-slate-200 absolute -top-4 opacity-50 select-none">تصديق</span>
+              <div className="text-center w-64 relative">
+                {/* SVG Official Stamp (slight rotation for realism) */}
+                <div className="absolute -top-16 -left-8 -rotate-12 opacity-80 mix-blend-multiply select-none">
+                  <svg viewBox="0 0 100 100" className="w-28 h-28 text-rose-600/90" fill="none" stroke="currentColor">
+                    <circle cx="50" cy="50" r="45" strokeWidth="2" strokeDasharray="4 2" />
+                    <circle cx="50" cy="50" r="40" strokeWidth="1" />
+                    <circle cx="50" cy="50" r="30" strokeWidth="0.5" />
+                    <path d="M20 50 Q50 30 80 50" strokeWidth="1" />
+                    <text x="50" y="35" fontSize="12" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none" transform="rotate(-15 50 25)">APPROVED</text>
+                    <text x="50" y="65" fontSize="10" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">OFFICIAL</text>
+                    <text x="50" y="75" fontSize="8" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none">SEAL</text>
+                  </svg>
                 </div>
-                <div className="border-t-2 border-slate-300 pt-2 border-dashed">
-                  <p className="text-base font-black text-slate-800 font-heading">খাজা এনায়েত উল্লাহ</p>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">তত্ত্বাবধায়ক</p>
-                  <p className="text-[10px] text-[#B8860B] font-bold mt-1">চন্দনাইশ দরবার শরীফ</p>
+                
+                {/* Signature Line */}
+                <div className="border-t-2 border-slate-800 pt-3 relative z-10">
+                  <p className="text-lg font-black text-slate-900 font-heading">খাজা এনায়েত উল্লাহ</p>
+                  <p className="text-xs font-bold text-[#D4AF37] uppercase tracking-widest mt-1">তত্ত্বাবধায়ক</p>
                 </div>
               </div>
             </div>
             
+          </div>
+          
+          {/* Bottom Border Accent */}
+          <div className="absolute bottom-0 left-0 w-full h-8 bg-slate-900 flex items-center justify-center">
+             <div className="h-0.5 w-1/3 bg-[#D4AF37]/50" />
           </div>
         </div>
       </div>
