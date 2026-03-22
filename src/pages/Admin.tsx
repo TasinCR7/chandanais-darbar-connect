@@ -14,6 +14,7 @@ const GalleryManager = lazy(() => import("@/components/admin/GalleryManager"));
 const SubmissionManager = lazy(() => import("@/components/admin/SubmissionManager"));
 const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"));
+const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -312,6 +313,7 @@ const Admin = () => {
             <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
             <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
             <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
+            <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
           </TabsList>
 
           <TabsContent value="notices">
@@ -361,6 +363,12 @@ const Admin = () => {
           <TabsContent value="committee">
             <Suspense fallback={<PremiumLoader />}>
               <CommitteeManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="voting">
+            <Suspense fallback={<PremiumLoader />}>
+              <VoteTopicManager />
             </Suspense>
           </TabsContent>
         </Tabs>
