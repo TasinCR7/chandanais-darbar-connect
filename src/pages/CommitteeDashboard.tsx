@@ -183,6 +183,29 @@ const CommitteeDashboard = () => {
     };
   };
 
+  // Signup
+  const [signupMode, setSignupMode] = useState(false);
+  const [signupName, setSignupName] = useState("");
+  const [signupLoading, setSignupLoading] = useState(false);
+
+  const handleSignup = async () => {
+    setSignupLoading(true);
+    try {
+      const credentials = method === "email"
+        ? { email, password, options: { data: { full_name: signupName } } }
+        : { phone: phone.startsWith("+") ? phone : `+88${phone}`, password, options: { data: { full_name: signupName } } };
+      const { error } = await supabase.auth.signUp(credentials);
+      if (error) {
+        toast({ title: "সাইনআপ ব্যর্থ", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "সাইনআপ সফল", description: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। এডমিন আপনাকে কমিটি সদস্য হিসেবে যুক্ত করলে লগইন করতে পারবেন।" });
+        setSignupMode(false);
+      }
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
   // LOGIN SCREEN
   if (!user || !isCommitteeMember) {
     return (
@@ -204,12 +227,16 @@ const CommitteeDashboard = () => {
                 </div>
               </div>
               <div className="text-center">
-                <h1 className="text-2xl md:text-3xl font-heading font-bold text-cream mb-1">কমিটি সদস্য লগইন</h1>
-                <p className="text-gold/60 text-sm font-medium">ভোটিং ও মতামত প্রদানের জন্য লগইন করুন</p>
+                <h1 className="text-2xl md:text-3xl font-heading font-bold text-cream mb-1">
+                  {signupMode ? "কমিটি সদস্য সাইনআপ" : "কমিটি সদস্য লগইন"}
+                </h1>
+                <p className="text-gold/60 text-sm font-medium">
+                  {signupMode ? "নতুন অ্যাকাউন্ট তৈরি করুন" : "ভোটিং ও মতামত প্রদানের জন্য লগইন করুন"}
+                </p>
               </div>
             </div>
 
-            {user && !isCommitteeMember && (
+            {user && !isCommitteeMember && !signupMode && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-6">
                 <p className="text-sm text-destructive font-medium text-center">আপনি কমিটি সদস্য হিসেবে নিবন্ধিত নন।</p>
               </motion.div>
@@ -229,6 +256,14 @@ const CommitteeDashboard = () => {
               </div>
 
               <div className="space-y-4">
+                {signupMode && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">আপনার নাম *</label>
+                    <Input type="text" placeholder="পূর্ণ নাম" value={signupName} onChange={e => setSignupName(e.target.value)}
+                      className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 font-medium" />
+                  </div>
+                )}
+
                 {method === "email" ? (
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">ইমেইল</label>
@@ -250,23 +285,43 @@ const CommitteeDashboard = () => {
                   <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">পাসওয়ার্ড</label>
                   <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
                     className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 font-medium"
-                    onKeyDown={e => e.key === "Enter" && handleLogin()} />
+                    onKeyDown={e => e.key === "Enter" && (signupMode ? handleSignup() : handleLogin())} />
                 </div>
 
-                <Button onClick={handleLogin} disabled={loginLoading || !(method === "email" ? email : phone) || !password}
-                  className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4">
-                  {loginLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      লগইন হচ্ছে...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">লগইন করুন <ArrowRight size={18} /></div>
-                  )}
-                </Button>
+                {signupMode ? (
+                  <Button onClick={handleSignup} disabled={signupLoading || !(method === "email" ? email : phone) || !password || !signupName.trim()}
+                    className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4">
+                    {signupLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                        সাইনআপ হচ্ছে...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">সাইনআপ করুন <ArrowRight size={18} /></div>
+                    )}
+                  </Button>
+                ) : (
+                  <Button onClick={handleLogin} disabled={loginLoading || !(method === "email" ? email : phone) || !password}
+                    className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4">
+                    {loginLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                        লগইন হচ্ছে...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">লগইন করুন <ArrowRight size={18} /></div>
+                    )}
+                  </Button>
+                )}
 
-                {user && !isCommitteeMember && (
-                  <div className="pt-4 border-t border-gold/10">
+                <div className="pt-4 border-t border-gold/10 text-center">
+                  <button onClick={() => setSignupMode(!signupMode)} className="text-sm text-gold/70 hover:text-gold font-medium transition-colors">
+                    {signupMode ? "ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন করুন" : "নতুন অ্যাকাউন্ট তৈরি করুন"}
+                  </button>
+                </div>
+
+                {user && !isCommitteeMember && !signupMode && (
+                  <div className="pt-2">
                     <Button variant="outline" onClick={handleLogout} className="w-full border-gold/30 text-gold h-12 rounded-xl font-semibold hover:bg-gold/5">
                       অন্য অ্যাকাউন্টে লগইন
                     </Button>
