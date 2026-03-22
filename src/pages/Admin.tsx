@@ -262,7 +262,6 @@ const Admin = () => {
         user={user}
         isAdmin={isAdmin}
         onLogout={handleLogout}
-        onForceAccess={forceAdminAccess}
       />
     );
   }
