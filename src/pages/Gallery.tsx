@@ -23,12 +23,13 @@ const Gallery = () => {
 
   useEffect(() => {
     const fetchGallery = async () => {
-      const { data } = await (supabase
-        .from("gallery" as any) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase.from("gallery" as any) as any)
         .select("*")
         .order("created_at", { ascending: false });
       
       if (data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setGalleryItems(data as any as GalleryItem[]);
       }
       setLoading(false);

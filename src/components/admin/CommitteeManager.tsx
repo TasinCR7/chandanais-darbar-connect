@@ -77,6 +77,7 @@ const CommitteeManager = () => {
       setPhone("");
       setImageFile(null);
       fetchMembers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
     } finally {

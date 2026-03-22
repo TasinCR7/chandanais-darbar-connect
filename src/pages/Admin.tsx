@@ -20,8 +20,11 @@ const Admin = () => {
   const [loginLoading, setLoginLoading] = useState(false);
 
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [notices, setNotices] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [submissions, setSubmissions] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [gallery, setGallery] = useState<any[]>([]);
   const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
   const [galleryCaption, setGalleryCaption] = useState("");
@@ -238,6 +241,7 @@ const Admin = () => {
       toast({ title: "আপলোড সফল", description: "ছবিটি গ্যালারিতে যোগ করা হয়েছে।" });
       setGalleryCaption("");
       fetchGallery();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast({ title: "আপলোড ব্যর্থ", description: err.message, variant: "destructive" });
     } finally {

@@ -9,6 +9,7 @@ interface AdminLoginProps {
   onLogin: (identifier: string, password: string, method: "email" | "phone") => void;
   loading: boolean;
   isVerifying?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user: any;
   isAdmin: boolean;
   onLogout: () => void;
