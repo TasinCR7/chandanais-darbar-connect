@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Download, TrendingUp, TrendingDown, Wallet, Calendar } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface Finance {
   id: string;
@@ -100,41 +102,30 @@ const FinanceManager = () => {
   };
 
   // PDF generation
-  const generatePDF = () => {
-    const title = viewMode === "monthly"
-      ? `আয়-ব্যয় রিপোর্ট — ${selectedMonth}`
-      : `বার্ষিক আয়-ব্যয় রিপোর্ট — ${selectedMonth.slice(0, 4)}`;
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
-    const rows = filteredFinances.map(f =>
-      `${f.date} | ${f.type === "income" ? "আয়" : "ব্যয়"} | ${f.category} | ৳${Number(f.amount).toLocaleString("bn-BD")} | ${f.description || "-"}`
-    );
-
-    const content = [
-      "চন্দনাইশ দরবার শরীফ",
-      title,
-      "=".repeat(60),
-      "",
-      `মোট আয়: ৳${totalIncome.toLocaleString("bn-BD")}`,
-      `মোট ব্যয়: ৳${totalExpense.toLocaleString("bn-BD")}`,
-      `ব্যালেন্স: ৳${balance.toLocaleString("bn-BD")}`,
-      "",
-      "=".repeat(60),
-      "তারিখ | ধরন | বিভাগ | পরিমাণ | বিবরণ",
-      "-".repeat(60),
-      ...rows,
-      "",
-      "-".repeat(60),
-      `তৈরির তারিখ: ${new Date().toLocaleDateString("bn-BD")}`,
-    ].join("\n");
-
-    const blob = new Blob(["\uFEFF" + content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoice-${selectedMonth}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "ডাউনলোড সফল", description: "ইনভয়েস ফাইল ডাউনলোড হয়েছে।" });
+  const generatePDF = async () => {
+    if (!invoiceRef.current) return;
+    setLoading(true);
+    try {
+      // Create a temporary clone for higher quality
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#0a0a0a"
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`invoice-${selectedMonth}.pdf`);
+      toast({ title: "ডাউনলোড সফল", description: "ইনভয়েস PDF ডাউনলোড হয়েছে।" });
+    } catch (err) {
+      toast({ title: "ত্রুটি", description: "PDF তৈরিতে সমস্যা হয়েছে।", variant: "destructive" });
+    }
+    setLoading(false);
   };
 
   return (
@@ -313,6 +304,75 @@ const FinanceManager = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Hidden Invoice Template for PDF Generation */}
+      <div className="hidden">
+        <div ref={invoiceRef} className="p-10 bg-[#0a0a0a] text-white w-[800px] font-bengali">
+          <div className="text-center mb-10 border-b border-gold/30 pb-6">
+            <h1 className="text-3xl font-bold text-gold mb-2">চন্দনাইশ দরবার শরীফ</h1>
+            <p className="text-sm text-gold/60">সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া</p>
+            <div className="mt-4 inline-block px-4 py-1 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-bold">
+              {viewMode === "monthly" ? `মাসিক আয়-ব্যয় রিপোর্ট: ${selectedMonth}` : `বার্ষিক আয়-ব্যয় রিপোর্ট: ${selectedMonth.slice(0, 4)}`}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-6 mb-10">
+            <div className="bg-[#111] p-4 rounded-xl border border-emerald-500/20">
+              <p className="text-xs text-muted-foreground mb-1">মোট আয়</p>
+              <p className="text-xl font-bold text-emerald-500">৳{totalIncome.toLocaleString("bn-BD")}</p>
+            </div>
+            <div className="bg-[#111] p-4 rounded-xl border border-red-500/20">
+              <p className="text-xs text-muted-foreground mb-1">মোট ব্যয়</p>
+              <p className="text-xl font-bold text-red-500">৳{totalExpense.toLocaleString("bn-BD")}</p>
+            </div>
+            <div className="bg-[#111] p-4 rounded-xl border border-gold/20">
+              <p className="text-xs text-muted-foreground mb-1">ব্যালেন্স</p>
+              <p className={`text-xl font-bold ${balance >= 0 ? "text-emerald-500" : "text-red-500"}`}>৳{balance.toLocaleString("bn-BD")}</p>
+            </div>
+          </div>
+
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gold/30 text-gold text-left">
+                <th className="py-3 px-2">তারিখ</th>
+                <th className="py-3 px-2">ধরন</th>
+                <th className="py-3 px-2">বিভাগ</th>
+                <th className="py-3 px-2 text-right">পরিমাণ (৳)</th>
+                <th className="py-3 px-2">বিবরণ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredFinances.map((f, i) => (
+                <tr key={i} className="border-b border-white/5">
+                  <td className="py-3 px-2 whitespace-nowrap">{new Date(f.date).toLocaleDateString("bn-BD")}</td>
+                  <td className="py-3 px-2">
+                    <span className={f.type === "income" ? "text-emerald-400" : "text-red-400"}>
+                      {f.type === "income" ? "আয়" : "ব্যয়"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-2">{f.category}</td>
+                  <td className="py-3 px-2 text-right font-bold">
+                    {Number(f.amount).toLocaleString("bn-BD")}
+                  </td>
+                  <td className="py-3 px-2 text-gray-400 max-w-[200px] truncate">{f.description || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="mt-20 flex justify-between items-end border-t border-gold/20 pt-10">
+            <div className="text-xs text-gray-500">
+              <p>রিপোর্ট তৈরির তারিখ: {new Date().toLocaleDateString("bn-BD")}</p>
+              <p>এটি একটি কম্পিউটার জেনারেটেড রিপোর্ট।</p>
+            </div>
+            <div className="text-center">
+              <div className="w-40 border-t border-gray-600 mb-2"></div>
+              <p className="text-sm font-bold text-gold">খাজা এনায়েত উল্লাহ</p>
+              <p className="text-[10px] text-gray-500">তত্ত্বাবধায়ক, চন্দনাইশ দরবার শরীফ</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
