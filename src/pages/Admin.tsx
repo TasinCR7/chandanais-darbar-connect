@@ -302,26 +302,31 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="notices">
-             <NoticeManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <NoticeManager 
                 notices={notices} 
                 loading={loading} 
                 onAddNotice={addNotice} 
                 onToggleActive={toggleNotice} 
                 onDeleteNotice={deleteNotice} 
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="submissions">
-             <SubmissionManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <SubmissionManager 
                 submissions={submissions} 
                 onMarkRead={markSubmissionRead} 
                 onDelete={deleteSubmission} 
                 onReply={submitReply} 
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="gallery">
-             <GalleryManager 
+            <Suspense fallback={<PremiumLoader />}>
+              <GalleryManager 
                 gallery={gallery}
                 uploading={uploading}
                 galleryCaption={galleryCaption}
@@ -330,11 +335,14 @@ const Admin = () => {
                 setGalleryCategory={setGalleryCategory}
                 onUpload={uploadGalleryImage}
                 onDelete={deleteGalleryItem}
-             />
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="finance">
-             <FinanceManager />
+            <Suspense fallback={<PremiumLoader />}>
+              <FinanceManager />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
