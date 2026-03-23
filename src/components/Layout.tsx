@@ -4,6 +4,7 @@ import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import DeveloperTeam from "./DeveloperTeam";
+import Chatbot from "./Chatbot";
 
 const navLinks = [
   { path: "/", label: "হোম" },
@@ -222,6 +223,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </footer>
+      <Chatbot />
     </div>
   );
 };
