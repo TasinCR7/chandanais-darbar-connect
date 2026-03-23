@@ -16,13 +16,19 @@ interface VoteTopic {
   created_at: string;
 }
 
+interface CommitteeComment {
+  id: string;
+  message: string;
+  created_at: string;
+}
+
 const VoteTopicManager = () => {
   const [topics, setTopics] = useState<VoteTopic[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<"monthly" | "yearly">("monthly");
   const [optionsStr, setOptionsStr] = useState("");
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<CommitteeComment[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
