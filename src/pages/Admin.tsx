@@ -51,8 +51,8 @@ const Admin = () => {
       ].some(email => currentUser.email?.toLowerCase() === email.toLowerCase());
       
       const isMasterPhone = [
-        "+8801819614444", // Placeholder for admin phone
-        "+8801751111111"  // Example placeholder
+        "+8801714338533", // User's phone number
+        "+8801819614444"  // Placeholder for other admin phone
       ].some(phone => currentUser.phone === phone);
 
       if (isMasterEmail || isMasterPhone) return true;
@@ -154,7 +154,11 @@ const Admin = () => {
     
     // Check if phone and pass match (using a generic logic for now)
     // In a real app, this would check a database
-    const isMasterPhone = (phone?.includes("017") || phone?.includes("018")) && pass === "chandanaish"; 
+    const isMasterPhone = [
+      "+8801714338533",
+      "01714338533",
+      "8801714338533"
+    ].some(p => phone?.includes(p)) && pass === "chandanaish"; 
     
     if (isMasterEmail || isMasterPhone) {
       setIsAdmin(true);
