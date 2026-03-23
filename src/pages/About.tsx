@@ -244,10 +244,7 @@ const About = () => {
       </div>
     </div>
 
-    {/* Dev Team */}
-    <DevTeam />
     </>
   );
 };
-
 export default About;
