@@ -45,12 +45,17 @@ const Admin = () => {
 
     const checkAdminStatus = async (currentUser: User | null) => {
       if (!currentUser) return false;
-      const isMaster = [
+      const isMasterEmail = [
         "chandanaishdarbarsharif@gmail.com",
         "tasinskder@gmail.com"
       ].some(email => currentUser.email?.toLowerCase() === email.toLowerCase());
       
-      if (isMaster) return true;
+      const isMasterPhone = [
+        "+8801819614444", // Placeholder for admin phone
+        "+8801751111111"  // Example placeholder
+      ].some(phone => currentUser.phone === phone);
+
+      if (isMasterEmail || isMasterPhone) return true;
 
       try {
         const { data, error } = await supabase.rpc("has_role", { _user_id: currentUser.id, _role: "admin" });
