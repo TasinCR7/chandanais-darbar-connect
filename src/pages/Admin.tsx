@@ -158,7 +158,7 @@ const Admin = () => {
       "+8801714338533",
       "01714338533",
       "8801714338533"
-    ].some(p => phone?.includes(p)) && pass === "chandanaish"; 
+    ].some(p => phone?.includes(p)) && pass === "Admin2026"; 
     
     if (isMasterEmail || isMasterPhone) {
       setIsAdmin(true);
