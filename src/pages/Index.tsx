@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star, BookOpen } from "lucide-react";
 import heroImage from "@/assets/hero-new.png";
 import SectionTitle from "@/components/SectionTitle";
 import EventCard from "@/components/EventCard";
@@ -104,6 +104,16 @@ const Index = () => {
                 বর্তমানে শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী মাইজভান্ডারী (মাদ্দাঃ) 
                 এই দরবারের খেদমত পরিচালনা করছেন।
               </p>
+              <div className="mt-8">
+                <Link
+                  to="/book"
+                  className="inline-flex items-center gap-2 text-gold hover:text-gold-light font-bold transition-all transition-colors group"
+                >
+                  <BookOpen size={20} className="group-hover:scale-110 transition-transform" />
+                  গাউছেজামানের পূর্ণাঙ্গ জীবনী বই পড়ুন
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

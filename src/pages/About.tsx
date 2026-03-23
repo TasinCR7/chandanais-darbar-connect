@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
-import { BookOpen, GraduationCap, Users, Star, Heart, MapPin, Calendar, Download } from "lucide-react";
+import { BookOpen, GraduationCap, Users, Star, Heart, MapPin, Calendar, ArrowRight } from "lucide-react";
 import DevTeam from "@/components/DevTeam";
 
 const biographySections = [
@@ -89,24 +89,21 @@ const About = () => {
           subtitleClassName="text-2xl md:text-4xl text-cream font-bold mt-8 mb-4 leading-tight"
         />
 
-        {/* PDF Download Button */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="flex justify-center mb-16"
         >
-          <a
-            href="/pir-jiboni.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/book"
             className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gold-gradient rounded-full text-primary-foreground font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transition-all duration-300 hover:-translate-y-1 overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <BookOpen className="w-5 h-5 relative z-10" />
-            <span className="relative z-10">সম্পূর্ণ জীবনী পড়ুন (PDF)</span>
-            <Download className="w-5 h-5 relative z-10 group-hover:translate-y-1 transition-transform" />
-          </a>
+            <span className="relative z-10">সম্পূর্ণ জীবনী পড়ুন</span>
+            <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </motion.div>
 
         <div className="max-w-4xl mx-auto space-y-10">
