@@ -45,7 +45,11 @@ const Admin = () => {
 
     const checkAdminStatus = async (currentUser: User | null) => {
       if (!currentUser) return false;
-      const isMaster = currentUser.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com".toLowerCase();
+      const isMaster = [
+        "chandanaishdarbarsharif@gmail.com",
+        "tasinskder@gmail.com"
+      ].some(email => currentUser.email?.toLowerCase() === email.toLowerCase());
+      
       if (isMaster) return true;
 
       try {
@@ -138,7 +142,10 @@ const Admin = () => {
 
   // Special bypass for master email or phone
   const forceAdminAccess = (phone?: string, pass?: string) => {
-    const isMasterEmail = user?.email?.toLowerCase() === "chandanaishdarbarsharif@gmail.com";
+    const isMasterEmail = [
+      "chandanaishdarbarsharif@gmail.com",
+      "tasinskder@gmail.com"
+    ].some(email => user?.email?.toLowerCase() === email.toLowerCase());
     
     // Check if phone and pass match (using a generic logic for now)
     // In a real app, this would check a database
