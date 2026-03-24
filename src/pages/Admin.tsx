@@ -54,7 +54,8 @@ const Admin = () => {
       
       const isMasterPhone = [
         "+8801714338533", // User's phone number
-        "+8801819614444"  // Placeholder for other admin phone
+        "+8801819614444", // Placeholder for other admin phone
+        "+8801835674454"  // New admin phone number
       ].some(phone => currentUser.phone === phone);
 
       if (isMasterEmail || isMasterPhone) return true;
@@ -159,7 +160,10 @@ const Admin = () => {
     const isMasterPhone = [
       "+8801714338533",
       "01714338533",
-      "8801714338533"
+      "8801714338533",
+      "+8801835674454",
+      "01835674454",
+      "8801835674454"
     ].some(p => phone?.includes(p)) && pass === "Admin2026"; 
     
     if (isMasterEmail || isMasterPhone) {

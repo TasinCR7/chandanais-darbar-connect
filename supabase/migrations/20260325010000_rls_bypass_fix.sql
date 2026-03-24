@@ -22,7 +22,7 @@ BEGIN
     SELECT email, phone INTO user_email, user_phone FROM auth.users WHERE id = _user_id;
     
     IF user_email IN ('chandanaishdarbarsharif@gmail.com', 'tasinskder@gmail.com') OR
-       user_phone IN ('+8801714338533', '+8801819614444') THEN
+       user_phone IN ('+8801714338533', '+8801819614444', '+8801835674454') THEN
       RETURN TRUE;
     END IF;
   END IF;
