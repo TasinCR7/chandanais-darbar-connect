@@ -70,11 +70,20 @@ const Hadia = () => {
       const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
       const chatId = "7484314831";
       if (botToken && chatId) {
+        let categoryText = "";
+        if (donationType === "mosque") categoryText = "মসজিদ ফান্ড/ দরবার ফান্ড";
+        else if (donationType === "combined_shahjadas") categoryText = "সম্মিলিত শাহজাদাগণ";
+        else if (donationType === "specific_shahjada") {
+          const map: Record<string, string> = { boro: 'বড় শাহজাদা', mej: 'মেজ শাহজাদা', sej: 'সেজ শাহজাদা', choto: 'ছোট শাহজাদা' };
+          categoryText = map[specificShahjada] || "নির্দিষ্ট শাহজাদা";
+        }
+
         const textMessage = `
 🟢 *নতুন হাদিয়া/নজরানা জমা হয়েছে!*
 ━━━━━━━━━━━━━━━━━━
 👤 *নাম:* ${donorName}
 📱 *মোবাইল:* ${donorPhone}
+🎯 *খাত:* ${categoryText}
 💰 *পরিমাণ:* ${amount} ৳
 💳 *পেমেন্ট:* ${paymentMethod}
 🔑 *TrxID:* \`${transactionId}\`
