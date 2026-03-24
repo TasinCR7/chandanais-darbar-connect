@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, LogOut, MessageSquare, ThumbsUp, ThumbsDown, Vote, Send, Trash2 } from "lucide-react";
+import { ShieldCheck, LogOut, MessageSquare, ThumbsUp, ThumbsDown, Vote, Send, Trash2, Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ interface TopicRecord {
 }
 interface VoteRecord { id: string; topic_id: string; user_id: string; vote: string; }
 interface CommentRecord { id: string; user_id: string; message: string; created_at: string; }
+interface CommitteeNotice { id: string; title: string; message: string; created_at: string; }
 
 export default function CommitteeDashboard() {
   const [member, setMember] = useState<{ id: string; name: string; designation: string } | null>(null);
@@ -26,6 +27,7 @@ export default function CommitteeDashboard() {
   const [votesData, setVotesData] = useState<VoteRecord[]>([]);
   const [commentsList, setCommentsList] = useState<CommentRecord[]>([]);
   const [comment, setComment] = useState("");
+  const [notices, setNotices] = useState<CommitteeNotice[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const navigate = useNavigate();
@@ -46,17 +48,18 @@ export default function CommitteeDashboard() {
         return;
       }
       setMember(memberData);
-
-      // 2. Load Active Voting Topics, All Votes, and All Comments
-      const [topicsRes, votesRes, commentsRes] = await Promise.all([
+      // 2. Load Active Voting Topics, All Votes, All Comments, and Committee Notices
+      const [topicsRes, votesRes, commentsRes, noticesRes] = await Promise.all([
         supabase.from("vote_topics").select("*").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("votes").select("*"),
         supabase.from("committee_comments").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("committee_notices").select("*").eq("is_active", true).order("created_at", { ascending: false }),
       ]);
         
       if (topicsRes.data) setTopics(topicsRes.data);
       if (votesRes.data) setVotesData(votesRes.data);
       if (commentsRes.data) setCommentsList(commentsRes.data);
+      if (noticesRes.data) setNotices(noticesRes.data);
 
     } catch (err) {
       console.error(err);
@@ -203,6 +206,37 @@ export default function CommitteeDashboard() {
             <LogOut size={18} className="mr-2" /> লগআউট
           </Button>
         </div>
+
+        {/* Committee Notices Section */}
+        {notices.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-8 space-y-4"
+          >
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <Megaphone size={18} className="text-gold animate-pulse" />
+              <h2 className="text-sm font-bold text-gold uppercase tracking-wider">সর্বশেষ নোটিশ</h2>
+            </div>
+            {notices.map((n, idx) => (
+              <div 
+                key={n.id} 
+                className={`bg-gold-gradient rounded-2xl p-0.5 shadow-lg shadow-gold/10 ${idx === 0 ? "animate-inner-glow" : ""}`}
+              >
+                <div className="bg-background/95 backdrop-blur-sm rounded-[14px] p-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-bold text-cream leading-tight">{n.title}</h3>
+                    <span className="text-[10px] text-gold/40 font-black">{new Date(n.created_at).toLocaleDateString("bn-BD")}</span>
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed italic border-l-2 border-gold/30 pl-4 py-1">
+                    "{n.message}"
+                  </p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
