@@ -102,10 +102,11 @@ const CommitteeBroadcast = () => {
     for (const member of selectedMembers) {
       try {
         const phone = member.phone?.replace(/[^0-9]/g, "");
-        const url = `https://bulksmsbd.net/api/smsapi?api_key=${apiKey}&type=text&number=${phone}&senderid=${senderId}&message=${encodeURIComponent(message)}`;
+        if (!phone) continue;
         
-        // Note: For actual cross-origin requests, we might need a backend proxy or Edge Function.
-        // For now, we use a fetch which might hit CORS depending on the provider.
+        // Using sms.net.bd parameters: api_key, msg, to, sender_id
+        const url = `https://api.sms.net.bd/sendsms?api_key=${apiKey}&msg=${encodeURIComponent(message)}&to=${phone}${senderId ? `&sender_id=${senderId}` : ""}`;
+        
         const response = await fetch(url, { method: "GET", mode: "no-cors" });
         successCount++;
       } catch (err) {
