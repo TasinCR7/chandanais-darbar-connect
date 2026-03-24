@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +11,13 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
 
+interface Donation extends InvoiceData {
+  id: string;
+  created_at: string;
+}
+
 const DonationManager = () => {
-  const [donations, setDonations] = useState<any[]>([]);
+  const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
@@ -20,7 +25,7 @@ const DonationManager = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadInvoice = async (donation: any) => {
+  const handleDownloadInvoice = async (donation: Donation) => {
     setSelectedInvoice(donation);
     setDownloadingId(donation.id);
     
@@ -53,7 +58,7 @@ const DonationManager = () => {
     }, 300);
   };
 
-  const fetchDonations = async () => {
+  const fetchDonations = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -63,16 +68,17 @@ const DonationManager = () => {
 
       if (error) throw error;
       setDonations(data || []);
-    } catch (error: any) {
-      toast({ title: "Error loading donations", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Error loading donations";
+      toast({ title: "Error loading donations", description: errorMessage, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchDonations();
-  }, []);
+  }, [fetchDonations]);
 
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'pending' ? 'verified' : 'pending';
@@ -86,8 +92,9 @@ const DonationManager = () => {
       
       toast({ title: "স্ট্যাটাস আপডেট করা হয়েছে" });
       fetchDonations();
-    } catch (error: any) {
-      toast({ title: "Failed to update status", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update status";
+      toast({ title: "Failed to update status", description: errorMessage, variant: "destructive" });
     }
   };
 
