@@ -6,7 +6,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MessageSquare, Send, Phone, UserCheck, Settings, Megaphone } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  MessageSquare, 
+  Send, 
+  Phone, 
+  UserCheck, 
+  Settings as SettingsIcon, 
+  Megaphone,
+  Wallet,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Loader2
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Member {
@@ -22,6 +37,9 @@ const CommitteeBroadcast = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sendingSms, setSendingSms] = useState(false);
+  const [smsBalance, setSmsBalance] = useState<string | null>(null);
+  const [sendProgress, setSendProgress] = useState(0);
+  const [smsLogs, setSmsLogs] = useState<{name: string, status: 'success' | 'error'}[]>([]);
   const { toast } = useToast();
 
   // SMS API Settings (saved locally for convenience, defaulting to .env if set)
@@ -32,8 +50,21 @@ const CommitteeBroadcast = () => {
   // WhatsApp Queue State
   const [currentWaIndex, setCurrentWaIndex] = useState<number | null>(null);
 
+  const fetchBalance = async (key: string) => {
+    if (!key) return;
+    try {
+      const res = await fetch(`https://api.sms.net.bd/user/balance?api_key=${key}`);
+      const data = await res.json();
+      if (data && data.balance) {
+        setSmsBalance(`${data.balance} ${data.currency || 'BDT'}`);
+      }
+    } catch (err) {
+      console.error("Balance fetch failed", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchMembers = async () => {
+    const init = async () => {
       const { data } = await supabase
         .from("committee_members")
         .select("id, name, phone, is_active")
@@ -42,9 +73,11 @@ const CommitteeBroadcast = () => {
         setMembers(data as Member[]);
         setSelectedIds(data.map(m => m.id));
       }
+      
+      if (apiKey) fetchBalance(apiKey);
     };
-    fetchMembers();
-  }, []);
+    init();
+  }, [apiKey]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -64,6 +97,7 @@ const CommitteeBroadcast = () => {
     localStorage.setItem("sms_api_key", apiKey);
     localStorage.setItem("sms_sender_id", senderId);
     localStorage.setItem("sms_content_id", contentId);
+    fetchBalance(apiKey);
     toast({ title: "সফল", description: "SMS এপিআই সেটিংস সেভ করা হয়েছে।" });
   };
 
@@ -91,17 +125,21 @@ const CommitteeBroadcast = () => {
   };
 
   const sendBulkSms = async () => {
-    if (!apiKey || !senderId || !message.trim() || selectedIds.length === 0) {
+    if (!apiKey || !message.trim() || selectedIds.length === 0) {
       toast({ title: "ত্রুটি", description: "API তথ্য এবং মেসেজ নিশ্চিত করুন।", variant: "destructive" });
       return;
     }
 
     setSendingSms(true);
+    setSendProgress(0);
+    setSmsLogs([]);
+    
     const selectedMembers = members.filter(m => selectedIds.includes(m.id) && m.phone);
     let successCount = 0;
+    const total = selectedMembers.length;
     
-    // Looping through numbers
-    for (const member of selectedMembers) {
+    for (let i = 0; i < total; i++) {
+      const member = selectedMembers[i];
       try {
         const phone = member.phone?.replace(/[^0-9]/g, "");
         if (!phone) continue;
@@ -109,14 +147,18 @@ const CommitteeBroadcast = () => {
         // Using sms.net.bd parameters: api_key, msg, to, sender_id, content_id
         const url = `https://api.sms.net.bd/sendsms?api_key=${apiKey}&msg=${encodeURIComponent(message)}&to=${phone}${senderId ? `&sender_id=${senderId}` : ""}${contentId ? `&content_id=${contentId}` : ""}`;
         
-        const response = await fetch(url, { method: "GET", mode: "no-cors" });
+        await fetch(url, { method: "GET", mode: "no-cors" });
         successCount++;
+        setSmsLogs(prev => [{name: member.name, status: 'success' as const}, ...prev].slice(0, 10));
       } catch (err) {
-        console.error("SMS failed for", member.name);
+        setSmsLogs(prev => [{name: member.name, status: 'error' as const}, ...prev].slice(0, 10));
       }
+      setSendProgress(Math.round(((i + 1) / total) * 100));
+      await new Promise(r => setTimeout(r, 150));
     }
 
     setSendingSms(false);
+    fetchBalance(apiKey);
     toast({ 
       title: "SMS সেন্ড প্রসেস শেষ", 
       description: `${successCount} জন সদস্যকে মেসেজ পাঠানোর রিকোয়েস্ট করা হয়েছে।`,
@@ -157,10 +199,15 @@ const CommitteeBroadcast = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-3 bg-gold/10 p-4 rounded-2xl border border-gold/20">
         <Megaphone className="text-gold w-6 h-6" />
-        <div>
-          <h2 className="text-xl font-heading font-bold text-cream">কমিটি ব্রডকাস্ট (Bulk Message)</h2>
-          <p className="text-xs text-gold/60">কমিটি মেম্বারদের মেসেজ বা নোটিশ পাঠান একসাথে।</p>
+        <div className="flex-1">
+          <h2 className="text-xl font-heading font-bold text-cream">কমিটি ব্রডকাস্ট (Premium)</h2>
+          <p className="text-xs text-gold/60">কমিটি মেম্বারদের সব চ্যানেলে নোটিশ পাঠান একসাথে।</p>
         </div>
+        {smsBalance && (
+          <Badge variant="outline" className="bg-gold/5 border-gold/30 text-gold gap-2 py-1 px-3 rounded-full">
+            <Wallet size={14} /> {smsBalance}
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -186,7 +233,7 @@ const CommitteeBroadcast = () => {
               <TabsTrigger value="whatsapp" className="data-[state=active]:bg-gold-gradient rounded-lg px-6 py-2">WhatsApp</TabsTrigger>
               <TabsTrigger value="sms" className="data-[state=active]:bg-gold-gradient rounded-lg px-6 py-2">Bulk SMS</TabsTrigger>
               <TabsTrigger value="internal" className="data-[state=active]:bg-gold-gradient rounded-lg px-6 py-2">Dashboard</TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-gold-gradient rounded-lg px-6 py-2"><Settings size={16} /></TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-gold-gradient rounded-lg px-6 py-2"><SettingsIcon size={16} /></TabsTrigger>
             </TabsList>
 
             <TabsContent value="whatsapp" className="space-y-4">
@@ -225,19 +272,52 @@ const CommitteeBroadcast = () => {
 
             <TabsContent value="sms" className="space-y-4">
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-blue-400 mb-2 flex items-center gap-2">
-                  <Send size={20} /> Bulk SMS (পেইড API)
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-bold text-blue-400 flex items-center gap-2">
+                    <Send size={20} /> Bulk SMS (পেইড API)
+                  </h3>
+                  {apiKey && (
+                    <Button variant="ghost" size="sm" onClick={() => fetchBalance(apiKey)} className="text-blue-400 h-8 gap-1 hover:bg-blue-500/10">
+                      <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> রিফ্রেশ ব্যালেন্স
+                    </Button>
+                  )}
+                </div>
                 <p className="text-sm text-foreground/80 mb-6">
-                  ইন্টারনেট ছাড়াই সবার মোবাইলে সরাসরি মেসেজ যাবে। এর জন্য আপনার এপিআই থাকা প্রয়োজন।
+                  সরাসরি অফলাইন মেসেজ পাঠানোর জন্য আপনার sms.net.bd গেটওয়ে ব্যবহার করা হবে।
                 </p>
-                <Button 
-                  onClick={sendBulkSms}
-                  disabled={sendingSms || selectedMembersCount === 0 || !message.trim() || !apiKey}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl"
-                >
-                  {sendingSms ? "মেসেজ পাঠানো হচ্ছে..." : `সরাসরি SMS পাঠান (${selectedMembersCount} জন)`}
-                </Button>
+
+                {sendingSms ? (
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between text-xs font-bold mb-1">
+                      <span className="text-blue-400">মেসেজ পাঠানো হচ্ছে...</span>
+                      <span className="text-cream">{sendProgress}%</span>
+                    </div>
+                    <Progress value={sendProgress} className="h-2 bg-black/40 border border-blue-500/20" />
+                    
+                    <ScrollArea className="h-24 bg-black/20 rounded-xl border border-white/5 p-2">
+                      <div className="space-y-1">
+                        {smsLogs.map((log, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-[10px]">
+                            {log.status === 'success' ? <CheckCircle2 size={10} className="text-green-500" /> : <AlertCircle size={10} className="text-red-500" />}
+                            <span className="text-cream/80">{log.name}</span>
+                            <span className={log.status === 'success' ? "text-green-500/60" : "text-red-500/60"}>
+                              {log.status === 'success' ? "সফল" : "ব্যর্থ"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={sendBulkSms}
+                    disabled={sendingSms || selectedMembersCount === 0 || !message.trim() || !apiKey}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl"
+                  >
+                    {sendingSms ? <Loader2 className="animate-spin mr-2" /> : <Send size={18} className="mr-2" />}
+                    সরাসরি SMS পাঠান ({selectedMembersCount} জন)
+                  </Button>
+                )}
               </div>
             </TabsContent>
 
@@ -262,11 +342,11 @@ const CommitteeBroadcast = () => {
             <TabsContent value="settings" className="space-y-4">
               <div className="bg-card/40 border border-gold/10 rounded-2xl p-6 space-y-4">
                 <h3 className="text-lg font-bold text-gold mb-2 flex items-center gap-2">
-                  <Settings size={20} /> এপিআই সেটিংস (SMS)
+                  <SettingsIcon size={20} /> গেটওয়ে সেটিংস (sms.net.bd)
                 </h3>
                 <div className="space-y-2">
-                  <Label>BulkSMSBD API Key</Label>
-                  <Input value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key..." className="bg-black/20" />
+                  <Label>API Key</Label>
+                  <Input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password" placeholder="Key..." className="bg-black/20" />
                 </div>
                 <div className="space-y-2">
                   <Label>Sender ID (Optional)</Label>
