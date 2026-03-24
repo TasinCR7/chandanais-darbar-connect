@@ -24,8 +24,8 @@ const CommitteeBroadcast = () => {
   const [sendingSms, setSendingSms] = useState(false);
   const { toast } = useToast();
 
-  // SMS API Settings (saved locally for convenience)
-  const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || "");
+  // SMS API Settings (saved locally for convenience, defaulting to .env if set)
+  const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || import.meta.env.VITE_SMS_API_KEY || "");
   const [senderId, setSenderId] = useState(localStorage.getItem("sms_sender_id") || "8809612... ");
 
   // WhatsApp Queue State
