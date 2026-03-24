@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,12 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  Loader2
+  Loader2,
+  Search,
+  X
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from "react";
 
 interface Member {
   id: string;
@@ -31,9 +34,46 @@ interface Member {
   is_active: boolean;
 }
 
+const MemberRow = memo(({ 
+  member, 
+  isSelected, 
+  onToggle 
+}: { 
+  member: Member; 
+  isSelected: boolean; 
+  onToggle: (id: string) => void;
+}) => {
+  return (
+    <div 
+      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+        isSelected 
+          ? "bg-gold/10 border-gold/30 ring-1 ring-gold/20" 
+          : "bg-black/20 border-white/5 hover:border-gold/20"
+      }`}
+      onClick={() => onToggle(member.id)}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-2 h-2 rounded-full ${member.phone ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500/50"}`} />
+        <div>
+          <p className="text-sm font-bold text-cream leading-none">{member.name}</p>
+          <p className="text-[10px] text-gold/60 mt-1">{member.phone || "No Number"}</p>
+        </div>
+      </div>
+      <Checkbox 
+        checked={isSelected} 
+        onCheckedChange={() => onToggle(member.id)}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+});
+
+MemberRow.displayName = "MemberRow";
+
 const CommitteeBroadcast = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sendingSms, setSendingSms] = useState(false);
@@ -42,12 +82,10 @@ const CommitteeBroadcast = () => {
   const [smsLogs, setSmsLogs] = useState<{name: string, status: 'success' | 'error'}[]>([]);
   const { toast } = useToast();
 
-  // SMS API Settings (saved locally for convenience, defaulting to .env if set)
   const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || import.meta.env.VITE_SMS_API_KEY || "");
   const [senderId, setSenderId] = useState(localStorage.getItem("sms_sender_id") || "");
   const [contentId, setContentId] = useState(localStorage.getItem("sms_content_id") || "");
 
-  // WhatsApp Queue State
   const [currentWaIndex, setCurrentWaIndex] = useState<number | null>(null);
 
   const fetchBalance = async (key: string) => {
@@ -73,25 +111,33 @@ const CommitteeBroadcast = () => {
         setMembers(data as Member[]);
         setSelectedIds(data.map(m => m.id));
       }
-      
       if (apiKey) fetchBalance(apiKey);
     };
     init();
   }, [apiKey]);
 
+  const filteredMembers = members.filter(m => 
+    m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    m.phone?.includes(searchTerm)
+  );
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(members.map(m => m.id));
+      const filteredIds = filteredMembers.map(m => m.id);
+      setSelectedIds(prev => {
+        const otherIds = prev.filter(id => !filteredMembers.some(fm => fm.id === id));
+        return Array.from(new Set([...otherIds, ...filteredIds]));
+      });
     } else {
-      setSelectedIds([]);
+      setSelectedIds(prev => prev.filter(id => !filteredMembers.some(fm => fm.id === id)));
     }
   };
 
-  const handleToggleMember = (id: string) => {
+  const handleToggleMember = useCallback((id: string) => {
     setSelectedIds(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
-  };
+  }, []);
 
   const saveSettings = () => {
     localStorage.setItem("sms_api_key", apiKey);
@@ -118,7 +164,7 @@ const CommitteeBroadcast = () => {
         throw error;
       }
     } catch (err: any) {
-      toast({ title: "ব্যর্থ", description: "নোটিশ সেভ করা সম্ভব হয়নি। (SQL Migration হয়তো এখনো বাকি)", variant: "destructive" });
+      toast({ title: "ব্যর্থ", description: "নোটিশ সেভ করা সম্ভব হয়নি।", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -144,17 +190,17 @@ const CommitteeBroadcast = () => {
         const phone = member.phone?.replace(/[^0-9]/g, "");
         if (!phone) continue;
         
-        // Using sms.net.bd parameters: api_key, msg, to, sender_id, content_id
         const url = `https://api.sms.net.bd/sendsms?api_key=${apiKey}&msg=${encodeURIComponent(message)}&to=${phone}${senderId ? `&sender_id=${senderId}` : ""}${contentId ? `&content_id=${contentId}` : ""}`;
         
-        await fetch(url, { method: "GET", mode: "no-cors" });
+        await fetch(url, { method: "GET", mode: "no-cors", cache: 'no-cache' });
+        
         successCount++;
-        setSmsLogs(prev => [{name: member.name, status: 'success' as const}, ...prev].slice(0, 10));
+        setSmsLogs(prev => [{name: member.name, status: 'success' as const}, ...prev].slice(0, 15));
       } catch (err) {
-        setSmsLogs(prev => [{name: member.name, status: 'error' as const}, ...prev].slice(0, 10));
+        setSmsLogs(prev => [{name: member.name, status: 'error' as const}, ...prev].slice(0, 15));
       }
       setSendProgress(Math.round(((i + 1) / total) * 100));
-      await new Promise(r => setTimeout(r, 150));
+      if (i < total - 1) await new Promise(r => setTimeout(r, 800)); // Increased delay for security
     }
 
     setSendingSms(false);
@@ -166,20 +212,55 @@ const CommitteeBroadcast = () => {
   };
 
   const startWhatsAppQueue = () => {
-    if (!message.trim() || selectedIds.length === 0) return;
+    if (!message.trim() || selectedIds.length === 0) {
+      toast({ title: "ত্রুটি", description: "মেসেজ লিখুন এবং মেম্বার সিলেক্ট করুন।", variant: "destructive" });
+      return;
+    }
     const selectedMembers = members.filter(m => selectedIds.includes(m.id) && m.phone);
-    if (selectedMembers.length === 0) return;
+    if (selectedMembers.length === 0) {
+      toast({ title: "ত্রুটি", description: "সিলেক্ট করা মেম্বারদের কারো ফোন নম্বর নেই।", variant: "destructive" });
+      return;
+    }
     
     setCurrentWaIndex(0);
     openWhatsApp(selectedMembers[0]);
   };
 
   const openWhatsApp = (member: Member) => {
-    const phone = member.phone?.replace(/[^0-9]/g, "");
-    if (!phone) return;
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    let phone = member.phone?.replace(/[^0-9]/g, "");
+    if (!phone) {
+      toast({ title: "ত্রুটি", description: `মেম্বার ${member.name} এর কোনো ফোন নম্বর নেই।`, variant: "destructive" });
+      return;
+    }
+    
+    // Ensure Bangladesh country code (88) is present for wa.me
+    if (phone.length === 11 && phone.startsWith("0")) {
+      phone = "88" + phone;
+    } else if (phone.length === 10 && !phone.startsWith("88") && !phone.startsWith("0")) {
+      phone = "880" + phone;
+    } else if (phone.length === 11 && !phone.startsWith("0") && !phone.startsWith("88")) {
+      phone = "88" + phone;
+    }
+
+    const encodedMessage = encodeURIComponent(message.trim());
+    const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+    
+    console.log("Opening WhatsApp for:", phone);
+    console.log("URL:", url);
+    
+    const newWindow = window.open(url, "_blank");
+    
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      toast({ 
+        title: "পপআপ ব্লকড!", 
+        description: "আপনার ব্রাউজারে 'Popup Blocker' বন্ধ করুন। অথবা এই লিঙ্কে ক্লিক করুন: [মেসেজ পাঠান](" + url + ")",
+        variant: "destructive"
+      });
+    } else {
+      toast({ title: "WhatsApp ওপেন হচ্ছে", description: `${member.name} এর চ্যাটবক্স ওপেন করা হয়েছে।` });
+    }
   };
+
 
   const nextWhatsApp = () => {
     const selectedMembers = members.filter(m => selectedIds.includes(m.id) && m.phone);
@@ -193,7 +274,7 @@ const CommitteeBroadcast = () => {
     }
   };
 
-  const selectedMembersCount = members.filter(m => selectedIds.includes(m.id)).length;
+  const selectedMembersCount = selectedIds.length;
 
   return (
     <div className="space-y-6">
@@ -366,50 +447,56 @@ const CommitteeBroadcast = () => {
         <div className="bg-card/60 backdrop-blur-md border border-gold/20 rounded-2xl p-6 h-fit">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-premium-gradient flex items-center gap-2">
-              <UserCheck size={20} /> মেম্বার সিলেক্ট করুন
+              <UserCheck size={20} /> মেম্বার লিস্ট
             </h3>
             <div className="flex items-center gap-2">
               <Checkbox 
                 id="select-all" 
-                checked={selectedIds.length === members.length && members.length > 0} 
+                checked={filteredMembers.length > 0 && filteredMembers.every(m => selectedIds.includes(m.id))} 
                 onCheckedChange={handleSelectAll}
               />
               <Label htmlFor="select-all" className="text-xs font-bold cursor-pointer">সবাই</Label>
             </div>
           </div>
-          
-          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-            {members.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">কোনো মেম্বার পাওয়া যায়নি।</p>
-            ) : (
-              members.map(member => (
-                <div 
-                  key={member.id} 
-                  className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
-                    selectedIds.includes(member.id) 
-                      ? "bg-gold/10 border-gold/30" 
-                      : "bg-black/20 border-white/5 hover:border-gold/20"
-                  }`}
-                  onClick={() => handleToggleMember(member.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${member.phone ? "bg-green-500" : "bg-red-500/50"}`} title={member.phone ? "Phone available" : "No phone"} />
-                    <div>
-                      <p className="text-sm font-bold text-cream leading-none">{member.name}</p>
-                      <p className="text-[10px] text-gold/60 mt-1">{member.phone || "No Number"}</p>
-                    </div>
-                  </div>
-                  <Checkbox 
-                    checked={selectedIds.includes(member.id)} 
-                    onCheckedChange={() => handleToggleMember(member.id)}
-                  />
-                </div>
-              ))
+
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 w-4 h-4" />
+            <Input 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="নাম বা ফোন দিয়ে খুঁজুন..."
+              className="bg-black/40 border-gold/20 pl-9 h-10 rounded-xl focus:border-gold/50"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gold/50 hover:text-gold"
+              >
+                <X size={14} />
+              </button>
             )}
           </div>
           
-          <div className="mt-4 pt-4 border-t border-gold/10 text-center">
-            <span className="text-xs font-bold text-gold/60 uppercase">সিলেক্টেড: {selectedMembersCount} জন</span>
+          <ScrollArea className="h-[400px] pr-2">
+            <div className="space-y-2">
+              {filteredMembers.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-8">কোনো মেম্বার পাওয়া যায়নি।</p>
+              ) : (
+                filteredMembers.map(member => (
+                  <MemberRow 
+                    key={member.id}
+                    member={member}
+                    isSelected={selectedIds.includes(member.id)}
+                    onToggle={handleToggleMember}
+                  />
+                ))
+              )}
+            </div>
+          </ScrollArea>
+          
+          <div className="mt-4 pt-4 border-t border-gold/10 flex justify-between items-center text-[10px] font-bold text-gold/60 uppercase">
+            <span>মোট: {filteredMembers.length}</span>
+            <span>সিলেক্টেড: {selectedMembersCount}</span>
           </div>
         </div>
 
