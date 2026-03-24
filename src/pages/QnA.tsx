@@ -72,6 +72,37 @@ const QnA = () => {
       return;
     }
 
+    // Send Telegram Notification
+    const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
+    const chatId = "7484314831";
+    if (botToken && chatId) {
+      const isComplaint = type === "complaint";
+      const icon = isComplaint ? "🔴" : "🔵";
+      const titleText = isComplaint ? "নতুন অভিযোগ জমা হয়েছে!" : "নতুন প্রশ্ন জমা হয়েছে!";
+      
+      const textMessage = `
+${icon} *${titleText}*
+━━━━━━━━━━━━━━━━━━
+👤 *নাম:* ${trimmedName}
+📱 *মোবাইল:* ${form.phone.trim() || "দেওয়া হয়নি"}
+📌 *বিষয়:* ${form.subject}
+📝 *বিস্তারিত:*
+${trimmedDetails}
+━━━━━━━━━━━━━━━━━━
+অনুগ্রহ করে প্যানেল থেকে ব্যবস্থা নিন।
+      `;
+      
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: textMessage,
+          parse_mode: 'Markdown',
+        }),
+      }).catch(err => console.error('Telegram notification error:', err));
+    }
+
     setForm({ ...initialForm });
     setSubmitting(false);
     setSuccess(true);
