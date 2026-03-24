@@ -77,6 +77,34 @@ const Doa = () => {
       return;
     }
 
+    // Send Telegram Notification
+    const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
+    const chatId = "7484314831";
+    if (botToken && chatId) {
+      const textMessage = `
+🤲 *নতুন দোয়া আবেদন জমা হয়েছে!*
+━━━━━━━━━━━━━━━━━━
+👤 *নাম:* ${trimmedName}
+📱 *মোবাইল:* ${formData.phone.trim() || "দেওয়া হয়নি"}
+📌 *বিষয়:* ${formData.subject}
+📍 *ঠিকানা:* ${formData.address.trim() || "দেওয়া হয়নি"}
+📝 *বিস্তারিত:*
+${trimmedDetails}
+━━━━━━━━━━━━━━━━━━
+পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
+      `;
+      
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: textMessage,
+          parse_mode: 'Markdown',
+        }),
+      }).catch(err => console.error('Telegram notification error:', err));
+    }
+
     toast({
       title: "দোয়া আবেদন পাঠানো হয়েছে ✅",
       description: "আপনার আবেদন সফলভাবে জমা হয়েছে।",
