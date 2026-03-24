@@ -26,7 +26,8 @@ const CommitteeBroadcast = () => {
 
   // SMS API Settings (saved locally for convenience, defaulting to .env if set)
   const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || import.meta.env.VITE_SMS_API_KEY || "");
-  const [senderId, setSenderId] = useState(localStorage.getItem("sms_sender_id") || "8809612... ");
+  const [senderId, setSenderId] = useState(localStorage.getItem("sms_sender_id") || "");
+  const [contentId, setContentId] = useState(localStorage.getItem("sms_content_id") || "");
 
   // WhatsApp Queue State
   const [currentWaIndex, setCurrentWaIndex] = useState<number | null>(null);
@@ -62,6 +63,7 @@ const CommitteeBroadcast = () => {
   const saveSettings = () => {
     localStorage.setItem("sms_api_key", apiKey);
     localStorage.setItem("sms_sender_id", senderId);
+    localStorage.setItem("sms_content_id", contentId);
     toast({ title: "সফল", description: "SMS এপিআই সেটিংস সেভ করা হয়েছে।" });
   };
 
@@ -104,8 +106,8 @@ const CommitteeBroadcast = () => {
         const phone = member.phone?.replace(/[^0-9]/g, "");
         if (!phone) continue;
         
-        // Using sms.net.bd parameters: api_key, msg, to, sender_id
-        const url = `https://api.sms.net.bd/sendsms?api_key=${apiKey}&msg=${encodeURIComponent(message)}&to=${phone}${senderId ? `&sender_id=${senderId}` : ""}`;
+        // Using sms.net.bd parameters: api_key, msg, to, sender_id, content_id
+        const url = `https://api.sms.net.bd/sendsms?api_key=${apiKey}&msg=${encodeURIComponent(message)}&to=${phone}${senderId ? `&sender_id=${senderId}` : ""}${contentId ? `&content_id=${contentId}` : ""}`;
         
         const response = await fetch(url, { method: "GET", mode: "no-cors" });
         successCount++;
@@ -267,8 +269,12 @@ const CommitteeBroadcast = () => {
                   <Input value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="API Key..." className="bg-black/20" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Sender ID</Label>
-                  <Input value={senderId} onChange={e => setSenderId(e.target.value)} placeholder="88096..." className="bg-black/20" />
+                  <Label>Sender ID (Optional)</Label>
+                  <Input value={senderId} onChange={e => setSenderId(e.target.value)} placeholder="e.g. 88096..." className="bg-black/20" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Content ID (For Bulk)</Label>
+                  <Input value={contentId} onChange={e => setContentId(e.target.value)} placeholder="Approved Content ID..." className="bg-black/20" />
                 </div>
                 <Button onClick={saveSettings} className="w-full variant-outline border-gold/20 text-gold hover:bg-gold/10">সেটিংস সেভ করুন</Button>
               </div>
