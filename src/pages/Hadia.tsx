@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, MessageCircle, HeartHandshake, Home, Users, User, Calculator, CheckCircle2, CreditCard, Send } from "lucide-react";
+import { Phone, MessageCircle, HeartHandshake, Home, Users, User, Calculator, CheckCircle2, CreditCard, Send, Download } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
 
 type DonationType = "mosque" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
@@ -29,6 +32,9 @@ const Hadia = () => {
   const [transactionId, setTransactionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [completedDonation, setCompletedDonation] = useState<InvoiceData | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   // Auto-calculate visibility based on inputs
   const canCalculate = Boolean(amount && amount > 0 && donationType && (donationType !== "specific_shahjada" || specificShahjada));
@@ -39,7 +45,7 @@ const Hadia = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('donations')
         .insert({
           donor_name: donorName,
@@ -50,10 +56,13 @@ const Hadia = () => {
           payment_method: paymentMethod,
           transaction_id: transactionId,
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       
+      setCompletedDonation(data as InvoiceData);
       setIsSuccess(true);
       toast.success("আপনার হাদিয়া সফলভাবে গৃহীত হয়েছে!");
     } catch (error) {
@@ -62,6 +71,33 @@ const Hadia = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!invoiceRef.current || !completedDonation) return;
+    setIsDownloading(true);
+    
+    setTimeout(async () => {
+      try {
+        const canvas = await html2canvas(invoiceRef.current!, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Hadia-Invoice-${completedDonation.donor_name.replace(/\s+/g, '-')}.pdf`);
+        toast.success("রশিদ ডাউনলোড সম্পন্ন হয়েছে");
+      } catch (error) {
+        console.error("PDF download error:", error);
+        toast.error("রশিদ ডাউনলোডে সমস্যা হয়েছে");
+      } finally {
+        setIsDownloading(false);
+      }
+    }, 150);
   };
 
   const calculateDistribution = () => {
@@ -150,16 +186,26 @@ const Hadia = () => {
                       <div className="flex justify-between text-sm py-1"><span className="text-muted-foreground">স্ট্যাটাস:</span> <span className="text-emerald-light font-medium py-0.5 px-2 bg-emerald/10 rounded-full text-xs">অপেক্ষমান</span></div>
                     </div>
                     
-                    <button 
-                      onClick={() => {
-                        setIsSuccess(false);
-                        setAmount("");
-                        setTransactionId("");
-                      }}
-                      className="mt-6 px-6 py-2 bg-gold text-deep-green font-semibold rounded-lg hover:bg-gold-light transition-colors"
-                    >
-                      আরও হাদিয়া দিন
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                      <button 
+                        onClick={handleDownloadInvoice}
+                        disabled={isDownloading}
+                        className="px-6 py-2 bg-emerald text-white font-semibold rounded-lg hover:bg-emerald/90 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        {isDownloading ? <span className="animate-pulse">ডাউনলোড হচ্ছে...</span> : <><Download size={18} /> রশিদ ডাউনলোড করুন</>}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setIsSuccess(false);
+                          setAmount("");
+                          setTransactionId("");
+                          setCompletedDonation(null);
+                        }}
+                        className="px-6 py-2 bg-gold text-deep-green font-semibold rounded-lg hover:bg-gold-light transition-colors"
+                      >
+                        আরও হাদিয়া দিন
+                      </button>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -403,6 +449,10 @@ const Hadia = () => {
           </div>
         </div>
       </div>
+      
+      {completedDonation && (
+        <DonationInvoiceTemplate ref={invoiceRef} donation={completedDonation} />
+      )}
     </>
   );
 };

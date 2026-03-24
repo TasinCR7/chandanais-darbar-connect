@@ -1,17 +1,57 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HeartHandshake, Home, Users, CheckCircle, Clock } from "lucide-react";
+import { HeartHandshake, Home, Users, CheckCircle, Clock, Download } from "lucide-react";
 import { format } from "date-fns";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
 
 const DonationManager = () => {
   const [donations, setDonations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
+  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadInvoice = async (donation: any) => {
+    setSelectedInvoice(donation);
+    setDownloadingId(donation.id);
+    
+    // Allow React to render the component off-screen
+    setTimeout(async () => {
+      if (!invoiceRef.current) {
+        setDownloadingId(null);
+        return;
+      }
+      try {
+        const canvas = await html2canvas(invoiceRef.current, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Invoice-${donation.donor_name.replace(/\s+/g, '-')}-${donation.id.substring(0, 6)}.pdf`);
+        toast({ title: "ইনভয়েস ডাউনলোড সম্পন্ন হয়েছে" });
+      } catch (error) {
+        console.error(error);
+        toast({ title: "ইনভয়েস তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
+      } finally {
+        setDownloadingId(null);
+        setSelectedInvoice(null);
+      }
+    }, 300);
+  };
 
   const fetchDonations = async () => {
     try {
@@ -180,14 +220,26 @@ const DonationManager = () => {
                         )}
                       </TableCell>
                       <TableCell className="py-4 text-right pr-6">
-                        <Button 
-                          size="sm"
-                          variant={d.status === 'verified' ? "outline" : "default"}
-                          className={d.status === 'verified' ? "border-gold/30 text-gold h-8 text-xs" : "bg-gold text-deep-green hover:bg-gold-light h-8 text-xs font-semibold shadow-md shadow-gold/20"}
-                          onClick={() => toggleStatus(d.id, d.status)}
-                        >
-                          {d.status === 'verified' ? 'বাতিল' : 'যাচাই করুন'}
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="border-emerald/30 text-emerald hover:bg-emerald/10 h-8 text-xs px-2 shadow-sm"
+                            onClick={() => handleDownloadInvoice(d)}
+                            disabled={downloadingId === d.id}
+                            title="রশিদ ডাউনলোড করুন"
+                          >
+                            {downloadingId === d.id ? <span className="animate-pulse">...</span> : <Download size={14} />}
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant={d.status === 'verified' ? "outline" : "default"}
+                            className={d.status === 'verified' ? "border-gold/30 text-gold h-8 text-xs" : "bg-gold text-deep-green hover:bg-gold-light h-8 text-xs font-semibold shadow-md shadow-gold/20"}
+                            onClick={() => toggleStatus(d.id, d.status)}
+                          >
+                            {d.status === 'verified' ? 'বাতিল' : 'যাচাই করুন'}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -197,6 +249,10 @@ const DonationManager = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {selectedInvoice && (
+        <DonationInvoiceTemplate ref={invoiceRef} donation={selectedInvoice} />
+      )}
     </div>
   );
 };
