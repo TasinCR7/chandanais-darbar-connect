@@ -65,6 +65,34 @@ const Hadia = () => {
       setCompletedDonation(data as InvoiceData);
       setIsSuccess(true);
       toast.success("আপনার হাদিয়া সফলভাবে গৃহীত হয়েছে!");
+      
+      // Send Telegram Notification
+      const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
+      const chatId = "7484314831";
+      if (botToken && chatId) {
+        const textMessage = `
+🟢 *নতুন হাদিয়া/নজরানা জমা হয়েছে!*
+━━━━━━━━━━━━━━━━━━
+👤 *নাম:* ${donorName}
+📱 *মোবাইল:* ${donorPhone}
+💰 *পরিমাণ:* ${amount} ৳
+💳 *পেমেন্ট:* ${paymentMethod}
+🔑 *TrxID:* \`${transactionId}\`
+━━━━━━━━━━━━━━━━━━
+অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
+        `;
+        
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: textMessage,
+            parse_mode: 'Markdown',
+          }),
+        }).catch(err => console.error('Telegram notification error:', err));
+      }
+      
     } catch (error) {
       console.error("Donation error:", error);
       toast.error("হাদিয়া জমা দিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
