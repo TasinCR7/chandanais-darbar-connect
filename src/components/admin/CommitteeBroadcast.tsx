@@ -88,6 +88,10 @@ const CommitteeBroadcast = () => {
 
   const [currentWaIndex, setCurrentWaIndex] = useState<number | null>(null);
 
+  const selectedMembersWithPhone = React.useMemo(() => {
+    return members.filter(m => selectedIds.includes(m.id) && m.phone);
+  }, [members, selectedIds]);
+
   const fetchBalance = async (key: string) => {
     if (!key) return;
     try {
@@ -216,14 +220,14 @@ const CommitteeBroadcast = () => {
       toast({ title: "ত্রুটি", description: "মেসেজ লিখুন এবং মেম্বার সিলেক্ট করুন।", variant: "destructive" });
       return;
     }
-    const selectedMembers = members.filter(m => selectedIds.includes(m.id) && m.phone);
-    if (selectedMembers.length === 0) {
+    
+    if (selectedMembersWithPhone.length === 0) {
       toast({ title: "ত্রুটি", description: "সিলেক্ট করা মেম্বারদের কারো ফোন নম্বর নেই।", variant: "destructive" });
       return;
     }
     
     setCurrentWaIndex(0);
-    openWhatsApp(selectedMembers[0]);
+    openWhatsApp(selectedMembersWithPhone[0]);
   };
 
   const openWhatsApp = (member: Member) => {
@@ -282,16 +286,16 @@ const CommitteeBroadcast = () => {
 
 
   const nextWhatsApp = () => {
-    const selectedMembers = members.filter(m => selectedIds.includes(m.id) && m.phone);
-    if (currentWaIndex !== null && currentWaIndex < selectedMembers.length - 1) {
+    if (currentWaIndex !== null && currentWaIndex < selectedMembersWithPhone.length - 1) {
       const nextIdx = currentWaIndex + 1;
       setCurrentWaIndex(nextIdx);
-      openWhatsApp(selectedMembers[nextIdx]);
+      openWhatsApp(selectedMembersWithPhone[nextIdx]);
     } else {
       setCurrentWaIndex(null);
       toast({ title: "সম্পন্ন", description: "সবাইকে WhatsApp মেসেজ পাঠানো হয়েছে।" });
     }
   };
+
 
   const selectedMembersCount = selectedIds.length;
 
@@ -351,20 +355,36 @@ const CommitteeBroadcast = () => {
                     disabled={selectedMembersCount === 0 || !message.trim()}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl"
                   >
-                    ব্রডকাস্ট শুরু করুন ({selectedMembersCount} জন)
+                    ব্রডকাস্ট শুরু করুন ({selectedMembersWithPhone.length} জন)
                   </Button>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-emerald/50">
-                      <span className="text-sm font-bold text-emerald-light">বর্তমান: {members.filter(m => selectedIds.includes(m.id) && m.phone)[currentWaIndex]?.name}</span>
-                      <span className="text-xs text-muted-foreground">{currentWaIndex + 1} / {members.filter(m => selectedIds.includes(m.id) && m.phone).length}</span>
+                    <div className="bg-black/40 p-4 rounded-xl border border-emerald/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-emerald-light">বর্তমান: {selectedMembersWithPhone[currentWaIndex]?.name}</span>
+                        <span className="text-xs text-muted-foreground">{currentWaIndex + 1} / {selectedMembersWithPhone.length}</span>
+                      </div>
+                      <Progress 
+                        value={((currentWaIndex + 1) / selectedMembersWithPhone.length) * 100} 
+                        className="h-2 bg-black/50"
+                      />
                     </div>
-                    <Button 
-                      onClick={nextWhatsApp}
-                      className="w-full bg-gold-gradient text-primary-foreground font-bold h-12 shadow-lg shadow-gold/20 rounded-xl"
-                    >
-                      পরবর্তী মেম্বার (Next)
-                    </Button>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setCurrentWaIndex(null)}
+                        className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                      >
+                        বন্ধ করুন
+                      </Button>
+                      <Button 
+                        onClick={nextWhatsApp}
+                        className="bg-gold-gradient text-primary-foreground font-bold flex items-center justify-center gap-2"
+                      >
+                        পরবর্তী (Next) <Send size={18} />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
