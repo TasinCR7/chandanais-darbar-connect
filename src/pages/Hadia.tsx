@@ -71,7 +71,7 @@ const Hadia = () => {
       return (
         <div className="bg-emerald/10 border border-emerald/30 rounded-lg p-4 mt-6">
           <p className="text-lg text-emerald-light font-semibold mb-2">হিসাব বিবরণী:</p>
-          <p className="text-foreground">সম্পূর্ণ <span className="text-gold font-bold">{amount} ৳</span> মসজিদ ফান্ডে প্রদান করা হবে। (১ জন প্রাপক)</p>
+          <p className="text-foreground">সম্পূর্ণ <span className="text-gold font-bold">{amount} ৳</span> মসজিদ ফান্ড/ দরবার ফান্ডে প্রদান করা হবে। (১ জন প্রাপক)</p>
         </div>
       );
     }
@@ -213,7 +213,7 @@ const Hadia = () => {
                               }`}
                             >
                               <Home size={24} className="mb-2" />
-                              <span className="text-sm font-semibold">মসজিদ ফান্ড</span>
+                              <span className="text-sm font-semibold">মসজিদ ফান্ড/ দরবার ফান্ড</span>
                             </button>
                             <button
                               onClick={() => setDonationType("combined_shahjadas")}

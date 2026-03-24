@@ -52,7 +52,7 @@ const DonationManager = () => {
   };
 
   const getCategoryLabel = (category: string, recipientId: string | null) => {
-    if (category === 'mosque') return 'মসজিদ ফান্ড';
+    if (category === 'mosque') return 'মসজিদ ফান্ড/ দরবার ফান্ড';
     if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {
@@ -101,7 +101,7 @@ const DonationManager = () => {
         <Card className="bg-gradient-to-br from-blue-500/20 to-blue-400/5 border-blue-500/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-blue-500 font-medium flex items-center gap-2">
-              <Home size={18} /> মসজিদ ফান্ড (গৃহীত)
+              <Home size={18} /> মসজিদ ফান্ড/ দরবার ফান্ড (গৃহীত)
             </CardTitle>
           </CardHeader>
           <CardContent>
