@@ -134,3 +134,38 @@ FOR ALL
 TO authenticated 
 USING (public.has_role(auth.uid(), 'admin'))
 WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+-- ==========================================
+-- 5. DONATIONS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS public.donations (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    donor_name text NOT NULL,
+    donor_phone text NOT NULL,
+    amount numeric NOT NULL,
+    donation_category text NOT NULL,
+    recipient_id text,
+    payment_method text NOT NULL,
+    transaction_id text NOT NULL,
+    status text DEFAULT 'pending',
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
+
+-- Allow public insert on donations
+CREATE POLICY "Allow public insert on donations" 
+ON public.donations 
+FOR INSERT 
+TO public 
+WITH CHECK (true);
+
+-- Only admins can manage donations
+CREATE POLICY "Allow admins to manage donations" 
+ON public.donations 
+FOR ALL 
+TO authenticated 
+USING (public.has_role(auth.uid(), 'admin'))
+WITH CHECK (public.has_role(auth.uid(), 'admin'));

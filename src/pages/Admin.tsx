@@ -15,6 +15,7 @@ const SubmissionManager = lazy(() => import("@/components/admin/SubmissionManage
 const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"));
 const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"));
+const DonationManager = lazy(() => import("@/components/admin/DonationManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -295,7 +296,7 @@ const Admin = () => {
 
   return (
     <div className="py-20 islamic-pattern min-h-screen">
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto px-4 max-w-[1400px]">
         <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 bg-card/40 backdrop-blur-md p-6 rounded-3xl border border-gold/20 shadow-2xl">
           <div className="flex items-center gap-4">
              <div className="w-12 h-12 rounded-2xl bg-gold-gradient p-0.5">
@@ -323,14 +324,17 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="notices" className="space-y-8">
-          <TabsList className="bg-card/40 backdrop-blur-md border border-gold/20 w-full flex h-auto p-1.5 rounded-2xl shadow-xl">
-            <TabsTrigger value="notices" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">নোটিশ</TabsTrigger>
-            <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আবেদনপত্র</TabsTrigger>
-            <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
-            <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
-            <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
-            <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground flex-1 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
+            <TabsList className="bg-card/40 backdrop-blur-md border border-gold/20 w-max min-w-full flex h-auto p-1.5 rounded-2xl shadow-xl">
+              <TabsTrigger value="notices" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">নোটিশ</TabsTrigger>
+              <TabsTrigger value="donations" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold">হাদিয়া ও নজরানা</TabsTrigger>
+              <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">আবেদনপত্র</TabsTrigger>
+              <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
+              <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
+              <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
+              <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="notices">
             <Suspense fallback={<PremiumLoader />}>
@@ -341,6 +345,12 @@ const Admin = () => {
                 onToggleActive={toggleNotice} 
                 onDeleteNotice={deleteNotice} 
               />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="donations">
+            <Suspense fallback={<PremiumLoader />}>
+              <DonationManager />
             </Suspense>
           </TabsContent>
 
