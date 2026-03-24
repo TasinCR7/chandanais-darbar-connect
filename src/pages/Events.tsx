@@ -13,7 +13,12 @@ const islamicEvents = [
 const Events = () => {
   return (
     <>
-      <SEO title="ওরশ ও অনুষ্ঠান" description="চন্দনাইশ দরবার শরীফের বার্ষিক ওরশ শরীফ ও ইসলামিক অনুষ্ঠানের তারিখসমূহ। বাংলা ও হিজরি ক্যালেন্ডার অনুযায়ী সময়সূচী।" canonical="/events" />
+      <SEO 
+        title="ওরশ ও মাহফিলের সময়সূচী" 
+        description="চন্দনাইশ দরবার শরীফের বার্ষিক ওরশ, পবিত্র জন্মদিন ও অন্যান্য গুরুত্বপূর্ণ ইসলামি অনুষ্ঠানের সঠিক সময়সূচী এবং তারিখসমূহ জানুন।" 
+        keywords="ওরশ সময়সূচী, মাহফিল তারিখ, চন্দনাইশ দরবার ক্যালেন্ডার, বার্ষিক ওরশ ২০২৬, ইসলামি অনুষ্ঠান"
+        canonical="/events" 
+      />
       <div className="py-20 islamic-pattern">
       <div className="container mx-auto px-4">
         <SectionTitle

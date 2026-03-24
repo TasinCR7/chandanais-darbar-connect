@@ -183,7 +183,12 @@ const Hadia = () => {
 
   return (
     <>
-      <SEO title="হাদিয়া ও নজরানা" description="চন্দনাইশ দরবার শরীফের খেদমতে হাদিয়া ও নজরানা প্রদান করুন। দরবারের সেবায় অংশগ্রহণ করুন।" canonical="/hadia" />
+      <SEO 
+        title="হাদিয়া ও নজরানা প্রদান" 
+        description="চন্দনাইশ দরবার শরীফের খেদমতে অনলাইনে আপনার হাদিয়া ও নজরানা প্রদান করুন। নিরাপদ পেমেন্ট ও অফিসীয়াল রশিদ সংগ্রহ করুন।" 
+        keywords="অনলাইন হাদিয়া, নজরানা প্রদান, চন্দনাইশ দরবার দান, মসজিদ ফান্ড, দরবার শরীফ কন্ট্রিবিউশন"
+        canonical="/hadia" 
+      />
       <div className="py-20 islamic-pattern min-h-screen">
         <div className="container mx-auto px-4">
           <SectionTitle

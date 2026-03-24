@@ -26,7 +26,12 @@ const contactInfo = [
 const Contact = () => {
   return (
     <>
-      <SEO title="যোগাযোগ" description="চন্দনাইশ দরবার শরীফে যোগাযোগ করুন। ঠিকানা, ফোন নম্বর ও ইমেইল তথ্য।" canonical="/contact" />
+      <SEO 
+        title="যোগাযোগ ও ঠিকানা - চন্দনাইশ দরবার শরীফ" 
+        description="চন্দনাইশ দরবার শরীফের সঠিক ঠিকানা, ফোন নম্বর, ইমেইল এবং গুগল ম্যাপ লোকেশন। আমাদের সাথে যোগাযোগের সব তথ্য এখানে পাবেন।" 
+        keywords="দরবার শরীফ ফোন নম্বর, চন্দনাইশ দরবার ঠিকানা, যোগাযোগ তথ্য, গুগল ম্যাপ লোকেশন"
+        canonical="/contact" 
+      />
       <div className="py-20 islamic-pattern">
       <div className="container mx-auto px-4">
         <SectionTitle

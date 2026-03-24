@@ -110,7 +110,12 @@ ${trimmedDetails}
 
   return (
     <>
-      <SEO title="প্রশ্ন-উত্তর ও অভিযোগ" description="চন্দনাইশ দরবার শরীফে শরিয়তের প্রশ্ন করুন বা অভিযোগ জানান।" canonical="/qna" />
+      <SEO 
+        title="শরিয়তের প্রশ্ন ও অভিযোগ" 
+        description="শরিয়তের যেকোনো বিষয়ে প্রশ্ন করুন অথবা দরবার শরীফ সংক্রান্ত কোনো অভিযোগ বা মতামত থাকলে জানান। অভিজ্ঞ আলেমগণ উত্তর প্রদান করবেন।" 
+        keywords="ফতোয়া জিজ্ঞাসা, শরিয়তি প্রশ্ন, অভিযোগ বক্স, চন্দনাইশ দরবার মতামত, আলেমদের পরামর্শ"
+        canonical="/qna" 
+      />
       <div className="py-20 islamic-pattern">
         <div className="container mx-auto px-4">
           <SectionTitle

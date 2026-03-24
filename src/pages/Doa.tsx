@@ -116,7 +116,12 @@ ${trimmedDetails}
 
   return (
     <>
-      <SEO title="দোয়া আবেদন" description="চন্দনাইশ দরবার শরীফে অনলাইনে দোয়া আবেদন করুন। আপনার সমস্যার বিবরণ দিন, পীর সাহেব দোয়া করবেন।" canonical="/doa" />
+      <SEO 
+        title="অনলাইন দোয়া আবেদন" 
+        description="আপনার যেকোনো সমস্যা বা অসুস্থতার জন্য চন্দনাইশ দরবার শরীফে অনলাইনে দোয়া আবেদন করুন। পীর সাহেব হুজুর আপনার জন্য খাস দোয়া করবেন।" 
+        keywords="দোয়া আবেদন, অনলাইন দোয়া, পীর সাহেবের দোয়া, রোগমুক্তি দোয়া, চন্দনাইশ দরবার দোয়া"
+        canonical="/doa" 
+      />
       <div className="py-20 islamic-pattern">
       <div className="container mx-auto px-4">
         <SectionTitle
