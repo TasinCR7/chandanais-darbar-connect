@@ -246,18 +246,37 @@ const CommitteeBroadcast = () => {
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
     
     console.log("Opening WhatsApp for:", phone);
-    console.log("URL:", url);
     
-    const newWindow = window.open(url, "_blank");
+    // Improved window opening logic
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
     
     if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
       toast({ 
         title: "পপআপ ব্লকড!", 
-        description: "আপনার ব্রাউজারে 'Popup Blocker' বন্ধ করুন। অথবা এই লিঙ্কে ক্লিক করুন: [মেসেজ পাঠান](" + url + ")",
-        variant: "destructive"
+        description: "আপনার ব্রাউজারে 'Popup Blocker' বন্ধ করুন অথবা নিচের বাটন দিয়ে ম্যাসেজটি কপি করুন।",
+        variant: "destructive",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => {
+            navigator.clipboard.writeText(message);
+            toast({ title: "কপি হয়েছে", description: "মেসেজটি কপি করা হয়েছে, এখন WhatsApp-এ পেস্ট করুন।" });
+          }}>
+            Copy
+          </Button>
+        )
       });
     } else {
-      toast({ title: "WhatsApp ওপেন হচ্ছে", description: `${member.name} এর চ্যাটবক্স ওপেন করা হয়েছে।` });
+      toast({ 
+        title: "WhatsApp ওপেন হচ্ছে", 
+        description: `${member.name} এর জন্য চ্যাটবক্স ওপেন করা হয়েছে।`,
+        action: (
+          <Button variant="outline" size="sm" onClick={() => {
+            navigator.clipboard.writeText(message);
+            toast({ title: "কপি হয়েছে", description: "মেসেজটি কপি করা হয়েছে।" });
+          }}>
+            Copy
+          </Button>
+        )
+      });
     }
   };
 
