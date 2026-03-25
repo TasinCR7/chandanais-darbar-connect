@@ -36,7 +36,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
   });
 
   const getCategoryLabel = (category: string, recipientId?: string | null) => {
-    if (category === 'mosque') return 'মসজিদ/দরবার ফান্ড';
+    if (category === 'mosque') return 'মসজিদ / দরবার ফান্ড';
     if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {
@@ -52,137 +52,164 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
 
   return (
     <div style={{ position: 'fixed', top: '-10000px', left: '-10000px', pointerEvents: 'none', zIndex: -1000 }}>
-      {/* Compact Bank Statement Layout */}
+      {/* Official Statement of Account Layout */}
       <div 
         id="report-container"
         ref={ref} 
-        className="bg-white text-black font-sans" 
-        style={{ width: '800px', padding: '40px', margin: '0' }}
+        className="bg-white text-black font-sans relative" 
+        style={{ width: '800px', padding: '50px', margin: '0', minHeight: '1100px' }}
       >
-        {/* Header Section */}
-        <div className="border-b-2 border-black pb-4 mb-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold uppercase tracking-tight">চন্দনাইশ দরবার শরীফ</h1>
-              <p className="text-sm font-semibold text-gray-700">হাদিয়া ও নজরানা হিসাব বিবরণী</p>
-            </div>
-            <div className="text-right text-xs">
-              <p>Statement Date: {format(new Date(), 'dd/MM/yyyy')}</p>
-              <p>Generation Time: {format(new Date(), 'hh:mm a')}</p>
-              <p className="mt-1 font-bold">Report ID: {format(new Date(), 'yyyyMMdd')}-{(Math.random()*100).toFixed(0)}</p>
-            </div>
+        {/* Subtle Watermark Logo/Seal Placeholder */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
+          <div className="w-[400px] h-[400px] border-[20px] border-black rounded-full flex items-center justify-center">
+            <span className="text-4xl font-bold uppercase text-center">চন্দনাইশ দরবার শরীফ<br/>OFFICIAL SEAL</span>
           </div>
         </div>
 
-        {/* Account Summary Section (Table-like) */}
-        <div className="mb-6">
-          <h3 className="text-sm font-bold uppercase bg-gray-100 p-2 border-t border-x border-black">আর্থিক সারাংশ (Summary)</h3>
-          <table className="w-full border-collapse border border-black text-sm">
-            <tbody>
-              <tr>
-                <td className="border border-black p-2 font-bold bg-gray-50 w-1/3">সর্বমোট সংগৃহীত হাদিয়া</td>
-                <td className="border border-black p-2 font-bold text-lg text-right">৳ {totalAmount.toLocaleString()}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-semibold bg-gray-50">মসজিদ ও দরবার ফান্ড</td>
-                <td className="border border-black p-2 font-semibold text-right">৳ {mosqueTotal.toLocaleString()}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-semibold bg-gray-50">সম্মিলিত প্রাপ্তি (ভাগ করারযোগ্য)</td>
-                <td className="border border-black p-2 font-semibold text-right">৳ {combinedShahjadasTotal.toLocaleString()}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <div className="relative z-10">
+          {/* Official Header */}
+          <div className="flex justify-between items-start border-b-[3px] border-black pb-6 mb-8">
+            <div className="w-2/3">
+              <h1 className="text-4xl font-black uppercase mb-1 tracking-tighter">চন্দনাইশ দরবার শরীফ</h1>
+              <p className="text-lg font-bold text-gray-800">অফিস অফ দ্য খাদেম | ফিন্যান্সিয়াল রেকর্ডস</p>
+              <div className="mt-4 text-xs font-mono">
+                <p>Location: Chandanaish, Chittagong, Bangladesh</p>
+                <p>Contact: +8801711234567 | info@chandanaishdarbar.com</p>
+              </div>
+            </div>
+            <div className="w-1/3 text-right">
+              <div className="inline-block border-2 border-black p-2 mb-2">
+                <h2 className="text-xl font-black uppercase tracking-widest leading-none">STATEMENT OF<br/>ACCOUNT</h2>
+              </div>
+              <div className="text-[10px] space-y-0.5">
+                <p><span className="font-bold">Date:</span> {format(new Date(), 'dd/MM/yyyy')}</p>
+                <p><span className="font-bold">Time:</span> {format(new Date(), 'hh:mm:ss a')}</p>
+                <p><span className="font-bold">Ref No:</span> CD-{(Math.random()*100000).toFixed(0)}</p>
+              </div>
+            </div>
+          </div>
 
-        {/* Breakdown Section (More Compact) */}
-        <div className="mb-6">
-          <h3 className="text-sm font-bold uppercase bg-gray-100 p-2 border-t border-x border-black">শাহজাদাদের বণ্টন বিবরণী (Breakdown)</h3>
-          <table className="w-full border-collapse border border-black text-xs">
-            <thead>
-              <tr className="bg-gray-50 font-bold">
-                <th className="border border-black p-2 text-left">শাহজাদার নাম</th>
-                <th className="border border-black p-2 text-right">সম্মিলিত অংশ (1/4)</th>
-                <th className="border border-black p-2 text-right">নির্দিষ্ট হাদিয়া</th>
-                <th className="border border-black p-2 text-right">সর্বমোট (৳)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {SHAHJADAS.map(s => {
-                const specific = specificShahjadaTotals.find(st => st.id === s.id)?.total || 0;
-                const totalForThisShahjada = perShahjadaCombined + specific;
-                return (
-                  <tr key={s.id}>
-                    <td className="border border-black p-2 font-bold">{s.name}</td>
-                    <td className="border border-black p-2 text-right">{perShahjadaCombined.toLocaleString()}</td>
-                    <td className="border border-black p-2 text-right">{specific.toLocaleString()}</td>
-                    <td className="border border-black p-2 text-right font-bold">{totalForThisShahjada.toLocaleString()}</td>
+          {/* Account Details */}
+          <div className="mb-8 grid grid-cols-2 gap-10">
+            <div className="border border-black p-4">
+              <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Account Particulars</p>
+              <h3 className="text-xl font-black">হাদিয়া ও নজরানা ফান্ড</h3>
+              <p className="text-xs">Category: Religious Contributions & Welfare</p>
+              <p className="text-xs">Status: Verified Official Ledger</p>
+            </div>
+            <div className="border border-black p-4 bg-gray-50">
+              <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Financial Summary</p>
+              <div className="flex justify-between items-baseline border-b border-gray-300 pb-1 mb-1">
+                <span className="text-xs">Total Net Collections:</span>
+                <span className="font-bold">৳ {totalAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-baseline border-b border-gray-300 pb-1 mb-1">
+                <span className="text-xs">Mosque Fund Allocation:</span>
+                <span className="font-bold">৳ {mosqueTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-baseline font-black">
+                <span className="text-sm">Balance for Distribution:</span>
+                <span className="text-lg">৳ {combinedShahjadasTotal.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Distribution Schedule */}
+          <div className="mb-10">
+            <table className="w-full border-collapse border-2 border-black">
+              <thead>
+                <tr className="bg-black text-white">
+                  <th colSpan={4} className="py-2 text-sm font-black uppercase tracking-widest">শাহজাদাদের বণ্টন বিবরণী (Distribution Schedule)</th>
+                </tr>
+                <tr className="bg-gray-200 text-[10px] font-black uppercase">
+                  <th className="border border-black p-2 text-left w-1/3">Recipient Name (শাহজাদার নাম)</th>
+                  <th className="border border-black p-2 text-right">Variable Share (সম্মিলিত)</th>
+                  <th className="border border-black p-2 text-right">Fixed Hadia (নির্দিষ্ট)</th>
+                  <th className="border border-black p-2 text-right w-1/4">Grand Total (সর্বমোট)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SHAHJADAS.map(s => {
+                  const specific = specificShahjadaTotals.find(st => st.id === s.id)?.total || 0;
+                  const totalForThisShahjada = perShahjadaCombined + specific;
+                  return (
+                    <tr key={s.id} className="text-xs">
+                      <td className="border border-black p-2 font-black">{s.name}</td>
+                      <td className="border border-black p-2 text-right">{perShahjadaCombined.toLocaleString()}</td>
+                      <td className="border border-black p-2 text-right">{specific.toLocaleString()}</td>
+                      <td className="border border-black p-2 text-right font-black text-sm bg-gray-50">৳ {totalForThisShahjada.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Ledger Table */}
+          <div className="mb-16">
+            <table className="w-full border-collapse border-2 border-black text-[9px]">
+              <thead>
+                <tr className="bg-black text-white">
+                  <th colSpan={4} className="py-2 text-sm font-black uppercase tracking-widest">ট্রানজেকশন লেজার (Transaction Ledger)</th>
+                </tr>
+                <tr className="bg-gray-200 font-black uppercase">
+                  <th className="border border-black p-2 text-left w-[12%]">Val. Date</th>
+                  <th className="border border-black p-2 text-left">Transaction Details (Contributor & Ref)</th>
+                  <th className="border border-black p-2 text-left w-[25%]">Description (Fund Category)</th>
+                  <th className="border border-black p-2 text-right w-[15%]">Amount (DR/CR)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {donations.map((d, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="border border-black px-2 py-3 font-mono">
+                      {d.created_at ? format(new Date(d.created_at), 'dd-MM-yy') : '--/--/--'}
+                    </td>
+                    <td className="border border-black px-2 py-3">
+                      <div className="font-bold text-xs uppercase">{d.donor_name}</div>
+                      <div className="text-[7px] text-gray-500 font-mono">CHANNEL: {d.payment_method.toUpperCase()} | TXN: {d.transaction_id}</div>
+                    </td>
+                    <td className="border border-black px-2 py-3 font-medium italic">
+                      {getCategoryLabel(d.donation_category, d.recipient_id)}
+                    </td>
+                    <td className="border border-black px-2 py-3 text-right font-black text-xs">
+                      {d.amount.toLocaleString()}.00
+                    </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Detailed Transactions Table (Formal Ledger Style) */}
-        <div className="mb-10">
-          <h3 className="text-sm font-bold uppercase bg-gray-100 p-2 border-t border-x border-black">লেনদেনের বিস্তারিত তালিকা (Ledger)</h3>
-          <table className="w-full border-collapse border border-black text-[10px]">
-            <thead>
-              <tr className="bg-gray-50 font-bold">
-                <th className="border border-black p-2 text-left w-[80px]">তারিখ</th>
-                <th className="border border-black p-2 text-left">দাতার বিবরণ (নাম ও ট্রানজেকশন আইডি)</th>
-                <th className="border border-black p-2 text-left">খাত / বিবরণ</th>
-                <th className="border border-black p-2 text-right w-[80px]">পরিমাণ (৳)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {donations.map((d, index) => (
-                <tr key={index}>
-                  <td className="border border-black p-2">
-                    {d.created_at ? format(new Date(d.created_at), 'dd-MM-yy') : '---'}
-                  </td>
-                  <td className="border border-black p-2">
-                    <span className="font-bold">{d.donor_name}</span>
-                    <p className="text-[8px] text-gray-500">{d.payment_method.toUpperCase()} | Trx: {d.transaction_id}</p>
-                  </td>
-                  <td className="border border-black p-2">
-                    {getCategoryLabel(d.donation_category, d.recipient_id)}
-                  </td>
-                  <td className="border border-black p-2 text-right font-bold">
-                    {d.amount.toLocaleString()}
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-200 font-black text-sm">
+                  <td colSpan={3} className="border border-black p-3 text-right tracking-[0.2em]">CUMULATIVE COLLECTIONS (TOTAL)</td>
+                  <td className="border border-black p-3 text-right underline decoration-double">
+                    ৳ {totalAmount.toLocaleString()}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-gray-100 font-bold text-xs">
-                <td colSpan={3} className="border border-black p-2 text-right uppercase">মোট জমা:</td>
-                <td className="border border-black p-2 text-right">
-                  ৳ {totalAmount.toLocaleString()}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+              </tfoot>
+            </table>
+          </div>
 
-        {/* Simple Footer/Signature Area */}
-        <div className="mt-16 flex justify-between items-end border-t border-gray-300 pt-8 px-10">
-          <div className="text-center w-32 border-t border-black pt-2">
-            <p className="text-xs font-bold">খাদেমের স্বাক্ষর</p>
+          {/* Verification Section */}
+          <div className="grid grid-cols-2 gap-20 mt-20 mb-10">
+            <div className="text-center">
+              <div className="border-t-2 border-black pt-2 mx-auto w-4/5">
+                <p className="text-sm font-black uppercase">খাদেমের স্বাক্ষর</p>
+                <p className="text-[9px] text-gray-500">Authorized Financial Custodian</p>
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="border-t-2 border-black pt-2 mx-auto w-4/5">
+                <p className="text-sm font-black uppercase">অফিসিয়াল সিল</p>
+                <p className="text-[9px] text-gray-500">Chandanaish Darbar Sharif Finance Dept.</p>
+              </div>
+            </div>
           </div>
-          <div className="text-center text-[8px] text-gray-400 italic">
-            <p>চন্দনাইশ দরবার শরীফ অফিসীয়াল রেকর্ড।</p>
-            <p>এটি একটি কম্পিউটার জেনারেটেড স্টেটমেন্ট।</p>
-          </div>
-          <div className="text-center w-32 border-t border-black pt-2">
-            <p className="text-xs font-bold">অফিসিয়াল সিল</p>
-          </div>
-        </div>
 
-        {/* Small footer text */}
-        <div className="mt-8 text-center text-[10px] text-gray-500">
-           <p>"নিশ্চয়ই আল্লাহ্ অনুগ্রহকারীদের ভালোবাসেন।"</p>
+          {/* Footer Metadata */}
+          <div className="border-t border-gray-200 mt-20 pt-6 text-center text-[8px] text-gray-400">
+            <p>"إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ" - আল্লাহ তায়ালা আপনার নেক মাকসুদ কবুল করুন।</p>
+            <p className="mt-2 text-[7px] font-mono">E-DOCUMENT - GENERATED BY CDB FINANCE SYSTEM V2.1 | PAGE 1 OF 1 (CANDIDATE)</p>
+          </div>
         </div>
       </div>
     </div>
