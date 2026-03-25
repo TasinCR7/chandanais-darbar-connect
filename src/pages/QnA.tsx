@@ -5,6 +5,7 @@ import QnAFormCard from "@/components/QnAFormCard";
 import { HelpCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sendTelegramNotification } from "@/utils/telegram";
 
 const questionSubjects = [
   "নামাজ সংক্রান্ত",
@@ -73,14 +74,11 @@ const QnA = () => {
     }
 
     // Send Telegram Notification
-    const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
-    const chatId = "7484314831";
-    if (botToken && chatId) {
-      const isComplaint = type === "complaint";
-      const icon = isComplaint ? "🔴" : "🔵";
-      const titleText = isComplaint ? "নতুন অভিযোগ জমা হয়েছে!" : "নতুন প্রশ্ন জমা হয়েছে!";
-      
-      const textMessage = `
+    const isComplaint = type === "complaint";
+    const icon = isComplaint ? "🔴" : "🔵";
+    const titleText = isComplaint ? "নতুন অভিযোগ জমা হয়েছে!" : "নতুন প্রশ্ন জমা হয়েছে!";
+    
+    const textMessage = `
 ${icon} *${titleText}*
 ━━━━━━━━━━━━━━━━━━
 👤 *নাম:* ${trimmedName}
@@ -90,18 +88,9 @@ ${icon} *${titleText}*
 ${trimmedDetails}
 ━━━━━━━━━━━━━━━━━━
 অনুগ্রহ করে প্যানেল থেকে ব্যবস্থা নিন।
-      `;
-      
-      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: textMessage,
-          parse_mode: 'Markdown',
-        }),
-      }).catch(err => console.error('Telegram notification error:', err));
-    }
+    `;
+    
+    sendTelegramNotification(textMessage);
 
     setForm({ ...initialForm });
     setSubmitting(false);

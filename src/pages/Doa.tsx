@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HandHeart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sendTelegramNotification } from "@/utils/telegram";
 
 const doaSubjects = [
   "রোগমুক্তি / সুস্থতা",
@@ -78,10 +79,7 @@ const Doa = () => {
     }
 
     // Send Telegram Notification
-    const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
-    const chatId = "7484314831";
-    if (botToken && chatId) {
-      const textMessage = `
+    const textMessage = `
 🤲 *নতুন দোয়া আবেদন জমা হয়েছে!*
 ━━━━━━━━━━━━━━━━━━
 👤 *নাম:* ${trimmedName}
@@ -92,18 +90,9 @@ const Doa = () => {
 ${trimmedDetails}
 ━━━━━━━━━━━━━━━━━━
 পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
-      `;
-      
-      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: textMessage,
-          parse_mode: 'Markdown',
-        }),
-      }).catch(err => console.error('Telegram notification error:', err));
-    }
+    `;
+    
+    sendTelegramNotification(textMessage);
 
     toast({
       title: "দোয়া আবেদন পাঠানো হয়েছে ✅",

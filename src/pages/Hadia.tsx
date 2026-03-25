@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
+import { sendTelegramNotification } from "@/utils/telegram";
 
 type DonationType = "mosque" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
@@ -67,18 +68,11 @@ const Hadia = () => {
       toast.success("আপনার হাদিয়া সফলভাবে গৃহীত হয়েছে!");
       
       // Send Telegram Notification
-      const botToken = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
-      const chatId = "7484314831";
-      if (botToken && chatId) {
-        let categoryText = "";
-        if (donationType === "mosque") categoryText = "মসজিদ ফান্ড/ দরবার ফান্ড";
-        else if (donationType === "combined_shahjadas") categoryText = "সম্মিলিত শাহজাদাগণ";
-        else if (donationType === "specific_shahjada") {
-          const map: Record<string, string> = { boro: 'বড় শাহজাদা', mej: 'মেজ শাহজাদা', sej: 'সেজ শাহজাদা', choto: 'ছোট শাহজাদা' };
-          categoryText = map[specificShahjada] || "নির্দিষ্ট শাহজাদা";
-        }
+      const categoryText = donationType === "mosque" ? "মসজিদ ফান্ড/ দরবার ফান্ড" :
+                           donationType === "combined_shahjadas" ? "সম্মিলিত শাহজাদাগণ" :
+                           (SHAHJADAS.find(s => s.id === specificShahjada)?.name || "নির্দিষ্ট শাহজাদা");
 
-        const textMessage = `
+      const textMessage = `
 🟢 *নতুন হাদিয়া/নজরানা জমা হয়েছে!*
 ━━━━━━━━━━━━━━━━━━
 👤 *নাম:* ${donorName}
@@ -89,18 +83,9 @@ const Hadia = () => {
 🔑 *TrxID:* \`${transactionId}\`
 ━━━━━━━━━━━━━━━━━━
 অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
-        `;
-        
-        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: textMessage,
-            parse_mode: 'Markdown',
-          }),
-        }).catch(err => console.error('Telegram notification error:', err));
-      }
+      `;
+      
+      sendTelegramNotification(textMessage);
       
     } catch (error) {
       console.error("Donation error:", error);

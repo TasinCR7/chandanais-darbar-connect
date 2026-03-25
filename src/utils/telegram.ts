@@ -1,0 +1,40 @@
+/**
+ * Telegram Notification Utility
+ * Supports sending messages to multiple chat IDs simultaneously.
+ * Uses environment variables VITE_TELEGRAM_BOT_TOKEN and VITE_TELEGRAM_CHAT_ID (or VITE_TELEGRAM_CHAT_IDS).
+ */
+
+export const sendTelegramNotification = async (message: string) => {
+  const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+  // Support both single ID and comma-separated IDs
+  const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_IDS || import.meta.env.VITE_TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatIdsString) {
+    console.error("Telegram credentials missing in environment variables.");
+    return;
+  }
+
+  const chatIds = chatIdsString.split(",").map(id => id.trim()).filter(id => id.length > 0);
+
+  const sendPromises = chatIds.map(chatId => 
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+      }),
+    })
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error(`Telegram error to ${chatId}:`, errorData);
+      }
+      return res;
+    })
+    .catch(err => console.error(`Telegram fetch error to ${chatId}:`, err))
+  );
+
+  return Promise.all(sendPromises);
+};
