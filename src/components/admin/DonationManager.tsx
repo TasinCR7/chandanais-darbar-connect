@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HeartHandshake, Home, Users, CheckCircle, Clock, Download } from "lucide-react";
+import { HeartHandshake, Home, Users, CheckCircle, Clock, Download, Trash2, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -157,8 +157,7 @@ const DonationManager = () => {
     fetchDonations();
   }, [fetchDonations]);
 
-  const toggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'pending' ? 'verified' : 'pending';
+  const updateStatus = async (id: string, newStatus: string) => {
     try {
       const { error } = await supabase
         .from('donations')
@@ -167,11 +166,30 @@ const DonationManager = () => {
 
       if (error) throw error;
       
-      toast({ title: "স্ট্যাটাস আপডেট করা হয়েছে" });
+      toast({ title: `স্ট্যাটাস '${newStatus === 'verified' ? 'গৃহীত' : 'বাতিল'}' করা হয়েছে` });
       fetchDonations();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update status";
       toast({ title: "Failed to update status", description: errorMessage, variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই হাদিয়ার তথ্যটি ডিলিট করতে চান?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from('donations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({ title: "হাদিয়াটি ডিলিট করা হয়েছে" });
+      fetchDonations();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete donation";
+      toast({ title: "Failed to delete donation", description: errorMessage, variant: "destructive" });
     }
   };
 
@@ -308,29 +326,55 @@ const DonationManager = () => {
                       <TableCell className="py-4">
                         {d.status === 'verified' ? (
                           <Badge className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 border-none px-2.5 py-0.5 font-medium">গৃহীত</Badge>
+                        ) : d.status === 'rejected' ? (
+                          <Badge className="bg-destructive/20 hover:bg-destructive/30 text-destructive border-none px-2.5 py-0.5 font-medium">বাতিল</Badge>
                         ) : (
                           <Badge className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-500 border-none px-2.5 py-0.5 font-medium">অপেক্ষমান</Badge>
                         )}
                       </TableCell>
                       <TableCell className="py-4 text-right pr-6">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <Button 
                             size="sm"
                             variant="outline"
-                            className="border-emerald/30 text-emerald hover:bg-emerald/10 h-8 text-xs px-2 shadow-sm"
+                            className="border-emerald/30 text-emerald hover:bg-emerald/10 h-8 w-8 p-0 shadow-sm"
                             onClick={() => handleDownloadInvoice(d)}
                             disabled={downloadingId === d.id}
                             title="রশিদ ডাউনলোড করুন"
                           >
                             {downloadingId === d.id ? <span className="animate-pulse">...</span> : <Download size={14} />}
                           </Button>
+                          
+                          {d.status !== 'verified' && (
+                            <Button 
+                              size="sm"
+                              variant="default"
+                              className="bg-emerald text-white hover:bg-emerald/90 h-8 text-xs font-semibold"
+                              onClick={() => updateStatus(d.id, 'verified')}
+                            >
+                              গৃহীত
+                            </Button>
+                          )}
+
+                          {d.status !== 'rejected' && (
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              className="border-destructive/30 text-destructive hover:bg-destructive/10 h-8 text-xs"
+                              onClick={() => updateStatus(d.id, 'rejected')}
+                            >
+                              বাতিল
+                            </Button>
+                          )}
+
                           <Button 
                             size="sm"
-                            variant={d.status === 'verified' ? "outline" : "default"}
-                            className={d.status === 'verified' ? "border-gold/30 text-gold h-8 text-xs" : "bg-gold text-deep-green hover:bg-gold-light h-8 text-xs font-semibold shadow-md shadow-gold/20"}
-                            onClick={() => toggleStatus(d.id, d.status)}
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                            onClick={() => handleDelete(d.id)}
+                            title="সম্পূর্ণ ডিলিট করুন"
                           >
-                            {d.status === 'verified' ? 'বাতিল' : 'যাচাই করুন'}
+                            <Trash2 size={14} />
                           </Button>
                         </div>
                       </TableCell>
