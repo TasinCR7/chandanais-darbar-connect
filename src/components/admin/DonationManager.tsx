@@ -82,7 +82,7 @@ const DonationManager = () => {
           allowTaint: true,
           backgroundColor: "#ffffff",
           logging: false,
-          windowWidth: 900,
+          windowWidth: 800,
           windowHeight: element.scrollHeight,
           onclone: (doc) => {
             const clonedElement = doc.getElementById('report-container');
