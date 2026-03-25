@@ -5,16 +5,17 @@
  */
 
 export const sendTelegramNotification = async (message: string) => {
-  const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
-  const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+  // Hardcoded Fallbacks (for when .env fails to load in Vite)
+  const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
+  const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || "7484314831,-1003880816949";
 
   if (!botToken) {
-    console.error("Telegram Bot Token is missing in environment variables.");
+    console.error("Telegram Bot Token is missing.");
     return;
   }
   
   if (!chatIdsString) {
-    console.error("Telegram Chat ID is missing in environment variables.");
+    console.error("Telegram Chat ID is missing.");
     return;
   }
 
