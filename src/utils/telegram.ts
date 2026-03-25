@@ -6,15 +6,20 @@
 
 export const sendTelegramNotification = async (message: string) => {
   const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
-  // Support both single ID and comma-separated IDs
-  const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_IDS || import.meta.env.VITE_TELEGRAM_CHAT_ID;
+  const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID;
 
-  if (!botToken || !chatIdsString) {
-    console.error("Telegram credentials missing in environment variables.");
+  if (!botToken) {
+    console.error("Telegram Bot Token is missing in environment variables.");
+    return;
+  }
+  
+  if (!chatIdsString) {
+    console.error("Telegram Chat ID is missing in environment variables.");
     return;
   }
 
   const chatIds = chatIdsString.split(",").map(id => id.trim()).filter(id => id.length > 0);
+  console.log("Broadcasting to Telegram Chat IDs:", chatIds);
 
   const sendPromises = chatIds.map(chatId => 
     fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -30,10 +35,15 @@ export const sendTelegramNotification = async (message: string) => {
       if (!res.ok) {
         const errorData = await res.json();
         console.error(`Telegram error to ${chatId}:`, errorData);
+      } else {
+        console.log(`Telegram message sent successfully to ${chatId}`);
       }
       return res;
     })
-    .catch(err => console.error(`Telegram fetch error to ${chatId}:`, err))
+    .catch(err => {
+      console.error(`Telegram fetch error to ${chatId}:`, err);
+      return null;
+    })
   );
 
   return Promise.all(sendPromises);
