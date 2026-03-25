@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HeartHandshake, Home, Users, CheckCircle, Clock, Download, Trash2, XCircle } from "lucide-react";
+import { HeartHandshake, Home, Users, CheckCircle, Clock, Download, Trash2, XCircle, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -25,6 +25,8 @@ const DonationManager = () => {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [viewMode, setViewMode] = useState<"all" | "monthly" | "yearly">("all");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const invoiceRef = useRef<HTMLDivElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -62,8 +64,16 @@ const DonationManager = () => {
   };
   const handleDownloadReport = async () => {
     const verifiedDonations = donations.filter(d => d.status === 'verified');
-    if (verifiedDonations.length === 0) {
-      toast({ title: "কোন ভেরিফাইড হাদিয়া পাওয়া যায়নি", variant: "destructive" });
+    
+    // Additional filtering based on viewMode
+    const filteredDonations = verifiedDonations.filter(d => {
+      if (viewMode === "all") return true;
+      if (viewMode === "monthly") return d.created_at.startsWith(selectedDate);
+      return d.created_at.startsWith(selectedDate.slice(0, 4));
+    });
+
+    if (filteredDonations.length === 0) {
+      toast({ title: "এই সময়ের জন্য কোন ভেরিফাইড হাদিয়া পাওয়া যায়নি", variant: "destructive" });
       return;
     }
     
@@ -124,7 +134,8 @@ const DonationManager = () => {
           heightLeft -= pageHeight;
         }
 
-        pdf.save(`Donation-Calculation-Report-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
+        const periodString = viewMode === "all" ? "Total" : viewMode === "monthly" ? selectedDate : selectedDate.slice(0, 4);
+        pdf.save(`Donation-Report-${periodString}-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
         toast({ title: "হিসাব বিবরণী ডাউনলোড সম্পন্ন হয়েছে" });
       } catch (error) {
         console.error("PDF Report Error:", error);
@@ -132,7 +143,23 @@ const DonationManager = () => {
       } finally {
         setIsGeneratingReport(false);
       }
-    }, 1000); // Increased delay for stability
+    }, 1000);
+  };
+
+  const filteredDonations = donations.filter(d => {
+    if (viewMode === "all") return true;
+    if (viewMode === "monthly") return d.created_at.startsWith(selectedDate);
+    return d.created_at.startsWith(selectedDate.slice(0, 4));
+  });
+
+  const getPeriodLabel = () => {
+    if (viewMode === "all") return "সর্বমোট হাদিয়া ও নজরানা";
+    if (viewMode === "monthly") {
+      const [year, month] = selectedDate.split("-");
+      const monthNames = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+      return `${monthNames[parseInt(month) - 1]} ${year} এর হাদিয়া ও নজরানা`;
+    }
+    return `${selectedDate.slice(0, 4)} সালের হাদিয়া ও নজরানা`;
   };
 
   const fetchDonations = useCallback(async () => {
@@ -208,10 +235,10 @@ const DonationManager = () => {
     return category;
   };
 
-  // Calculate stats
-  const totalVerified = donations.filter(d => d.status === 'verified').reduce((sum, d) => sum + d.amount, 0);
-  const mosqueTotal = donations.filter(d => d.status === 'verified' && d.donation_category === 'mosque').reduce((sum, d) => sum + d.amount, 0);
-  const pendingCount = donations.filter(d => d.status === 'pending').length;
+  // Calculate stats based on filtered data
+  const totalVerified = filteredDonations.filter(d => d.status === 'verified').reduce((sum, d) => sum + d.amount, 0);
+  const mosqueTotal = filteredDonations.filter(d => d.status === 'verified' && d.donation_category === 'mosque').reduce((sum, d) => sum + d.amount, 0);
+  const pendingCount = filteredDonations.filter(d => d.status === 'pending').length;
 
   return (
     <div className="space-y-6 animate-fade-in text-foreground">
@@ -223,7 +250,42 @@ const DonationManager = () => {
           </h2>
           <p className="text-muted-foreground mt-1">ভক্তদের অবদান এবং ফান্ডের বিস্তারিত বিবরণ</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex bg-background border border-gold/20 rounded-xl overflow-hidden">
+            <button 
+              onClick={() => setViewMode("all")} 
+              className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "all" ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-gold"}`}
+            >
+              সকল
+            </button>
+            <button 
+              onClick={() => setViewMode("monthly")} 
+              className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "monthly" ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-gold"}`}
+            >
+              মাসিক
+            </button>
+            <button 
+              onClick={() => setViewMode("yearly")} 
+              className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "yearly" ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-gold"}`}
+            >
+              বার্ষিক
+            </button>
+          </div>
+          
+          {viewMode !== "all" && (
+            <div className="flex items-center gap-2">
+              <Calendar size={18} className="text-gold" />
+              <input
+                type={viewMode === "monthly" ? "month" : "number"}
+                value={viewMode === "monthly" ? selectedDate : selectedDate.slice(0, 4)}
+                onChange={e => setSelectedDate(viewMode === "monthly" ? e.target.value : `${e.target.value}-01`)}
+                min={viewMode === "yearly" ? 2020 : undefined}
+                max={viewMode === "yearly" ? 2030 : undefined}
+                className="bg-background border border-gold/20 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-gold"
+              />
+            </div>
+          )}
+
           <Button 
             onClick={handleDownloadReport} 
             disabled={isGeneratingReport}
@@ -232,7 +294,7 @@ const DonationManager = () => {
             {isGeneratingReport ? <span className="animate-pulse">তৈরি হচ্ছে...</span> : <><Download size={18} /> হিসাব বিবরণী ডাউনলোড</>}
           </Button>
           <Button onClick={fetchDonations} variant="outline" className="border-gold/30 hover:bg-gold/10 text-gold">
-            Refresh Data
+            Refresh
           </Button>
         </div>
       </div>
@@ -291,14 +353,14 @@ const DonationManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {donations.length === 0 && !loading ? (
+                {filteredDonations.length === 0 && !loading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      কোনো হাদিয়ার তথ্য পাওয়া যায়নি।
+                      এই সময়ের জন্য কোনো হাদিয়ার তথ্য পাওয়া যায়নি।
                     </TableCell>
                   </TableRow>
                 ) : (
-                  donations.map((d) => (
+                  filteredDonations.map((d) => (
                     <TableRow key={d.id} className="border-gold/5 bg-background/30 hover:bg-gold/5 transition-colors">
                       <TableCell className="pl-4 py-4 text-xs whitespace-nowrap text-muted-foreground">
                         {format(new Date(d.created_at), "dd MMM yyyy, hh:mm a")}
@@ -393,8 +455,9 @@ const DonationManager = () => {
       
       <DonationReportTemplate 
         ref={reportRef} 
-        donations={donations.filter(d => d.status === 'verified')} 
+        donations={filteredDonations.filter(d => d.status === 'verified')} 
         totalAmount={totalVerified} 
+        periodLabel={getPeriodLabel()}
       />
     </div>
   );

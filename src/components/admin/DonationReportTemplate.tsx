@@ -5,6 +5,7 @@ import { InvoiceData } from '@/components/DonationInvoiceTemplate';
 interface DonationReportProps {
   donations: InvoiceData[];
   totalAmount: number;
+  periodLabel?: string;
 }
 
 const SHAHJADAS = [
@@ -14,7 +15,7 @@ const SHAHJADAS = [
   { id: "choto", name: "ছোট শাহজাদা" },
 ];
 
-export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationReportProps>(({ donations, totalAmount }, ref) => {
+export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationReportProps>(({ donations, totalAmount, periodLabel }, ref) => {
   // Calculate specific totals
   const mosqueTotal = donations
     .filter(d => d.donation_category === 'mosque')
@@ -93,7 +94,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
           <div className="mb-8 grid grid-cols-2 gap-10">
             <div className="border border-black p-4">
               <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Account Particulars</p>
-              <h3 className="text-xl font-black">হাদিয়া ও নজরানা ফান্ড</h3>
+              <h3 className="text-xl font-black">{periodLabel || 'হাদিয়া ও নজরানা ফান্ড'}</h3>
               <p className="text-xs">Category: Religious Contributions & Welfare</p>
               <p className="text-xs">Status: Verified Official Ledger</p>
             </div>
