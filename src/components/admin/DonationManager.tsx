@@ -69,31 +69,56 @@ const DonationManager = () => {
     
     setIsGeneratingReport(true);
     
+    // Ensure styles are applied and fonts are ready
     setTimeout(async () => {
       if (!reportRef.current) {
         setIsGeneratingReport(false);
         return;
       }
       try {
-        const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+        // Use a slightly larger timeout for DOM to stabilize
+        const element = reportRef.current;
+        const canvas = await html2canvas(element, { 
+          scale: 2, 
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          windowWidth: 1000,
+          windowHeight: element.scrollHeight + 100,
+          onclone: (doc) => {
+            const clonedElement = doc.getElementById('report-container');
+            if (clonedElement) {
+              clonedElement.style.position = 'relative';
+              clonedElement.style.top = '0';
+              clonedElement.style.left = '0';
+              clonedElement.style.visibility = 'visible';
+              clonedElement.style.pointerEvents = 'auto';
+            }
+          }
+        });
+
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "mm",
           format: "a4",
         });
+
+        const imgProps = pdf.getImageProperties(imgData);
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         pdf.save(`Donation-Calculation-Report-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
         toast({ title: "হিসাব বিবরণী ডাউনলোড সম্পন্ন হয়েছে" });
       } catch (error) {
-        console.error(error);
+        console.error("PDF Report Error:", error);
         toast({ title: "রিপোর্ট তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
       } finally {
         setIsGeneratingReport(false);
       }
-    }, 500);
+    }, 800);
   };
 
   const fetchDonations = useCallback(async () => {

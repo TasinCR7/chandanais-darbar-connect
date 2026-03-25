@@ -54,9 +54,10 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
     <div style={{ position: 'fixed', top: '-30000px', left: '-30000px', pointerEvents: 'none', zIndex: -1000 }}>
       {/* Container with a subtle shadow and border that shows in PDF */}
       <div 
+        id="report-container"
         ref={ref} 
         className="bg-white text-slate-800 font-sans relative overflow-hidden" 
-        style={{ width: '900px', padding: '70px', margin: '0', minHeight: '1200px' }}
+        style={{ width: '900px', padding: '70px', margin: '0' }}
       >
         {/* Decorative corner patterns (simulated with CSS for better PDF rendering) */}
         <div className="absolute top-0 right-0 w-48 h-48 border-t-[12px] border-r-[12px] border-emerald-800/20 opacity-30 rounded-tr-[40px] z-0" />
