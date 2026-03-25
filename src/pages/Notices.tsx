@@ -4,6 +4,7 @@ import { Bell, Calendar, ChevronRight } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import SkeletonLoader from "@/components/ui/SkeletonLoader";
 
 interface Notice {
   id: string;
@@ -51,9 +52,7 @@ const Notices = () => {
           />
 
           {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="w-10 h-10 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
-            </div>
+            <SkeletonLoader count={3} />
           ) : notices.length === 0 ? (
             <div className="text-center py-20 bg-card/50 border border-gold/10 rounded-2xl">
               <Bell className="mx-auto text-gold/30 mb-4" size={48} />

@@ -35,9 +35,9 @@ const Index = () => {
 
         <div className="relative z-10 container mx-auto px-4 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           >
             <p className="font-arabic text-gold text-base md:text-2xl mb-4">
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
@@ -158,10 +158,10 @@ const Index = () => {
       <section className="py-20 islamic-pattern">
         <div className="container mx-auto px-4 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
           >
             <p className="font-arabic text-gold text-xl mb-4">صَدَقَة</p>
             <h2 className="text-3xl font-heading font-bold text-cream mb-4">

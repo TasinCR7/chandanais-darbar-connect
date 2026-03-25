@@ -9,6 +9,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import PremiumLoader from "./components/PremiumLoader";
 import ScrollToTop from "./components/ScrollToTop";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
@@ -31,6 +33,45 @@ const BookReader = lazy(() => import("./pages/BookReader"));
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const location = useLocation();
+  return (
+    <Layout>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          <Suspense fallback={<PremiumLoader />}>
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/pir" element={<Pir />} />
+              <Route path="/rules" element={<Rules />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/hadia" element={<Hadia />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/doa" element={<Doa />} />
+              <Route path="/qna" element={<QnA />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/notices" element={<Notices />} />
+              <Route path="/committee" element={<Committee />} />
+              <Route path="/committee-login" element={<CommitteeLogin />} />
+              <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/book" element={<BookReader />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
+    </Layout>
+  );
+};
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -40,29 +81,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <ScrollToTop />
-            <Layout>
-              <Suspense fallback={<PremiumLoader />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/pir" element={<Pir />} />
-                  <Route path="/rules" element={<Rules />} />
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/hadia" element={<Hadia />} />
-                  <Route path="/gallery" element={<Gallery />} />
-                  <Route path="/doa" element={<Doa />} />
-                  <Route path="/qna" element={<QnA />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/notices" element={<Notices />} />
-                  <Route path="/committee" element={<Committee />} />
-                  <Route path="/committee-login" element={<CommitteeLogin />} />
-                  <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/book" element={<BookReader />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </Layout>
+            <AppContent />
           </BrowserRouter>
         </TooltipProvider>
       </HelmetProvider>

@@ -59,9 +59,16 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground font-bengali;
+    @apply bg-background text-foreground font-bengali overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     position: relative;
   }
 
@@ -114,5 +121,20 @@
   .section-divider {
     @apply w-24 h-px mx-auto;
     background: linear-gradient(90deg, transparent, hsl(var(--gold)), transparent);
+  }
+
+  .glass-card {
+    @apply bg-black/40 backdrop-blur-md border border-white/10;
+  }
+
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .premium-shadow {
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
   }
 }

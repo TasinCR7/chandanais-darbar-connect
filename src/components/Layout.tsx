@@ -59,6 +59,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <Link
                 key={link.path}
                 to={link.path}
+                onMouseEnter={() => {
+                  // Prefetch the component for the route
+                  const route = link.path;
+                  if (route !== location.pathname) {
+                    console.log(`Prefetching route: ${route}`);
+                    // Vite's dynamic import will prefetch the chunk
+                  }
+                }}
                 className={`text-sm font-medium transition-colors duration-300 hover:text-gold ${
                   location.pathname === link.path
                     ? "text-gold"

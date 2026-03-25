@@ -15,19 +15,33 @@ const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOP
   const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
   const url = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
   const siteKeywords = keywords || "চন্দনাইশ দরবার শরীফ, দরবার শরীফ, মাইজভান্ডারী, সুফিবাদ, ইসলাম, চন্দনাইশ, চট্টগ্রাম, ওরশ, হাদিয়া, দোয়া আবেদন, Chandanaish Darbar Sharif, Maizbhandari, Sufism, Islam, Chattogram";
+  const ogImage = `${BASE_URL}/logo.png`; // Using logo as default OG image instead of non-existent og-image.jpg
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Place",
+    "@type": "ReligiousOrganization",
     "name": SITE_NAME,
+    "alternateName": "Chandanaish Darbar Sharif",
     "description": description,
     "url": url,
+    "logo": `${BASE_URL}/logo.png`,
+    "image": `${BASE_URL}/darbar-mazar.png`,
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Chandananish",
+      "streetAddress": "Chandanaish Darbar Sharif",
+      "addressLocality": "Chandanaish",
       "addressRegion": "Chattogram",
       "addressCountry": "BD"
-    }
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+8801819385557",
+      "contactType": "religious service"
+    },
+    "sameAs": [
+      "https://www.facebook.com/ChandanaishDarbar",
+      "https://www.youtube.com/@ChandanaishDarbar"
+    ]
   };
 
   return (
@@ -43,13 +57,13 @@ const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOP
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:image" content={`${BASE_URL}/og-image.jpg`} />
+      <meta property="og:image" content={ogImage} />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={`${BASE_URL}/og-image.jpg`} />
+      <meta name="twitter:image" content={ogImage} />
 
       {/* Structured Data */}
       <script type="application/ld+json">
