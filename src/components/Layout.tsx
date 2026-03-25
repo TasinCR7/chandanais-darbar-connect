@@ -47,12 +47,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Sticky Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20">
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain transition-transform duration-300 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gold/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-            <span className="text-gold font-heading font-bold text-lg leading-tight hidden sm:block">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="text-gold font-heading font-bold text-lg leading-tight">
               চন্দনাইশ দরবার শরীফ
             </span>
           </Link>
@@ -176,12 +172,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
-                <h3 className="text-gold font-heading font-bold text-lg">
-                  চন্দনাইশ দরবার শরীফ
-                </h3>
-              </div>
+              <h3 className="text-gold font-heading font-bold text-lg mb-4">
+                চন্দনাইশ দরবার শরীফ
+              </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
               </p>
