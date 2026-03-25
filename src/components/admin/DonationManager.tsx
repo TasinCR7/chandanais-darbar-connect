@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
+import { DonationReportTemplate } from "@/components/admin/DonationReportTemplate";
 
 interface Donation extends InvoiceData {
   id: string;
@@ -23,7 +24,9 @@ const DonationManager = () => {
   
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadInvoice = async (donation: Donation) => {
     setSelectedInvoice(donation);
@@ -56,6 +59,41 @@ const DonationManager = () => {
         setSelectedInvoice(null);
       }
     }, 300);
+  };
+  const handleDownloadReport = async () => {
+    const verifiedDonations = donations.filter(d => d.status === 'verified');
+    if (verifiedDonations.length === 0) {
+      toast({ title: "কোন ভেরিফাইড হাদিয়া পাওয়া যায়নি", variant: "destructive" });
+      return;
+    }
+    
+    setIsGeneratingReport(true);
+    
+    setTimeout(async () => {
+      if (!reportRef.current) {
+        setIsGeneratingReport(false);
+        return;
+      }
+      try {
+        const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Donation-Calculation-Report-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
+        toast({ title: "হিসাব বিবরণী ডাউনলোড সম্পন্ন হয়েছে" });
+      } catch (error) {
+        console.error(error);
+        toast({ title: "রিপোর্ট তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
+      } finally {
+        setIsGeneratingReport(false);
+      }
+    }, 500);
   };
 
   const fetchDonations = useCallback(async () => {
@@ -128,9 +166,18 @@ const DonationManager = () => {
           </h2>
           <p className="text-muted-foreground mt-1">ভক্তদের অবদান এবং ফান্ডের বিস্তারিত বিবরণ</p>
         </div>
-        <Button onClick={fetchDonations} variant="outline" className="border-gold/30 hover:bg-gold/10 text-gold">
-          Refresh Data
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={handleDownloadReport} 
+            disabled={isGeneratingReport}
+            className="bg-emerald hover:bg-emerald/90 text-white font-semibold flex items-center gap-2"
+          >
+            {isGeneratingReport ? <span className="animate-pulse">তৈরি হচ্ছে...</span> : <><Download size={18} /> হিসাব বিবরণী ডাউনলোড</>}
+          </Button>
+          <Button onClick={fetchDonations} variant="outline" className="border-gold/30 hover:bg-gold/10 text-gold">
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -260,6 +307,12 @@ const DonationManager = () => {
       {selectedInvoice && (
         <DonationInvoiceTemplate ref={invoiceRef} donation={selectedInvoice} />
       )}
+      
+      <DonationReportTemplate 
+        ref={reportRef} 
+        donations={donations.filter(d => d.status === 'verified')} 
+        totalAmount={totalVerified} 
+      />
     </div>
   );
 };
