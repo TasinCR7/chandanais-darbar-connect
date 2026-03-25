@@ -17,6 +17,7 @@ const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"
 const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"));
 const DonationManager = lazy(() => import("@/components/admin/DonationManager"));
 const CommitteeBroadcast = lazy(() => import("@/components/admin/CommitteeBroadcast"));
+const WhatsAppBroadcast = lazy(() => import("@/components/admin/WhatsAppBroadcast"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -338,7 +339,8 @@ const Admin = () => {
               <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
               <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
               <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
-              <TabsTrigger value="broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold text-premium-gold shadow-lg shadow-gold/10 ml-2">বার্তা পাঠান 📢</TabsTrigger>
+              <TabsTrigger value="broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold">কমিটি বার্তা</TabsTrigger>
+              <TabsTrigger value="public-broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-36 px-4 py-3 rounded-xl transition-all font-bold text-premium-gold shadow-lg shadow-gold/10 ml-2">পাবলিক নোটিশ 📢</TabsTrigger>
             </TabsList>
           </div>
 
@@ -407,6 +409,12 @@ const Admin = () => {
           <TabsContent value="broadcast">
             <Suspense fallback={<PremiumLoader />}>
               <CommitteeBroadcast />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="public-broadcast">
+            <Suspense fallback={<PremiumLoader />}>
+              <WhatsAppBroadcast />
             </Suspense>
           </TabsContent>
         </Tabs>
