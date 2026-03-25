@@ -69,23 +69,21 @@ const DonationManager = () => {
     
     setIsGeneratingReport(true);
     
-    // Ensure styles are applied and fonts are ready
     setTimeout(async () => {
       if (!reportRef.current) {
         setIsGeneratingReport(false);
         return;
       }
       try {
-        // Use a slightly larger timeout for DOM to stabilize
         const element = reportRef.current;
         const canvas = await html2canvas(element, { 
-          scale: 2, 
+          scale: 3, // Higher scale for even better quality
           useCORS: true,
           allowTaint: true,
           backgroundColor: "#ffffff",
           logging: false,
-          windowWidth: 1000,
-          windowHeight: element.scrollHeight + 100,
+          windowWidth: 900,
+          windowHeight: element.scrollHeight,
           onclone: (doc) => {
             const clonedElement = doc.getElementById('report-container');
             if (clonedElement) {
@@ -93,23 +91,39 @@ const DonationManager = () => {
               clonedElement.style.top = '0';
               clonedElement.style.left = '0';
               clonedElement.style.visibility = 'visible';
-              clonedElement.style.pointerEvents = 'auto';
+              clonedElement.style.margin = '0';
+              clonedElement.style.padding = '70px';
             }
           }
         });
 
         const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({
-          orientation: "portrait",
-          unit: "mm",
-          format: "a4",
-        });
-
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        const pdf = new jsPDF("p", "mm", "a4");
         
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        
+        const imgWidth = pageWidth;
+        const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Add first page
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+
+        // Add additional pages if content exceeds one page
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= pageHeight;
+        }
+
         pdf.save(`Donation-Calculation-Report-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
         toast({ title: "হিসাব বিবরণী ডাউনলোড সম্পন্ন হয়েছে" });
       } catch (error) {
@@ -118,7 +132,7 @@ const DonationManager = () => {
       } finally {
         setIsGeneratingReport(false);
       }
-    }, 800);
+    }, 1000); // Increased delay for stability
   };
 
   const fetchDonations = useCallback(async () => {
