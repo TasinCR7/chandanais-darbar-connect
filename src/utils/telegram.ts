@@ -28,13 +28,25 @@ export const sendTelegramNotification = async (message: string) => {
       body: JSON.stringify({
         chat_id: chatId,
         text: message,
-        parse_mode: "HTML",
+        parse_mode: "Markdown", // Changed from HTML to Markdown to match message formatting
       }),
     })
     .then(async (res) => {
       if (!res.ok) {
         const errorData = await res.json();
-        console.error(`Telegram error to ${chatId}:`, errorData);
+        console.error(`Telegram API Error for ${chatId}:`, errorData);
+        // Fallback: Try sending without Markdown if it fails
+        if (errorData.description?.includes("can't parse entities")) {
+           console.log("Retrying without Markdown parsing...");
+           return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({
+               chat_id: chatId,
+               text: message,
+             }),
+           });
+        }
       } else {
         console.log(`Telegram message sent successfully to ${chatId}`);
       }
