@@ -53,7 +53,7 @@ export default function CommitteeDashboard() {
         supabase.from("vote_topics").select("*").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("votes").select("*"),
         supabase.from("committee_comments").select("*").order("created_at", { ascending: false }),
-        (supabase as any).from("committee_notices").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("committee_notices").select("*").eq("is_active", true).order("created_at", { ascending: false }),
       ]);
         
       if (topicsRes.data) setTopics(topicsRes.data);

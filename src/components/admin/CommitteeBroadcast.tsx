@@ -155,7 +155,7 @@ const CommitteeBroadcast = () => {
     if (!message.trim()) return;
     setLoading(true);
     try {
-      const { error } = await (supabase as any).from("committee_notices").insert({
+      const { error } = await supabase.from("committee_notices").insert({
         title: "সাধারণ নোটিশ",
         message: message.trim(),
         type: "internal",
@@ -167,7 +167,7 @@ const CommitteeBroadcast = () => {
       } else {
         throw error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({ title: "ব্যর্থ", description: "নোটিশ সেভ করা সম্ভব হয়নি।", variant: "destructive" });
     } finally {
       setLoading(false);
