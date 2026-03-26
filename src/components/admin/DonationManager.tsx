@@ -41,18 +41,36 @@ const DonationManager = () => {
         return;
       }
       try {
-        const canvas = await html2canvas(invoiceRef.current, { scale: 2, useCORS: true });
+        const canvas = await html2canvas(invoiceRef.current, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        });
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "mm",
           format: "a4",
         });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`Invoice-${donation.donor_name.replace(/\s+/g, '-')}-${donation.id.substring(0, 6)}.pdf`);
-        toast({ title: "ইনভয়েস ডাউনলোড সম্পন্ন হয়েছে" });
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const imgH = (canvas.height * pageW) / canvas.width;
+        let heightLeft = imgH;
+        let position = 0;
+        pdf.addImage(imgData, 'PNG', 0, position, pageW, imgH, undefined, 'FAST');
+        heightLeft -= pageH;
+        while (heightLeft > 0) {
+          position = heightLeft - imgH;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, pageW, imgH, undefined, 'FAST');
+          heightLeft -= pageH;
+        }
+        const invoiceId = donation.id.substring(0, 6).toUpperCase();
+        const dateStr = new Date().toISOString().slice(0, 10);
+        pdf.save(`Rashid-${donation.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
+        toast({ title: "রশিদ ডাউনলোড সম্পন্ন হয়েছে" });
       } catch (error) {
         console.error(error);
         toast({ title: "ইনভয়েস তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
@@ -60,7 +78,7 @@ const DonationManager = () => {
         setDownloadingId(null);
         setSelectedInvoice(null);
       }
-    }, 300);
+    }, 400);
   };
   const handleDownloadReport = async () => {
     const verifiedDonations = donations.filter(d => d.status === 'verified');
@@ -221,7 +239,8 @@ const DonationManager = () => {
   };
 
   const getCategoryLabel = (category: string, recipientId: string | null) => {
-    if (category === 'mosque') return 'মসজিদ ফান্ড/ দরবার ফান্ড';
+    if (category === 'mosque' || category === 'mosque_fund') return 'মসজিদ ফান্ড';
+    if (category === 'darbar_fund') return 'দরবার ফান্ড';
     if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {
@@ -237,7 +256,8 @@ const DonationManager = () => {
 
   // Calculate stats based on filtered data
   const totalVerified = filteredDonations.filter(d => d.status === 'verified').reduce((sum, d) => sum + d.amount, 0);
-  const mosqueTotal = filteredDonations.filter(d => d.status === 'verified' && d.donation_category === 'mosque').reduce((sum, d) => sum + d.amount, 0);
+  const mosqueTotal = filteredDonations.filter(d => d.status === 'verified' && (d.donation_category === 'mosque' || d.donation_category === 'mosque_fund')).reduce((sum, d) => sum + d.amount, 0);
+  const darbarTotal = filteredDonations.filter(d => d.status === 'verified' && d.donation_category === 'darbar_fund').reduce((sum, d) => sum + d.amount, 0);
   const pendingCount = filteredDonations.filter(d => d.status === 'pending').length;
 
   return (
@@ -299,7 +319,7 @@ const DonationManager = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-emerald/20 to-emerald-light/5 border-emerald/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-emerald font-medium flex items-center gap-2">
@@ -314,11 +334,22 @@ const DonationManager = () => {
         <Card className="bg-gradient-to-br from-blue-500/20 to-blue-400/5 border-blue-500/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-blue-500 font-medium flex items-center gap-2">
-              <Home size={18} /> মসজিদ ফান্ড/ দরবার ফান্ড (গৃহীত)
+              <Home size={18} /> মসজিদ ফান্ড
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-foreground">৳ {mosqueTotal.toLocaleString()}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500/20 to-purple-400/5 border-purple-500/30 shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-purple-500 font-medium flex items-center gap-2">
+              <Users size={18} /> দরবার ফান্ড
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-foreground">৳ {darbarTotal.toLocaleString()}</p>
           </CardContent>
         </Card>
 

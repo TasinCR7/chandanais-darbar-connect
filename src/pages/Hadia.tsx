@@ -10,7 +10,7 @@ import jsPDF from "jspdf";
 import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { sendTelegramNotification } from "@/utils/telegram";
 
-type DonationType = "mosque" | "combined_shahjadas" | "specific_shahjada" | "";
+type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
 type PaymentMethod = "bkash" | "nagad" | "rocket" | "card" | "";
 
@@ -68,7 +68,8 @@ const Hadia = () => {
       toast.success("আপনার হাদিয়া সফলভাবে গৃহীত হয়েছে!");
       
       // Send Telegram Notification
-      const categoryText = donationType === "mosque" ? "মসজিদ ফান্ড/ দরবার ফান্ড" :
+      const categoryText = donationType === "mosque_fund" ? "মসজিদ ফান্ড" :
+                           donationType === "darbar_fund" ? "দরবার ফান্ড" :
                            donationType === "combined_shahjadas" ? "সম্মিলিত শাহজাদাগণ" :
                            (SHAHJADAS.find(s => s.id === specificShahjada)?.name || "নির্দিষ্ট শাহজাদা");
 
@@ -107,17 +108,36 @@ const Hadia = () => {
     
     setTimeout(async () => {
       try {
-        const canvas = await html2canvas(invoiceRef.current!, { scale: 2, useCORS: true });
+        const canvas = await html2canvas(invoiceRef.current!, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        });
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "mm",
           format: "a4",
         });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`Hadia-Invoice-${completedDonation.donor_name.replace(/\s+/g, '-')}.pdf`);
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const imgH = (canvas.height * pageW) / canvas.width;
+        // Multi-page support if content overflows
+        let heightLeft = imgH;
+        let position = 0;
+        pdf.addImage(imgData, "PNG", 0, position, pageW, imgH, undefined, 'FAST');
+        heightLeft -= pageH;
+        while (heightLeft > 0) {
+          position = heightLeft - imgH;
+          pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, position, pageW, imgH, undefined, 'FAST');
+          heightLeft -= pageH;
+        }
+        const invoiceId = completedDonation.id?.substring(0, 6).toUpperCase() || 'N';
+        const dateStr = new Date().toISOString().slice(0, 10);
+        pdf.save(`Rashid-${completedDonation.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
         toast.success("রশিদ ডাউনলোড সম্পন্ন হয়েছে");
       } catch (error) {
         console.error("PDF download error:", error);
@@ -125,17 +145,26 @@ const Hadia = () => {
       } finally {
         setIsDownloading(false);
       }
-    }, 150);
+    }, 300);
   };
 
   const calculateDistribution = () => {
     if (!canCalculate) return null;
     
-    if (donationType === "mosque") {
+    if (donationType === "mosque_fund") {
       return (
         <div className="bg-emerald/10 border border-emerald/30 rounded-lg p-4 mt-6">
           <p className="text-lg text-emerald-light font-semibold mb-2">হিসাব বিবরণী:</p>
-          <p className="text-foreground">সম্পূর্ণ <span className="text-gold font-bold">{amount} ৳</span> মসজিদ ফান্ড/ দরবার ফান্ডে প্রদান করা হবে। (১ জন প্রাপক)</p>
+          <p className="text-foreground">সম্পূর্ণ <span className="text-gold font-bold">{amount} ৳</span> মসজিদ ফান্ডে প্রদান করা হবে। (১ জন প্রাপক)</p>
+        </div>
+      );
+    }
+    
+    if (donationType === "darbar_fund") {
+      return (
+        <div className="bg-emerald/10 border border-emerald/30 rounded-lg p-4 mt-6">
+          <p className="text-lg text-emerald-light font-semibold mb-2">হিসাব বিবরণী:</p>
+          <p className="text-foreground">সম্পূর্ণ <span className="text-gold font-bold">{amount} ৳</span> দরবার ফান্ডে প্রদান করা হবে। (১ জন প্রাপক)</p>
         </div>
       );
     }
@@ -284,15 +313,24 @@ const Hadia = () => {
                       <div className="space-y-5">
                         <div>
                           <label className="block text-foreground capitalize mb-3 font-medium text-sm">খাত নির্বাচন করুন</label>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <button
-                              onClick={() => setDonationType("mosque")}
+                              onClick={() => setDonationType("mosque_fund")}
                               className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                                donationType === "mosque" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
+                                donationType === "mosque_fund" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
                               <Home size={24} className="mb-2" />
-                              <span className="text-sm font-semibold">মসজিদ ফান্ড/ দরবার ফান্ড</span>
+                              <span className="text-sm font-semibold text-center">মসজিদ ফান্ড</span>
+                            </button>
+                            <button
+                              onClick={() => setDonationType("darbar_fund")}
+                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
+                                donationType === "darbar_fund" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
+                              }`}
+                            >
+                              <HeartHandshake size={24} className="mb-2" />
+                              <span className="text-sm font-semibold text-center">দরবার ফান্ড</span>
                             </button>
                             <button
                               onClick={() => setDonationType("combined_shahjadas")}
