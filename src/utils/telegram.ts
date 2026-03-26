@@ -9,24 +9,24 @@ export const sendTelegramNotification = async (message: string) => {
   const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
   const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID;
 
-  // Diagnostic Log for User (Safe for production)
-  console.log("Telegram Service Diagnostic:", {
-    hasToken: !!botToken,
-    hasChatIds: !!chatIdsString,
-    chatIdCount: chatIdsString ? chatIdsString.split(",").length : 0,
-    vitePrefixOk: true 
+  // Detailed Diagnostic Log for User
+  console.log("DEBUG: Telegram Integration Check", {
+    tokenStatus: botToken ? `Present (ends in ...${botToken.slice(-4)})` : "MISSING",
+    chatIdsStatus: chatIdsString ? `Present (length ${chatIdsString.length})` : "MISSING",
+    environment: import.meta.env.MODE,
+    hasGlobalVite: !!import.meta.env.VITE_TELEGRAM_BOT_TOKEN
   });
 
-
-  if (!botToken) {
-    console.error("Telegram Bot Token is missing. Ensure VITE_TELEGRAM_BOT_TOKEN is defined in .env and vite.config.ts.");
+  if (!botToken || botToken === "undefined") {
+    console.error("Telegram API Error: VITE_TELEGRAM_BOT_TOKEN is missing or invalid in environment.");
     return;
   }
   
-  if (!chatIdsString) {
-    console.error("Telegram Chat ID is missing. Ensure VITE_TELEGRAM_CHAT_ID is defined in .env and vite.config.ts.");
+  if (!chatIdsString || chatIdsString === "undefined") {
+    console.error("Telegram API Error: VITE_TELEGRAM_CHAT_ID is missing or invalid in environment.");
     return;
   }
+
 
   const chatIds = chatIdsString.split(",").map(id => id.trim()).filter(id => id.length > 0);
   if (chatIds.length === 0) {
