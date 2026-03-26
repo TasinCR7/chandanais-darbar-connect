@@ -92,7 +92,14 @@ ${trimmedDetails}
 পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
     `;
     
-    sendTelegramNotification(textMessage);
+    // Send Telegram Notification
+    try {
+      await sendTelegramNotification(textMessage);
+      console.log("Telegram notification sent successfully from Doa page");
+    } catch (err) {
+      console.error("Failed to send Telegram notification from Doa page:", err);
+    }
+
 
     toast({
       title: "দোয়া আবেদন পাঠানো হয়েছে ✅",

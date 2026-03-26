@@ -85,7 +85,13 @@ const Hadia = () => {
 অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
       `;
       
-      sendTelegramNotification(textMessage);
+      // Send Telegram Notification
+      try {
+        await sendTelegramNotification(textMessage);
+        console.log("Telegram notification sent successfully from Hadia page");
+      } catch (err) {
+        console.error("Failed to send Telegram notification from Hadia page:", err);
+      }
       
     } catch (error) {
       console.error("Donation error:", error);

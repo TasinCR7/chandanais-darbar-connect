@@ -90,7 +90,14 @@ ${trimmedDetails}
 অনুগ্রহ করে প্যানেল থেকে ব্যবস্থা নিন।
     `;
     
-    sendTelegramNotification(textMessage);
+    // Send Telegram Notification
+    try {
+      await sendTelegramNotification(textMessage);
+      console.log("Telegram notification sent successfully from QnA page");
+    } catch (err) {
+      console.error("Failed to send Telegram notification from QnA page:", err);
+    }
+
 
     setForm({ ...initialForm });
     setSubmitting(false);
