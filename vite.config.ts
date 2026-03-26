@@ -5,13 +5,14 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  console.log("Loaded Environment [REDACTED]:", Object.keys(env).filter(k => k.startsWith("VITE_")));
 
   const publicBackendUrl =
-    env.VITE_SUPABASE_URL || "https://exrevduphqknvlejjabg.supabase.co";
+    env.VITE_SUPABASE_URL || "https://uezrdvjbazehzjorhfrl.supabase.co";
   const publicBackendKey =
     env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4cmV2ZHVwaHFrbnZsZWpqYWJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjA4MTAsImV4cCI6MjA4OTMzNjgxMH0.bC2-D6f3RhYZI_3RR6rEtzTKxuoRwtJ4P7qHGbjADHY";
-  const publicBackendProjectId = env.VITE_SUPABASE_PROJECT_ID || "exrevduphqknvlejjabg";
+    "sb_publishable_jcSthwFxzUPKKEi5i5cjDA_gZG94j_h";
+  const publicBackendProjectId = env.VITE_SUPABASE_PROJECT_ID || "uezrdvjbazehzjorhfrl";
 
   return {
     server: {
@@ -25,7 +26,11 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(publicBackendUrl),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publicBackendKey),
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(publicBackendProjectId),
+      "import.meta.env.VITE_TELEGRAM_BOT_TOKEN": JSON.stringify(env.VITE_TELEGRAM_BOT_TOKEN),
+      "import.meta.env.VITE_TELEGRAM_CHAT_ID": JSON.stringify(env.VITE_TELEGRAM_CHAT_ID),
+      "import.meta.env.VITE_SMS_API_KEY": JSON.stringify(env.VITE_SMS_API_KEY),
     },
+
     plugins: [react()],
     resolve: {
       alias: {
