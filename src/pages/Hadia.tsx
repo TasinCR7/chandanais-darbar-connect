@@ -435,7 +435,7 @@ const Hadia = () => {
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                             <div className="bg-background/40 p-4 rounded-lg border border-gold/10 mb-4 text-sm text-muted-foreground">
                               অনুগ্রহ করে নিচের নাম্বারে <span className="text-gold font-bold">{amount} ৳</span> Send Money করে Transaction ID টি নিচের বক্সে দিন।
-                              <div className="mt-2 font-mono text-lg text-emerald-light font-bold track-wider">+8801711234567</div>
+                              <div className="mt-2 font-mono text-lg text-emerald-light font-bold track-wider">+88017***********</div>
                             </div>
                             <label className="block text-foreground mb-2 font-medium text-sm">Transaction ID (ট্রানজেকশন আইডি)</label>
                             <input
@@ -497,11 +497,12 @@ const Hadia = () => {
                       <li>আমাদের নাম্বারে টাকা পাঠান।</li>
                       <li>Transaction ID বক্সে লিখে সাবমিট দিন।</li>
                       <li>যাচাই করে আপনার হাদিয়া গ্রহণ করা হবে।</li>
+                      <li>যেকোনো প্রয়োজনে যোগাযোগ করুন।</li>
                     </ul>
                   </div>
                   
                   <a
-                    href="https://wa.me/8801711234567"
+                    href="https://wa.me/88017***********"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 bg-emerald/20 hover:bg-emerald/30 text-emerald-light border border-emerald/50 rounded-lg p-4 transition-all duration-300 relative overflow-hidden group mt-4"

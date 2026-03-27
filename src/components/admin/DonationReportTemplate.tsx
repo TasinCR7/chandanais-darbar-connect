@@ -75,7 +75,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
               <p className="text-lg font-bold text-gray-800">অফিস অফ দ্য খাদেম | ফিন্যান্সিয়াল রেকর্ডস</p>
               <div className="mt-4 text-xs font-mono">
                 <p>Location: Chandanaish, Chittagong, Bangladesh</p>
-                <p>Contact: +8801711234567 | info@chandanaishdarbar.com</p>
+                <p>Contact: +88017*********** | info@chandanaishdarbar.com</p>
               </div>
             </div>
             <div className="w-1/3 text-right">

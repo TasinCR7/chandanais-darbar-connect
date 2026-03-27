@@ -12,8 +12,8 @@ const contactInfo = [
   {
     icon: Phone,
     label: "ফোন",
-    value: "০১৭১১-২৩৪৫৬৭", // অনুগ্রহ করে সঠিক নম্বরটি দিন
-    href: "tel:+8801711234567",
+    value: "017***********",
+    href: "tel:+88017***********",
   },
   {
     icon: Mail,
