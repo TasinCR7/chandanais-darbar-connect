@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { Calendar } from "lucide-react";
 
@@ -8,7 +9,7 @@ interface EventCardProps {
   index: number;
 }
 
-const EventCard = ({ title, date, calendarType, index }: EventCardProps) => (
+const EventCard = React.memo(({ title, date, calendarType, index }: EventCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -33,6 +34,6 @@ const EventCard = ({ title, date, calendarType, index }: EventCardProps) => (
       </div>
     </div>
   </motion.div>
-);
+));
 
 export default EventCard;

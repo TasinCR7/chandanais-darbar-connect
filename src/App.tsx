@@ -31,7 +31,16 @@ const CommitteeDashboard = lazy(() => import("./pages/CommitteeDashboard"));
 const BookReader = lazy(() => import("./pages/BookReader"));
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, 
+      gcTime: 10 * 60 * 1000, 
+      refetchOnWindowFocus: false, 
+      retry: 1,
+    },
+  },
+});
 
 const AppContent = () => {
   const location = useLocation();

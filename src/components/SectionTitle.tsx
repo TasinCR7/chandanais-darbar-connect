@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 
 interface SectionTitleProps {
@@ -7,7 +8,7 @@ interface SectionTitleProps {
   subtitleClassName?: string;
 }
 
-const SectionTitle = ({ title, subtitle, arabic, subtitleClassName }: SectionTitleProps) => (
+const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName }: SectionTitleProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -28,6 +29,6 @@ const SectionTitle = ({ title, subtitle, arabic, subtitleClassName }: SectionTit
     )}
     <div className="section-divider mt-6" />
   </motion.div>
-);
+));
 
 export default SectionTitle;
