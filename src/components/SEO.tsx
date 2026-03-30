@@ -12,7 +12,7 @@ const SITE_NAME = "চন্দনাইশ দরবার শরীফ";
 const BASE_URL = "https://chandanaish-darbar.com"; // Updated to assuming a real domain or the provided one
 
 const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOProps) => {
-  const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
+  const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
   const url = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
   const siteKeywords = keywords || "চন্দনাইশ দরবার শরীফ, দরবার শরীফ, মাইজভান্ডারী, গাউছে জামান আবদুল লতিফ শাহ, সুফিবাদ, ইসলাম, চন্দনাইশ, চট্টগ্রাম, ওরশ, হাদিয়া, দোয়া আবেদন, Chandanaish Darbar Sharif, Maizbhandari, Sufism, Islam, Chattogram, Best Darbar Sharif in Chittagong, Spiritual Center Bangladesh";
   const ogImage = `${BASE_URL}/logo.png`; 
