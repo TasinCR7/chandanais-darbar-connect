@@ -11,6 +11,33 @@ const islamicEvents = [
 ];
 
 const Events = () => {
+  const eventsData = [
+    {
+      name: "বাবাজান কেবলা চন্দনাইশী সহধর্মিণীর ওরশ",
+      startDate: "2026-01-14",
+      location: "চন্দনাইশ দরবার শরীফ",
+      description: "পবিত্র ওরশ শরীফ - ৩০ পৌষ"
+    },
+    {
+      name: "গাউছে জামান মাইজভান্ডারী ওরশ",
+      startDate: "2026-02-05",
+      location: "চন্দনাইশ দরবার শরীফ",
+      description: "পবিত্র ওরশ শরীফ - ২২ মাঘ"
+    },
+    {
+      name: "বার্ষিক ওরশ (চন্দনাইশ দরবার)",
+      startDate: "2026-03-01",
+      location: "চন্দনাইশ দরবার শরীফ",
+      description: "পবিত্র বার্ষিক ওরশ শরীফ - ১৬ ফাল্গুন"
+    },
+    {
+      name: "পীর বাবা ভান্ডারীর ওরশ",
+      startDate: "2026-03-15",
+      location: "চন্দনাইশ দরবার শরীফ",
+      description: "পবিত্র ওরশ শরীফ - ১ চৈত্র"
+    }
+  ];
+
   return (
     <>
       <SEO 
@@ -18,6 +45,7 @@ const Events = () => {
         description="চন্দনাইশ দরবার শরীফের বার্ষিক ওরশ, পবিত্র জন্মদিন ও অন্যান্য গুরুত্বপূর্ণ ইসলামি অনুষ্ঠানের সঠিক সময়সূচী এবং তারিখসমূহ জানুন।" 
         keywords="ওরশ সময়সূচী, মাহফিল তারিখ, চন্দনাইশ দরবার ক্যালেন্ডার, বার্ষিক ওরশ ২০২৬, ইসলামি অনুষ্ঠান"
         canonical="/events" 
+        events={eventsData}
       />
       <div className="py-20 islamic-pattern">
       <div className="container mx-auto px-4">

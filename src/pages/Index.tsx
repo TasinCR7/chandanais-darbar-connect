@@ -23,12 +23,14 @@ const Index = () => {
       <SEO
         title="চন্দনাইশ দরবার শরীফ | মাইজভান্ডারী তরিকা, চট্টগ্রাম"
         description="চন্দনাইশ দরবার শরীফ — হযরত আবদুল লতিফ শাহ্ (রাঃ) এর পবিত্র মাজার। ওরশ শরীফ, ইসলামি মাহফিল ও আধ্যাত্মিক কার্যক্রমের সময়সূচী জানুন। চন্দনাইশ, চট্টগ্রাম।"
-        keywords="চন্দনাইশ দরবার শরীফ, ওরশ শরীফ, মাইজভান্ডারী তরিকা, গাউছে জামান আবদুল লতিফ শাহ, আধ্যাত্মিক কেন্দ্র, চন্দনাইশ, চট্টগ্রাম, সুফিবাদ, ইসলামি মাহফিল, পীর মাশায়েখ"
+        keywords="চন্দনাইশ দরবার শরীফ, Chandanaish Darbar Sharif, ওরশ শরীফ ২০২৬, মাইজভান্ডারী তরিকা, গাউছে জামান আবদুল লতিফ শাহ, আধ্যাত্মিক কেন্দ্র চট্টগ্রাম, চন্দনাইশ, চট্টগ্রাম দরবার, সুফিবাদ বাংলাদেশ, ইসলামি মাহফিল"
         canonical="/"
       />
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          role="img"
+          aria-label="চন্দনাইশ দরবার শরীফ হিরো ইমেজ"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background" />
@@ -45,9 +47,9 @@ const Index = () => {
             <h1 className="text-3xl md:text-6xl lg:text-7xl font-heading font-bold text-cream mb-4 leading-tight px-2">
               চন্দনাইশ দরবার শরীফ
             </h1>
-            <p className="text-gold text-base md:text-xl mb-2">
+            <h2 className="text-gold text-base md:text-xl mb-2 font-medium">
               সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
-            </p>
+            </h2>
             <p className="text-cream text-base md:text-2xl font-medium leading-relaxed px-4 max-w-3xl mx-auto mb-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র দরবার
             </p>

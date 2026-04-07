@@ -65,7 +65,7 @@ const DeveloperTeam = () => {
                   <div className="w-full h-full rounded-full bg-muted overflow-hidden">
                     {/* Render exact image if available, else fallback */}
                     {member.imageUrl ? (
-                      <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
+                      <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : member.name === "Tasin" ? (
                       <div className="w-full h-full bg-gold/10 flex items-center justify-center text-gold font-bold text-2xl">T</div>
                     ) : (

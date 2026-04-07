@@ -1,24 +1,39 @@
 import { Helmet } from "react-helmet-async";
 
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface EventItem {
+  name: string;
+  startDate: string;
+  location: string;
+  description: string;
+  image?: string;
+}
+
 interface SEOProps {
   title: string;
   description: string;
   canonical?: string;
   keywords?: string;
   type?: "website" | "article" | "profile";
+  faq?: FAQItem[];
+  events?: EventItem[];
 }
 
 const SITE_NAME = "চন্দনাইশ দরবার শরীফ";
-const BASE_URL = "https://chandanaish-darbar.com"; // Updated to assuming a real domain or the provided one
+const BASE_URL = "https://chandanaish-darbar.com";
 
-const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOProps) => {
+const SEO = ({ title, description, canonical, keywords, type = "website", faq, events }: SEOProps) => {
   const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
   const url = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
   const siteKeywords = keywords || "চন্দনাইশ দরবার শরীফ, দরবার শরীফ, মাইজভান্ডারী, গাউছে জামান আবদুল লতিফ শাহ, সুফিবাদ, ইসলাম, চন্দনাইশ, চট্টগ্রাম, ওরশ, হাদিয়া, দোয়া আবেদন, Chandanaish Darbar Sharif, Maizbhandari, Sufism, Islam, Chattogram, Best Darbar Sharif in Chittagong, Spiritual Center Bangladesh";
   const ogImage = `${BASE_URL}/logo.png`; 
 
-  // Combined Schema Markups
-  const structuredData = [
+  // Base Schema Markups
+  const structuredData: any[] = [
     {
       "@context": "https://schema.org",
       "@type": "ReligiousOrganization",
@@ -27,7 +42,7 @@ const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOP
       "description": description,
       "url": url,
       "logo": `${BASE_URL}/logo.png`,
-      "image": `${BASE_URL}/darbar-mazar.png`,
+      "image": `${BASE_URL}/logo.png`,
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Chandanaish Darbar Sharif",
@@ -35,11 +50,7 @@ const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOP
         "addressRegion": "Chattogram",
         "addressCountry": "BD"
       },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+8801819385557",
-        "contactType": "religious service"
-      },
+      "telephone": "+8801819385557",
       "sameAs": [
         "https://www.facebook.com/ChandanaishDarbar",
         "https://www.youtube.com/@ChandanaishDarbar"
@@ -47,16 +58,60 @@ const SEO = ({ title, description, canonical, keywords, type = "website" }: SEOP
     },
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": SITE_NAME,
-      "url": BASE_URL,
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": `${BASE_URL}/?s={search_term_string}`,
-        "query-input": "required name=search_term_string"
-      }
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": BASE_URL
+        },
+        ...(canonical && canonical !== "/" ? [
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": title,
+            "item": `${BASE_URL}${canonical}`
+          }
+        ] : [])
+      ]
     }
   ];
+
+  // Add FAQ Schema if provided
+  if (faq && faq.length > 0) {
+    structuredData.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faq.map(item => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer
+        }
+      }))
+    });
+  }
+
+  // Add Event Schema if provided
+  if (events && events.length > 0) {
+    events.forEach(event => {
+      structuredData.push({
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": event.name,
+        "startDate": event.startDate,
+        "location": {
+          "@type": "Place",
+          "name": event.location,
+          "address": "Chandanaish, Chattogram"
+        },
+        "image": event.image || ogImage,
+        "description": event.description
+      });
+    });
+  }
 
   return (
     <Helmet>

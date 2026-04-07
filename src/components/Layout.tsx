@@ -1,5 +1,23 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+
+// Map paths to their respective lazy import functions for prefetching
+const routeImports: Record<string, () => Promise<any>> = {
+  "/": () => import("../pages/Index"),
+  "/about": () => import("../pages/About"),
+  "/pir": () => import("../pages/Pir"),
+  "/rules": () => import("../pages/Rules"),
+  "/events": () => import("../pages/Events"),
+  "/hadia": () => import("../pages/Hadia"),
+  "/gallery": () => import("../pages/Gallery"),
+  "/notices": () => import("../pages/Notices"),
+  "/committee": () => import("../pages/Committee"),
+  "/doa": () => import("../pages/Doa"),
+  "/qna": () => import("../pages/QnA"),
+  "/contact": () => import("../pages/Contact"),
+  "/committee-login": () => import("../pages/CommitteeLogin"),
+  "/admin": () => import("../pages/Admin"),
+};
 import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,10 +62,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip to Content for Accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-gold focus:text-primary-foreground focus:rounded-md"
+      >
+        মূল কন্টেন্টে যান
+      </a>
+
       {/* Sticky Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20">
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2" aria-label="হোম পেজ">
             <span className="text-gold font-heading font-bold text-lg leading-tight">
               চন্দনাইশ দরবার শরীফ
             </span>
@@ -62,9 +88,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 onMouseEnter={() => {
                   // Prefetch the component for the route
                   const route = link.path;
-                  if (route !== location.pathname) {
-                    console.log(`Prefetching route: ${route}`);
-                    // Vite's dynamic import will prefetch the chunk
+                  if (route !== location.pathname && routeImports[route]) {
+                    routeImports[route]();
                   }
                 }}
                 className={`text-sm font-medium transition-colors duration-300 hover:text-gold ${
@@ -119,7 +144,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               exit={{ opacity: 0, height: 0 }}
               className="lg:hidden bg-background/95 backdrop-blur-md border-b border-gold/20 overflow-hidden"
             >
-              <div className="container mx-auto px-4 py-4 flex flex-col gap-1.5 Max-h-[70vh] overflow-y-auto">
+              <div className="container mx-auto px-4 py-4 flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
@@ -170,13 +195,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Main Content */}
-      <main className={notice ? "pt-[104px]" : "pt-16"}>{children}</main>
+      <main id="main-content" className={notice ? "pt-[104px]" : "pt-16"}>{children}</main>
 
       <div className="border-t border-gold/20" />
       <DeveloperTeam />
 
       {/* Footer */}
-      <footer className="border-t border-gold/20 bg-card islamic-pattern">
+      <footer className="border-t border-gold/20 bg-card islamic-pattern content-visibility-auto">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>

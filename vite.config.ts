@@ -51,14 +51,26 @@ export default defineConfig(({ mode }) => {
               if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                 return 'vendor';
               }
-              if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('framer-motion')) {
-                return 'ui';
+              if (id.includes('@radix-ui')) {
+                return 'radix';
+              }
+              if (id.includes('lucide-react')) {
+                return 'lucide';
+              }
+              if (id.includes('framer-motion')) {
+                return 'framer';
               }
               if (id.includes('@tanstack/react-query')) {
                 return 'query';
               }
               if (id.includes('@supabase/supabase-js')) {
                 return 'supabase';
+              }
+              if (id.includes('jspdf') || id.includes('html2canvas')) {
+                return 'pdf';
+              }
+              if (id.includes('date-fns') || id.includes('zod') || id.includes('clsx') || id.includes('tailwind-merge')) {
+                return 'utils-core';
               }
               return 'vendor-core';
             }
