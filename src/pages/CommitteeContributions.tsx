@@ -497,7 +497,7 @@ const CommitteeContributions = () => {
       const W = 210;
       addPdfHeader(doc, "অর্থ সংগ্রহ — সদস্য তালিকা");
       const monthLabel = filterMonth ? formatMonthBn(filterMonth) : "সকল সময়";
-      const paidSet = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name.toLowerCase()));
+      const paidSet = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name?.toLowerCase() || ""));
       doc.setTextColor(100, 110, 125);
       doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
@@ -566,7 +566,7 @@ const CommitteeContributions = () => {
     if (!searchQuery.trim()) { toast.error("আপনার নাম লিখুন"); return; }
     setRefreshing(true);
     await fetchData();
-    const results = contributions.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.toLowerCase().includes(searchQuery.toLowerCase()));
+    const results = contributions.filter(c => (c.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || c.id.toLowerCase().includes(searchQuery.toLowerCase()));
     setSearchResult(results);
     if (results.length === 0) toast.info("কোনো তথ্য পাওয়া যায়নি");
     setRefreshing(false);
@@ -674,7 +674,7 @@ const CommitteeContributions = () => {
   };
 
   const getMemberAdjTotal = (memberName: string) =>
-    duesAdjustments.filter(a => a.member_name.toLowerCase() === memberName.toLowerCase()).reduce((s, a) => s + a.amount, 0);
+    duesAdjustments.filter(a => (a.member_name?.toLowerCase() || "") === (memberName?.toLowerCase() || "")).reduce((s, a) => s + a.amount, 0);
 
   const handleAddDuesAdjustment = async (e: FormEvent) => {
     e.preventDefault();
@@ -700,13 +700,13 @@ const CommitteeContributions = () => {
   };
 
   const getDuesForMonth = (month: string) => {
-    const paidMemberNames = new Set(contributions.filter(c => c.target_month === month).map(c => c.name.toLowerCase()));
-    return members.filter(m => !paidMemberNames.has(m.name.toLowerCase()));
+    const paidMemberNames = new Set(contributions.filter(c => c.target_month === month).map(c => c.name?.toLowerCase() || ""));
+    return members.filter(m => !paidMemberNames.has(m.name?.toLowerCase() || ""));
   };
 
   const duesData = useMemo(() => {
-    const paid = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name.toLowerCase()));
-    const unpaid = members.filter(m => !paid.has(m.name.toLowerCase()));
+    const paid = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name?.toLowerCase() || ""));
+    const unpaid = members.filter(m => !paid.has(m.name?.toLowerCase() || ""));
     const totalDuesAmount = unpaid.reduce((s, m) => s + (m.monthly_due ?? 100) + Math.max(0, getMemberAdjTotal(m.name)), 0);
     return {
       total: members.length,
@@ -1193,11 +1193,11 @@ const CommitteeContributions = () => {
               </div>
             </form>
             {/* History */}
-            {duesAdjustments.filter(a => a.member_name.toLowerCase() === showDuesModal.name.toLowerCase()).length > 0 && (
+            {duesAdjustments.filter(a => (a.member_name?.toLowerCase() || "") === (showDuesModal.name?.toLowerCase() || "")).length > 0 && (
               <div className="mt-5 border-t border-gold/10 pt-4">
                 <p className="text-xs font-bold text-muted-foreground uppercase mb-2">ইতিহাস</p>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {duesAdjustments.filter(a => a.member_name.toLowerCase() === showDuesModal.name.toLowerCase()).map(a => (
+                  {duesAdjustments.filter(a => (a.member_name?.toLowerCase() || "") === (showDuesModal.name?.toLowerCase() || "")).map(a => (
                     <div key={a.id} className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">{a.note || "-"}</span>
                       <span className={a.amount > 0 ? "text-red-500 font-bold" : "text-emerald-500 font-bold"}>
