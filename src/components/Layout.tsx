@@ -18,6 +18,7 @@ const routeImports: Record<string, () => Promise<any>> = {
   "/committee-login": () => import("../pages/CommitteeLogin"),
   "/admin": () => import("../pages/Admin"),
   "/committee-contributions": () => import("../pages/CommitteeContributions"),
+  "/fund-transparency": () => import("../pages/FundTransparency"),
 };
 import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,6 +40,7 @@ const navLinks = [
   { path: "/qna", label: "প্রশ্ন ও অভিযোগ" },
   { path: "/contact", label: "যোগাযোগ" },
   { path: "/committee-contributions", label: "অর্থ সংগ্রহ" },
+  { path: "/fund-transparency", label: "তহবিল স্বচ্ছতা" },
   { path: "/committee-login", label: "কমিটি লগইন" },
 ];
 

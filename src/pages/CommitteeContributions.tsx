@@ -32,6 +32,15 @@ interface Expense {
   note?: string;
 }
 
+interface Member {
+  id: string;
+  name: string;
+  designation?: string;
+  area?: string;
+  phone?: string;
+  is_active: boolean;
+}
+
 const AREAS = ["চন্দনাইশ", "পটিয়া", "আনোয়ারা", "সাতকানিয়া", "লোহাগাড়া", "বাঁশখালী", "বোয়ালখালী", "অন্যান্য"];
 const PAYMENT_METHODS = ["ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "রকেট (Rocket)", "ব্যাংক (Bank)"];
 const YEARLY_GOAL = 1000000;
@@ -59,9 +68,15 @@ const CommitteeContributions = () => {
 
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [filterMonth, setFilterMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<Contribution[] | null>(null);
+
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberArea, setNewMemberArea] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+  const [newMemberDesignation, setNewMemberDesignation] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -91,6 +106,8 @@ const CommitteeContributions = () => {
       if (cData) setContributions(cData as Contribution[]);
       const { data: eData } = await supabase.from("committee_expenses").select("*").order("date", { ascending: false });
       if (eData) setExpenses(eData as Expense[]);
+      const { data: mData } = await supabase.from("committee_members").select("*").eq("is_active", true).order("name");
+      if (mData) setMembers(mData as Member[]);
     } catch (err) { toast.error("তথ্য লোড করতে সমস্যা হয়েছে"); }
     setRefreshing(false);
   };
@@ -166,11 +183,77 @@ const CommitteeContributions = () => {
       const tableData = filteredByMonth.map(c => [new Date(c.created_at).toLocaleDateString(), c.name, c.area || "-", c.target_month || "-", `${c.amount} BDT`]);
       autoTable(doc, { startY: (doc as any).lastAutoTable.finalY + 10, head: [['Date', 'Member Name', 'Area', 'Month', 'Amount']], body: tableData, headStyles: { fillColor: [212, 175, 55] } });
 
-      doc.save("Report.pdf");
+      doc.save("Financial_Report.pdf");
       toast.success("রিপোর্ট ডাউনলোড হয়েছে");
     } catch (e) {
       console.error(e);
       toast.error("পিডিএফ রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
+    }
+    setPdfLoading(null);
+  };
+
+  const handleDownloadAreaReport = () => {
+    setPdfLoading("area-report");
+    try {
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFillColor(212, 175, 55);
+      doc.rect(0, 0, 210, 40, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text("CHANDANISH DARBAR SHARIF", 105, 18, { align: "center" });
+      doc.setFontSize(10);
+      doc.text("AREA-WISE CONTRIBUTION REPORT", 105, 30, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 150, 50);
+
+      let finalY = 60;
+
+      AREAS.forEach((areaName) => {
+        const areaContributions = contributions.filter(c => c.area === areaName);
+        if (areaContributions.length === 0) return;
+
+        const areaTotal = areaContributions.reduce((sum, c) => sum + c.amount, 0);
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Area: ${areaName}`, 20, finalY);
+        doc.setFontSize(10);
+        doc.text(`Total: ${areaTotal.toLocaleString()} BDT`, 150, finalY);
+        
+        const tableData = areaContributions.map(c => [
+          new Date(c.created_at).toLocaleDateString(),
+          c.name,
+          c.target_month || "-",
+          `${c.amount.toLocaleString()} BDT`
+        ]);
+
+        autoTable(doc, {
+          startY: finalY + 5,
+          head: [['Date', 'Member Name', 'Month', 'Amount']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: { fillColor: [212, 175, 55], textColor: [255, 255, 255] },
+          margin: { left: 20, right: 20 }
+        });
+
+        finalY = (doc as any).lastAutoTable.finalY + 15;
+
+        // Check for new page
+        if (finalY > 250) {
+          doc.addPage();
+          finalY = 20;
+        }
+      });
+
+      doc.save(`Area_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      toast.success("এলাকা ভিত্তিক রিপোর্ট ডাউনলোড হয়েছে");
+    } catch (e) {
+      console.error(e);
+      toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
     }
     setPdfLoading(null);
   };
@@ -215,6 +298,18 @@ const CommitteeContributions = () => {
     else { toast.success("সফল!"); setExpenseTitle(""); setExpenseAmount(""); fetchData(); }
   };
 
+  const handleSubmitMember = async (e: FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.from("committee_members").insert([{ name: newMemberName, area: newMemberArea, phone: newMemberPhone, designation: newMemberDesignation }]);
+    if (error) { toast.error("ত্রুটি: " + error.message); } 
+    else { toast.success("সদস্য যুক্ত হয়েছে!"); setNewMemberName(""); setNewMemberPhone(""); setNewMemberDesignation(""); fetchData(); }
+  };
+
+  const getDuesForMonth = (month: string) => {
+    const paidMemberNames = new Set(contributions.filter(c => c.target_month === month).map(c => c.name.toLowerCase()));
+    return members.filter(m => !paidMemberNames.has(m.name.toLowerCase()));
+  };
+
   const currentYear = new Date().getFullYear().toString();
   const currentYearTotal = contributions.filter(c => c.created_at.startsWith(currentYear)).reduce((s, c) => s + c.amount, 0);
   const goalPercentage = Math.min((currentYearTotal / YEARLY_GOAL) * 100, 100);
@@ -255,7 +350,14 @@ const CommitteeContributions = () => {
 
       <nav className="container mx-auto px-4 -mt-8">
         <div className="bg-card border border-gold/10 p-2 rounded-2xl shadow-xl flex flex-wrap gap-2 justify-center md:justify-start">
-          {[{ id: "overview", label: "সারসংক্ষেপ", icon: <LayoutGrid size={18} /> }, { id: "search", label: "ব্যক্তিগত হিসাব", icon: <UserIcon size={18} /> }, { id: "transparency", label: "স্বচ্ছতা", icon: <PieChartIcon size={18} /> }, { id: "leaderboard", label: "র‍্যাঙ্কিং", icon: <Award size={18} /> }, ...(isAdmin ? [{ id: "admin", label: "অ্যাডমিন", icon: <Settings size={18} /> }] : [])].map(tab => (
+          {[
+            { id: "overview", label: "সারসংক্ষেপ", icon: <LayoutGrid size={18} /> }, 
+            { id: "search", label: "ব্যক্তিগত হিসাব", icon: <UserIcon size={18} /> }, 
+            { id: "dues", label: "বকেয়া (Dues)", icon: <AlertCircle size={18} /> },
+            { id: "transparency", label: "স্বচ্ছতা", icon: <PieChartIcon size={18} /> }, 
+            { id: "leaderboard", label: "র‍্যাঙ্কিং", icon: <Award size={18} /> }, 
+            ...(isAdmin ? [{ id: "admin", label: "অ্যাডমিন", icon: <Settings size={18} /> }] : [])
+          ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all ${activeTab === tab.id ? "bg-gold text-primary-foreground shadow-lg" : "hover:bg-gold/5 text-muted-foreground"}`}>{tab.icon} {tab.label}</button>
           ))}
         </div>
@@ -321,6 +423,33 @@ const CommitteeContributions = () => {
             </motion.div>
           )}
 
+          {activeTab === "dues" && (
+            <motion.div key="dues" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <h2 className="text-2xl font-bold text-gold flex items-center gap-3"><AlertCircle className="text-orange-500" /> বকেয়া তালিকা</h2>
+                <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="bg-card border border-gold/10 rounded-xl px-4 py-2 text-sm font-bold" />
+              </div>
+              <div className="bg-card rounded-3xl border border-gold/10 overflow-hidden shadow-2xl">
+                <table className="w-full text-left">
+                  <thead className="bg-orange-500/5 text-orange-500 font-bold border-b border-gold/10">
+                    <tr><th className="p-6">সদস্যের নাম</th><th className="p-6">এলাকা</th><th className="p-6">পদবী</th><th className="p-6 text-right">স্ট্যাটাস</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-gold/5">
+                    {getDuesForMonth(filterMonth).map(m => (
+                      <tr key={m.id} className="hover:bg-orange-500/5">
+                        <td className="p-6 font-bold">{m.name}</td>
+                        <td className="p-6 text-muted-foreground">{m.area || "-"}</td>
+                        <td className="p-6 text-muted-foreground">{m.designation || "-"}</td>
+                        <td className="p-6 text-right"><span className="px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-xs font-bold">বকেয়া</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {getDuesForMonth(filterMonth).length === 0 && <div className="p-20 text-center text-green-500 font-bold">সবাই এই মাসের চাঁদা প্রদান করেছেন!</div>}
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === "transparency" && (
             <motion.div key="transparency" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4"><h2 className="text-2xl font-bold text-gold flex items-center gap-3"><TrendingDown className="text-red-500" /> খরচের বিবরণী</h2><input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="bg-card border border-gold/10 rounded-xl px-4 py-2 text-sm font-bold" /></div>
@@ -354,7 +483,8 @@ const CommitteeContributions = () => {
               <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                 <h2 className="text-3xl font-bold text-gold flex items-center gap-3"><Shield size={32} /> অ্যাডমিন প্যানেল</h2>
                 <div className="flex flex-wrap gap-3">
-                  <button onClick={handleDownloadReport} disabled={pdfLoading === "report"} className="bg-gold text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2">{pdfLoading === "report" ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />} রিপোর্ট (PDF)</button>
+                  <button onClick={handleDownloadReport} disabled={pdfLoading === "report"} className="bg-gold text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2">{pdfLoading === "report" ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />} জেনারেল রিপোর্ট</button>
+                  <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2">{pdfLoading === "area-report" ? <Loader2 size={18} className="animate-spin" /> : <Printer size={18} />} এলাকা ভিত্তিক রিপোর্ট</button>
                   <button onClick={handleExportCSV} className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2"><FileSpreadsheet size={18} /> এক্সেল (CSV)</button>
                 </div>
               </div>
@@ -373,6 +503,12 @@ const CommitteeContributions = () => {
                         {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold cursor-pointer">
+                        {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <input type="text" value={transactionId} onChange={e => setTransactionId(e.target.value)} placeholder="ট্রানজেকশন আইডি (ঐচ্ছিক)" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
+                    </div>
                     <button type="submit" className="w-full bg-gold-gradient text-primary-foreground py-5 rounded-2xl font-bold text-xl shadow-2xl uppercase tracking-widest">সেভ ও রসিদ ডাউনলোড</button>
                   </form>
                 </div>
@@ -385,6 +521,19 @@ const CommitteeContributions = () => {
                       <input type="date" required value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="w-full bg-background border border-red-500/10 rounded-2xl px-5 py-4 outline-none focus:border-red-500 font-bold" />
                     </div>
                     <button type="submit" className="w-full bg-red-600 text-white py-5 rounded-2xl font-bold text-xl shadow-2xl uppercase tracking-widest">খরচ রেকর্ড করুন</button>
+                  </form>
+                </div>
+                <div className="bg-card p-10 rounded-3xl border-2 border-gold/20 shadow-2xl lg:col-span-2">
+                  <h3 className="text-2xl font-bold text-gold mb-8 flex items-center gap-3"><UserIcon size={28} /> নতুন সদস্য যোগ করুন</h3>
+                  <form onSubmit={handleSubmitMember} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <input type="text" required value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
+                    <select value={newMemberArea} onChange={e => setNewMemberArea(e.target.value)} className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold cursor-pointer">
+                      <option value="">এলাকা</option>
+                      {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                    <input type="text" value={newMemberPhone} onChange={e => setNewMemberPhone(e.target.value)} placeholder="ফোন" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
+                    <input type="text" value={newMemberDesignation} onChange={e => setNewMemberDesignation(e.target.value)} placeholder="পদবী" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
+                    <button type="submit" className="md:col-span-2 lg:col-span-4 bg-gold text-primary-foreground py-4 rounded-2xl font-bold text-lg shadow-xl uppercase tracking-widest">সদস্য যোগ করুন</button>
                   </form>
                 </div>
               </div>
