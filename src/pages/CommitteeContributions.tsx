@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { 
   FileText, Shield, User as UserIcon, Search, Download, Target,
-  Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
+  Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, Settings, Trash2,
   PieChart as PieChartIcon, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
   MessageCircle, Edit2, X
 } from "lucide-react";
@@ -855,19 +855,19 @@ const CommitteeContributions = () => {
   }, [members, contributions, filterMonth, duesAdjustments]);
 
   const currentYear = new Date().getFullYear().toString();
-  const currentYearTotal = useMemo(() => contributions.filter(c => (c.created_at || "").startsWith(currentYear)).reduce((s, c) => s + c.amount, 0), [contributions, currentYear]);
+  const currentYearTotal = useMemo(() => contributions.filter(c => (c.created_at || "").startsWith(currentYear)).reduce((s, c) => s + (c.amount || 0), 0), [contributions, currentYear]);
   const goalPercentage = Math.min((currentYearTotal / YEARLY_GOAL) * 100, 100);
   const filteredByMonth = useMemo(() => contributions.filter(c => !filterMonth || (c.target_month === filterMonth || (c.created_at || "").startsWith(filterMonth))), [contributions, filterMonth]);
-  const monthTotal = useMemo(() => filteredByMonth.reduce((s, c) => s + c.amount, 0), [filteredByMonth]);
-  const monthExpense = useMemo(() => expenses.filter(e => (e.date || "").startsWith(filterMonth)).reduce((s, e) => s + e.amount, 0), [expenses, filterMonth]);
+  const monthTotal = useMemo(() => filteredByMonth.reduce((s, c) => s + (c.amount || 0), 0), [filteredByMonth]);
+  const monthExpense = useMemo(() => expenses.filter(e => (e.date || "").startsWith(filterMonth)).reduce((s, e) => s + (e.amount || 0), 0), [expenses, filterMonth]);
 
   const monthlyChartData = useMemo(() => {
     const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(); d.setMonth(d.getMonth() - i); return d.toISOString().slice(0, 7); }).reverse();
-    return months.map(m => ({ name: m, total: contributions.filter(c => c.target_month === m || (c.created_at || "").startsWith(m)).reduce((s, c) => s + c.amount, 0) }));
+    return months.map(m => ({ name: m, total: contributions.filter(c => c.target_month === m || (c.created_at || "").startsWith(m)).reduce((s, c) => s + (c.amount || 0), 0) }));
   }, [contributions]);
 
   const areaPieData = useMemo(() => {
-    const areaStats = contributions.reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + c.amount; return acc; }, {} as Record<string, number>);
+    const areaStats = contributions.reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + (c.amount || 0); return acc; }, {} as Record<string, number>);
     return Object.entries(areaStats).map(([name, value]) => ({ name, value }));
   }, [contributions]);
 
@@ -983,7 +983,7 @@ const CommitteeContributions = () => {
                           <td className="p-4 font-bold">{c.name}</td>
                           <td className="p-4 text-muted-foreground">{c.area || "-"}</td>
                           <td className="p-4 text-xs font-bold text-muted-foreground uppercase">{formatMonthBn(c.target_month)}</td>
-                          <td className="p-4 text-right font-black text-emerald-600">৳{c.amount.toLocaleString()}</td>
+                          <td className="p-4 text-right font-black text-emerald-600">৳{(c.amount || 0).toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1167,7 +1167,7 @@ const CommitteeContributions = () => {
                   <Download size={14} /> PDF রিপোর্ট
                 </button>
               </div>
-              {Object.entries(contributions.filter(c => !filterMonth || (c.target_month === filterMonth || (c.created_at || "").startsWith(filterMonth))).reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + c.amount; return acc; }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).map(([name, total], idx) => (
+              {Object.entries(contributions.filter(c => !filterMonth || (c.target_month === filterMonth || (c.created_at || "").startsWith(filterMonth))).reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + (c.amount || 0); return acc; }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).map(([name, total], idx) => (
                 <div key={name} className="bg-card p-6 rounded-3xl border border-gold/10 flex justify-between items-center shadow-xl hover:shadow-gold/5 hover:scale-[1.02] transition-all relative overflow-hidden group">
                   <div className={`absolute left-0 top-0 w-1 h-full ${idx === 0 ? "bg-gold" : "bg-gold/20"}`} />
                   <div className="flex items-center gap-5">
@@ -1297,7 +1297,7 @@ const CommitteeContributions = () => {
                               )}
                             </td>
                             <td className="p-3 text-center">
-                              <button onClick={() => handleDeleteMember(m.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full" title="মুছুন"><TrendingDown size={14} /></button>
+                              <button onClick={() => handleDeleteMember(m.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full" title="মুছুন"><Trash2 size={14} /></button>
                             </td>
                           </tr>
                         ))}
@@ -1321,7 +1321,7 @@ const CommitteeContributions = () => {
                             <td className="p-3"><span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-full">চাঁদা</span></td>
                             <td className="p-3 text-right font-bold">৳{c.amount}</td>
                             <td className="p-3 text-center">
-                              <button onClick={() => handleDeleteContribution(c.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrendingDown size={14} /></button>
+                              <button onClick={() => handleDeleteContribution(c.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><Trash2 size={14} /></button>
                             </td>
                           </tr>
                         ))}
@@ -1332,7 +1332,7 @@ const CommitteeContributions = () => {
                             <td className="p-3"><span className="px-2 py-0.5 bg-red-500/10 text-red-600 rounded-full">খরচ</span></td>
                             <td className="p-3 text-right font-bold">৳{e.amount}</td>
                             <td className="p-3 text-center">
-                              <button onClick={() => handleDeleteExpense(e.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrendingDown size={14} /></button>
+                              <button onClick={() => handleDeleteExpense(e.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><Trash2 size={14} /></button>
                             </td>
                           </tr>
                         ))}
