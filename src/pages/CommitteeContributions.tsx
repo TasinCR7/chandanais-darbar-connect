@@ -154,7 +154,7 @@ const CommitteeContributions = () => {
 
     doc.setTextColor(212, 175, 55);
     doc.setFontSize(24);
-    doc.setFont("NotoSansBengali", "bold");
+    doc.setFont("NotoSansBengali", "normal");
     doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 25, { align: "center" });
     
     doc.setTextColor(200, 200, 200);
@@ -164,7 +164,7 @@ const CommitteeContributions = () => {
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
-    doc.setFont("NotoSansBengali", "bold");
+    doc.setFont("NotoSansBengali", "normal");
     doc.text(subtitle, W / 2, 48, { align: "center" });
   };
 
@@ -191,7 +191,7 @@ const CommitteeContributions = () => {
       // Watermark
       doc.setTextColor(248, 248, 248);
       doc.setFontSize(60);
-      doc.setFont("NotoSansBengali", "bold");
+      doc.setFont("NotoSansBengali", "normal");
       doc.text("পরিশোধিত", W / 2, 170, { align: "center", angle: 35 });
 
       // Circular Stamp
@@ -228,13 +228,13 @@ const CommitteeContributions = () => {
         theme: "plain",
         styles: { font: "NotoSansBengali", fontSize: 11, cellPadding: 8, lineColor: [230, 230, 230], lineWidth: 0.1 },
         columnStyles: {
-          0: { fontStyle: "bold", cellWidth: 50, textColor: [100, 100, 100] },
+          0: { cellWidth: 50, textColor: [100, 100, 100] },
           1: { fontStyle: "normal", textColor: [20, 20, 20] },
         },
         margin: { left: 20, right: 20 },
         didDrawCell: (data) => {
            if (data.row.index === 3 && data.column.index === 1) {
-             doc.setFont("NotoSansBengali", "bold");
+             doc.setFont("NotoSansBengali", "normal");
              doc.setTextColor(180, 140, 0);
            }
         }
@@ -250,7 +250,7 @@ const CommitteeContributions = () => {
       
       doc.setTextColor(33, 33, 33);
       doc.setFontSize(12);
-      doc.setFont("NotoSansBengali", "bold");
+      doc.setFont("NotoSansBengali", "normal");
       doc.text("মোট পরিশোধিত টাকা:", 30, curY + 12);
       
       doc.setTextColor(180, 140, 0);
@@ -314,7 +314,7 @@ const CommitteeContributions = () => {
         doc.text(s.label, x + 21, 82, { align: "center" });
         doc.setFontSize(11);
         doc.setTextColor(33, 33, 33);
-        doc.setFont("NotoSansBengali", "bold");
+        doc.setFont("NotoSansBengali", "normal");
         doc.text(s.value, x + 21, 91, { align: "center" });
         doc.setFont("NotoSansBengali", "normal");
       });
@@ -328,7 +328,7 @@ const CommitteeContributions = () => {
       // Detail header
       let detailY = 115;
       doc.setFontSize(12);
-      doc.setFont("NotoSansBengali", "bold");
+      doc.setFont("NotoSansBengali", "normal");
       doc.setTextColor(33, 33, 33);
       doc.text("সংগ্রহের বিস্তারিত তালিকা", 15, detailY);
       detailY += 5;
@@ -351,7 +351,7 @@ const CommitteeContributions = () => {
         theme: "grid",
         headStyles: { font: "NotoSansBengali", fillColor: [33, 33, 33], textColor: [212, 175, 55], fontSize: 8 },
         styles: { font: "NotoSansBengali", fontSize: 7.5, cellPadding: 3 },
-        columnStyles: { 0: { cellWidth: 8 }, 5: { fontStyle: "bold", halign: "right" } },
+        columnStyles: { 0: { cellWidth: 8 }, 5: { halign: "right" } },
         margin: { left: 15, right: 15 },
         didDrawPage: () => { addPdfFooter(doc); },
       });
@@ -363,7 +363,7 @@ const CommitteeContributions = () => {
         doc.roundedRect(15, gtY, W - 30, 14, 2, 2, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(11);
-        doc.setFont("NotoSansBengali", "bold");
+        doc.setFont("NotoSansBengali", "normal");
         doc.text("সর্বমোট আয়: " + monthTotal.toLocaleString("bn-BD") + " টাকা | বর্তমান ব্যালেন্স: " + balance.toLocaleString("bn-BD") + " টাকা", W / 2, gtY + 10, { align: "center" });
       }
 
@@ -413,7 +413,7 @@ const CommitteeContributions = () => {
         doc.roundedRect(15, finalY, W - 30, 12, 2, 2, "F");
         doc.setTextColor(212, 175, 55);
         doc.setFontSize(11);
-        doc.setFont("NotoSansBengali", "bold");
+        doc.setFont("NotoSansBengali", "normal");
         doc.text(areaIndex.toLocaleString("bn-BD") + ". " + areaName, 20, finalY + 8);
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
@@ -437,7 +437,7 @@ const CommitteeContributions = () => {
           theme: "grid",
           headStyles: { font: "NotoSansBengali", fillColor: [212, 175, 55], textColor: [33, 33, 33], fontSize: 8 },
           styles: { font: "NotoSansBengali", fontSize: 7.5, cellPadding: 3 },
-          columnStyles: { 0: { cellWidth: 8 }, 4: { fontStyle: "bold", halign: "right" } },
+          columnStyles: { 0: { cellWidth: 8 }, 4: { halign: "right" } },
           margin: { left: 15, right: 15 },
         });
 
@@ -447,7 +447,7 @@ const CommitteeContributions = () => {
         doc.rect(15, subY, W - 30, 8, "F");
         doc.setTextColor(80, 60, 0);
         doc.setFontSize(9);
-        doc.setFont("NotoSansBengali", "bold");
+        doc.setFont("NotoSansBengali", "normal");
         doc.text("সাবটোটাল (" + areaName + "): " + areaTotal.toLocaleString("bn-BD") + " টাকা", W - 20, subY + 6, { align: "right" });
         finalY = subY + 18;
       });
