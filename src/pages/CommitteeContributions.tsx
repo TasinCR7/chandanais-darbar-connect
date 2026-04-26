@@ -311,18 +311,19 @@ const CommitteeContributions = () => {
         doc.roundedRect(x, 75, 42, 22, 2, 2, "FD");
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
+        doc.setFont("NotoSansBengali", "normal");
         doc.text(s.label, x + 21, 82, { align: "center" });
         doc.setFontSize(11);
         doc.setTextColor(33, 33, 33);
         doc.setFont("NotoSansBengali", "normal");
         doc.text(s.value, x + 21, 91, { align: "center" });
-        doc.setFont("NotoSansBengali", "normal");
       });
 
       // Yearly Progress Bar
       doc.setDrawColor(212, 175, 55, 0.3);
       doc.line(15, 105, W-15, 105);
       doc.setFontSize(8);
+      doc.setFont("NotoSansBengali", "normal");
       doc.text("বার্ষিক লক্ষ্যমাত্রা অগ্রগতি: " + currentYearTotal.toLocaleString("bn-BD") + " / " + YEARLY_GOAL.toLocaleString("bn-BD") + " টাকা", 15, 102);
 
       // Detail header
@@ -405,6 +406,8 @@ const CommitteeContributions = () => {
         if (finalY > 230) {
           addPdfFooter(doc);
           doc.addPage();
+          registerBengaliFont(doc);
+          doc.setFont("NotoSansBengali", "normal");
           finalY = 20;
         }
 
@@ -453,7 +456,13 @@ const CommitteeContributions = () => {
       });
 
       // Grand total
-      if (finalY > 260) { addPdfFooter(doc); doc.addPage(); finalY = 20; }
+      if (finalY > 260) { 
+        addPdfFooter(doc); 
+        doc.addPage(); 
+        registerBengaliFont(doc);
+        doc.setFont("NotoSansBengali", "normal");
+        finalY = 20; 
+      }
       doc.setFillColor(33, 33, 33);
       doc.roundedRect(15, finalY, W - 30, 16, 3, 3, "F");
       doc.setFont("NotoSansBengali", "normal");
