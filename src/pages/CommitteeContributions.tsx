@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 import { 
   FileText, Shield, User as UserIcon, Search, Download, Target, 
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
-  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw
+  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
