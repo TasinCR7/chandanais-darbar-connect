@@ -794,6 +794,13 @@ const CommitteeContributions = () => {
     else { toast.success("সফলভাবে মুছে ফেলা হয়েছে"); fetchData(); }
   };
 
+  const handleDeleteMember = async (id: string) => {
+    if (!confirm("আপনি কি নিশ্চিতভাবে এই সদস্যকে মুছতে চান?")) return;
+    const { error } = await supabase.from("committee_members").delete().eq("id", id);
+    if (error) toast.error("মুছতে সমস্যা হয়েছে: " + error.message);
+    else { toast.success("সফলভাবে মুছে ফেলা হয়েছে"); fetchData(); }
+  };
+
   const getMemberAdjTotal = (memberName: string) =>
     duesAdjustments.filter(a => (a.member_name?.toLowerCase() || "") === (memberName?.toLowerCase() || "")).reduce((s, a) => s + a.amount, 0);
 
@@ -1253,8 +1260,8 @@ const CommitteeContributions = () => {
                   </form>
                 </div>
                 <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-xl lg:col-span-2">
-                  <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><UserIcon size={22} /> সদস্য যোগ করুন</h3>
-                  <form onSubmit={handleSubmitMember} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><UserIcon size={22} /> সদস্য ব্যবস্থাপনা</h3>
+                  <form onSubmit={handleSubmitMember} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <input type="text" required value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                     <select value={newMemberArea} onChange={e => setNewMemberArea(e.target.value)} className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm cursor-pointer">
                       <option value="">এলাকা</option>
@@ -1262,8 +1269,41 @@ const CommitteeContributions = () => {
                     </select>
                     <input type="text" value={newMemberPhone} onChange={e => setNewMemberPhone(e.target.value)} placeholder="ফোন" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                     <input type="text" value={newMemberDesignation} onChange={e => setNewMemberDesignation(e.target.value)} placeholder="পদবী" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
-                    <button type="submit" className="md:col-span-2 lg:col-span-4 bg-gold text-primary-foreground py-3 rounded-xl font-bold text-md shadow-lg uppercase tracking-widest">সদস্য যুক্ত করুন</button>
+                    <button type="submit" className="md:col-span-2 lg:col-span-4 bg-gold text-primary-foreground py-3 rounded-xl font-bold text-md shadow-lg uppercase tracking-widest">নতুন সদস্য যুক্ত করুন</button>
                   </form>
+                  <div className="overflow-x-auto max-h-96">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-gold/5 text-gold font-bold sticky top-0">
+                        <tr><th className="p-3">নাম</th><th className="p-3">এলাকা</th><th className="p-3">ফোন</th><th className="p-3">মাসিক চাঁদা</th><th className="p-3 text-center">অ্যাকশন</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-gold/5">
+                        {members.map(m => (
+                          <tr key={m.id} className="hover:bg-gold/5">
+                            <td className="p-3 font-bold">{m.name}</td>
+                            <td className="p-3">{m.area || "-"}</td>
+                            <td className="p-3">{m.phone || "-"}</td>
+                            <td className="p-3">
+                              {editingMemberMonthlyDue?.id === m.id ? (
+                                <div className="flex items-center gap-2">
+                                  <input type="number" value={editingMemberMonthlyDue.value} onChange={e => setEditingMemberMonthlyDue({ ...editingMemberMonthlyDue, value: e.target.value })} className="w-20 bg-background border border-gold/20 rounded px-2 py-1 text-xs" />
+                                  <button onClick={() => handleUpdateMonthlyDue(m.id, editingMemberMonthlyDue.value)} className="text-emerald-500 font-bold hover:underline">সেভ</button>
+                                  <button onClick={() => setEditingMemberMonthlyDue(null)} className="text-red-500 font-bold hover:underline">বাতিল</button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <span>৳{m.monthly_due ?? 100}</span>
+                                  <button onClick={() => setEditingMemberMonthlyDue({ id: m.id, value: String(m.monthly_due ?? 100) })} className="text-blue-500 hover:text-blue-600"><Edit2 size={12} /></button>
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button onClick={() => handleDeleteMember(m.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full" title="মুছুন"><TrendingDown size={14} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
                 
                 <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-xl lg:col-span-2">
