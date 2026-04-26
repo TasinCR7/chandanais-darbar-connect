@@ -1150,6 +1150,7 @@ const CommitteeContributions = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        )}
       </main>
       {/* Dues Adjustment Modal */}
       {showDuesModal && (
