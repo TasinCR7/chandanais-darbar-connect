@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { registerBengaliFont } from "../fonts/bengaliFont";
+import { downloadAnnualStatementPDF, downloadReceiptPDF } from "@/lib/statement";
 
 interface Contribution {
   id: string;
@@ -208,81 +209,26 @@ const CommitteeContributions = () => {
   const handleDownloadSingleReceipt = (c: Contribution) => {
     setPdfLoading(c.id);
     try {
-      const doc = new jsPDF();
-      const W = 210;
-      addPdfHeader(doc, "অফিসিয়াল পেমেন্ট রসিদ");
-
-      // Receipt meta
-      const rid = c.id.slice(0, 8).toUpperCase();
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(10);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("ইনভয়েস নম্বর:", 20, 65);
-      doc.text("#" + rid, 20, 71);
+      const foundMember = members.find(m => m.name === c.name);
+      const memberLite = {
+        id: foundMember?.id || c.name,
+        name: c.name,
+        phone: foundMember?.phone || undefined,
+        area: c.area || undefined,
+        monthly_due: foundMember?.monthly_due ?? 100
+      };
       
-      doc.text("ইস্যু তারিখ:", W - 20, 65, { align: "right" });
-      doc.text(new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 71, { align: "right" });
-
-      // Main table
-      const rows = [
-        ["দাতার নাম", c.name || "-"],
-        ["এলাকা/অবস্থান", c.area || "নেই"],
-        ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
-        ["টাকার পরিমাণ", "৳" + c.amount.toLocaleString("bn-BD")],
-        ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
-        ["ট্রানজেকশন আইডি", c.transaction_id || "নেই"],
-        ["বিশেষ মন্তব্য", c.note || "-"],
-      ];
-      autoTable(doc, {
-        startY: 85,
-        body: rows,
-        theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 12, cellPadding: 9, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        columnStyles: {
-          0: { cellWidth: 50, textColor: [100, 110, 125], fillColor: [248, 250, 252] },
-          1: { textColor: [10, 37, 64], fontStyle: "normal" },
-        },
-        margin: { left: 20, right: 20 }
-      });
-
-      let curY = (doc as any).lastAutoTable.finalY + 15;
-
-      // Highlighted amount box
-      doc.setDrawColor(0, 212, 200);
-      doc.setLineWidth(0.5);
-      doc.setFillColor(240, 253, 250);
-      doc.roundedRect(20, curY, W - 40, 24, 3, 3, "FD");
+      const paymentLite = {
+        id: c.id,
+        name: c.name,
+        amount: c.amount || 0,
+        target_month: c.target_month || "",
+        payment_method: c.payment_method || "",
+        transaction_id: c.transaction_id || "",
+        created_at: c.created_at
+      };
       
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(13);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 15);
-      
-      doc.setTextColor(0, 160, 150);
-      doc.setFontSize(20);
-      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 16, { align: "right" });
-      
-      curY += 45;
-
-      // Signatures
-      doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.setDrawColor(200, 210, 220);
-      doc.line(25, curY, 85, curY);
-      doc.text("সদস্যের স্বাক্ষর", 55, curY + 6, { align: "center" });
-      
-      doc.line(W - 85, curY, W - 25, curY);
-      doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
-
-      // Paid Stamp
-      doc.setTextColor(16, 185, 129);
-      doc.setFontSize(60);
-      doc.setFont("helvetica", "bold");
-      doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
-
-      addPdfFooter(doc);
-      doc.save("Invoice_" + rid + ".pdf");
+      downloadReceiptPDF(memberLite, paymentLite);
       toast.success("রসিদ ডাউনলোড হয়েছে");
     } catch (e) {
       console.error("PDF Error:", e);
@@ -346,7 +292,7 @@ const CommitteeContributions = () => {
         c.name,
         c.area || "-",
         formatMonthBn(c.target_month),
-        c.amount.toLocaleString("bn-BD"),
+        (c.amount || 0).toLocaleString("bn-BD"),
         c.payment_method || "ক্যাশ",
       ]);
       autoTable(doc, {
@@ -443,7 +389,7 @@ const CommitteeContributions = () => {
           new Date(c.created_at).toLocaleDateString("bn-BD"),
           c.name,
           formatMonthBn(c.target_month),
-          c.amount.toLocaleString("bn-BD"),
+          (c.amount || 0).toLocaleString("bn-BD"),
           c.payment_method || "ক্যাশ",
         ]);
 
@@ -564,6 +510,11 @@ const CommitteeContributions = () => {
     }
     setPdfLoading(null);
   };
+
+  const handleDownloadSingleReceipt = (c: Contribution) => {
+    downloadReceiptPDF(c);
+  };
+
   const handleMemberSearch = async () => {
     if (!searchQuery.trim()) { toast.error("আপনার নাম লিখুন"); return; }
     setRefreshing(true);
@@ -579,112 +530,27 @@ const CommitteeContributions = () => {
   const handleDownloadAnnualStatement = (member: Member) => {
     setPdfLoading("annual-" + member.id);
     try {
-      const doc = new jsPDF();
-      const W = 210;
-      const currentYear = new Date().getFullYear().toString();
-      const monthlyRate = member.monthly_due ?? 100;
+      const memberLite = {
+        id: member.id,
+        name: member.name,
+        phone: member.phone || undefined,
+        area: member.area || undefined,
+        monthly_due: member.monthly_due ?? 100
+      };
       
-      // --- Professional Header ---
-      addPdfHeader(doc, "বার্ষিক বিবরণী — " + currentYear);
-
-      // --- Member Info Section ---
-      const startY = 58;
-      doc.setFillColor(248, 250, 252);
-      doc.roundedRect(15, startY - 5, W - 30, 30, 3, 3, "F");
-      doc.setDrawColor(226, 232, 240);
-      doc.roundedRect(15, startY - 5, W - 30, 30, 3, 3, "S");
+      const memberContributions = contributions.filter(c => c.name === member.name);
+      const mappedPayments = memberContributions.map(c => ({
+        id: c.id,
+        name: c.name,
+        amount: c.amount || 0,
+        target_month: c.target_month || "",
+        payment_method: c.payment_method || "",
+        transaction_id: c.transaction_id || "",
+        created_at: c.created_at
+      }));
       
-      doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("সদস্য কোড:", 20, startY + 2);
-      doc.text("নাম:", 20, startY + 9);
-      doc.text("মোবাইল:", 20, startY + 16);
-      
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(11);
-      doc.text("M-" + member.id.substring(0, 6).toUpperCase(), 55, startY + 2);
-      doc.text(member.name, 55, startY + 9);
-      doc.text(member.phone || "N/A", 55, startY + 16);
-      
-      doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
-      doc.text("এলাকা:", W / 2 + 15, startY + 2);
-      doc.text("মাসিক চাঁদা:", W / 2 + 15, startY + 9);
-      doc.text("তৈরির তারিখ:", W / 2 + 15, startY + 16);
-      
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(11);
-      doc.text(member.area || "-", W / 2 + 50, startY + 2);
-      doc.text("৳" + monthlyRate.toLocaleString("bn-BD"), W / 2 + 50, startY + 9);
-      doc.text(new Date().toLocaleDateString("bn-BD"), W / 2 + 50, startY + 16);
-
-      // --- Monthly Breakdown Table ---
-      const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
-      const targetMonths = bnMonths.map((_, i) => `${currentYear}-${String(i + 1).padStart(2, "0")}`);
-      
-      let totalExpected = 0;
-      let totalPaid = 0;
-      
-      const rows = targetMonths.map((tm, idx) => {
-        totalExpected += monthlyRate;
-        const monthContributions = contributions.filter(c => (c.name?.toLowerCase() || "") === (member.name?.toLowerCase() || "") && c.target_month === tm);
-        const paidAmount = monthContributions.reduce((s, c) => s + c.amount, 0);
-        totalPaid += paidAmount;
-        
-        const isPaid = paidAmount >= monthlyRate;
-        const dateStr = monthContributions.length > 0 ? new Date(monthContributions[0].created_at).toLocaleDateString("bn-BD") : "-";
-        const method = monthContributions.length > 0 ? (monthContributions[0].payment_method || "ক্যাশ") : "-";
-        
-        return [
-          bnMonths[idx],
-          "৳" + monthlyRate.toLocaleString("bn-BD"),
-          "৳" + paidAmount.toLocaleString("bn-BD"),
-          isPaid ? "✓ পরিশোধ" : "□ বকেয়া",
-          dateStr,
-          method
-        ];
-      });
-      
-      autoTable(doc, {
-        startY: startY + 32,
-        head: [["মাস", "প্রত্যাশিত", "পরিশোধ", "স্ট্যাটাস", "তারিখ", "পদ্ধতি"]],
-        body: rows,
-        theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 7, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 11, fontStyle: "normal" },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        didParseCell: (data) => {
-          if (data.section === 'body' && data.column.index === 3) {
-            const val = String(data.cell.raw);
-            if (val.includes("✓")) data.cell.styles.textColor = [16, 185, 129];
-            else data.cell.styles.textColor = [225, 29, 72];
-          }
-        },
-        margin: { left: 15, right: 15 },
-        didDrawPage: () => { addPdfFooter(doc); }
-      });
-      
-      // --- Summary Footer Block ---
-      const totalDue = totalExpected - totalPaid;
-      const pdfFinalY = (doc as any).lastAutoTable.finalY + 8;
-      
-      if (pdfFinalY < 255) {
-        doc.setFillColor(10, 37, 64);
-        doc.roundedRect(15, pdfFinalY, W - 30, 28, 4, 4, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.setFont("NotoSansBengali", "normal");
-        doc.text("মোট প্রত্যাশিত: ৳" + totalExpected.toLocaleString("bn-BD"), 25, pdfFinalY + 10);
-        doc.text("মোট পরিশোধ: ৳" + totalPaid.toLocaleString("bn-BD"), 25, pdfFinalY + 20);
-        
-        doc.setTextColor(totalDue > 0 ? 225 : 0, totalDue > 0 ? 29 : 212, totalDue > 0 ? 72 : 200);
-        doc.setFontSize(15);
-        doc.text(totalDue > 0 ? "বকেয়া: ৳" + totalDue.toLocaleString("bn-BD") : "সম্পূর্ণ পরিশোধিত ✓", W - 25, pdfFinalY + 16, { align: "right" });
-      }
-      
-      addPdfFooter(doc);
-      doc.save(`Annual_Statement_${member.name.replace(/\s+/g, '_')}_${currentYear}.pdf`);
+      const currentYear = new Date().getFullYear();
+      downloadAnnualStatementPDF(memberLite, mappedPayments, currentYear);
       toast.success("বার্ষিক বিবরণী ডাউনলোড হয়েছে");
     } catch(err) {
       console.error(err);
@@ -1034,7 +900,7 @@ const CommitteeContributions = () => {
                         <tr key={c.id} className="hover:bg-gold/5">
                           <td className="p-4">{new Date(c.created_at).toLocaleDateString()}</td>
                           <td className="p-4 font-bold text-muted-foreground uppercase text-[10px]">{formatMonthBn(c.target_month)}</td>
-                          <td className="p-4 text-right font-bold text-gold">৳{c.amount.toLocaleString()}</td>
+                          <td className="p-4 text-right font-bold text-gold">৳{(c.amount || 0).toLocaleString()}</td>
                           <td className="p-4 text-center">
                             <div className="flex justify-center gap-2">
                               <button onClick={() => handleDownloadSingleReceipt(c)} disabled={pdfLoading === c.id} className="p-2 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-white transition-all" title="ডাউনলোড">
@@ -1151,7 +1017,7 @@ const CommitteeContributions = () => {
                   <thead className="bg-red-500/5 text-red-500 font-bold border-b border-gold/10"><tr><th className="p-6">তারিখ</th><th className="p-6">বিবরণ</th><th className="p-6 text-right">পরিমাণ</th></tr></thead>
                   <tbody className="divide-y divide-gold/5">
                     {expenses.filter(e => !filterMonth || (e.date || "").startsWith(filterMonth)).map(e => (
-                      <tr key={e.id} className="hover:bg-red-500/5"><td className="p-6 text-muted-foreground">{new Date(e.date).toLocaleDateString()}</td><td className="p-6 font-bold">{e.title}</td><td className="p-6 text-right font-bold text-red-500">৳{e.amount.toLocaleString()}</td></tr>
+                      <tr key={e.id} className="hover:bg-red-500/5"><td className="p-6 text-muted-foreground">{new Date(e.date).toLocaleDateString()}</td><td className="p-6 font-bold">{e.title}</td><td className="p-6 text-right font-bold text-red-500">৳{(e.amount || 0).toLocaleString()}</td></tr>
                     ))}
                   </tbody>
                 </table>
@@ -1395,7 +1261,7 @@ const CommitteeContributions = () => {
                     <div key={a.id} className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">{a.note || "-"}</span>
                       <span className={a.amount > 0 ? "text-red-500 font-bold" : "text-emerald-500 font-bold"}>
-                        {a.amount > 0 ? "+" : ""}{a.amount.toLocaleString("bn-BD")} ৳
+                        {a.amount > 0 ? "+" : ""}{(a.amount || 0).toLocaleString("bn-BD")} ৳
                       </span>
                     </div>
                   ))}
