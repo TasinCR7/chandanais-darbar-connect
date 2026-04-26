@@ -179,7 +179,7 @@ const CommitteeContributions = () => {
     
     // Subtext
     doc.setTextColor(150, 160, 175);
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setFont("NotoSansBengali", "normal");
     doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | info@chandanaishdarbar.org", W / 2, 30, { align: "center" });
     
@@ -187,7 +187,7 @@ const CommitteeContributions = () => {
     doc.setFillColor(0, 212, 200);
     doc.roundedRect(W / 2 - 35, 36, 70, 8, 4, 4, "F");
     doc.setTextColor(10, 37, 64);
-    doc.setFontSize(11);
+    doc.setFontSize(12);
     doc.setFont("NotoSansBengali", "normal");
     doc.text(subtitle, W / 2, 42, { align: "center" });
   };
@@ -198,7 +198,7 @@ const CommitteeContributions = () => {
     doc.setDrawColor(230, 235, 241);
     doc.setLineWidth(0.5);
     doc.line(15, H - 20, W - 15, H - 20);
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.setTextColor(150, 160, 175);
     doc.setFont("NotoSansBengali", "normal");
     doc.text("অফিসিয়াল ডকুমেন্ট • চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেম", 15, H - 14);
@@ -237,7 +237,7 @@ const CommitteeContributions = () => {
         startY: 85,
         body: rows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 12, cellPadding: 9, lineColor: [230, 235, 241], lineWidth: 0.1 },
         columnStyles: {
           0: { cellWidth: 50, textColor: [100, 110, 125], fillColor: [248, 250, 252] },
           1: { textColor: [10, 37, 64], fontStyle: "normal" },
@@ -254,7 +254,7 @@ const CommitteeContributions = () => {
       doc.roundedRect(20, curY, W - 40, 24, 3, 3, "FD");
       
       doc.setTextColor(10, 37, 64);
-      doc.setFontSize(12);
+      doc.setFontSize(13);
       doc.setFont("NotoSansBengali", "normal");
       doc.text("মোট পরিশোধিত টাকা:", 30, curY + 15);
       
@@ -305,7 +305,7 @@ const CommitteeContributions = () => {
 
       // Meta
       doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.setFont("NotoSansBengali", "normal");
       doc.text("প্রতিবেদনের মাস: " + (filterMonth ? formatMonthBn(filterMonth) : "সকল সময়"), 15, 65);
       doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 15, 65, { align: "right" });
@@ -324,10 +324,10 @@ const CommitteeContributions = () => {
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(226, 232, 240);
         doc.roundedRect(x, 75, 42, 24, 3, 3, "FD");
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.setTextColor(100, 110, 125);
         doc.text(s.label, x + 21, 84, { align: "center" });
-        doc.setFontSize(12);
+        doc.setFontSize(13);
         doc.setTextColor(10, 37, 64);
         doc.text(s.value, x + 21, 94, { align: "center" });
       });
@@ -354,8 +354,8 @@ const CommitteeContributions = () => {
         head: [["#", "তারিখ", "নাম", "এলাকা", "মাস", "পরিমাণ", "পেমেন্ট"]],
         body: detailRows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 8, cellPadding: 4, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 9 },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 10, cellPadding: 6, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 11 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: { 0: { cellWidth: 10 }, 5: { halign: "right" } },
         margin: { left: 15, right: 15 },
@@ -380,7 +380,7 @@ const CommitteeContributions = () => {
         doc.rect(W - 15 - barWidth - 10, finalY + 14, barWidth, 2, "F");
         doc.setFillColor(0, 212, 200);
         doc.rect(W - 15 - barWidth - 10, finalY + 14, progress, 2, "F");
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.text(`লক্ষ্যমাত্রা: ${goalPercentage.toFixed(1)}%`, W - 25, finalY + 10, { align: "right" });
       }
 
@@ -402,7 +402,7 @@ const CommitteeContributions = () => {
       addPdfHeader(doc, "এলাকা ভিত্তিক অর্থ সংগ্রহ প্রতিবেদন");
 
       doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.setFont("NotoSansBengali", "normal");
       doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 15, 65, { align: "right" });
       doc.text("মোট এলাকা: " + AREAS.length.toLocaleString("bn-BD"), 15, 65);
@@ -431,9 +431,9 @@ const CommitteeContributions = () => {
         doc.setFillColor(10, 37, 64);
         doc.roundedRect(15, finalY, W - 30, 14, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
+        doc.setFontSize(13);
         doc.text(areaIndex.toLocaleString("bn-BD") + ". " + areaName, 20, finalY + 9);
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setTextColor(0, 212, 200);
         doc.text("মোট: ৳" + areaTotal.toLocaleString("bn-BD"), W - 20, finalY + 9, { align: "right" });
         finalY += 18;
@@ -452,8 +452,8 @@ const CommitteeContributions = () => {
           head: [["#", "তারিখ", "নাম", "মাস", "টাকা", "পেমেন্ট"]],
           body: rows,
           theme: "grid",
-          styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 8, cellPadding: 4, lineColor: [230, 235, 241], lineWidth: 0.1 },
-          headStyles: { fillColor: [248, 250, 252], textColor: [10, 37, 64], fontSize: 9 },
+          styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 10, cellPadding: 6, lineColor: [230, 235, 241], lineWidth: 0.1 },
+          headStyles: { fillColor: [248, 250, 252], textColor: [10, 37, 64], fontSize: 11 },
           columnStyles: { 0: { cellWidth: 10 }, 4: { halign: "right", textColor: [10, 37, 64] } },
           margin: { left: 15, right: 15 },
         });
@@ -462,7 +462,7 @@ const CommitteeContributions = () => {
         doc.setFillColor(248, 250, 252);
         doc.rect(15, subY, W - 30, 8, "F");
         doc.setTextColor(10, 37, 64);
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.text(`সাবটোটাল (${areaName}): ৳${areaTotal.toLocaleString("bn-BD")}`, W - 20, subY + 6, { align: "right" });
         
         finalY = subY + 15;
@@ -479,7 +479,7 @@ const CommitteeContributions = () => {
       doc.setFillColor(0, 212, 200);
       doc.roundedRect(15, finalY, W - 30, 18, 4, 4, "F");
       doc.setTextColor(10, 37, 64);
-      doc.setFontSize(14);
+      doc.setFontSize(15);
       doc.text("সর্বমোট সংগ্রহ (সকল এলাকা): ৳" + grandTotal.toLocaleString("bn-BD"), W / 2, finalY + 12, { align: "center" });
 
       addPdfFooter(doc);
@@ -501,7 +501,7 @@ const CommitteeContributions = () => {
       const monthLabel = filterMonth ? formatMonthBn(filterMonth) : "সকল সময়";
       const paidSet = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name?.toLowerCase() || ""));
       doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.setFont("NotoSansBengali", "normal");
       doc.text("মাস: " + monthLabel, 15, 65);
       doc.text("মোট সদস্য: " + members.length.toLocaleString("bn-BD"), W - 15, 65, { align: "right" });
@@ -524,8 +524,8 @@ const CommitteeContributions = () => {
         head: [["#", "সদস্যের নাম", "এলাকা", "মোবাইল", "স্ট্যাটাস", "বকেয়া টাকা"]],
         body: duesRows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 5, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 10 },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 7, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 12 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: { 0: { cellWidth: 10 }, 5: { halign: "right" } },
         didParseCell: (data) => {
@@ -547,12 +547,12 @@ const CommitteeContributions = () => {
         doc.setFillColor(10, 37, 64);
         doc.roundedRect(15, pdfFinalY, W - 30, 22, 4, 4, "F");
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont("NotoSansBengali", "normal");
         doc.text("পরিশোধ: " + paidSet.size.toLocaleString("bn-BD") + " জন", 25, pdfFinalY + 9);
         doc.text("বকেয়া: " + (members.length - paidSet.size).toLocaleString("bn-BD") + " জন", 25, pdfFinalY + 17);
         doc.setTextColor(0, 212, 200);
-        doc.setFontSize(12);
+        doc.setFontSize(13);
         doc.text("মোট বকেয়া: " + totalOwedSum.toLocaleString("bn-BD") + " ৳", W - 25, pdfFinalY + 14, { align: "right" });
       }
       addPdfFooter(doc);
@@ -595,26 +595,26 @@ const CommitteeContributions = () => {
       doc.roundedRect(15, startY - 5, W - 30, 30, 3, 3, "S");
       
       doc.setTextColor(100, 110, 125);
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
       doc.text("সদস্য কোড:", 20, startY + 2);
       doc.text("নাম:", 20, startY + 9);
       doc.text("মোবাইল:", 20, startY + 16);
       
       doc.setTextColor(10, 37, 64);
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.text("M-" + member.id.substring(0, 6).toUpperCase(), 55, startY + 2);
       doc.text(member.name, 55, startY + 9);
       doc.text(member.phone || "N/A", 55, startY + 16);
       
       doc.setTextColor(100, 110, 125);
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.text("এলাকা:", W / 2 + 15, startY + 2);
       doc.text("মাসিক চাঁদা:", W / 2 + 15, startY + 9);
       doc.text("তৈরির তারিখ:", W / 2 + 15, startY + 16);
       
       doc.setTextColor(10, 37, 64);
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.text(member.area || "-", W / 2 + 50, startY + 2);
       doc.text("৳" + monthlyRate.toLocaleString("bn-BD"), W / 2 + 50, startY + 9);
       doc.text(new Date().toLocaleDateString("bn-BD"), W / 2 + 50, startY + 16);
@@ -651,8 +651,8 @@ const CommitteeContributions = () => {
         head: [["মাস", "প্রত্যাশিত", "পরিশোধ", "স্ট্যাটাস", "তারিখ", "পদ্ধতি"]],
         body: rows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 5, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 9, fontStyle: "normal" },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 7, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 11, fontStyle: "normal" },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         didParseCell: (data) => {
           if (data.section === 'body' && data.column.index === 3) {
@@ -673,13 +673,13 @@ const CommitteeContributions = () => {
         doc.setFillColor(10, 37, 64);
         doc.roundedRect(15, pdfFinalY, W - 30, 28, 4, 4, "F");
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont("NotoSansBengali", "normal");
         doc.text("মোট প্রত্যাশিত: ৳" + totalExpected.toLocaleString("bn-BD"), 25, pdfFinalY + 10);
         doc.text("মোট পরিশোধ: ৳" + totalPaid.toLocaleString("bn-BD"), 25, pdfFinalY + 20);
         
         doc.setTextColor(totalDue > 0 ? 225 : 0, totalDue > 0 ? 29 : 212, totalDue > 0 ? 72 : 200);
-        doc.setFontSize(14);
+        doc.setFontSize(15);
         doc.text(totalDue > 0 ? "বকেয়া: ৳" + totalDue.toLocaleString("bn-BD") : "সম্পূর্ণ পরিশোধিত ✓", W - 25, pdfFinalY + 16, { align: "right" });
       }
       
