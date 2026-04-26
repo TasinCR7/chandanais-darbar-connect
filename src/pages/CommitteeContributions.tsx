@@ -1,7 +1,6 @@
 import React, { useState, useEffect, FormEvent, useRef } from "react";
 import SEO from "../components/SEO";
 import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -257,7 +256,7 @@ const CommitteeContributions = () => {
 
   const handleSubmitContribution = async (e: FormEvent) => {
     e.preventDefault();
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const { error } = await supabase.from("committee_contributions").insert([{
       id, name, amount: Number(amount), area: area || null, note,
       target_month: targetMonth, payment_method: paymentMethod, transaction_id: transactionId || null,
