@@ -7,7 +7,8 @@ import autoTable from "jspdf-autotable";
 import { 
   FileText, Shield, User as UserIcon, Search, Download, Target, 
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
-  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database
+  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
+  MessageCircle, Edit2, PlusCircle, X, MinusCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -40,6 +41,17 @@ interface Member {
   area?: string;
   phone?: string;
   is_active: boolean;
+  monthly_due?: number;
+}
+
+interface DuesAdjustment {
+  id: string;
+  member_id: string | null;
+  member_name: string;
+  amount: number;
+  note?: string;
+  adjusted_by?: string;
+  created_at: string;
 }
 
 const AREAS = ["চন্দনাইশ", "পটিয়া", "আনোয়ারা", "সাতকানিয়া", "লোহাগাড়া", "বাঁশখালী", "বোয়ালখালী", "অন্যান্য"];
@@ -79,6 +91,13 @@ const CommitteeContributions = () => {
   const [newMemberArea, setNewMemberArea] = useState("");
   const [newMemberPhone, setNewMemberPhone] = useState("");
   const [newMemberDesignation, setNewMemberDesignation] = useState("");
+
+  // Dues management state
+  const [duesAdjustments, setDuesAdjustments] = useState<DuesAdjustment[]>([]);
+  const [showDuesModal, setShowDuesModal] = useState<Member | null>(null);
+  const [duesAdjAmount, setDuesAdjAmount] = useState("");
+  const [duesAdjNote, setDuesAdjNote] = useState("");
+  const [editingMemberMonthlyDue, setEditingMemberMonthlyDue] = useState<{id: string, value: string} | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -476,48 +495,73 @@ const CommitteeContributions = () => {
     try {
       const doc = new jsPDF();
       const W = 210;
-      addPdfHeader(doc, "বকেয়া চাঁদা (Dues) তালিকা");
-      
-      const monthLabel = filterMonth ? formatMonthBn(filterMonth) : "সকল সময়";
-      const dues = getDuesForMonth(filterMonth);
-      
+      addPdfHeader(doc, "অর্থ সংগ্রহ — সদস্য তালিকা");
+      const monthLabel = filterMonth ? formatMonthBn(filterMonth) : "সকল সময়";
+      const paidSet = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name.toLowerCase()));
       doc.setTextColor(100, 110, 125);
       doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
-      doc.text("প্রতিবেদনের মাস: " + monthLabel, 15, 65);
-      doc.text("মোট বকেয়া সদস্য: " + dues.length.toLocaleString("bn-BD"), W - 15, 65, { align: "right" });
-
-      const rows = dues.map((m, i) => [
-        (i + 1).toLocaleString("bn-BD"),
-        m.name,
-        m.area || "-",
-        m.phone || "-",
-        "বকেয়া"
-      ]);
-
+      doc.text("মাস: " + monthLabel, 15, 65);
+      doc.text("মোট সদস্য: " + members.length.toLocaleString("bn-BD"), W - 15, 65, { align: "right" });
+      const duesRows = members.map((m, i) => {
+        const paid = paidSet.has(m.name.toLowerCase());
+        const monthlyDue = m.monthly_due ?? 100;
+        const adjTotal = getMemberAdjTotal(m.name);
+        const totalOwed = paid ? 0 : monthlyDue + Math.max(0, adjTotal);
+        return [
+          (i + 1).toLocaleString("bn-BD"),
+          m.name,
+          m.area || "-",
+          m.phone || "-",
+          paid ? "✓ পরিশোধ" : "□ বকেয়া",
+          paid ? "-" : totalOwed.toLocaleString("bn-BD") + " ৳",
+        ];
+      });
       autoTable(doc, {
         startY: 75,
-        head: [["#", "সদস্যের নাম", "এলাকা", "মোবাইল", "স্ট্যাটাস"]],
-        body: rows,
+        head: [["#", "সদস্যের নাম", "এলাকা", "মোবাইল", "স্ট্যাটাস", "বকেয়া টাকা"]],
+        body: duesRows,
         theme: "grid",
         styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 5, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        headStyles: { fillColor: [225, 29, 72], textColor: [255, 255, 255], fontSize: 10 },
-        alternateRowStyles: { fillColor: [255, 241, 242] },
-        columnStyles: { 0: { cellWidth: 12 }, 4: { textColor: [225, 29, 72], fontStyle: "normal" } },
+        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 10 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 10 }, 5: { halign: "right" } },
+        didParseCell: (data) => {
+          if (data.column.index === 4 && data.section === "body") {
+            const v = String(data.cell.raw);
+            data.cell.styles.textColor = v.includes("✓") ? [16, 185, 129] : [225, 29, 72];
+          }
+          if (data.column.index === 5 && data.section === "body" && String(data.cell.raw) !== "-") {
+            data.cell.styles.textColor = [225, 29, 72];
+          }
+        },
         margin: { left: 15, right: 15 },
         didDrawPage: () => { addPdfFooter(doc); }
       });
-
+      const pdfFinalY = (doc as any).lastAutoTable.finalY + 10;
+      const totalOwedSum = members.filter(m => !paidSet.has(m.name.toLowerCase()))
+        .reduce((s, m) => s + (m.monthly_due ?? 100) + Math.max(0, getMemberAdjTotal(m.name)), 0);
+      if (pdfFinalY < 265) {
+        doc.setFillColor(10, 37, 64);
+        doc.roundedRect(15, pdfFinalY, W - 30, 22, 4, 4, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text("পরিশোধ: " + paidSet.size + " জন", 25, pdfFinalY + 9);
+        doc.text("বকেয়া: " + (members.length - paidSet.size) + " জন", 25, pdfFinalY + 17);
+        doc.setTextColor(0, 212, 200);
+        doc.setFontSize(12);
+        doc.text("মোট বকেয়া: " + totalOwedSum.toLocaleString("bn-BD") + " ৳", W - 25, pdfFinalY + 14, { align: "right" });
+      }
       addPdfFooter(doc);
-      doc.save(`Dues_Report_${filterMonth}.pdf`);
-      toast.success("বকেয়া রিপোর্ট ডাউনলোড হয়েছে");
+      doc.save("Dues_Report_" + filterMonth + ".pdf");
+      toast.success("বকেয়া রিপোর্ট ডাউনলোড হয়েছে");
     } catch (e) {
       console.error(e);
-      toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
+      toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
     }
     setPdfLoading(null);
   };
-
   const handleMemberSearch = async () => {
     if (!searchQuery.trim()) { toast.error("আপনার নাম লিখুন"); return; }
     setRefreshing(true);
@@ -629,6 +673,32 @@ const CommitteeContributions = () => {
     else { toast.success("সফলভাবে মুছে ফেলা হয়েছে"); fetchData(); }
   };
 
+  const getMemberAdjTotal = (memberName: string) =>
+    duesAdjustments.filter(a => a.member_name.toLowerCase() === memberName.toLowerCase()).reduce((s, a) => s + a.amount, 0);
+
+  const handleAddDuesAdjustment = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!showDuesModal) return;
+    const numAmt = Number(duesAdjAmount);
+    if (isNaN(numAmt) || numAmt === 0) { toast.error("সঠিক পরিমাণ দিন"); return; }
+    const { error } = await supabase.from("member_dues_adjustments").insert([{
+      member_id: showDuesModal.id,
+      member_name: showDuesModal.name,
+      amount: numAmt,
+      note: duesAdjNote || null,
+    }]);
+    if (error) { toast.error("ত্রুটি: " + error.message); }
+    else { toast.success("বকেয়া আপডেট হয়েছে!"); setShowDuesModal(null); setDuesAdjAmount(""); setDuesAdjNote(""); fetchData(); }
+  };
+
+  const handleUpdateMonthlyDue = async (memberId: string, value: string) => {
+    const numVal = Number(value);
+    if (isNaN(numVal) || numVal < 0) { toast.error("সঠিক পরিমাণ দিন"); return; }
+    const { error } = await supabase.from("committee_members").update({ monthly_due: numVal }).eq("id", memberId);
+    if (error) { toast.error("আপডেট ব্যর্থ: " + error.message); }
+    else { toast.success("মাসিক চাঁদা আপডেট হয়েছে!"); setEditingMemberMonthlyDue(null); fetchData(); }
+  };
+
   const getDuesForMonth = (month: string) => {
     const paidMemberNames = new Set(contributions.filter(c => c.target_month === month).map(c => c.name.toLowerCase()));
     return members.filter(m => !paidMemberNames.has(m.name.toLowerCase()));
@@ -637,13 +707,15 @@ const CommitteeContributions = () => {
   const duesData = useMemo(() => {
     const paid = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name.toLowerCase()));
     const unpaid = members.filter(m => !paid.has(m.name.toLowerCase()));
+    const totalDuesAmount = unpaid.reduce((s, m) => s + (m.monthly_due ?? 100) + Math.max(0, getMemberAdjTotal(m.name)), 0);
     return {
       total: members.length,
       paidCount: members.length - unpaid.length,
       dueCount: unpaid.length,
-      list: unpaid
+      list: unpaid,
+      totalDuesAmount,
     };
-  }, [members, contributions, filterMonth]);
+  }, [members, contributions, filterMonth, duesAdjustments]);
 
   const currentYear = new Date().getFullYear().toString();
   const currentYearTotal = useMemo(() => contributions.filter(c => c.created_at.startsWith(currentYear)).reduce((s, c) => s + c.amount, 0), [contributions, currentYear]);
@@ -826,17 +898,18 @@ const CommitteeContributions = () => {
             <motion.div key="dues" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gold flex items-center gap-3"><AlertCircle className="text-red-500" /> বকেয়া তালিকা</h2>
+                  <h2 className="text-2xl font-bold text-gold flex items-center gap-3"><AlertCircle className="text-red-500" /> বকেয়া তালিকা</h2>
                   <p className="text-xs text-muted-foreground mt-1">যারা এখনো {formatMonthBn(filterMonth)} মাসের চাঁদা দেননি</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="bg-card border border-gold/10 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-gold" />
-                  <button onClick={handleDownloadDuesReport} disabled={pdfLoading === "dues-report"} className="bg-red-500 text-white px-5 py-2 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2 hover:bg-red-600 transition-all">
-                    {pdfLoading === "dues-report" ? <Loader2 className="animate-spin" /> : <Download size={16} />} ডাউনলোড বকেয়া তালিকা
+                  <button onClick={handleDownloadDuesReport} disabled={pdfLoading === "dues-report"} className="bg-[#0A2540] text-white px-5 py-2 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2 hover:bg-[#0d3060] transition-all">
+                    {pdfLoading === "dues-report" ? <Loader2 className="animate-spin" /> : <Download size={16} />} PDF ডাউনলোড
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-card p-5 rounded-2xl border border-gold/10 shadow-lg text-center">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground">মোট সদস্য</p>
                   <p className="text-2xl font-black text-gold">{duesData.total.toLocaleString("bn-BD")}</p>
@@ -846,8 +919,12 @@ const CommitteeContributions = () => {
                   <p className="text-2xl font-black text-emerald-600">{duesData.paidCount.toLocaleString("bn-BD")}</p>
                 </div>
                 <div className="bg-card p-5 rounded-2xl border border-red-500/20 shadow-lg text-center">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground">বকেয়া আছে</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">বকেয়া আছে</p>
                   <p className="text-2xl font-black text-red-600">{duesData.dueCount.toLocaleString("bn-BD")}</p>
+                </div>
+                <div className="bg-card p-5 rounded-2xl border border-orange-500/20 shadow-lg text-center">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">মোট বকেয়া টাকা</p>
+                  <p className="text-2xl font-black text-orange-500">৳{duesData.totalDuesAmount.toLocaleString("bn-BD")}</p>
                 </div>
               </div>
 
@@ -857,34 +934,47 @@ const CommitteeContributions = () => {
                     <tr>
                       <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">নাম</th>
                       <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">এলাকা</th>
-                      <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">পদবী</th>
+                      <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">মাসিক চাঁদা</th>
+                      <th className="p-4 text-xs font-bold text-red-500 uppercase tracking-widest text-right">বকেয়া মোট</th>
                       <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest text-right">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gold/5">
-                    {duesData.list.map((m) => (
-                      <tr key={m.id} className="hover:bg-gold/5 transition-colors group">
-                        <td className="p-4 font-bold">{m.name}</td>
-                        <td className="p-4 text-muted-foreground">{m.area || "-"}</td>
-                        <td className="p-4 text-xs font-bold text-muted-foreground uppercase">{m.designation || "-"}</td>
-                        <td className="p-4 text-right">
-                          <div className="flex justify-end items-center gap-2">
-                            <span className="text-[10px] font-bold text-red-600 bg-red-500/10 px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">বকেয়া</span>
-                            <a 
-                              href={`https://wa.me/${m.phone?.replace(/\+/g, '')}?text=${encodeURIComponent(`আসসালামু আলাইকুম, ${m.name}। চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের ${formatMonthBn(filterMonth)} মাসের চাঁদা বকেয়া আছে। অনুগ্রহ করে জমা দিন।`)}`}
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="p-2 bg-emerald-500/10 text-emerald-600 rounded-full hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
-                              title="WhatsApp এ স্মরণ করিয়ে দিন"
-                            >
-                              <MessageCircle size={16} />
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {duesData.list.map((m) => {
+                      const monthlyDue = m.monthly_due ?? 100;
+                      const adjTotal = getMemberAdjTotal(m.name);
+                      const totalOwed = monthlyDue + Math.max(0, adjTotal);
+                      return (
+                        <tr key={m.id} className="hover:bg-gold/5 transition-colors group">
+                          <td className="p-4 font-bold">{m.name}
+                            {adjTotal !== 0 && <span className="ml-2 text-[10px] text-orange-500 font-bold">+ডিসো</span>}
+                          </td>
+                          <td className="p-4 text-muted-foreground">{m.area || "-"}</td>
+                          <td className="p-4 text-sm font-bold text-muted-foreground">৳{monthlyDue.toLocaleString("bn-BD")}</td>
+                          <td className="p-4 text-right font-black text-red-600">৳{totalOwed.toLocaleString("bn-BD")}</td>
+                          <td className="p-4 text-right">
+                            <div className="flex justify-end items-center gap-2">
+                              {isAdmin && (
+                                <button onClick={() => { setShowDuesModal(m); setDuesAdjAmount(""); setDuesAdjNote(""); }}
+                                  className="p-2 bg-orange-500/10 text-orange-600 rounded-full hover:bg-orange-500 hover:text-white transition-all shadow-sm"
+                                  title="বকেয়া সম্পাদনা">
+                                  <Edit2 size={14} />
+                                </button>
+                              )}
+                              <a
+                                href={`https://wa.me/${m.phone?.replace(/\+/g, '')}?text=${encodeURIComponent(`আসসালামু আলাইকুম, ${m.name}। চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের ${formatMonthBn(filterMonth)} মাসের চাঁদা বকেয়া আছে (৳${totalOwed}৳)। অনুগ্রহ করে জমা দিন।`)}`}
+                                target="_blank" rel="noreferrer"
+                                className="p-2 bg-emerald-500/10 text-emerald-600 rounded-full hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                title="WhatsApp এ স্মরণ করিয়ে দিন">
+                                <MessageCircle size={14} />
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {duesData.list.length === 0 && (
-                      <tr><td colSpan={4} className="p-10 text-center text-muted-foreground italic">সবাই পরিশোধ করেছেন! মাশাআল্লাহ।</td></tr>
+                      <tr><td colSpan={5} className="p-10 text-center text-muted-foreground italic">সবাই পরিশোধ করেছেন! মাশাআল্লাহ।</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -1061,6 +1151,67 @@ const CommitteeContributions = () => {
           )}
         </AnimatePresence>
       </main>
+      {/* Dues Adjustment Modal */}
+      {showDuesModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-card rounded-3xl border border-gold/20 shadow-2xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-gold flex items-center gap-2">
+                <Edit2 size={20} /> বকেয়া সম্পাদনা
+              </h3>
+              <button onClick={() => setShowDuesModal(null)} className="p-2 rounded-full hover:bg-red-500/10 text-red-500"><X size={20} /></button>
+            </div>
+            <div className="bg-background rounded-xl p-4 mb-5 space-y-1">
+              <p className="font-bold text-lg">{showDuesModal.name}</p>
+              <p className="text-sm text-muted-foreground">{showDuesModal.area || "-"} • মাসিক চাঁদা: ৳{showDuesModal.monthly_due ?? 100}</p>
+              {getMemberAdjTotal(showDuesModal.name) !== 0 && (
+                <p className="text-sm font-bold text-orange-500">ডিসো মোট: ৳{getMemberAdjTotal(showDuesModal.name).toLocaleString("bn-BD")}</p>
+              )}
+            </div>
+            <form onSubmit={handleAddDuesAdjustment} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">পরিমাণ (পজিটিভ = বাড়ান, নেগেটিভ = কমানো)</label>
+                <input type="number" value={duesAdjAmount} onChange={e => setDuesAdjAmount(e.target.value)}
+                  placeholder="যেমন: 500 বা -200"
+                  className="w-full bg-background border border-gold/20 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" required />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">কারণ (ঐচ্ছিক)</label>
+                <input type="text" value={duesAdjNote} onChange={e => setDuesAdjNote(e.target.value)}
+                  placeholder="যেমন: মাফ, অতিরিক্ত জরিমানা..."
+                  className="w-full bg-background border border-gold/20 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowDuesModal(null)}
+                  className="flex-1 border border-gold/20 text-muted-foreground py-3 rounded-xl font-bold text-sm hover:bg-gold/5 transition-all">
+                  বাতিল
+                </button>
+                <button type="submit" className="flex-1 bg-gold-gradient text-primary-foreground py-3 rounded-xl font-bold text-sm shadow-lg">
+                  সেভ করুন
+                </button>
+              </div>
+            </form>
+            {/* History */}
+            {duesAdjustments.filter(a => a.member_name.toLowerCase() === showDuesModal.name.toLowerCase()).length > 0 && (
+              <div className="mt-5 border-t border-gold/10 pt-4">
+                <p className="text-xs font-bold text-muted-foreground uppercase mb-2">ইতিহাস</p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {duesAdjustments.filter(a => a.member_name.toLowerCase() === showDuesModal.name.toLowerCase()).map(a => (
+                    <div key={a.id} className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">{a.note || "-"}</span>
+                      <span className={a.amount > 0 ? "text-red-500 font-bold" : "text-emerald-500 font-bold"}>
+                        {a.amount > 0 ? "+" : ""}{a.amount.toLocaleString("bn-BD")} ৳
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
+
+
       <div className="fixed bottom-10 right-10 z-[100]"><button className="bg-gold text-white p-5 rounded-full shadow-2xl hover:scale-110 transition-all flex items-center gap-3 font-bold group border-2 border-white/20"><Calculator className="w-7 h-7" /><span className="max-w-0 overflow-hidden group-hover:max-w-[200px] transition-all duration-500 whitespace-nowrap text-sm">হিসাব সহকারী</span></button></div>
     </div>
   );
