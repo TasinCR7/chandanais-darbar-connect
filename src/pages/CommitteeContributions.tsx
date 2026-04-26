@@ -86,6 +86,7 @@ const CommitteeContributions = () => {
   const [filterMonth, setFilterMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<Contribution[] | null>(null);
+  const [searchMemberResult, setSearchMemberResult] = useState<Member[] | null>(null);
 
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberArea, setNewMemberArea] = useState("");
@@ -568,8 +569,96 @@ const CommitteeContributions = () => {
     await fetchData();
     const results = contributions.filter(c => (c.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || (c.id?.toLowerCase() || "").includes(searchQuery.toLowerCase()));
     setSearchResult(results);
-    if (results.length === 0) toast.info("কোনো তথ্য পাওয়া যায়নি");
+    const mResults = members.filter(m => (m.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || (m.phone || "").includes(searchQuery.toLowerCase()));
+    setSearchMemberResult(mResults);
+    if (results.length === 0 && mResults.length === 0) toast.info("কোনো তথ্য পাওয়া যায়নি");
     setRefreshing(false);
+  };
+
+  const handleDownloadAnnualStatement = (member: Member) => {
+    setPdfLoading("annual-" + member.id);
+    try {
+      const doc = new jsPDF();
+      const W = 210;
+      
+      doc.setFillColor(188, 143, 63);
+      doc.rect(0, 0, W, 40, "F");
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "normal");
+      doc.text("Chandanaish Darbar Sharif", W / 2, 20, { align: "center" });
+      doc.setFontSize(12);
+      const currentYear = new Date().getFullYear().toString();
+      doc.text(`Annual Statement - ${currentYear}`, W / 2, 30, { align: "center" });
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      
+      const startY = 55;
+      doc.text(`Member Code: M-${member.id.substring(0, 4).toUpperCase()}`, 15, startY);
+      doc.text(`Name: ${member.name}`, 15, startY + 7);
+      doc.text(`Phone: ${member.phone || "N/A"}`, 15, startY + 14);
+      
+      doc.text(`Joined: ${currentYear}-01-01`, W / 2 + 20, startY);
+      const monthlyRate = member.monthly_due ?? 100;
+      doc.text(`Monthly Rate: BDT ${monthlyRate}`, W / 2 + 20, startY + 7);
+      doc.text(`Generated: ${new Date().toISOString().split('T')[0]}`, W / 2 + 20, startY + 14);
+      
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const targetMonths = months.map((m, i) => `${currentYear}-${String(i + 1).padStart(2, "0")}`);
+      
+      let totalExpected = 0;
+      let totalPaid = 0;
+      
+      const rows = targetMonths.map((tm, idx) => {
+        totalExpected += monthlyRate;
+        const monthContributions = contributions.filter(c => (c.name?.toLowerCase() || "") === (member.name?.toLowerCase() || "") && c.target_month === tm);
+        const paidAmount = monthContributions.reduce((s, c) => s + c.amount, 0);
+        totalPaid += paidAmount;
+        
+        const status = paidAmount >= monthlyRate ? "PAID" : "DUE";
+        const dateStr = monthContributions.length > 0 ? new Date(monthContributions[0].created_at).toISOString().split('T')[0] : "-";
+        const method = monthContributions.length > 0 ? (monthContributions[0].payment_method || "cash") : "-";
+        
+        return [
+          months[idx],
+          `BDT ${monthlyRate}`,
+          `BDT ${paidAmount}`,
+          status,
+          dateStr,
+          method
+        ];
+      });
+      
+      autoTable(doc, {
+        startY: startY + 25,
+        head: [["Month", "Expected", "Paid", "Status", "Date", "Ref / Method"]],
+        body: rows,
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4, lineColor: [255, 255, 255], lineWidth: 0.5 },
+        headStyles: { fillColor: [188, 143, 63], textColor: [255, 255, 255], fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [249, 249, 249] },
+        didParseCell: (data) => {
+          if (data.section === 'body' && data.column.index === 3) {
+             const val = String(data.cell.raw);
+             data.cell.styles.fontStyle = 'bold';
+             if (val === 'PAID') data.cell.styles.textColor = [34, 197, 94];
+             else data.cell.styles.textColor = [239, 68, 68];
+          }
+        },
+        margin: { left: 15, right: 15 },
+        foot: [["TOTAL", `BDT ${totalExpected}`, `BDT ${totalPaid}`, { content: `DUE BDT ${totalExpected - totalPaid}`, colSpan: 3 }]],
+        footStyles: { fillColor: [235, 225, 205], textColor: [0, 0, 0], fontStyle: "bold" }
+      });
+      
+      doc.save(`Annual_Statement_${member.name.replace(/\\s+/g, '_')}_${currentYear}.pdf`);
+      toast.success("অ্যানুয়াল স্টেটমেন্ট ডাউনলোড হয়েছে");
+    } catch(err) {
+      console.error(err);
+      toast.error("পিডিএফ তৈরিতে সমস্যা হয়েছে!");
+    }
+    setPdfLoading(null);
   };
 
   const handleExportCSV = () => {
@@ -873,14 +962,32 @@ const CommitteeContributions = () => {
           {activeTab === "search" && (
             <motion.div key="search" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto space-y-6">
               <div className="bg-card p-6 rounded-2xl border border-gold/20 shadow-xl text-center">
-                <h2 className="text-xl font-bold text-gold mb-4">রসিদ ডাউনলোড করুন</h2>
+                <h2 className="text-xl font-bold text-gold mb-4">রসিদ ও অ্যানুয়াল স্টেটমেন্ট ডাউনলোড</h2>
                 <div className="flex flex-col md:flex-row gap-2">
-                  <input type="text" placeholder="নাম বা আইডি..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMemberSearch()} className="flex-1 bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                  <input type="text" placeholder="নাম বা মোবাইল নম্বর..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMemberSearch()} className="flex-1 bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                   <button onClick={handleMemberSearch} disabled={refreshing} className="bg-gold text-primary-foreground px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">{refreshing ? <Loader2 className="animate-spin" /> : <Search size={18} />} খুঁজুন</button>
                 </div>
               </div>
-              {searchResult && (
-                <div className="bg-card rounded-2xl border border-gold/10 overflow-hidden shadow-xl">
+              
+              {searchMemberResult && searchMemberResult.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {searchMemberResult.map(m => (
+                    <div key={m.id} className="bg-card p-5 rounded-2xl border border-gold/10 shadow-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-lg">{m.name}</p>
+                        <p className="text-xs text-muted-foreground">{m.phone || "No Phone"} • {m.area || "No Area"}</p>
+                      </div>
+                      <button onClick={() => handleDownloadAnnualStatement(m)} disabled={pdfLoading === "annual-" + m.id} className="bg-[#BC8F3F] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#a37930] transition-all flex items-center gap-2">
+                        {pdfLoading === "annual-" + m.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} 
+                        Annual Statement
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {searchResult && searchResult.length > 0 && (
+                <div className="bg-card rounded-2xl border border-gold/10 overflow-hidden shadow-xl mt-6">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-gold/5 text-gold font-bold"><tr><th className="p-4">তারিখ</th><th className="p-4">মাস</th><th className="p-4 text-right">পরিমাণ</th><th className="p-4 text-center">রসিদ</th></tr></thead>
                     <tbody className="divide-y divide-gold/10">
