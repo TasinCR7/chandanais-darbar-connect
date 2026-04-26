@@ -85,20 +85,31 @@ const CommitteeContributions = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const isMaster = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com"].includes(session.user.email || "");
-          const isMasterPhone = ["+8801714338533", "+8801819614444", "+8801835674454"].includes(session.user.phone || "");
+          const isMaster = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com", "tasinbook@gmail.com"].includes(session.user.email || "");
+          const isMasterPhone = ["+8801714338533", "+8801819614444", "+8801835674454", "+8801622721996"].includes(session.user.phone || "");
+          
           if (isMaster || isMasterPhone) {
             setIsAdmin(true);
+            fetchData(); // Only fetch if admin
           } else {
             const { data } = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
             setIsAdmin(!!data);
+            if (data) fetchData();
           }
+        } else {
+          // If not admin, maybe fetch limited data for public view
+          // But for this private committee page, we should probably redirect or show error
+          setLoading(false);
+          setRefreshing(false);
         }
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error(err); 
+        setLoading(false);
+        setRefreshing(false);
+      }
     };
     checkAuth();
-    fetchData();
-  }, []);
+  }, [fetchData]);
 
   const fetchData = useCallback(async () => {
     setRefreshing(true);
@@ -539,6 +550,11 @@ const CommitteeContributions = () => {
   };
 
   const handleDownloadBackup = async () => {
+    const masterKey = prompt("সিস্টেম ব্যাকআপ নিতে এডমিন 'মাস্টার কী' প্রদান করুন:");
+    if (masterKey !== "CD1996") {
+      toast.error("ভুল মাস্টার কী! ব্যাকআপ নিতে অনুমতি নেই।");
+      return;
+    }
     setRefreshing(true);
     try {
       const { data: cData } = await supabase.from("committee_contributions").select("*");
@@ -590,7 +606,6 @@ const CommitteeContributions = () => {
   const handleSubmitMember = async (e: FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.from("committee_members").insert([{ name: newMemberName, area: newMemberArea, phone: newMemberPhone, designation: newMemberDesignation }]);
-    if (error) { toast.error("ত্রুটি: " + error.message); } 
     if (error) { toast.error("ত্রুটি: " + error.message); } 
     else { toast.success("সদস্য যুক্ত হয়েছে!"); setNewMemberName(""); setNewMemberPhone(""); setNewMemberDesignation(""); fetchData(); }
   };
