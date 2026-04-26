@@ -1,12 +1,9 @@
-import React, { useState, useEffect, FormEvent, useRef } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import SEO from "../components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { registerBengaliFont } from "@/fonts/bengaliFont";
-import { CommitteeReportTemplate } from "@/components/CommitteeReportTemplate";
 import { 
   FileText, Shield, User as UserIcon, Search, Download, Target, 
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
@@ -14,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { registerBengaliFont } from "../fonts/bengaliFont";
 
 interface Contribution {
   id: string;
@@ -55,8 +53,6 @@ const CommitteeContributions = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
-  const [templateData, setTemplateData] = useState<{ type: any; data: any[]; subtitle: string; meta?: any } | null>(null);
-  const templateRef = useRef<HTMLDivElement>(null);
   
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -126,130 +122,409 @@ const CommitteeContributions = () => {
     }
   };
 
-  const handleDownloadSingleReceipt = async (c: Contribution) => {
-    setPdfLoading(c.id);
-    setTemplateData({ type: 'receipt', data: [c as any], subtitle: "অফিসিয়াল পেমেন্ট রসিদ" });
+  const addPdfHeader = (doc: jsPDF, subtitle: string) => {
+    registerBengaliFont(doc);
+    const W = 210;
+    const H = 297;
     
-    setTimeout(async () => {
-      try {
-        if (!templateRef.current) return;
-        const canvas = await html2canvas(templateRef.current, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-        const imgData = canvas.toDataURL("image/png");
-        const doc = new jsPDF("p", "mm", "a4");
-        const W = doc.internal.pageSize.getWidth();
-        const H = (canvas.height * W) / canvas.width;
-        doc.addImage(imgData, "PNG", 0, 0, W, H);
-        doc.save(`Receipt_${c.id.slice(0, 8).toUpperCase()}.pdf`);
-        toast.success("রসিদ ডাউনলোড হয়েছে");
-      } catch (e) {
-        console.error(e);
-        toast.error("পিডিএফ তৈরিতে সমস্যা হয়েছে!");
-      } finally {
-        setPdfLoading(null);
-        setTemplateData(null);
-      }
-    }, 500);
+    // Page Background / Frame
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(0.8);
+    doc.rect(10, 10, W - 20, H - 20); // Outer gold border
+    doc.setLineWidth(0.2);
+    doc.rect(12, 12, W - 24, H - 24); // Inner thin line
+    
+    // Header Block
+    doc.setFillColor(33, 33, 33);
+    doc.rect(10, 10, W - 20, 45, "F");
+    doc.setFillColor(212, 175, 55);
+    doc.rect(10, 55, W - 20, 2, "F");
+    
+    // Corner Accents
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(1.5);
+    // Top Left
+    doc.line(10, 10, 25, 10); doc.line(10, 10, 10, 25);
+    // Top Right
+    doc.line(W-10, 10, W-25, 10); doc.line(W-10, 10, W-10, 25);
+    // Bottom Left
+    doc.line(10, H-10, 25, H-10); doc.line(10, H-10, 10, H-25);
+    // Bottom Right
+    doc.line(W-10, H-10, W-25, H-10); doc.line(W-10, H-10, W-10, H-25);
+
+    doc.setTextColor(212, 175, 55);
+    doc.setFontSize(24);
+    doc.setFont("NotoSansBengali", "normal");
+    doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 25, { align: "center" });
+    
+    doc.setTextColor(200, 200, 200);
+    doc.setFontSize(9);
+    doc.setFont("NotoSansBengali", "normal");
+    doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | chandanaishdarbarsharif@gmail.com", W / 2, 34, { align: "center" });
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont("NotoSansBengali", "normal");
+    doc.text(subtitle, W / 2, 48, { align: "center" });
   };
 
-  const handleDownloadReport = async () => {
+  const addPdfFooter = (doc: jsPDF) => {
+    const W = 210;
+    const H = 297;
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(0.5);
+    doc.line(20, H - 22, W - 20, H - 22);
+    doc.setFontSize(7);
+    doc.setTextColor(140, 140, 140);
+    doc.setFont("NotoSansBengali", "normal");
+    doc.text("এটি একটি কম্পিউটার জেনারেটেড ডকুমেন্ট। ডিজিটাল কপির জন্য কোনো স্বাক্ষর প্রয়োজন নেই।", W / 2, H - 16, { align: "center" });
+    doc.text("চন্দনাইশ দরবার শরীফ কমিটি | তৈরির সময়: " + new Date().toLocaleString("bn-BD"), W / 2, H - 11, { align: "center" });
+  };
+
+  const handleDownloadSingleReceipt = (c: Contribution) => {
+    setPdfLoading(c.id);
+    try {
+      const doc = new jsPDF();
+      const W = 210;
+      addPdfHeader(doc, "অফিসিয়াল পেমেন্ট রসিদ");
+
+      // Watermark
+      doc.setTextColor(248, 248, 248);
+      doc.setFontSize(60);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("পরিশোধিত", W / 2, 170, { align: "center", angle: 35 });
+
+      // Circular Stamp
+      doc.setDrawColor(212, 175, 55, 0.4);
+      doc.setLineWidth(1);
+      doc.circle(W - 45, 170, 20);
+      doc.circle(W - 45, 170, 18);
+      doc.setFontSize(8);
+      doc.setTextColor(212, 175, 55, 0.6);
+      doc.text("VERIFIED", W - 45, 168, { align: "center" });
+      doc.text("COMMITTEE", W - 45, 173, { align: "center" });
+
+      // Receipt meta
+      const rid = c.id.slice(0, 8).toUpperCase();
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(10);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("রসিদ নম্বর: #" + rid, 20, 68);
+      doc.text("তারিখ: " + new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 68, { align: "right" });
+
+      // Main table
+      const rows = [
+        ["দাতার নাম", c.name || "-"],
+        ["এলাকা/অবস্থান", c.area || "N/A"],
+        ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
+        ["টাকার পরিমাণ", c.amount.toLocaleString("bn-BD") + " BDT"],
+        ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
+        ["ট্রানজেকশন আইডি", c.transaction_id || "N/A"],
+        ["বিশেষ মন্তব্য", c.note || "-"],
+      ];
+      autoTable(doc, {
+        startY: 75,
+        body: rows,
+        theme: "plain",
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 230, 230], lineWidth: 0.1 },
+        columnStyles: {
+          0: { cellWidth: 50, textColor: [100, 100, 100] },
+          1: { fontStyle: "normal", textColor: [20, 20, 20] },
+        },
+        margin: { left: 20, right: 20 },
+        didDrawCell: (data) => {
+           if (data.row.index === 3 && data.column.index === 1) {
+             doc.setFont("NotoSansBengali", "normal");
+             doc.setTextColor(180, 140, 0);
+           }
+        }
+      });
+
+      let curY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Highlighted amount box
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.5);
+      doc.setFillColor(255, 252, 240);
+      doc.roundedRect(20, curY, W - 40, 20, 2, 2, "FD");
+      
+      doc.setTextColor(33, 33, 33);
+      doc.setFontSize(12);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 12);
+      
+      doc.setTextColor(180, 140, 0);
+      doc.setFontSize(18);
+      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 13, { align: "right" });
+      
+      curY += 45;
+
+      // Signatures
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(9);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.line(25, curY, 85, curY);
+      doc.text("সদস্যের স্বাক্ষর", 55, curY + 6, { align: "center" });
+      
+      doc.line(W - 85, curY, W - 25, curY);
+      doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
+
+      addPdfFooter(doc);
+      doc.save("Receipt_" + rid + ".pdf");
+      toast.success("রসিদ ডাউনলোড হয়েছে");
+    } catch (e) {
+      console.error("PDF Error:", e);
+      toast.error("পিডিএফ তৈরিতে সমস্যা হয়েছে!");
+    }
+    setPdfLoading(null);
+  };
+
+  const handleDownloadReport = () => {
     setPdfLoading("report");
-    const balance = monthTotal - monthExpense;
-    const stats = [
-      { label: "মোট সংগ্রহ", value: monthTotal.toLocaleString("bn-BD") + " টাকা" },
-      { label: "মোট খরচ", value: monthExpense.toLocaleString("bn-BD") + " টাকা" },
-      { label: "বর্তমান ব্যালেন্স", value: balance.toLocaleString("bn-BD") + " টাকা" },
-      { label: "লক্ষ্যমাত্রা", value: goalPercentage.toFixed(1) + "%" }
-    ];
+    try {
+      const doc = new jsPDF();
+      const W = 210;
+      addPdfHeader(doc, "সাধারণ আর্থিক প্রতিবেদন");
 
-    setTemplateData({
-      type: 'report',
-      data: filteredByMonth as any,
-      subtitle: "সাধারণ আর্থিক প্রতিবেদন",
-      meta: { stats, month: filterMonth }
-    });
+      // Meta
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("প্রতিবেদনের মাস: " + (filterMonth ? formatMonthBn(filterMonth) : "সকল সময়"), 20, 62);
+      doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 20, 62, { align: "right" });
+      doc.text("মোট এন্ট্রি: " + filteredByMonth.length.toLocaleString("bn-BD"), 20, 68);
 
-    setTimeout(async () => {
-      try {
-        if (!templateRef.current) return;
-        const canvas = await html2canvas(templateRef.current, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
-        const imgData = canvas.toDataURL("image/png");
-        const doc = new jsPDF("p", "mm", "a4");
-        const W = doc.internal.pageSize.getWidth();
-        const H = (canvas.height * W) / canvas.width;
-        
-        let heightLeft = H;
-        let position = 0;
-        const pageH = doc.internal.pageSize.getHeight();
+      // Summary stats cards
+      const balance = monthTotal - monthExpense;
+      const stats = [
+        { label: "মোট সংগ্রহ", value: monthTotal.toLocaleString("bn-BD") },
+        { label: "মোট খরচ", value: monthExpense.toLocaleString("bn-BD") },
+        { label: "বর্তমান ব্যালেন্স", value: balance.toLocaleString("bn-BD") },
+        { label: "লক্ষ্যমাত্রা", value: goalPercentage.toFixed(1) + "%" }
+      ];
 
-        doc.addImage(imgData, "PNG", 0, position, W, H);
-        heightLeft -= pageH;
+      doc.setFillColor(250, 250, 250);
+      doc.setDrawColor(230, 230, 230);
+      
+      stats.forEach((s, i) => {
+        const x = 15 + (i * 46);
+        doc.roundedRect(x, 75, 42, 22, 2, 2, "FD");
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text(s.label, x + 21, 82, { align: "center" });
+        doc.setFontSize(11);
+        doc.setTextColor(33, 33, 33);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text(s.value, x + 21, 91, { align: "center" });
+      });
 
-        while (heightLeft > 0) {
-          position = heightLeft - H;
-          doc.addPage();
-          doc.addImage(imgData, "PNG", 0, position, W, H);
-          heightLeft -= pageH;
-        }
+      // Yearly Progress Bar
+      doc.setDrawColor(212, 175, 55, 0.3);
+      doc.line(15, 105, W-15, 105);
+      doc.setFontSize(8);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("বার্ষিক লক্ষ্যমাত্রা অগ্রগতি: " + currentYearTotal.toLocaleString("bn-BD") + " / " + YEARLY_GOAL.toLocaleString("bn-BD") + " টাকা", 15, 102);
 
-        doc.save(`Financial_Report_${filterMonth || "all"}.pdf`);
-        toast.success("রিপোর্ট ডাউনলোড হয়েছে");
-      } catch (e) {
-        console.error(e);
-        toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
-      } finally {
-        setPdfLoading(null);
-        setTemplateData(null);
+      // Detail header
+      let detailY = 115;
+      doc.setFontSize(12);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.setTextColor(33, 33, 33);
+      doc.text("সংগ্রহের বিস্তারিত তালিকা", 15, detailY);
+      detailY += 5;
+
+      // Full detail table
+      const detailRows = filteredByMonth.map((c, i) => [
+        (i + 1).toLocaleString("bn-BD"),
+        new Date(c.created_at).toLocaleDateString("bn-BD"),
+        c.name,
+        c.area || "-",
+        formatMonthBn(c.target_month),
+        c.amount.toLocaleString("bn-BD"),
+        c.payment_method || "ক্যাশ",
+        c.transaction_id || "-",
+      ]);
+      autoTable(doc, {
+        startY: detailY,
+        head: [["#", "তারিখ", "নাম", "এলাকা", "মাস", "পরিমাণ", "পেমেন্ট", "TrxID"]],
+        body: detailRows,
+        theme: "grid",
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 7.5, cellPadding: 3 },
+        headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [33, 33, 33], textColor: [212, 175, 55], fontSize: 8 },
+        columnStyles: { 0: { cellWidth: 8 }, 5: { halign: "right" } },
+        margin: { left: 15, right: 15 },
+        didDrawPage: () => { addPdfFooter(doc); },
+      });
+
+      // Grand total bar
+      const gtY = (doc as any).lastAutoTable.finalY + 8;
+      if (gtY < 270) {
+        doc.setFillColor(212, 175, 55);
+        doc.roundedRect(15, gtY, W - 30, 14, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text("সর্বমোট আয়: " + monthTotal.toLocaleString("bn-BD") + " টাকা | বর্তমান ব্যালেন্স: " + balance.toLocaleString("bn-BD") + " টাকা", W / 2, gtY + 10, { align: "center" });
       }
-    }, 800);
+
+      addPdfFooter(doc);
+      doc.save("Financial_Report_" + (filterMonth || "all") + ".pdf");
+      toast.success("রিপোর্ট ডাউনলোড হয়েছে");
+    } catch (e) {
+      console.error(e);
+      toast.error("পিডিএফ রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
+    }
+    setPdfLoading(null);
   };
 
-  const handleDownloadAreaReport = async () => {
+  const handleDownloadAreaReport = () => {
     setPdfLoading("area-report");
-    const contributionsByArea: Record<string, any[]> = {};
-    AREAS.forEach(area => {
-      contributionsByArea[area] = contributions.filter(c => c.area === area);
-    });
+    try {
+      const doc = new jsPDF();
+      const W = 210;
+      addPdfHeader(doc, "এলাকা ভিত্তিক অর্থ সংগ্রহ প্রতিবেদন");
 
-    setTemplateData({
-      type: 'area-report',
-      data: contributions,
-      subtitle: "এলাকা ভিত্তিক অর্থ সংগ্রহ প্রতিবেদন",
-      meta: { areas: AREAS, contributionsByArea }
-    });
+      // Meta
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 20, 62, { align: "right" });
+      doc.text("মোট এলাকা: " + AREAS.length.toLocaleString("bn-BD") + " | মোট এন্ট্রি: " + contributions.length.toLocaleString("bn-BD"), 20, 62);
 
-    setTimeout(async () => {
-      try {
-        if (!templateRef.current) return;
-        const canvas = await html2canvas(templateRef.current, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
-        const imgData = canvas.toDataURL("image/png");
-        const doc = new jsPDF("p", "mm", "a4");
-        const W = doc.internal.pageSize.getWidth();
-        const H = (canvas.height * W) / canvas.width;
-        
-        let heightLeft = H;
-        let position = 0;
-        const pageH = doc.internal.pageSize.getHeight();
+      let finalY = 72;
+      let grandTotal = 0;
+      let areaIndex = 0;
 
-        doc.addImage(imgData, "PNG", 0, position, W, H);
-        heightLeft -= pageH;
+      AREAS.forEach((areaName) => {
+        const ac = contributions.filter(c => c.area === areaName);
+        if (ac.length === 0) return;
+        areaIndex++;
+        const areaTotal = ac.reduce((sum, c) => sum + c.amount, 0);
+        grandTotal += areaTotal;
 
-        while (heightLeft > 0) {
-          position = heightLeft - H;
+        if (finalY > 230) {
+          addPdfFooter(doc);
           doc.addPage();
-          doc.addImage(imgData, "PNG", 0, position, W, H);
-          heightLeft -= pageH;
+          registerBengaliFont(doc);
+          doc.setFont("NotoSansBengali", "normal");
+          finalY = 20;
         }
 
-        doc.save(`Area_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
-        toast.success("এলাকা ভিত্তিক রিপোর্ট ডাউনলোড হয়েছে");
-      } catch (e) {
-        console.error(e);
-        toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
-      } finally {
-        setPdfLoading(null);
-        setTemplateData(null);
+        // Area header bar
+        doc.setFillColor(33, 33, 33);
+        doc.roundedRect(15, finalY, W - 30, 12, 2, 2, "F");
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(11);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text(areaIndex.toLocaleString("bn-BD") + ". " + areaName, 20, finalY + 8);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text(ac.length.toLocaleString("bn-BD") + " টি এন্ট্রি | মোট: " + areaTotal.toLocaleString("bn-BD") + " টাকা", W - 20, finalY + 8, { align: "right" });
+        finalY += 16;
+
+        const rows = ac.map((c, i) => [
+          (i + 1).toLocaleString("bn-BD"),
+          new Date(c.created_at).toLocaleDateString("bn-BD"),
+          c.name,
+          formatMonthBn(c.target_month),
+          c.amount.toLocaleString("bn-BD"),
+          c.payment_method || "ক্যাশ",
+          c.transaction_id || "-",
+        ]);
+
+        autoTable(doc, {
+          startY: finalY,
+          head: [["#", "তারিখ", "নাম", "মাস", "টাকা", "পেমেন্ট", "TrxID"]],
+          body: rows,
+          theme: "grid",
+          styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 7.5, cellPadding: 3 },
+          headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [212, 175, 55], textColor: [33, 33, 33], fontSize: 8 },
+          columnStyles: { 0: { cellWidth: 8 }, 4: { halign: "right" } },
+          margin: { left: 15, right: 15 },
+        });
+
+        // Area subtotal
+        const subY = (doc as any).lastAutoTable.finalY;
+        doc.setFillColor(255, 248, 220);
+        doc.rect(15, subY, W - 30, 8, "F");
+        doc.setTextColor(80, 60, 0);
+        doc.setFontSize(9);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text("সাবটোটাল (" + areaName + "): " + areaTotal.toLocaleString("bn-BD") + " টাকা", W - 20, subY + 6, { align: "right" });
+        finalY = subY + 18;
+      });
+
+      // Grand total
+      if (finalY > 260) { 
+        addPdfFooter(doc); 
+        doc.addPage(); 
+        registerBengaliFont(doc);
+        doc.setFont("NotoSansBengali", "normal");
+        finalY = 20; 
       }
-    }, 1000);
+      doc.setFillColor(33, 33, 33);
+      doc.roundedRect(15, finalY, W - 30, 16, 3, 3, "F");
+      doc.setFont("NotoSansBengali", "normal");
+      doc.setTextColor(212, 175, 55);
+      doc.setFontSize(13);
+      doc.text("সর্বমোট সংগ্রহ (সকল এলাকা): " + grandTotal.toLocaleString("bn-BD") + " টাকা", W / 2, finalY + 11, { align: "center" });
+
+      addPdfFooter(doc);
+      doc.save("Area_Report_" + new Date().toISOString().slice(0, 10) + ".pdf");
+      toast.success("এলাকা ভিত্তিক রিপোর্ট ডাউনলোড হয়েছে");
+    } catch (e) {
+      console.error(e);
+      toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
+    }
+    setPdfLoading(null);
+  };
+  
+  const handleDownloadDuesReport = () => {
+    setPdfLoading("dues-report");
+    try {
+      const doc = new jsPDF();
+      const W = 210;
+      addPdfHeader(doc, "বকেয়া চাঁদা (Dues) তালিকা");
+      
+      const monthLabel = filterMonth ? formatMonthBn(filterMonth) : "সকল সময়";
+      const dues = getDuesForMonth(filterMonth);
+      
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(10);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("প্রতিবেদনের মাস: " + monthLabel, 20, 62);
+      doc.text("মোট বকেয়া সদস্য: " + dues.length.toLocaleString("bn-BD"), W - 20, 62, { align: "right" });
+
+      const rows = dues.map((m, i) => [
+        (i + 1).toLocaleString("bn-BD"),
+        m.name,
+        m.area || "-",
+        m.designation || "-",
+        m.phone || "-",
+        "বকেয়া"
+      ]);
+
+      autoTable(doc, {
+        startY: 70,
+        head: [["#", "সদস্যের নাম", "এলাকা", "পদবী", "মোবাইল", "স্ট্যাটাস"]],
+        body: rows,
+        theme: "grid",
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 4 },
+        headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [220, 38, 38], textColor: [255, 255, 255], fontSize: 10 },
+        columnStyles: { 0: { cellWidth: 10 }, 5: { textColor: [220, 38, 38], fontStyle: "normal" } },
+        margin: { left: 15, right: 15 },
+        didDrawPage: () => { addPdfFooter(doc); }
+      });
+
+      addPdfFooter(doc);
+      doc.save(`Dues_Report_${filterMonth}.pdf`);
+      toast.success("বকেয়া রিপোর্ট ডাউনলোড হয়েছে");
+    } catch (e) {
+      console.error(e);
+      toast.error("রিপোর্ট তৈরিতে সমস্যা হয়েছে!");
+    }
+    setPdfLoading(null);
   };
 
   const handleMemberSearch = async () => {
@@ -460,8 +735,16 @@ const CommitteeContributions = () => {
           {activeTab === "dues" && (
             <motion.div key="dues" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 className="text-2xl font-bold text-gold flex items-center gap-3"><AlertCircle className="text-orange-500" /> বকেয়া তালিকা</h2>
-                <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="bg-card border border-gold/10 rounded-xl px-4 py-2 text-sm font-bold" />
+                <div>
+                  <h2 className="text-2xl font-bold text-gold flex items-center gap-3"><AlertCircle className="text-red-500" /> বকেয়া তালিকা</h2>
+                  <p className="text-xs text-muted-foreground mt-1">যারা এখনো {formatMonthBn(filterMonth)} মাসের চাঁদা দেননি</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="bg-card border border-gold/10 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-gold" />
+                  <button onClick={handleDownloadDuesReport} disabled={pdfLoading === "dues-report"} className="bg-red-500 text-white px-5 py-2 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2 hover:bg-red-600 transition-all">
+                    {pdfLoading === "dues-report" ? <Loader2 className="animate-spin" /> : <Download size={16} />} ডাউনলোড বকেয়া তালিকা
+                  </button>
+                </div>
               </div>
               <div className="bg-card rounded-3xl border border-gold/10 overflow-hidden shadow-2xl">
                 <table className="w-full text-left">
@@ -544,7 +827,21 @@ const CommitteeContributions = () => {
                   <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><TrendingUp size={22} /> চাঁদা এন্ট্রি</h3>
                   <form onSubmit={handleSubmitContribution} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                      <div className="relative">
+                        <select value={name} onChange={e => {
+                          const val = e.target.value;
+                          setName(val);
+                          const member = members.find(m => m.name === val);
+                          if (member?.area) setArea(member.area);
+                        }} className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm cursor-pointer appearance-none">
+                          <option value="">দাতার নাম নির্বাচন করুন *</option>
+                          {members.map(m => <option key={m.id} value={m.name}>{m.name} ({m.area || "এলাকা নাই"})</option>)}
+                          <option value="custom">--- নতুন নাম লিখুন ---</option>
+                        </select>
+                        {name === "custom" && (
+                          <input type="text" autoFocus placeholder="নতুন নাম লিখুন..." onBlur={e => setName(e.target.value)} className="absolute inset-0 bg-background border border-gold rounded-xl px-4 py-3 outline-none text-sm" />
+                        )}
+                      </div>
                       <input type="number" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="পরিমাণ *" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -593,16 +890,6 @@ const CommitteeContributions = () => {
         </AnimatePresence>
       </main>
       <div className="fixed bottom-10 right-10 z-[100]"><button className="bg-gold text-white p-5 rounded-full shadow-2xl hover:scale-110 transition-all flex items-center gap-3 font-bold group border-2 border-white/20"><Calculator className="w-7 h-7" /><span className="max-w-0 overflow-hidden group-hover:max-w-[200px] transition-all duration-500 whitespace-nowrap text-sm">হিসাব সহকারী</span></button></div>
-      {/* PDF Template (Hidden) */}
-      {templateData && (
-        <CommitteeReportTemplate
-          ref={templateRef}
-          type={templateData.type}
-          data={templateData.data}
-          subtitle={templateData.subtitle}
-          meta={templateData.meta}
-        />
-      )}
     </div>
   );
 };
