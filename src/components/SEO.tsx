@@ -29,7 +29,7 @@ const BASE_URL = "https://chandanaish-darbar.com";
 const SEO = ({ title, description, canonical, keywords, type = "website", faq, events }: SEOProps) => {
   const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
   const url = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
-  const siteKeywords = keywords || "চন্দনাইশ দরবার শরীফ, দরবার শরীফ, মাইজভান্ডারী, গাউছে জামান আবদুল লতিফ শাহ, সুফিবাদ, ইসলাম, চন্দনাইশ, চট্টগ্রাম, ওরশ, হাদিয়া, দোয়া আবেদন, Chandanaish Darbar Sharif, Maizbhandari, Sufism, Islam, Chattogram, Best Darbar Sharif in Chittagong, Spiritual Center Bangladesh";
+  const siteKeywords = keywords || "চন্দনাইশ দরবার শরীফ, দরবার শরীফ, মাইজভান্ডারী, গাউছে জামান আবদুল লতিফ শাহ, সুফিবাদ, ইসলাম, চন্দনাইশ, চট্টগ্রাম, ওরশ, হাদিয়া, দোয়া আবেদন, আধ্যাত্মিক সাধনা, অলি আল্লাহ, কুতুবুল আলম, ত্বরিকত, সুফি সংগীত, সামা মাহফিল, মাজহাব, আহলে সুন্নাত ওয়াল জামাত, Chandanaish Darbar Sharif, Maizbhandari, Sufism, Islam, Chattogram, Best Darbar Sharif in Chittagong, Spiritual Center Bangladesh, Hazrat Abdul Latif Shah, Maizbhandari Torika, Sufi Shrine Bangladesh, Islamic Spirituality, Chandanaish News, Chattogram Religious Center";
   const ogImage = `${BASE_URL}/logo.png`; 
 
   // Base Schema Markups

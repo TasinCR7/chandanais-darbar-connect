@@ -1,3 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /committee-login
+Disallow: /member-portal
+
 Sitemap: https://chandanaish-darbar.com/sitemap.xml
