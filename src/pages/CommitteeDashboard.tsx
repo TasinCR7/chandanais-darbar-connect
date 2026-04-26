@@ -354,6 +354,28 @@ export default function CommitteeDashboard() {
           </Button>
         </div>
 
+        {/* Committee Rules Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 flex items-start gap-4"
+        >
+          <AlertCircle className="text-amber-500 shrink-0 mt-1" size={24} />
+          <div>
+            <h2 className="text-lg font-bold text-amber-500">কমিটি নিয়ম ও নীতিমালা</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 mt-2">
+              <p className="text-sm text-amber-500/90 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                পরিশোধের সময়: প্রতি মাসের ১০ তারিখের মধ্যে।
+              </p>
+              <p className="text-sm text-amber-500/90 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                সর্বনিম্ন হাদিয়া: ৫০ টাকা (প্রত্যেক সদস্য)।
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Committee Notices Section */}
         {notices.length > 0 && (
           <motion.div 

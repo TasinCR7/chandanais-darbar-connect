@@ -581,17 +581,22 @@ const CommitteeContributions = () => {
 
   const handleSubmitContribution = async (e: FormEvent) => {
     e.preventDefault();
+    const numAmount = Number(amount);
+    if (numAmount < 50) {
+      toast.error("সর্বনিম্ন ৫০ টাকা হাদিয়া প্রদান করতে হবে।");
+      return;
+    }
     const id = crypto.randomUUID();
     const { error } = await supabase.from("committee_contributions").insert([{
-      id, name, amount: Number(amount), area: area || null, note,
+      id, name, amount: numAmount, area: area || null, note,
       target_month: targetMonth, payment_method: paymentMethod, transaction_id: transactionId || null,
     }]);
     if (error) { toast.error("ত্রুটি: " + error.message); } 
     else {
       toast.success("সফল হয়েছে!");
-      const newEntry = { id, name, amount: Number(amount), area: area || null, note, created_at: new Date().toISOString(), target_month: targetMonth, payment_method: paymentMethod, transaction_id: transactionId || null };
+      const newEntry = { id, name, amount: numAmount, area: area || null, note, created_at: new Date().toISOString(), target_month: targetMonth, payment_method: paymentMethod, transaction_id: transactionId || null };
       handleDownloadSingleReceipt(newEntry);
-      setName(""); setAmount(""); setArea(""); setNote(""); setTransactionId(""); fetchData();
+      setName(""); setAmount(""); setArea(""); setNote(""); setTransactionId(""); setPaymentMethod("ক্যাশ (Cash)"); fetchData();
     }
   };
 
@@ -945,6 +950,13 @@ const CommitteeContributions = () => {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-xl">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-6 flex items-start gap-3">
+                    <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={16} />
+                    <div>
+                      <p className="text-amber-500 font-bold text-[10px] uppercase">চাঁদার নিয়মাবলী:</p>
+                      <p className="text-xs text-amber-500/80">প্রতি মাসের ১০ তারিখের মধ্যে সর্বনিম্ন ৫০ টাকা।</p>
+                    </div>
+                  </div>
                   <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><TrendingUp size={22} /> চাঁদা এন্ট্রি</h3>
                   <form onSubmit={handleSubmitContribution} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
