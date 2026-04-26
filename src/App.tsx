@@ -29,6 +29,7 @@ const Committee = lazy(() => import("./pages/Committee"));
 const CommitteeLogin = lazy(() => import("./pages/CommitteeLogin"));
 const CommitteeDashboard = lazy(() => import("./pages/CommitteeDashboard"));
 const BookReader = lazy(() => import("./pages/BookReader"));
+const CommitteeContributions = lazy(() => import("./pages/CommitteeContributions"));
 
 
 const queryClient = new QueryClient({
@@ -72,6 +73,7 @@ const AppContent = () => {
               <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/book" element={<BookReader />} />
+              <Route path="/committee-contributions" element={<CommitteeContributions />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
