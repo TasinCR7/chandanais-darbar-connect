@@ -585,7 +585,22 @@ const CommitteeContributions = () => {
     e.preventDefault();
     const { error } = await supabase.from("committee_members").insert([{ name: newMemberName, area: newMemberArea, phone: newMemberPhone, designation: newMemberDesignation }]);
     if (error) { toast.error("ত্রুটি: " + error.message); } 
+    if (error) { toast.error("ত্রুটি: " + error.message); } 
     else { toast.success("সদস্য যুক্ত হয়েছে!"); setNewMemberName(""); setNewMemberPhone(""); setNewMemberDesignation(""); fetchData(); }
+  };
+
+  const handleDeleteContribution = async (id: string) => {
+    if (!confirm("আপনি কি নিশ্চিতভাবে এই এন্ট্রিটি মুছতে চান?")) return;
+    const { error } = await supabase.from("committee_contributions").delete().eq("id", id);
+    if (error) toast.error("মুছতে সমস্যা হয়েছে: " + error.message);
+    else { toast.success("সফলভাবে মুছে ফেলা হয়েছে"); fetchData(); }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm("আপনি কি নিশ্চিতভাবে এই খরচটি মুছতে চান?")) return;
+    const { error } = await supabase.from("committee_expenses").delete().eq("id", id);
+    if (error) toast.error("মুছতে সমস্যা হয়েছে: " + error.message);
+    else { toast.success("সফলভাবে মুছে ফেলা হয়েছে"); fetchData(); }
   };
 
   const getDuesForMonth = (month: string) => {
@@ -692,8 +707,32 @@ const CommitteeContributions = () => {
                   <ResponsiveContainer width="100%" height="100%"><BarChart data={getMonthlyChartData()}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" fontSize={10} /><YAxis fontSize={10} /><Tooltip /><Bar dataKey="total" fill="#D4AF37" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
                 </div>
                 <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-lg h-[300px]">
-                  <h3 className="text-md font-bold text-gold mb-4">এলাকা ভিত্তিক ডাটা</h3>
+                  <h3 className="text-md font-bold text-gold mb-4 flex items-center gap-2"><PieChartIcon size={18} /> এলাকা ভিত্তিক ডাটা</h3>
                   <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getAreaPieData()} cx="50%" cy="50%" outerRadius={70} dataKey="value">{getAreaPieData().map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: '10px' }} /></PieChart></ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-2xl border border-gold/10 shadow-xl overflow-hidden">
+                <div className="bg-gold/5 p-4 border-b border-gold/10 flex justify-between items-center">
+                  <h3 className="font-bold text-gold flex items-center gap-2"><RefreshCw size={16} /> সাম্প্রতিক চাঁদা প্রদান</h3>
+                  <button onClick={() => setActiveTab("search")} className="text-xs text-gold font-bold hover:underline">সব দেখুন</button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gold/5 text-gold font-bold uppercase text-[10px] tracking-widest">
+                      <tr><th className="p-4">নাম</th><th className="p-4">এলাকা</th><th className="p-4">মাস</th><th className="p-4 text-right">পরিমাণ</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-gold/5">
+                      {contributions.slice(0, 5).map(c => (
+                        <tr key={c.id} className="hover:bg-gold/5 transition-colors">
+                          <td className="p-4 font-bold">{c.name}</td>
+                          <td className="p-4 text-muted-foreground">{c.area || "-"}</td>
+                          <td className="p-4 text-xs font-bold text-muted-foreground uppercase">{formatMonthBn(c.target_month)}</td>
+                          <td className="p-4 text-right font-black text-emerald-600">৳{c.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </motion.div>
@@ -883,6 +922,41 @@ const CommitteeContributions = () => {
                     <input type="text" value={newMemberDesignation} onChange={e => setNewMemberDesignation(e.target.value)} placeholder="পদবী" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                     <button type="submit" className="md:col-span-2 lg:col-span-4 bg-gold text-primary-foreground py-3 rounded-xl font-bold text-md shadow-lg uppercase tracking-widest">সদস্য যুক্ত করুন</button>
                   </form>
+                </div>
+                
+                <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-xl lg:col-span-2">
+                  <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><LayoutGrid size={22} /> সাম্প্রতিক এন্ট্রি ব্যবস্থাপনা</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-gold/5 text-gold font-bold">
+                        <tr><th className="p-3">তারিখ</th><th className="p-3">নাম/টাইটেল</th><th className="p-3">ধরন</th><th className="p-3 text-right">পরিমাণ</th><th className="p-3 text-center">অ্যাকশন</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-gold/5">
+                        {contributions.slice(0, 5).map(c => (
+                          <tr key={c.id}>
+                            <td className="p-3">{new Date(c.created_at).toLocaleDateString()}</td>
+                            <td className="p-3 font-bold">{c.name}</td>
+                            <td className="p-3"><span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-full">চাঁদা</span></td>
+                            <td className="p-3 text-right font-bold">৳{c.amount}</td>
+                            <td className="p-3 text-center">
+                              <button onClick={() => handleDeleteContribution(c.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrendingDown size={14} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                        {expenses.slice(0, 5).map(e => (
+                          <tr key={e.id}>
+                            <td className="p-3">{new Date(e.date).toLocaleDateString()}</td>
+                            <td className="p-3 font-bold">{e.title}</td>
+                            <td className="p-3"><span className="px-2 py-0.5 bg-red-500/10 text-red-600 rounded-full">খরচ</span></td>
+                            <td className="p-3 text-right font-bold">৳{e.amount}</td>
+                            <td className="p-3 text-center">
+                              <button onClick={() => handleDeleteExpense(e.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full"><TrendingDown size={14} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </motion.div>
