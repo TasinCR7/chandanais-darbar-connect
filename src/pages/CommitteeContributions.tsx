@@ -99,37 +99,6 @@ const CommitteeContributions = () => {
   const [duesAdjNote, setDuesAdjNote] = useState("");
   const [editingMemberMonthlyDue, setEditingMemberMonthlyDue] = useState<{id: string, value: string} | null>(null);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const isMaster = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com", "tasinbook@gmail.com"].includes(session.user.email || "");
-          const isMasterPhone = ["+8801714338533", "+8801819614444", "+8801835674454", "+8801622721996"].includes(session.user.phone || "");
-          
-          if (isMaster || isMasterPhone) {
-            setIsAdmin(true);
-            fetchData(); // Only fetch if admin
-          } else {
-            const { data } = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
-            setIsAdmin(!!data);
-            if (data) fetchData();
-          }
-        } else {
-          // If not admin, maybe fetch limited data for public view
-          // But for this private committee page, we should probably redirect or show error
-          setLoading(false);
-          setRefreshing(false);
-        }
-      } catch (err) { 
-        console.error(err); 
-        setLoading(false);
-        setRefreshing(false);
-      }
-    };
-    checkAuth();
-  }, [fetchData]);
-
   const fetchData = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -145,6 +114,35 @@ const CommitteeContributions = () => {
     setRefreshing(false);
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const isMaster = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com", "tasinbook@gmail.com"].includes(session.user.email || "");
+          const isMasterPhone = ["+8801714338533", "+8801819614444", "+8801835674454", "+8801622721996"].includes(session.user.phone || "");
+          
+          if (isMaster || isMasterPhone) {
+            setIsAdmin(true);
+            fetchData();
+          } else {
+            const { data } = await supabase.rpc("has_role", { _user_id: session.user.id, _role: "admin" });
+            setIsAdmin(!!data);
+            if (data) fetchData();
+          }
+        } else {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      } catch (err) { 
+        console.error(err); 
+        setLoading(false);
+        setRefreshing(false);
+      }
+    };
+    checkAuth();
+  }, [fetchData]);
 
   const formatMonthBn = (m: string | null | undefined) => {
     if (!m) return "-";
