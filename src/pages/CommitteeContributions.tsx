@@ -734,15 +734,15 @@ const CommitteeContributions = () => {
   }, [members, contributions, filterMonth, duesAdjustments]);
 
   const currentYear = new Date().getFullYear().toString();
-  const currentYearTotal = useMemo(() => contributions.filter(c => c.created_at.startsWith(currentYear)).reduce((s, c) => s + c.amount, 0), [contributions, currentYear]);
+  const currentYearTotal = useMemo(() => contributions.filter(c => (c.created_at || "").startsWith(currentYear)).reduce((s, c) => s + c.amount, 0), [contributions, currentYear]);
   const goalPercentage = Math.min((currentYearTotal / YEARLY_GOAL) * 100, 100);
-  const filteredByMonth = useMemo(() => contributions.filter(c => !filterMonth || (c.target_month === filterMonth || c.created_at.startsWith(filterMonth))), [contributions, filterMonth]);
+  const filteredByMonth = useMemo(() => contributions.filter(c => !filterMonth || (c.target_month === filterMonth || (c.created_at || "").startsWith(filterMonth))), [contributions, filterMonth]);
   const monthTotal = useMemo(() => filteredByMonth.reduce((s, c) => s + c.amount, 0), [filteredByMonth]);
-  const monthExpense = useMemo(() => expenses.filter(e => e.date.startsWith(filterMonth)).reduce((s, e) => s + e.amount, 0), [expenses, filterMonth]);
+  const monthExpense = useMemo(() => expenses.filter(e => (e.date || "").startsWith(filterMonth)).reduce((s, e) => s + e.amount, 0), [expenses, filterMonth]);
 
   const monthlyChartData = useMemo(() => {
     const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(); d.setMonth(d.getMonth() - i); return d.toISOString().slice(0, 7); }).reverse();
-    return months.map(m => ({ name: m, total: contributions.filter(c => c.target_month === m || c.created_at.startsWith(m)).reduce((s, c) => s + c.amount, 0) }));
+    return months.map(m => ({ name: m, total: contributions.filter(c => c.target_month === m || (c.created_at || "").startsWith(m)).reduce((s, c) => s + c.amount, 0) }));
   }, [contributions]);
 
   const areaPieData = useMemo(() => {
@@ -1005,7 +1005,7 @@ const CommitteeContributions = () => {
                 <table className="w-full text-left">
                   <thead className="bg-red-500/5 text-red-500 font-bold border-b border-gold/10"><tr><th className="p-6">তারিখ</th><th className="p-6">বিবরণ</th><th className="p-6 text-right">পরিমাণ</th></tr></thead>
                   <tbody className="divide-y divide-gold/5">
-                    {expenses.filter(e => !filterMonth || e.date.startsWith(filterMonth)).map(e => (
+                    {expenses.filter(e => !filterMonth || (e.date || "").startsWith(filterMonth)).map(e => (
                       <tr key={e.id} className="hover:bg-red-500/5"><td className="p-6 text-muted-foreground">{new Date(e.date).toLocaleDateString()}</td><td className="p-6 font-bold">{e.title}</td><td className="p-6 text-right font-bold text-red-500">৳{e.amount.toLocaleString()}</td></tr>
                     ))}
                   </tbody>
@@ -1022,7 +1022,7 @@ const CommitteeContributions = () => {
                   <Download size={14} /> PDF রিপোর্ট
                 </button>
               </div>
-              {Object.entries(contributions.filter(c => !filterMonth || (c.target_month === filterMonth || c.created_at.startsWith(filterMonth))).reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + c.amount; return acc; }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).map(([name, total], idx) => (
+              {Object.entries(contributions.filter(c => !filterMonth || (c.target_month === filterMonth || (c.created_at || "").startsWith(filterMonth))).reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + c.amount; return acc; }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).map(([name, total], idx) => (
                 <div key={name} className="bg-card p-6 rounded-3xl border border-gold/10 flex justify-between items-center shadow-xl hover:shadow-gold/5 hover:scale-[1.02] transition-all relative overflow-hidden group">
                   <div className={`absolute left-0 top-0 w-1 h-full ${idx === 0 ? "bg-gold" : "bg-gold/20"}`} />
                   <div className="flex items-center gap-5">
