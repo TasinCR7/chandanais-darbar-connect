@@ -23,19 +23,28 @@ const Gallery = () => {
 
   useEffect(() => {
     const fetchGallery = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase.from("gallery" as any) as any)
+      const { data } = await supabase.from("gallery")
         .select("*")
         .order("created_at", { ascending: false });
       
       if (data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setGalleryItems(data as any as GalleryItem[]);
+        setGalleryItems(data as unknown as GalleryItem[]);
       }
       setLoading(false);
     };
     fetchGallery();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (lightbox === null) return;
+      if (e.key === "Escape") setLightbox(null);
+      if (e.key === "ArrowRight") setLightbox(prev => (prev !== null && prev < filtered.length - 1 ? prev + 1 : prev));
+      if (e.key === "ArrowLeft") setLightbox(prev => (prev !== null && prev > 0 ? prev - 1 : prev));
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightbox, filtered.length]);
 
   const filtered =
     activeCategory === "সকল"
@@ -71,7 +80,9 @@ const Gallery = () => {
 
         {/* Loading / Grid */}
         {loading ? (
-            <PremiumLoader />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+              {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="aspect-video bg-card/50 animate-pulse rounded-lg border border-gold/10" />)}
+            </div>
         ) : filtered.length === 0 ? (
             <div className="text-center py-20 bg-card/50 border border-gold/10 rounded-2xl max-w-2xl mx-auto">
               <ImageIcon className="mx-auto text-gold/30 mb-4" size={48} />

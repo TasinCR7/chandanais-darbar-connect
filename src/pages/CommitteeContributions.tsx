@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent, useCallback, useMemo } from "react";
 import SEO from "../components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -94,13 +94,12 @@ const CommitteeContributions = () => {
           }
         }
       } catch (err) { console.error(err); }
-      setLoading(false);
     };
     checkAuth();
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setRefreshing(true);
     try {
       const { data: cData } = await supabase.from("committee_contributions").select("*").order("created_at", { ascending: false });
@@ -111,7 +110,8 @@ const CommitteeContributions = () => {
       if (mData) setMembers(mData as Member[]);
     } catch (err) { toast.error("তথ্য লোড করতে সমস্যা হয়েছে"); }
     setRefreshing(false);
-  };
+    setLoading(false);
+  }, []);
 
   const formatMonthBn = (m: string | null | undefined) => {
     if (!m) return "-";
@@ -609,21 +609,21 @@ const CommitteeContributions = () => {
   };
 
   const currentYear = new Date().getFullYear().toString();
-  const currentYearTotal = contributions.filter(c => c.created_at.startsWith(currentYear)).reduce((s, c) => s + c.amount, 0);
+  const currentYearTotal = useMemo(() => contributions.filter(c => c.created_at.startsWith(currentYear)).reduce((s, c) => s + c.amount, 0), [contributions, currentYear]);
   const goalPercentage = Math.min((currentYearTotal / YEARLY_GOAL) * 100, 100);
-  const filteredByMonth = contributions.filter(c => !filterMonth || (c.target_month === filterMonth || c.created_at.startsWith(filterMonth)));
-  const monthTotal = filteredByMonth.reduce((s, c) => s + c.amount, 0);
-  const monthExpense = expenses.filter(e => e.date.startsWith(filterMonth)).reduce((s, e) => s + e.amount, 0);
+  const filteredByMonth = useMemo(() => contributions.filter(c => !filterMonth || (c.target_month === filterMonth || c.created_at.startsWith(filterMonth))), [contributions, filterMonth]);
+  const monthTotal = useMemo(() => filteredByMonth.reduce((s, c) => s + c.amount, 0), [filteredByMonth]);
+  const monthExpense = useMemo(() => expenses.filter(e => e.date.startsWith(filterMonth)).reduce((s, e) => s + e.amount, 0), [expenses, filterMonth]);
 
-  const getMonthlyChartData = () => {
+  const monthlyChartData = useMemo(() => {
     const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(); d.setMonth(d.getMonth() - i); return d.toISOString().slice(0, 7); }).reverse();
     return months.map(m => ({ name: m, total: contributions.filter(c => c.target_month === m || c.created_at.startsWith(m)).reduce((s, c) => s + c.amount, 0) }));
-  };
+  }, [contributions]);
 
-  const getAreaPieData = () => {
+  const areaPieData = useMemo(() => {
     const areaStats = contributions.reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + c.amount; return acc; }, {} as Record<string, number>);
     return Object.entries(areaStats).map(([name, value]) => ({ name, value }));
-  };
+  }, [contributions]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -661,7 +661,16 @@ const CommitteeContributions = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 mt-12">
+      <main className="container mx-auto px-4 mt-12 min-h-[60vh]">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-32 bg-card rounded-2xl animate-pulse" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-32 bg-card rounded-2xl animate-pulse" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-32 bg-card rounded-2xl animate-pulse" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-32 bg-card rounded-2xl animate-pulse" />
+            <div className="lg:col-span-4 h-64 bg-card rounded-2xl animate-pulse" />
+          </div>
+        ) : (
         <AnimatePresence mode="wait">
           {activeTab === "overview" && (
             <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -703,12 +712,12 @@ const CommitteeContributions = () => {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-lg h-[300px]">
-                  <h3 className="text-md font-bold text-gold mb-4">মাসিক গ্রাফ</h3>
-                  <ResponsiveContainer width="100%" height="100%"><BarChart data={getMonthlyChartData()}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" fontSize={10} /><YAxis fontSize={10} /><Tooltip /><Bar dataKey="total" fill="#D4AF37" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
+                  <h3 className="text-md font-bold text-gold mb-4 flex items-center gap-2"><BarChart size={18} /> সংগ্রহ প্রবাহ (বিগত ৬ মাস)</h3>
+                  <ResponsiveContainer width="100%" height="100%"><BarChart data={monthlyChartData}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" fontSize={10} /><YAxis fontSize={10} /><Tooltip /><Bar dataKey="total" fill="#D4AF37" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
                 </div>
                 <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-lg h-[300px]">
                   <h3 className="text-md font-bold text-gold mb-4 flex items-center gap-2"><PieChartIcon size={18} /> এলাকা ভিত্তিক ডাটা</h3>
-                  <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getAreaPieData()} cx="50%" cy="50%" outerRadius={70} dataKey="value">{getAreaPieData().map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: '10px' }} /></PieChart></ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={areaPieData} cx="50%" cy="50%" outerRadius={70} dataKey="value">{areaPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: '10px' }} /></PieChart></ResponsiveContainer>
                 </div>
               </div>
 
