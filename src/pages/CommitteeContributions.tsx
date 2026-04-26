@@ -504,7 +504,7 @@ const CommitteeContributions = () => {
       doc.text("মাস: " + monthLabel, 15, 65);
       doc.text("মোট সদস্য: " + members.length.toLocaleString("bn-BD"), W - 15, 65, { align: "right" });
       const duesRows = members.map((m, i) => {
-        const paid = paidSet.has(m.name.toLowerCase());
+        const paid = paidSet.has(m.name?.toLowerCase() || "");
         const monthlyDue = m.monthly_due ?? 100;
         const adjTotal = getMemberAdjTotal(m.name);
         const totalOwed = paid ? 0 : monthlyDue + Math.max(0, adjTotal);
@@ -539,7 +539,7 @@ const CommitteeContributions = () => {
         didDrawPage: () => { addPdfFooter(doc); }
       });
       const pdfFinalY = (doc as any).lastAutoTable.finalY + 10;
-      const totalOwedSum = members.filter(m => !paidSet.has(m.name.toLowerCase()))
+      const totalOwedSum = members.filter(m => !paidSet.has(m.name?.toLowerCase() || ""))
         .reduce((s, m) => s + (m.monthly_due ?? 100) + Math.max(0, getMemberAdjTotal(m.name)), 0);
       if (pdfFinalY < 265) {
         doc.setFillColor(10, 37, 64);
@@ -566,7 +566,7 @@ const CommitteeContributions = () => {
     if (!searchQuery.trim()) { toast.error("আপনার নাম লিখুন"); return; }
     setRefreshing(true);
     await fetchData();
-    const results = contributions.filter(c => (c.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || c.id.toLowerCase().includes(searchQuery.toLowerCase()));
+    const results = contributions.filter(c => (c.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || (c.id?.toLowerCase() || "").includes(searchQuery.toLowerCase()));
     setSearchResult(results);
     if (results.length === 0) toast.info("কোনো তথ্য পাওয়া যায়নি");
     setRefreshing(false);
