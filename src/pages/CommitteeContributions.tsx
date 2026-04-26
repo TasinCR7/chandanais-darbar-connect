@@ -5,9 +5,9 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { 
-  FileText, Shield, User as UserIcon, Search, Download,
+  FileText, Shield, User as UserIcon, Search, Download, Target,
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
-  Settings, PieChart as PieChartIcon, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
+  PieChart as PieChartIcon, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
   MessageCircle, Edit2, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
