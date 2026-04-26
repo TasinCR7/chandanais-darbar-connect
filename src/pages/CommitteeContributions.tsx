@@ -608,6 +608,17 @@ const CommitteeContributions = () => {
     return members.filter(m => !paidMemberNames.has(m.name.toLowerCase()));
   };
 
+  const duesData = useMemo(() => {
+    const paid = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name.toLowerCase()));
+    const unpaid = members.filter(m => !paid.has(m.name.toLowerCase()));
+    return {
+      total: members.length,
+      paidCount: members.length - unpaid.length,
+      dueCount: unpaid.length,
+      list: unpaid
+    };
+  }, [members, contributions, filterMonth]);
+
   const currentYear = new Date().getFullYear().toString();
   const currentYearTotal = useMemo(() => contributions.filter(c => c.created_at.startsWith(currentYear)).reduce((s, c) => s + c.amount, 0), [contributions, currentYear]);
   const goalPercentage = Math.min((currentYearTotal / YEARLY_GOAL) * 100, 100);
@@ -794,23 +805,58 @@ const CommitteeContributions = () => {
                   </button>
                 </div>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-card p-5 rounded-2xl border border-gold/10 shadow-lg text-center">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">মোট সদস্য</p>
+                  <p className="text-2xl font-black text-gold">{duesData.total.toLocaleString("bn-BD")}</p>
+                </div>
+                <div className="bg-card p-5 rounded-2xl border border-emerald-500/20 shadow-lg text-center">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">পরিশোধ করেছেন</p>
+                  <p className="text-2xl font-black text-emerald-600">{duesData.paidCount.toLocaleString("bn-BD")}</p>
+                </div>
+                <div className="bg-card p-5 rounded-2xl border border-red-500/20 shadow-lg text-center">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground">বকেয়া আছে</p>
+                  <p className="text-2xl font-black text-red-600">{duesData.dueCount.toLocaleString("bn-BD")}</p>
+                </div>
+              </div>
+
               <div className="bg-card rounded-3xl border border-gold/10 overflow-hidden shadow-2xl">
                 <table className="w-full text-left">
-                  <thead className="bg-orange-500/5 text-orange-500 font-bold border-b border-gold/10">
-                    <tr><th className="p-6">সদস্যের নাম</th><th className="p-6">এলাকা</th><th className="p-6">পদবী</th><th className="p-6 text-right">স্ট্যাটাস</th></tr>
+                  <thead className="bg-gold/5 border-b border-gold/10">
+                    <tr>
+                      <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">নাম</th>
+                      <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">এলাকা</th>
+                      <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest">পদবী</th>
+                      <th className="p-4 text-xs font-bold text-gold uppercase tracking-widest text-right">অ্যাকশন</th>
+                    </tr>
                   </thead>
                   <tbody className="divide-y divide-gold/5">
-                    {getDuesForMonth(filterMonth).map(m => (
-                      <tr key={m.id} className="hover:bg-orange-500/5">
-                        <td className="p-6 font-bold">{m.name}</td>
-                        <td className="p-6 text-muted-foreground">{m.area || "-"}</td>
-                        <td className="p-6 text-muted-foreground">{m.designation || "-"}</td>
-                        <td className="p-6 text-right"><span className="px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-xs font-bold">বকেয়া</span></td>
+                    {duesData.list.map((m) => (
+                      <tr key={m.id} className="hover:bg-gold/5 transition-colors group">
+                        <td className="p-4 font-bold">{m.name}</td>
+                        <td className="p-4 text-muted-foreground">{m.area || "-"}</td>
+                        <td className="p-4 text-xs font-bold text-muted-foreground uppercase">{m.designation || "-"}</td>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end items-center gap-2">
+                            <span className="text-[10px] font-bold text-red-600 bg-red-500/10 px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">বকেয়া</span>
+                            <a 
+                              href={`https://wa.me/${m.phone?.replace(/\+/g, '')}?text=${encodeURIComponent(`আসসালামু আলাইকুম, ${m.name}। চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের ${formatMonthBn(filterMonth)} মাসের চাঁদা বকেয়া আছে। অনুগ্রহ করে জমা দিন।`)}`}
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="p-2 bg-emerald-500/10 text-emerald-600 rounded-full hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                              title="WhatsApp এ স্মরণ করিয়ে দিন"
+                            >
+                              <MessageCircle size={16} />
+                            </a>
+                          </div>
+                        </td>
                       </tr>
                     ))}
+                    {duesData.list.length === 0 && (
+                      <tr><td colSpan={4} className="p-10 text-center text-muted-foreground italic">সবাই পরিশোধ করেছেন! মাশাআল্লাহ।</td></tr>
+                    )}
                   </tbody>
                 </table>
-                {getDuesForMonth(filterMonth).length === 0 && <div className="p-20 text-center text-green-500 font-bold">সবাই এই মাসের চাঁদা প্রদান করেছেন!</div>}
               </div>
             </motion.div>
           )}
