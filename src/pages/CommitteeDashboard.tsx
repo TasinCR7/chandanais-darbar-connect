@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
 import PremiumLoader from "@/components/PremiumLoader";
 
+import { Download, Share2 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { registerBengaliFont } from "@/fonts/bengaliFont";
+import { formatMonthBn } from "@/utils/dateHelpers";
+
 interface TopicRecord { 
   id: string; 
   title: string; 
@@ -20,9 +26,11 @@ interface TopicRecord {
 interface VoteRecord { id: string; topic_id: string; user_id: string; vote: string; }
 interface CommentRecord { id: string; user_id: string; message: string; created_at: string; }
 interface CommitteeNotice { id: string; title: string; message: string; created_at: string; }
+interface Contribution { id: string; name: string; amount: number; target_month: string; created_at: string; payment_method?: string; transaction_id?: string; }
 
 export default function CommitteeDashboard() {
   const [member, setMember] = useState<{ id: string; name: string; designation: string } | null>(null);
+  const [contributions, setContributions] = useState<Contribution[]>([]);
   const [topics, setTopics] = useState<TopicRecord[]>([]);
   const [votesData, setVotesData] = useState<VoteRecord[]>([]);
   const [commentsList, setCommentsList] = useState<CommentRecord[]>([]);
@@ -49,17 +57,19 @@ export default function CommitteeDashboard() {
       }
       setMember(memberData);
       // 2. Load Active Voting Topics, All Votes, All Comments, and Committee Notices
-      const [topicsRes, votesRes, commentsRes, noticesRes] = await Promise.all([
+      const [topicsRes, votesRes, commentsRes, noticesRes, contributionsRes] = await Promise.all([
         supabase.from("vote_topics").select("*").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("votes").select("*"),
         supabase.from("committee_comments").select("*").order("created_at", { ascending: false }),
         supabase.from("committee_notices").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("committee_contributions").select("*").eq("name", memberData.name).order("created_at", { ascending: false })
       ]);
         
       if (topicsRes.data) setTopics(topicsRes.data);
       if (votesRes.data) setVotesData(votesRes.data);
       if (commentsRes.data) setCommentsList(commentsRes.data);
       if (noticesRes.data) setNotices(noticesRes.data);
+      if (contributionsRes.data) setContributions(contributionsRes.data as Contribution[]);
 
     } catch (err) {
       console.error(err);
@@ -173,6 +183,132 @@ export default function CommitteeDashboard() {
     };
   };
 
+  const totalDeposit = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
+  const currentYear = new Date().getFullYear();
+  const paidMonthsThisYear = contributions.filter(c => c.target_month?.startsWith(currentYear.toString())).map(c => c.target_month);
+  
+  // Calculate due months from Jan to current month
+  const currentMonthNum = new Date().getMonth() + 1;
+  const dueMonths: string[] = [];
+  for (let i = 1; i <= currentMonthNum; i++) {
+    const monthStr = `${currentYear}-${i.toString().padStart(2, '0')}`;
+    if (!paidMonthsThisYear.includes(monthStr)) {
+      dueMonths.push(monthStr);
+    }
+  }
+
+  const generateReceiptPdf = (c: Contribution) => {
+    try {
+      const doc = new jsPDF();
+      registerBengaliFont(doc);
+      const W = 210;
+      const H = 297;
+      
+      // Page Background - White
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, W, H, "F");
+
+      // Header Navy Blue Block
+      doc.setFillColor(10, 37, 64);
+      doc.rect(0, 0, W, 45, "F");
+      
+      // Teal Accent line
+      doc.setFillColor(0, 212, 200);
+      doc.rect(0, 45, W, 2, "F");
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 22, { align: "center" });
+      
+      doc.setTextColor(150, 160, 175);
+      doc.setFontSize(9);
+      doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | info@chandanaishdarbar.org", W / 2, 30, { align: "center" });
+      
+      doc.setFillColor(0, 212, 200);
+      doc.roundedRect(W / 2 - 35, 36, 70, 8, 4, 4, "F");
+      doc.setTextColor(10, 37, 64);
+      doc.setFontSize(11);
+      doc.text("অফিসিয়াল পেমেন্ট রসিদ", W / 2, 42, { align: "center" });
+
+      // Receipt meta
+      const rid = c.id.slice(0, 8).toUpperCase();
+      doc.setTextColor(10, 37, 64);
+      doc.setFontSize(10);
+      doc.text("ইনভয়েস নম্বর:", 20, 65);
+      doc.text("#" + rid, 20, 71);
+      
+      doc.text("ইস্যু তারিখ:", W - 20, 65, { align: "right" });
+      doc.text(new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 71, { align: "right" });
+
+      // Main table
+      const rows = [
+        ["দাতার নাম", c.name || "-"],
+        ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
+        ["টাকার পরিমাণ", c.amount.toLocaleString("bn-BD") + " BDT"],
+        ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
+        ["ট্রানজেকশন আইডি", c.transaction_id || "N/A"],
+      ];
+      autoTable(doc, {
+        startY: 85,
+        body: rows,
+        theme: "grid",
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        columnStyles: {
+          0: { cellWidth: 50, textColor: [100, 110, 125], fillColor: [248, 250, 252] },
+          1: { textColor: [10, 37, 64], fontStyle: "normal" },
+        },
+        margin: { left: 20, right: 20 }
+      });
+
+      let curY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Highlighted amount box
+      doc.setDrawColor(0, 212, 200);
+      doc.setLineWidth(0.5);
+      doc.setFillColor(240, 253, 250);
+      doc.roundedRect(20, curY, W - 40, 24, 3, 3, "FD");
+      
+      doc.setTextColor(10, 37, 64);
+      doc.setFontSize(12);
+      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 15);
+      
+      doc.setTextColor(0, 160, 150);
+      doc.setFontSize(20);
+      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 16, { align: "right" });
+      
+      curY += 45;
+
+      // Signatures
+      doc.setTextColor(100, 110, 125);
+      doc.setFontSize(10);
+      doc.setDrawColor(200, 210, 220);
+      doc.line(25, curY, 85, curY);
+      doc.text("সদস্যের স্বাক্ষর", 55, curY + 6, { align: "center" });
+      
+      doc.line(W - 85, curY, W - 25, curY);
+      doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
+
+      // Paid Stamp
+      doc.setTextColor(0, 212, 200, 0.15);
+      doc.setFontSize(60);
+      doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
+
+      // Footer
+      doc.setDrawColor(230, 235, 241);
+      doc.setLineWidth(0.5);
+      doc.line(15, H - 20, W - 15, H - 20);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 160, 175);
+      doc.text("অফিসিয়াল ডকুমেন্ট • চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেম", 15, H - 14);
+      doc.text("জেনারেট করা হয়েছে: " + new Date().toLocaleString("bn-BD"), W - 15, H - 14, { align: "right" });
+
+      doc.save(`Invoice_${c.target_month}.pdf`);
+    } catch (e) {
+      toast({ title: "ত্রুটি", description: "পিডিএফ তৈরি করা সম্ভব হয়নি।", variant: "destructive" });
+    }
+  };
+
   if (loading) return <PremiumLoader />;
 
   return (
@@ -237,6 +373,59 @@ export default function CommitteeDashboard() {
           </motion.div>
         )}
 
+        {/* My Contributions Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 bg-card/60 backdrop-blur-md border border-gold/20 rounded-3xl p-6 shadow-xl"
+        >
+          <h2 className="text-xl font-heading font-bold text-gold mb-4 flex items-center gap-2">
+            <ShieldCheck size={22} /> আমার অনুদান ও হিসাব
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4">
+              <p className="text-sm font-bold text-emerald-500/70 uppercase">মোট জমা</p>
+              <p className="text-2xl font-black text-emerald-500 mt-1">৳ {totalDeposit.toLocaleString("bn-BD")}</p>
+            </div>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4">
+              <p className="text-sm font-bold text-red-500/70 uppercase">বকেয়া মাস ({currentYear})</p>
+              <p className="text-lg font-bold text-red-500 mt-1">
+                {dueMonths.length > 0 ? dueMonths.map(m => formatMonthBn(m)).join(", ") : "কোনো বকেয়া নেই"}
+              </p>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto bg-background/50 rounded-xl border border-gold/10">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gold/10 text-gold uppercase text-[10px] font-bold tracking-widest">
+                <tr>
+                  <th className="p-4">তারিখ</th>
+                  <th className="p-4">মাস</th>
+                  <th className="p-4">পরিমাণ</th>
+                  <th className="p-4 text-center">রসিদ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gold/10">
+                {contributions.length > 0 ? contributions.map((c) => (
+                  <tr key={c.id} className="hover:bg-gold/5">
+                    <td className="p-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString("bn-BD")}</td>
+                    <td className="p-4 font-bold">{formatMonthBn(c.target_month)}</td>
+                    <td className="p-4 font-black text-emerald-500">৳{c.amount.toLocaleString("bn-BD")}</td>
+                    <td className="p-4 text-center flex justify-center gap-2">
+                      <button onClick={() => generateReceiptPdf(c)} className="p-2 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-primary-foreground transition-colors">
+                        <Download size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground">কোনো অনুদান রেকর্ড পাওয়া যায়নি।</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           

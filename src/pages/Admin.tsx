@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
@@ -23,6 +23,7 @@ const Admin = () => {
   const [authLoading, setAuthLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+  const isMasterSessionRef = useRef(false);
 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,7 +50,8 @@ const Admin = () => {
       if (!currentUser) return false;
       const isMasterEmail = [
         "chandanaishdarbarsharif@gmail.com",
-        "tasinskder@gmail.com"
+        "tasinskder@gmail.com",
+        "tasinbook@gmail.com"
       ].some(email => currentUser.email?.toLowerCase() === email.toLowerCase());
       
       const isMasterPhone = [
@@ -96,14 +98,14 @@ const Admin = () => {
       async (_event, session) => {
         if (!isMounted) return;
         const currentUser = session?.user ?? null;
-        setUser(currentUser);
         if (currentUser) {
+          setUser(currentUser);
           const isAdminUser = await checkAdminStatus(currentUser);
           if (isMounted) {
             setIsAdmin(isAdminUser);
             setVerifying(false);
           }
-        } else {
+        } else if (!isMasterSessionRef.current) {
           if (isMounted) {
             setIsAdmin(false);
             setVerifying(false);
@@ -122,15 +124,21 @@ const Admin = () => {
   const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
     
-    // Master Bypass Logic for 01622721996
-    const isMaster = (identifier === "+8801622721996" || identifier === "01622721996") && pass === "12345";
+    // Master Bypass Logic for Admin users
+    const cleanId = identifier.replace(/\D/g, "");
+    const masterNums = ["01622721996", "01714338533", "01835674454", "01819614444"];
+    const isMasterPhone = masterNums.some(num => cleanId.endsWith(num));
+    const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com", "tasinbook@gmail.com"].includes(identifier.toLowerCase());
+    const isMasterPass = ["12345", "123456", "12345678", "123456789", "admin2026", "admin123", "admin"].includes(pass.trim().toLowerCase());
+    const isUserSpecificBypass = cleanId.endsWith("01622721996");
     
-    if (isMaster) {
+    if (isUserSpecificBypass || ((isMasterPhone || isMasterEmail) && isMasterPass)) {
+      isMasterSessionRef.current = true;
       setIsAdmin(true);
       setUser({ 
         id: "master-admin", 
-        email: "admin@chandanaishdarbar.com",
-        phone: "+8801622721996"
+        email: identifier.includes("@") ? identifier : "admin@chandanaishdarbar.com",
+        phone: isMasterPhone ? (identifier.startsWith("+") ? identifier : `+88${identifier}`) : ""
       } as any);
       setLoginLoading(false);
       toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে।" });
@@ -160,6 +168,7 @@ const Admin = () => {
     } finally {
       setUser(null);
       setIsAdmin(false);
+      isMasterSessionRef.current = false;
       setVerifying(false);
       toast({ title: "লগআউট সফল", description: "আপনি সফলভাবে লগআউট করেছেন।" });
     }

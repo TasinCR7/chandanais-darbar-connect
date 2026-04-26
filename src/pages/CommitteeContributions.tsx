@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 import { 
   FileText, Shield, User as UserIcon, Search, Download, Target, 
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
-  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle
+  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -66,6 +66,7 @@ const CommitteeContributions = () => {
   const [expenseAmount, setExpenseAmount] = useState("");
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [expenseNote, setExpenseNote] = useState("");
+  const [expenseApprovedBy, setExpenseApprovedBy] = useState("");
 
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -127,58 +128,50 @@ const CommitteeContributions = () => {
     const W = 210;
     const H = 297;
     
-    // Page Background / Frame
-    doc.setDrawColor(212, 175, 55);
-    doc.setLineWidth(0.8);
-    doc.rect(10, 10, W - 20, H - 20); // Outer gold border
-    doc.setLineWidth(0.2);
-    doc.rect(12, 12, W - 24, H - 24); // Inner thin line
-    
-    // Header Block
-    doc.setFillColor(33, 33, 33);
-    doc.rect(10, 10, W - 20, 45, "F");
-    doc.setFillColor(212, 175, 55);
-    doc.rect(10, 55, W - 20, 2, "F");
-    
-    // Corner Accents
-    doc.setDrawColor(212, 175, 55);
-    doc.setLineWidth(1.5);
-    // Top Left
-    doc.line(10, 10, 25, 10); doc.line(10, 10, 10, 25);
-    // Top Right
-    doc.line(W-10, 10, W-25, 10); doc.line(W-10, 10, W-10, 25);
-    // Bottom Left
-    doc.line(10, H-10, 25, H-10); doc.line(10, H-10, 10, H-25);
-    // Bottom Right
-    doc.line(W-10, H-10, W-25, H-10); doc.line(W-10, H-10, W-10, H-25);
+    // Page Background - White
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, W, H, "F");
 
-    doc.setTextColor(212, 175, 55);
-    doc.setFontSize(24);
-    doc.setFont("NotoSansBengali", "normal");
-    doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 25, { align: "center" });
+    // Header Navy Blue Block
+    doc.setFillColor(10, 37, 64); // #0A2540
+    doc.rect(0, 0, W, 45, "F");
     
-    doc.setTextColor(200, 200, 200);
+    // Teal Accent line
+    doc.setFillColor(0, 212, 200); // #00D4C8
+    doc.rect(0, 45, W, 2, "F");
+    
+    // Title
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("NotoSansBengali", "normal");
+    doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 22, { align: "center" });
+    
+    // Subtext
+    doc.setTextColor(150, 160, 175);
     doc.setFontSize(9);
     doc.setFont("NotoSansBengali", "normal");
-    doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | chandanaishdarbarsharif@gmail.com", W / 2, 34, { align: "center" });
+    doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | info@chandanaishdarbar.org", W / 2, 30, { align: "center" });
     
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
+    // Subtitle Badge
+    doc.setFillColor(0, 212, 200);
+    doc.roundedRect(W / 2 - 35, 36, 70, 8, 4, 4, "F");
+    doc.setTextColor(10, 37, 64);
+    doc.setFontSize(11);
     doc.setFont("NotoSansBengali", "normal");
-    doc.text(subtitle, W / 2, 48, { align: "center" });
+    doc.text(subtitle, W / 2, 42, { align: "center" });
   };
 
   const addPdfFooter = (doc: jsPDF) => {
     const W = 210;
     const H = 297;
-    doc.setDrawColor(212, 175, 55);
+    doc.setDrawColor(230, 235, 241);
     doc.setLineWidth(0.5);
-    doc.line(20, H - 22, W - 20, H - 22);
-    doc.setFontSize(7);
-    doc.setTextColor(140, 140, 140);
+    doc.line(15, H - 20, W - 15, H - 20);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 160, 175);
     doc.setFont("NotoSansBengali", "normal");
-    doc.text("এটি একটি কম্পিউটার জেনারেটেড ডকুমেন্ট। ডিজিটাল কপির জন্য কোনো স্বাক্ষর প্রয়োজন নেই।", W / 2, H - 16, { align: "center" });
-    doc.text("চন্দনাইশ দরবার শরীফ কমিটি | তৈরির সময়: " + new Date().toLocaleString("bn-BD"), W / 2, H - 11, { align: "center" });
+    doc.text("অফিসিয়াল ডকুমেন্ট • চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেম", 15, H - 14);
+    doc.text("জেনারেট করা হয়েছে: " + new Date().toLocaleString("bn-BD"), W - 15, H - 14, { align: "right" });
   };
 
   const handleDownloadSingleReceipt = (c: Contribution) => {
@@ -188,29 +181,16 @@ const CommitteeContributions = () => {
       const W = 210;
       addPdfHeader(doc, "অফিসিয়াল পেমেন্ট রসিদ");
 
-      // Watermark
-      doc.setTextColor(248, 248, 248);
-      doc.setFontSize(60);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("পরিশোধিত", W / 2, 170, { align: "center", angle: 35 });
-
-      // Circular Stamp
-      doc.setDrawColor(212, 175, 55, 0.4);
-      doc.setLineWidth(1);
-      doc.circle(W - 45, 170, 20);
-      doc.circle(W - 45, 170, 18);
-      doc.setFontSize(8);
-      doc.setTextColor(212, 175, 55, 0.6);
-      doc.text("VERIFIED", W - 45, 168, { align: "center" });
-      doc.text("COMMITTEE", W - 45, 173, { align: "center" });
-
       // Receipt meta
       const rid = c.id.slice(0, 8).toUpperCase();
-      doc.setTextColor(80, 80, 80);
+      doc.setTextColor(10, 37, 64);
       doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
-      doc.text("রসিদ নম্বর: #" + rid, 20, 68);
-      doc.text("তারিখ: " + new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 68, { align: "right" });
+      doc.text("ইনভয়েস নম্বর:", 20, 65);
+      doc.text("#" + rid, 20, 71);
+      
+      doc.text("ইস্যু তারিখ:", W - 20, 65, { align: "right" });
+      doc.text(new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 71, { align: "right" });
 
       // Main table
       const rows = [
@@ -223,60 +203,66 @@ const CommitteeContributions = () => {
         ["বিশেষ মন্তব্য", c.note || "-"],
       ];
       autoTable(doc, {
-        startY: 75,
+        startY: 85,
         body: rows,
-        theme: "plain",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 230, 230], lineWidth: 0.1 },
+        theme: "grid",
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 235, 241], lineWidth: 0.1 },
         columnStyles: {
-          0: { cellWidth: 50, textColor: [100, 100, 100] },
-          1: { fontStyle: "normal", textColor: [20, 20, 20] },
+          0: { cellWidth: 50, textColor: [100, 110, 125], fillColor: [248, 250, 252] },
+          1: { textColor: [10, 37, 64], fontStyle: "normal" },
         },
-        margin: { left: 20, right: 20 },
-        didDrawCell: (data) => {
-           if (data.row.index === 3 && data.column.index === 1) {
-             doc.setFont("NotoSansBengali", "normal");
-             doc.setTextColor(180, 140, 0);
-           }
-        }
+        margin: { left: 20, right: 20 }
       });
 
       let curY = (doc as any).lastAutoTable.finalY + 15;
 
       // Highlighted amount box
-      doc.setDrawColor(212, 175, 55);
+      doc.setDrawColor(0, 212, 200);
       doc.setLineWidth(0.5);
-      doc.setFillColor(255, 252, 240);
-      doc.roundedRect(20, curY, W - 40, 20, 2, 2, "FD");
+      doc.setFillColor(240, 253, 250);
+      doc.roundedRect(20, curY, W - 40, 24, 3, 3, "FD");
       
-      doc.setTextColor(33, 33, 33);
+      doc.setTextColor(10, 37, 64);
       doc.setFontSize(12);
       doc.setFont("NotoSansBengali", "normal");
-      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 12);
+      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 15);
       
-      doc.setTextColor(180, 140, 0);
-      doc.setFontSize(18);
-      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 13, { align: "right" });
+      doc.setTextColor(0, 160, 150);
+      doc.setFontSize(20);
+      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 16, { align: "right" });
       
       curY += 45;
 
       // Signatures
-      doc.setTextColor(60, 60, 60);
-      doc.setFontSize(9);
+      doc.setTextColor(100, 110, 125);
+      doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
+      doc.setDrawColor(200, 210, 220);
       doc.line(25, curY, 85, curY);
       doc.text("সদস্যের স্বাক্ষর", 55, curY + 6, { align: "center" });
       
       doc.line(W - 85, curY, W - 25, curY);
       doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
 
+      // Paid Stamp
+      doc.setTextColor(0, 212, 200, 0.15);
+      doc.setFontSize(60);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
+
       addPdfFooter(doc);
-      doc.save("Receipt_" + rid + ".pdf");
+      doc.save("Invoice_" + rid + ".pdf");
       toast.success("রসিদ ডাউনলোড হয়েছে");
     } catch (e) {
       console.error("PDF Error:", e);
       toast.error("পিডিএফ তৈরিতে সমস্যা হয়েছে!");
     }
     setPdfLoading(null);
+  };
+
+  const handleWhatsAppShare = (c: Contribution) => {
+    const text = `আসসালামু আলাইকুম, ${c.name}।\nআপনার ${formatMonthBn(c.target_month)} মাসের চাঁদা ৳${c.amount} সফলভাবে জমা হয়েছে।\nধন্যবাদ।`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const handleDownloadReport = () => {
@@ -287,12 +273,11 @@ const CommitteeContributions = () => {
       addPdfHeader(doc, "সাধারণ আর্থিক প্রতিবেদন");
 
       // Meta
-      doc.setTextColor(80, 80, 80);
-      doc.setFontSize(9);
+      doc.setTextColor(100, 110, 125);
+      doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
-      doc.text("প্রতিবেদনের মাস: " + (filterMonth ? formatMonthBn(filterMonth) : "সকল সময়"), 20, 62);
-      doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 20, 62, { align: "right" });
-      doc.text("মোট এন্ট্রি: " + filteredByMonth.length.toLocaleString("bn-BD"), 20, 68);
+      doc.text("প্রতিবেদনের মাস: " + (filterMonth ? formatMonthBn(filterMonth) : "সকল সময়"), 15, 65);
+      doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 15, 65, { align: "right" });
 
       // Summary stats cards
       const balance = monthTotal - monthExpense;
@@ -303,36 +288,25 @@ const CommitteeContributions = () => {
         { label: "লক্ষ্যমাত্রা", value: goalPercentage.toFixed(1) + "%" }
       ];
 
-      doc.setFillColor(250, 250, 250);
-      doc.setDrawColor(230, 230, 230);
-      
       stats.forEach((s, i) => {
         const x = 15 + (i * 46);
-        doc.roundedRect(x, 75, 42, 22, 2, 2, "FD");
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.setFont("NotoSansBengali", "normal");
-        doc.text(s.label, x + 21, 82, { align: "center" });
-        doc.setFontSize(11);
-        doc.setTextColor(33, 33, 33);
-        doc.setFont("NotoSansBengali", "normal");
-        doc.text(s.value, x + 21, 91, { align: "center" });
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(x, 75, 42, 24, 3, 3, "FD");
+        doc.setFontSize(9);
+        doc.setTextColor(100, 110, 125);
+        doc.text(s.label, x + 21, 84, { align: "center" });
+        doc.setFontSize(12);
+        doc.setTextColor(10, 37, 64);
+        doc.text(s.value, x + 21, 94, { align: "center" });
       });
-
-      // Yearly Progress Bar
-      doc.setDrawColor(212, 175, 55, 0.3);
-      doc.line(15, 105, W-15, 105);
-      doc.setFontSize(8);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("বার্ষিক লক্ষ্যমাত্রা অগ্রগতি: " + currentYearTotal.toLocaleString("bn-BD") + " / " + YEARLY_GOAL.toLocaleString("bn-BD") + " টাকা", 15, 102);
 
       // Detail header
       let detailY = 115;
-      doc.setFontSize(12);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.setTextColor(33, 33, 33);
+      doc.setFontSize(14);
+      doc.setTextColor(10, 37, 64);
       doc.text("সংগ্রহের বিস্তারিত তালিকা", 15, detailY);
-      detailY += 5;
+      detailY += 6;
 
       // Full detail table
       const detailRows = filteredByMonth.map((c, i) => [
@@ -343,30 +317,19 @@ const CommitteeContributions = () => {
         formatMonthBn(c.target_month),
         c.amount.toLocaleString("bn-BD"),
         c.payment_method || "ক্যাশ",
-        c.transaction_id || "-",
       ]);
       autoTable(doc, {
         startY: detailY,
-        head: [["#", "তারিখ", "নাম", "এলাকা", "মাস", "পরিমাণ", "পেমেন্ট", "TrxID"]],
+        head: [["#", "তারিখ", "নাম", "এলাকা", "মাস", "পরিমাণ", "পেমেন্ট"]],
         body: detailRows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 7.5, cellPadding: 3 },
-        headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [33, 33, 33], textColor: [212, 175, 55], fontSize: 8 },
-        columnStyles: { 0: { cellWidth: 8 }, 5: { halign: "right" } },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 8, cellPadding: 4, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 9 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { cellWidth: 10 }, 5: { halign: "right" } },
         margin: { left: 15, right: 15 },
         didDrawPage: () => { addPdfFooter(doc); },
       });
-
-      // Grand total bar
-      const gtY = (doc as any).lastAutoTable.finalY + 8;
-      if (gtY < 270) {
-        doc.setFillColor(212, 175, 55);
-        doc.roundedRect(15, gtY, W - 30, 14, 2, 2, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.setFont("NotoSansBengali", "normal");
-        doc.text("সর্বমোট আয়: " + monthTotal.toLocaleString("bn-BD") + " টাকা | বর্তমান ব্যালেন্স: " + balance.toLocaleString("bn-BD") + " টাকা", W / 2, gtY + 10, { align: "center" });
-      }
 
       addPdfFooter(doc);
       doc.save("Financial_Report_" + (filterMonth || "all") + ".pdf");
@@ -385,14 +348,13 @@ const CommitteeContributions = () => {
       const W = 210;
       addPdfHeader(doc, "এলাকা ভিত্তিক অর্থ সংগ্রহ প্রতিবেদন");
 
-      // Meta
-      doc.setTextColor(80, 80, 80);
-      doc.setFontSize(9);
+      doc.setTextColor(100, 110, 125);
+      doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
-      doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 20, 62, { align: "right" });
-      doc.text("মোট এলাকা: " + AREAS.length.toLocaleString("bn-BD") + " | মোট এন্ট্রি: " + contributions.length.toLocaleString("bn-BD"), 20, 62);
+      doc.text("তৈরির তারিখ: " + new Date().toLocaleDateString("bn-BD"), W - 15, 65, { align: "right" });
+      doc.text("মোট এলাকা: " + AREAS.length.toLocaleString("bn-BD"), 15, 65);
 
-      let finalY = 72;
+      let finalY = 75;
       let grandTotal = 0;
       let areaIndex = 0;
 
@@ -412,16 +374,15 @@ const CommitteeContributions = () => {
         }
 
         // Area header bar
-        doc.setFillColor(33, 33, 33);
-        doc.roundedRect(15, finalY, W - 30, 12, 2, 2, "F");
-        doc.setTextColor(212, 175, 55);
-        doc.setFontSize(11);
-        doc.setFont("NotoSansBengali", "normal");
-        doc.text(areaIndex.toLocaleString("bn-BD") + ". " + areaName, 20, finalY + 8);
+        doc.setFillColor(10, 37, 64);
+        doc.roundedRect(15, finalY, W - 30, 14, 3, 3, "F");
         doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.text(areaIndex.toLocaleString("bn-BD") + ". " + areaName, 20, finalY + 9);
         doc.setFontSize(10);
-        doc.text(ac.length.toLocaleString("bn-BD") + " টি এন্ট্রি | মোট: " + areaTotal.toLocaleString("bn-BD") + " টাকা", W - 20, finalY + 8, { align: "right" });
-        finalY += 16;
+        doc.setTextColor(0, 212, 200);
+        doc.text("মোট: ৳" + areaTotal.toLocaleString("bn-BD"), W - 20, finalY + 9, { align: "right" });
+        finalY += 18;
 
         const rows = ac.map((c, i) => [
           (i + 1).toLocaleString("bn-BD"),
@@ -430,29 +391,20 @@ const CommitteeContributions = () => {
           formatMonthBn(c.target_month),
           c.amount.toLocaleString("bn-BD"),
           c.payment_method || "ক্যাশ",
-          c.transaction_id || "-",
         ]);
 
         autoTable(doc, {
           startY: finalY,
-          head: [["#", "তারিখ", "নাম", "মাস", "টাকা", "পেমেন্ট", "TrxID"]],
+          head: [["#", "তারিখ", "নাম", "মাস", "টাকা", "পেমেন্ট"]],
           body: rows,
           theme: "grid",
-          styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 7.5, cellPadding: 3 },
-          headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [212, 175, 55], textColor: [33, 33, 33], fontSize: 8 },
-          columnStyles: { 0: { cellWidth: 8 }, 4: { halign: "right" } },
+          styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 8, cellPadding: 4, lineColor: [230, 235, 241], lineWidth: 0.1 },
+          headStyles: { fillColor: [248, 250, 252], textColor: [10, 37, 64], fontSize: 9 },
+          columnStyles: { 0: { cellWidth: 10 }, 4: { halign: "right", textColor: [10, 37, 64] } },
           margin: { left: 15, right: 15 },
         });
 
-        // Area subtotal
-        const subY = (doc as any).lastAutoTable.finalY;
-        doc.setFillColor(255, 248, 220);
-        doc.rect(15, subY, W - 30, 8, "F");
-        doc.setTextColor(80, 60, 0);
-        doc.setFontSize(9);
-        doc.setFont("NotoSansBengali", "normal");
-        doc.text("সাবটোটাল (" + areaName + "): " + areaTotal.toLocaleString("bn-BD") + " টাকা", W - 20, subY + 6, { align: "right" });
-        finalY = subY + 18;
+        finalY = (doc as any).lastAutoTable.finalY + 12;
       });
 
       // Grand total
@@ -463,12 +415,11 @@ const CommitteeContributions = () => {
         doc.setFont("NotoSansBengali", "normal");
         finalY = 20; 
       }
-      doc.setFillColor(33, 33, 33);
-      doc.roundedRect(15, finalY, W - 30, 16, 3, 3, "F");
-      doc.setFont("NotoSansBengali", "normal");
-      doc.setTextColor(212, 175, 55);
-      doc.setFontSize(13);
-      doc.text("সর্বমোট সংগ্রহ (সকল এলাকা): " + grandTotal.toLocaleString("bn-BD") + " টাকা", W / 2, finalY + 11, { align: "center" });
+      doc.setFillColor(0, 212, 200);
+      doc.roundedRect(15, finalY, W - 30, 18, 4, 4, "F");
+      doc.setTextColor(10, 37, 64);
+      doc.setFontSize(14);
+      doc.text("সর্বমোট সংগ্রহ (সকল এলাকা): ৳" + grandTotal.toLocaleString("bn-BD"), W / 2, finalY + 12, { align: "center" });
 
       addPdfFooter(doc);
       doc.save("Area_Report_" + new Date().toISOString().slice(0, 10) + ".pdf");
@@ -490,29 +441,29 @@ const CommitteeContributions = () => {
       const monthLabel = filterMonth ? formatMonthBn(filterMonth) : "সকল সময়";
       const dues = getDuesForMonth(filterMonth);
       
-      doc.setTextColor(80, 80, 80);
+      doc.setTextColor(100, 110, 125);
       doc.setFontSize(10);
       doc.setFont("NotoSansBengali", "normal");
-      doc.text("প্রতিবেদনের মাস: " + monthLabel, 20, 62);
-      doc.text("মোট বকেয়া সদস্য: " + dues.length.toLocaleString("bn-BD"), W - 20, 62, { align: "right" });
+      doc.text("প্রতিবেদনের মাস: " + monthLabel, 15, 65);
+      doc.text("মোট বকেয়া সদস্য: " + dues.length.toLocaleString("bn-BD"), W - 15, 65, { align: "right" });
 
       const rows = dues.map((m, i) => [
         (i + 1).toLocaleString("bn-BD"),
         m.name,
         m.area || "-",
-        m.designation || "-",
         m.phone || "-",
         "বকেয়া"
       ]);
 
       autoTable(doc, {
-        startY: 70,
-        head: [["#", "সদস্যের নাম", "এলাকা", "পদবী", "মোবাইল", "স্ট্যাটাস"]],
+        startY: 75,
+        head: [["#", "সদস্যের নাম", "এলাকা", "মোবাইল", "স্ট্যাটাস"]],
         body: rows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 4 },
-        headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [220, 38, 38], textColor: [255, 255, 255], fontSize: 10 },
-        columnStyles: { 0: { cellWidth: 10 }, 5: { textColor: [220, 38, 38], fontStyle: "normal" } },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 5, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        headStyles: { fillColor: [225, 29, 72], textColor: [255, 255, 255], fontSize: 10 },
+        alternateRowStyles: { fillColor: [255, 241, 242] },
+        columnStyles: { 0: { cellWidth: 12 }, 4: { textColor: [225, 29, 72], fontStyle: "normal" } },
         margin: { left: 15, right: 15 },
         didDrawPage: () => { addPdfFooter(doc); }
       });
@@ -558,6 +509,31 @@ const CommitteeContributions = () => {
     link.click();
   };
 
+  const handleDownloadBackup = async () => {
+    setRefreshing(true);
+    try {
+      const { data: cData } = await supabase.from("committee_contributions").select("*");
+      const { data: eData } = await supabase.from("committee_expenses").select("*");
+      const { data: mData } = await supabase.from("committee_members").select("*");
+      const backup = {
+        timestamp: new Date().toISOString(),
+        contributions: cData,
+        expenses: eData,
+        members: mData
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `chandanaish_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      toast.success("সফলভাবে ডাটা ব্যাকআপ ডাউনলোড হয়েছে");
+    } catch (e) {
+      toast.error("ব্যাকআপ নিতে সমস্যা হয়েছে");
+    }
+    setRefreshing(false);
+  };
+
   const handleSubmitContribution = async (e: FormEvent) => {
     e.preventDefault();
     const id = crypto.randomUUID();
@@ -576,9 +552,10 @@ const CommitteeContributions = () => {
 
   const handleSubmitExpense = async (e: FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("committee_expenses").insert([{ title: expenseTitle, amount: Number(expenseAmount), date: expenseDate, note: expenseNote }]);
+    const finalNote = expenseApprovedBy ? `[অনুমোদন: ${expenseApprovedBy}] ${expenseNote}` : expenseNote;
+    const { error } = await supabase.from("committee_expenses").insert([{ title: expenseTitle, amount: Number(expenseAmount), date: expenseDate, note: finalNote }]);
     if (error) { toast.error("ত্রুটি: " + error.message); } 
-    else { toast.success("সফল!"); setExpenseTitle(""); setExpenseAmount(""); fetchData(); }
+    else { toast.success("সফল!"); setExpenseTitle(""); setExpenseAmount(""); setExpenseApprovedBy(""); setExpenseNote(""); fetchData(); }
   };
 
   const handleSubmitMember = async (e: FormEvent) => {
@@ -778,9 +755,14 @@ const CommitteeContributions = () => {
                           <td className="p-4 font-bold text-muted-foreground uppercase text-[10px]">{formatMonthBn(c.target_month)}</td>
                           <td className="p-4 text-right font-bold text-gold">৳{c.amount.toLocaleString()}</td>
                           <td className="p-4 text-center">
-                            <button onClick={() => handleDownloadSingleReceipt(c)} disabled={pdfLoading === c.id} className="p-2 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-white transition-all">
-                              {pdfLoading === c.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-                            </button>
+                            <div className="flex justify-center gap-2">
+                              <button onClick={() => handleDownloadSingleReceipt(c)} disabled={pdfLoading === c.id} className="p-2 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-white transition-all" title="ডাউনলোড">
+                                {pdfLoading === c.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                              </button>
+                              <button onClick={() => handleWhatsAppShare(c)} className="p-2 bg-emerald-500/10 text-emerald-600 rounded-full hover:bg-emerald-500 hover:text-white transition-all shadow-sm" title="WhatsApp এ শেয়ার">
+                                <Share2 size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -914,6 +896,7 @@ const CommitteeContributions = () => {
                   <button onClick={handleDownloadReport} disabled={pdfLoading === "report"} className="bg-gold text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2">{pdfLoading === "report" ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} জেনারেল রিপোর্ট</button>
                   <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2">{pdfLoading === "area-report" ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} এলাকা রিপোর্ট</button>
                   <button onClick={handleExportCSV} className="bg-green-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2"><FileSpreadsheet size={16} /> সিএসভি</button>
+                  <button onClick={handleDownloadBackup} disabled={refreshing} className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2"><Database size={16} /> ডাটা ব্যাকআপ</button>
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -961,6 +944,10 @@ const CommitteeContributions = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <input type="number" required value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} placeholder="পরিমাণ *" className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
                       <input type="date" required value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input type="text" value={expenseApprovedBy} onChange={e => setExpenseApprovedBy(e.target.value)} placeholder="অনুমোদনকারী (ঐচ্ছিক)" className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
+                      <input type="text" value={expenseNote} onChange={e => setExpenseNote(e.target.value)} placeholder="মন্তব্য (ঐচ্ছিক)" className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
                     </div>
                     <button type="submit" className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl uppercase tracking-widest">রেকর্ড করুন</button>
                   </form>
