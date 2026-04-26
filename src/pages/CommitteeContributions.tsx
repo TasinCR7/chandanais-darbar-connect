@@ -708,13 +708,27 @@ const CommitteeContributions = () => {
 
   const duesData = useMemo(() => {
     const paid = new Set(contributions.filter(c => c.target_month === filterMonth).map(c => c.name?.toLowerCase() || ""));
-    const unpaid = members.filter(m => !paid.has(m.name?.toLowerCase() || ""));
-    const totalDuesAmount = unpaid.reduce((s, m) => s + (m.monthly_due ?? 100) + Math.max(0, getMemberAdjTotal(m.name)), 0);
+    
+    const list = members.filter(m => {
+      const isPaidThisMonth = paid.has(m.name?.toLowerCase() || "");
+      const adjTotal = getMemberAdjTotal(m.name);
+      const monthlyDue = m.monthly_due ?? 100;
+      const totalOwed = (isPaidThisMonth ? 0 : monthlyDue) + Math.max(0, adjTotal);
+      return totalOwed > 0;
+    });
+
+    const totalDuesAmount = list.reduce((s, m) => {
+      const isPaidThisMonth = paid.has(m.name?.toLowerCase() || "");
+      const adjTotal = getMemberAdjTotal(m.name);
+      const monthlyDue = m.monthly_due ?? 100;
+      return s + (isPaidThisMonth ? 0 : monthlyDue) + Math.max(0, adjTotal);
+    }, 0);
+
     return {
       total: members.length,
-      paidCount: members.length - unpaid.length,
-      dueCount: unpaid.length,
-      list: unpaid,
+      paidCount: members.length - list.length,
+      dueCount: list.length,
+      list,
       totalDuesAmount,
     };
   }, [members, contributions, filterMonth, duesAdjustments]);
@@ -1213,9 +1227,6 @@ const CommitteeContributions = () => {
           </motion.div>
         </div>
       )}
-
-
-      <div className="fixed bottom-10 right-10 z-[100]"><button className="bg-gold text-white p-5 rounded-full shadow-2xl hover:scale-110 transition-all flex items-center gap-3 font-bold group border-2 border-white/20"><Calculator className="w-7 h-7" /><span className="max-w-0 overflow-hidden group-hover:max-w-[200px] transition-all duration-500 whitespace-nowrap text-sm">হিসাব সহকারী</span></button></div>
     </div>
   );
 };
