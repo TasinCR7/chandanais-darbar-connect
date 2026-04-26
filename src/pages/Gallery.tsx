@@ -103,7 +103,7 @@ const Gallery = () => {
               >
                 <img
                   src={item.url}
-                  alt={item.caption || ""}
+                  alt={item.caption || "চন্দনাইশ দরবার শরীফ গ্যালারি ছবি"}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
                 />
