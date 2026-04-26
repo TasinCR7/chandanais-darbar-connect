@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 import { 
   FileText, Shield, User as UserIcon, Search, Download, Target, 
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
-  Settings, PieChart as PieChartIcon, Calculator, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
+  Settings, PieChart as PieChartIcon, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
   MessageCircle, Edit2, PlusCircle, X, MinusCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -276,9 +276,9 @@ const CommitteeContributions = () => {
       doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
 
       // Paid Stamp
-      doc.setTextColor(230, 245, 245);
+      doc.setTextColor(16, 185, 129);
       doc.setFontSize(60);
-      doc.setFont("NotoSansBengali", "normal");
+      doc.setFont("helvetica", "bold");
       doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
 
       addPdfFooter(doc);
@@ -580,33 +580,47 @@ const CommitteeContributions = () => {
     try {
       const doc = new jsPDF();
       const W = 210;
-      
-      doc.setFillColor(188, 143, 63);
-      doc.rect(0, 0, W, 40, "F");
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "normal");
-      doc.text("Chandanaish Darbar Sharif", W / 2, 20, { align: "center" });
-      doc.setFontSize(12);
       const currentYear = new Date().getFullYear().toString();
-      doc.text(`Annual Statement - ${currentYear}`, W / 2, 30, { align: "center" });
-      
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(10);
-      
-      const startY = 55;
-      doc.text(`Member Code: M-${member.id.substring(0, 4).toUpperCase()}`, 15, startY);
-      doc.text(`Name: ${member.name}`, 15, startY + 7);
-      doc.text(`Phone: ${member.phone || "N/A"}`, 15, startY + 14);
-      
-      doc.text(`Joined: ${currentYear}-01-01`, W / 2 + 20, startY);
       const monthlyRate = member.monthly_due ?? 100;
-      doc.text(`Monthly Rate: BDT ${monthlyRate}`, W / 2 + 20, startY + 7);
-      doc.text(`Generated: ${new Date().toISOString().split('T')[0]}`, W / 2 + 20, startY + 14);
       
-      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      const targetMonths = months.map((m, i) => `${currentYear}-${String(i + 1).padStart(2, "0")}`);
+      // --- Professional Header ---
+      addPdfHeader(doc, "বার্ষিক বিবরণী — " + currentYear);
+
+      // --- Member Info Section ---
+      const startY = 58;
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(15, startY - 5, W - 30, 30, 3, 3, "F");
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(15, startY - 5, W - 30, 30, 3, 3, "S");
+      
+      doc.setTextColor(100, 110, 125);
+      doc.setFontSize(9);
+      doc.setFont("NotoSansBengali", "normal");
+      doc.text("সদস্য কোড:", 20, startY + 2);
+      doc.text("নাম:", 20, startY + 9);
+      doc.text("মোবাইল:", 20, startY + 16);
+      
+      doc.setTextColor(10, 37, 64);
+      doc.setFontSize(10);
+      doc.text("M-" + member.id.substring(0, 6).toUpperCase(), 55, startY + 2);
+      doc.text(member.name, 55, startY + 9);
+      doc.text(member.phone || "N/A", 55, startY + 16);
+      
+      doc.setTextColor(100, 110, 125);
+      doc.setFontSize(9);
+      doc.text("এলাকা:", W / 2 + 15, startY + 2);
+      doc.text("মাসিক চাঁদা:", W / 2 + 15, startY + 9);
+      doc.text("তৈরির তারিখ:", W / 2 + 15, startY + 16);
+      
+      doc.setTextColor(10, 37, 64);
+      doc.setFontSize(10);
+      doc.text(member.area || "-", W / 2 + 50, startY + 2);
+      doc.text("৳" + monthlyRate.toLocaleString("bn-BD"), W / 2 + 50, startY + 9);
+      doc.text(new Date().toLocaleDateString("bn-BD"), W / 2 + 50, startY + 16);
+
+      // --- Monthly Breakdown Table ---
+      const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+      const targetMonths = bnMonths.map((_, i) => `${currentYear}-${String(i + 1).padStart(2, "0")}`);
       
       let totalExpected = 0;
       let totalPaid = 0;
@@ -617,43 +631,60 @@ const CommitteeContributions = () => {
         const paidAmount = monthContributions.reduce((s, c) => s + c.amount, 0);
         totalPaid += paidAmount;
         
-        const status = paidAmount >= monthlyRate ? "PAID" : "DUE";
-        const dateStr = monthContributions.length > 0 ? new Date(monthContributions[0].created_at).toISOString().split('T')[0] : "-";
-        const method = monthContributions.length > 0 ? (monthContributions[0].payment_method || "cash") : "-";
+        const isPaid = paidAmount >= monthlyRate;
+        const dateStr = monthContributions.length > 0 ? new Date(monthContributions[0].created_at).toLocaleDateString("bn-BD") : "-";
+        const method = monthContributions.length > 0 ? (monthContributions[0].payment_method || "ক্যাশ") : "-";
         
         return [
-          months[idx],
-          `BDT ${monthlyRate}`,
-          `BDT ${paidAmount}`,
-          status,
+          bnMonths[idx],
+          "৳" + monthlyRate.toLocaleString("bn-BD"),
+          "৳" + paidAmount.toLocaleString("bn-BD"),
+          isPaid ? "✓ পরিশোধ" : "□ বকেয়া",
           dateStr,
           method
         ];
       });
       
       autoTable(doc, {
-        startY: startY + 25,
-        head: [["Month", "Expected", "Paid", "Status", "Date", "Ref / Method"]],
+        startY: startY + 32,
+        head: [["মাস", "প্রত্যাশিত", "পরিশোধ", "স্ট্যাটাস", "তারিখ", "পদ্ধতি"]],
         body: rows,
         theme: "grid",
-        styles: { fontSize: 9, cellPadding: 4, lineColor: [255, 255, 255], lineWidth: 0.5 },
-        headStyles: { fillColor: [188, 143, 63], textColor: [255, 255, 255], fontStyle: "bold" },
-        alternateRowStyles: { fillColor: [249, 249, 249] },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 9, cellPadding: 5, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        headStyles: { fillColor: [10, 37, 64], textColor: [255, 255, 255], fontSize: 9, fontStyle: "normal" },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
         didParseCell: (data) => {
           if (data.section === 'body' && data.column.index === 3) {
-             const val = String(data.cell.raw);
-             data.cell.styles.fontStyle = 'bold';
-             if (val === 'PAID') data.cell.styles.textColor = [34, 197, 94];
-             else data.cell.styles.textColor = [239, 68, 68];
+            const val = String(data.cell.raw);
+            if (val.includes("✓")) data.cell.styles.textColor = [16, 185, 129];
+            else data.cell.styles.textColor = [225, 29, 72];
           }
         },
         margin: { left: 15, right: 15 },
-        foot: [["TOTAL", `BDT ${totalExpected}`, `BDT ${totalPaid}`, { content: `DUE BDT ${totalExpected - totalPaid}`, colSpan: 3 }]],
-        footStyles: { fillColor: [235, 225, 205], textColor: [0, 0, 0], fontStyle: "bold" }
+        didDrawPage: () => { addPdfFooter(doc); }
       });
       
-      doc.save(`Annual_Statement_${member.name.replace(/\\s+/g, '_')}_${currentYear}.pdf`);
-      toast.success("অ্যানুয়াল স্টেটমেন্ট ডাউনলোড হয়েছে");
+      // --- Summary Footer Block ---
+      const totalDue = totalExpected - totalPaid;
+      const pdfFinalY = (doc as any).lastAutoTable.finalY + 8;
+      
+      if (pdfFinalY < 255) {
+        doc.setFillColor(10, 37, 64);
+        doc.roundedRect(15, pdfFinalY, W - 30, 28, 4, 4, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont("NotoSansBengali", "normal");
+        doc.text("মোট প্রত্যাশিত: ৳" + totalExpected.toLocaleString("bn-BD"), 25, pdfFinalY + 10);
+        doc.text("মোট পরিশোধ: ৳" + totalPaid.toLocaleString("bn-BD"), 25, pdfFinalY + 20);
+        
+        doc.setTextColor(totalDue > 0 ? 225 : 0, totalDue > 0 ? 29 : 212, totalDue > 0 ? 72 : 200);
+        doc.setFontSize(14);
+        doc.text(totalDue > 0 ? "বকেয়া: ৳" + totalDue.toLocaleString("bn-BD") : "সম্পূর্ণ পরিশোধিত ✓", W - 25, pdfFinalY + 16, { align: "right" });
+      }
+      
+      addPdfFooter(doc);
+      doc.save(`Annual_Statement_${member.name.replace(/\s+/g, '_')}_${currentYear}.pdf`);
+      toast.success("বার্ষিক বিবরণী ডাউনলোড হয়েছে");
     } catch(err) {
       console.error(err);
       toast.error("পিডিএফ তৈরিতে সমস্যা হয়েছে!");
@@ -970,27 +1001,32 @@ const CommitteeContributions = () => {
               </div>
               
               {searchMemberResult && searchMemberResult.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {searchMemberResult.map(m => (
-                    <div key={m.id} className="bg-card p-5 rounded-2xl border border-gold/10 shadow-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-lg">{m.name}</p>
-                        <p className="text-xs text-muted-foreground">{m.phone || "No Phone"} • {m.area || "No Area"}</p>
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">সদস্য তালিকা ({searchMemberResult.length} জন)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {searchMemberResult.map(m => (
+                      <div key={m.id} className="bg-card p-5 rounded-2xl border border-gold/10 shadow-lg flex justify-between items-center hover:shadow-gold/10 hover:scale-[1.01] transition-all">
+                        <div>
+                          <p className="font-bold text-lg">{m.name}</p>
+                          <p className="text-xs text-muted-foreground">{m.phone || "ফোন নেই"} • {m.area || "এলাকা নেই"} • মাসিক: ৳{(m.monthly_due ?? 100).toLocaleString("bn-BD")}</p>
+                        </div>
+                        <button onClick={() => handleDownloadAnnualStatement(m)} disabled={pdfLoading === "annual-" + m.id} className="bg-[#0A2540] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#0d3060] transition-all flex items-center gap-2 shadow-lg">
+                          {pdfLoading === "annual-" + m.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} 
+                          বার্ষিক বিবরণী
+                        </button>
                       </div>
-                      <button onClick={() => handleDownloadAnnualStatement(m)} disabled={pdfLoading === "annual-" + m.id} className="bg-[#BC8F3F] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#a37930] transition-all flex items-center gap-2">
-                        {pdfLoading === "annual-" + m.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} 
-                        Annual Statement
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
 
               {searchResult && searchResult.length > 0 && (
-                <div className="bg-card rounded-2xl border border-gold/10 overflow-hidden shadow-xl mt-6">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-gold/5 text-gold font-bold"><tr><th className="p-4">তারিখ</th><th className="p-4">মাস</th><th className="p-4 text-right">পরিমাণ</th><th className="p-4 text-center">রসিদ</th></tr></thead>
-                    <tbody className="divide-y divide-gold/10">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">পেমেন্ট ইতিহাস ({searchResult.length} টি)</h3>
+                  <div className="bg-card rounded-2xl border border-gold/10 overflow-hidden shadow-xl">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gold/5 text-gold font-bold"><tr><th className="p-4">তারিখ</th><th className="p-4">মাস</th><th className="p-4 text-right">পরিমাণ</th><th className="p-4 text-center">রসিদ</th></tr></thead>
+                      <tbody className="divide-y divide-gold/10">
                       {searchResult.map(c => (
                         <tr key={c.id} className="hover:bg-gold/5">
                           <td className="p-4">{new Date(c.created_at).toLocaleDateString()}</td>
@@ -1010,6 +1046,7 @@ const CommitteeContributions = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
                 </div>
               )}
             </motion.div>
