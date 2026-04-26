@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { 
-  FileText, Shield, User as UserIcon, Search, Download, Target, 
+  FileText, Shield, User as UserIcon, Search, Download,
   Award, TrendingDown, TrendingUp, Wallet, LayoutGrid, 
   Settings, PieChart as PieChartIcon, FileSpreadsheet, Printer, Loader2, RefreshCw, AlertCircle, Share2, Database,
-  MessageCircle, Edit2, PlusCircle, X, MinusCircle
+  MessageCircle, Edit2, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -226,11 +226,11 @@ const CommitteeContributions = () => {
       // Main table
       const rows = [
         ["দাতার নাম", c.name || "-"],
-        ["এলাকা/অবস্থান", c.area || "N/A"],
+        ["এলাকা/অবস্থান", c.area || "নেই"],
         ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
-        ["টাকার পরিমাণ", c.amount.toLocaleString("bn-BD") + " BDT"],
+        ["টাকার পরিমাণ", "৳" + c.amount.toLocaleString("bn-BD")],
         ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
-        ["ট্রানজেকশন আইডি", c.transaction_id || "N/A"],
+        ["ট্রানজেকশন আইডি", c.transaction_id || "নেই"],
         ["বিশেষ মন্তব্য", c.note || "-"],
       ];
       autoTable(doc, {
@@ -374,11 +374,11 @@ const CommitteeContributions = () => {
         doc.text(`বর্তমান ব্যালেন্স: ৳${balance.toLocaleString("bn-BD")}`, 25, finalY + 18);
         
         // Mini Progress line
-        doc.setFillColor(0, 212, 200);
         const barWidth = (W - 140);
         const progress = Math.min(goalPercentage / 100, 1) * barWidth;
+        doc.setFillColor(50, 60, 80);
         doc.rect(W - 15 - barWidth - 10, finalY + 14, barWidth, 2, "F");
-        doc.setFillColor(255, 255, 255);
+        doc.setFillColor(0, 212, 200);
         doc.rect(W - 15 - barWidth - 10, finalY + 14, progress, 2, "F");
         doc.setFontSize(10);
         doc.text(`লক্ষ্যমাত্রা: ${goalPercentage.toFixed(1)}%`, W - 25, finalY + 10, { align: "right" });
@@ -411,8 +411,9 @@ const CommitteeContributions = () => {
       let grandTotal = 0;
       let areaIndex = 0;
 
-      AREAS.forEach((areaName) => {
-        const ac = contributions.filter(c => c.area === areaName);
+      const allAreas = [...new Set([...AREAS, ...contributions.map(c => c.area || "অন্যান্য")])];
+      allAreas.forEach((areaName) => {
+        const ac = contributions.filter(c => (c.area || "অন্যান্য") === areaName);
         if (ac.length === 0) return;
         areaIndex++;
         const areaTotal = ac.reduce((sum, c) => sum + c.amount, 0);
@@ -548,8 +549,8 @@ const CommitteeContributions = () => {
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
         doc.setFont("NotoSansBengali", "normal");
-        doc.text("পরিশোধ: " + paidSet.size + " জন", 25, pdfFinalY + 9);
-        doc.text("বকেয়া: " + (members.length - paidSet.size) + " জন", 25, pdfFinalY + 17);
+        doc.text("পরিশোধ: " + paidSet.size.toLocaleString("bn-BD") + " জন", 25, pdfFinalY + 9);
+        doc.text("বকেয়া: " + (members.length - paidSet.size).toLocaleString("bn-BD") + " জন", 25, pdfFinalY + 17);
         doc.setTextColor(0, 212, 200);
         doc.setFontSize(12);
         doc.text("মোট বকেয়া: " + totalOwedSum.toLocaleString("bn-BD") + " ৳", W - 25, pdfFinalY + 14, { align: "right" });
@@ -817,11 +818,6 @@ const CommitteeContributions = () => {
     const { error } = await supabase.from("committee_members").update({ monthly_due: numVal }).eq("id", memberId);
     if (error) { toast.error("আপডেট ব্যর্থ: " + error.message); }
     else { toast.success("মাসিক চাঁদা আপডেট হয়েছে!"); setEditingMemberMonthlyDue(null); fetchData(); }
-  };
-
-  const getDuesForMonth = (month: string) => {
-    const paidMemberNames = new Set(contributions.filter(c => c.target_month === month).map(c => c.name?.toLowerCase() || ""));
-    return members.filter(m => !paidMemberNames.has(m.name?.toLowerCase() || ""));
   };
 
   const duesData = useMemo(() => {
@@ -1120,7 +1116,7 @@ const CommitteeContributions = () => {
                                 </button>
                               )}
                               <a
-                                href={`https://wa.me/${m.phone?.replace(/\+/g, '')}?text=${encodeURIComponent(`আসসালামু আলাইকুম, ${m.name}। চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের ${formatMonthBn(filterMonth)} মাসের চাঁদা বকেয়া আছে (৳${totalOwed}৳)। অনুগ্রহ করে জমা দিন।`)}`}
+                                href={`https://wa.me/${m.phone?.replace(/\+/g, '')}?text=${encodeURIComponent(`আসসালামু আলাইকুম, ${m.name}। চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের ${formatMonthBn(filterMonth)} মাসের চাঁদা বকেয়া আছে (৳${totalOwed})। অনুগ্রহ করে জমা দিন।`)}`}
                                 target="_blank" rel="noreferrer"
                                 className="p-2 bg-emerald-500/10 text-emerald-600 rounded-full hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                                 title="WhatsApp এ স্মরণ করিয়ে দিন">
