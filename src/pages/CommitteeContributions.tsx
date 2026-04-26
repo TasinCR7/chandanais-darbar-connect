@@ -226,7 +226,7 @@ const CommitteeContributions = () => {
         startY: 75,
         body: rows,
         theme: "plain",
-        styles: { font: "NotoSansBengali", fontSize: 11, cellPadding: 8, lineColor: [230, 230, 230], lineWidth: 0.1 },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 230, 230], lineWidth: 0.1 },
         columnStyles: {
           0: { cellWidth: 50, textColor: [100, 100, 100] },
           1: { fontStyle: "normal", textColor: [20, 20, 20] },
@@ -349,8 +349,8 @@ const CommitteeContributions = () => {
         head: [["#", "তারিখ", "নাম", "এলাকা", "মাস", "পরিমাণ", "পেমেন্ট", "TrxID"]],
         body: detailRows,
         theme: "grid",
-        headStyles: { font: "NotoSansBengali", fillColor: [33, 33, 33], textColor: [212, 175, 55], fontSize: 8 },
-        styles: { font: "NotoSansBengali", fontSize: 7.5, cellPadding: 3 },
+        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 7.5, cellPadding: 3 },
+        headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [33, 33, 33], textColor: [212, 175, 55], fontSize: 8 },
         columnStyles: { 0: { cellWidth: 8 }, 5: { halign: "right" } },
         margin: { left: 15, right: 15 },
         didDrawPage: () => { addPdfFooter(doc); },
@@ -435,8 +435,8 @@ const CommitteeContributions = () => {
           head: [["#", "তারিখ", "নাম", "মাস", "টাকা", "পেমেন্ট", "TrxID"]],
           body: rows,
           theme: "grid",
-          headStyles: { font: "NotoSansBengali", fillColor: [212, 175, 55], textColor: [33, 33, 33], fontSize: 8 },
-          styles: { font: "NotoSansBengali", fontSize: 7.5, cellPadding: 3 },
+          styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 7.5, cellPadding: 3 },
+          headStyles: { font: "NotoSansBengali", fontStyle: "normal", fillColor: [212, 175, 55], textColor: [33, 33, 33], fontSize: 8 },
           columnStyles: { 0: { cellWidth: 8 }, 4: { halign: "right" } },
           margin: { left: 15, right: 15 },
         });
@@ -456,9 +456,9 @@ const CommitteeContributions = () => {
       if (finalY > 260) { addPdfFooter(doc); doc.addPage(); finalY = 20; }
       doc.setFillColor(33, 33, 33);
       doc.roundedRect(15, finalY, W - 30, 16, 3, 3, "F");
+      doc.setFont("NotoSansBengali", "normal");
       doc.setTextColor(212, 175, 55);
       doc.setFontSize(13);
-      doc.setFont("NotoSansBengali", "bold");
       doc.text("সর্বমোট সংগ্রহ (সকল এলাকা): " + grandTotal.toLocaleString("bn-BD") + " টাকা", W / 2, finalY + 11, { align: "center" });
 
       addPdfFooter(doc);
