@@ -245,7 +245,7 @@ const CommitteeContributions = () => {
       doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
 
       // Paid Stamp
-      doc.setTextColor(0, 212, 200, 0.15);
+      doc.setTextColor(230, 245, 245);
       doc.setFontSize(60);
       doc.setFont("NotoSansBengali", "normal");
       doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
