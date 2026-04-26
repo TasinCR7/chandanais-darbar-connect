@@ -112,47 +112,106 @@ const CommitteeContributions = () => {
     setRefreshing(false);
   };
 
+  const addPdfHeader = (doc: jsPDF, subtitle: string) => {
+    const W = 210;
+    doc.setFillColor(33, 33, 33);
+    doc.rect(0, 0, W, 50, "F");
+    doc.setFillColor(212, 175, 55);
+    doc.rect(0, 50, W, 3, "F");
+    doc.setTextColor(212, 175, 55);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("CHANDANISH DARBAR SHARIF", W / 2, 18, { align: "center" });
+    doc.setTextColor(200, 200, 200);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Chandanish, Chattogram, Bangladesh | chandanaishdarbarsharif@gmail.com", W / 2, 28, { align: "center" });
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(subtitle, W / 2, 42, { align: "center" });
+  };
+
+  const addPdfFooter = (doc: jsPDF) => {
+    const W = 210;
+    const H = 297;
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(0.5);
+    doc.line(20, H - 22, W - 20, H - 22);
+    doc.setFontSize(7);
+    doc.setTextColor(140, 140, 140);
+    doc.setFont("helvetica", "normal");
+    doc.text("This is a computer-generated document. No physical signature is required for digital copies.", W / 2, H - 16, { align: "center" });
+    doc.text("Chandanish Darbar Sharif Committee | Generated: " + new Date().toLocaleString(), W / 2, H - 11, { align: "center" });
+  };
+
   const handleDownloadSingleReceipt = (c: Contribution) => {
     setPdfLoading(c.id);
     try {
       const doc = new jsPDF();
-      doc.setFillColor(212, 175, 55);
-      doc.rect(0, 0, 210, 40, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.text("CHANDANISH DARBAR SHARIF", 105, 18, { align: "center" });
-      doc.setFontSize(10);
-      doc.text("COMMITTEE FUND RECEIPT", 105, 30, { align: "center" });
+      const W = 210;
+      addPdfHeader(doc, "OFFICIAL PAYMENT RECEIPT");
 
-      doc.setTextColor(0, 0, 0);
+      // Watermark
+      doc.setTextColor(245, 245, 245);
+      doc.setFontSize(65);
+      doc.setFont("helvetica", "bold");
+      doc.text("PAID", W / 2, 170, { align: "center", angle: 35 });
+
+      // Receipt meta
+      const rid = c.id.slice(0, 8).toUpperCase();
+      doc.setTextColor(100, 100, 100);
       doc.setFontSize(9);
-      doc.text(`Receipt ID: ${c.id.slice(0, 8).toUpperCase()}`, 20, 55);
-      doc.text(`Date: ${new Date(c.created_at).toLocaleDateString()}`, 150, 55);
+      doc.setFont("helvetica", "normal");
+      doc.text("Receipt No: #" + rid, 20, 64);
+      doc.text("Date: " + new Date(c.created_at).toLocaleDateString(), W - 20, 64, { align: "right" });
 
-      const tableData = [
-        ["Member Name", c.name || "-"],
-        ["Area", c.area || "-"],
-        ["Target Month", c.target_month || "-"],
-        ["Amount", `${c.amount.toLocaleString()} BDT`],
+      // Main table with all fields
+      const rows = [
+        ["Member Name / Donor", c.name || "-"],
+        ["Area / Location", c.area || "N/A"],
+        ["Contribution Month", c.target_month || "N/A"],
+        ["Amount Paid", c.amount.toLocaleString() + " BDT"],
         ["Payment Method", c.payment_method || "Cash"],
-        ["Transaction ID", c.transaction_id || "-"]
+        ["Transaction ID", c.transaction_id || "N/A"],
+        ["Note / Remarks", c.note || "-"],
       ];
-
       autoTable(doc, {
-        startY: 65,
-        body: tableData,
-        theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 5 },
-        columnStyles: { 0: { fontStyle: 'bold', fillColor: [245, 245, 245], width: 50 } },
+        startY: 72,
+        body: rows,
+        theme: "striped",
+        styles: { fontSize: 11, cellPadding: 6, lineColor: [212, 175, 55], lineWidth: 0.15 },
+        columnStyles: {
+          0: { fontStyle: "bold", cellWidth: 60, fillColor: [255, 248, 220], textColor: [80, 60, 0] },
+        },
+        alternateRowStyles: { fillColor: [255, 255, 255] },
+        margin: { left: 20, right: 20 },
       });
 
-      const finalY = (doc as any).lastAutoTable.finalY + 40;
-      doc.line(20, finalY, 70, finalY);
-      doc.text("Member Signature", 45, finalY + 5, { align: "center" });
-      doc.line(140, finalY, 190, finalY);
-      doc.text("Authorized Signature", 165, finalY + 5, { align: "center" });
+      let curY = (doc as any).lastAutoTable.finalY + 12;
 
-      doc.save(`Receipt_${c.id.slice(0, 5)}.pdf`);
+      // Highlighted amount box
+      doc.setFillColor(212, 175, 55);
+      doc.roundedRect(20, curY, W - 40, 16, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Total Paid: " + c.amount.toLocaleString() + " BDT", W / 2, curY + 11, { align: "center" });
+      curY += 30;
+
+      // Signatures
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setDrawColor(150, 150, 150);
+      doc.setLineWidth(0.3);
+      doc.line(20, curY + 12, 80, curY + 12);
+      doc.text("Member Signature", 50, curY + 18, { align: "center" });
+      doc.line(130, curY + 12, 190, curY + 12);
+      doc.text("Authorized Signature & Seal", 160, curY + 18, { align: "center" });
+
+      addPdfFooter(doc);
+      doc.save("Receipt_" + rid + ".pdf");
       toast.success("রসিদ ডাউনলোড হয়েছে");
     } catch (e) {
       console.error("PDF Error:", e);
@@ -165,25 +224,81 @@ const CommitteeContributions = () => {
     setPdfLoading("report");
     try {
       const doc = new jsPDF();
-      doc.setFillColor(212, 175, 55);
-      doc.rect(0, 0, 210, 40, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
-      doc.text("CHANDANISH DARBAR SHARIF", 105, 20, { align: "center" });
-      doc.setFontSize(10);
-      doc.text("COMMITTEE FINANCIAL REPORT", 105, 30, { align: "center" });
+      const W = 210;
+      addPdfHeader(doc, "COMMITTEE FINANCIAL REPORT");
 
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Period: ${filterMonth || "All"}`, 20, 55);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 150, 55);
+      // Meta
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("Report Period: " + (filterMonth || "All Time"), 20, 62);
+      doc.text("Generated: " + new Date().toLocaleDateString(), W - 20, 62, { align: "right" });
+      doc.text("Total Entries: " + filteredByMonth.length, 20, 68);
 
-      const stats = [["Total Collection", `${monthTotal} BDT`], ["Total Expense", `${monthExpense} BDT`], ["Balance", `${monthTotal - monthExpense} BDT`]];
-      autoTable(doc, { startY: 65, body: stats, theme: 'plain', styles: { fontStyle: 'bold', fontSize: 11 } });
+      // Summary stats
+      const balance = monthTotal - monthExpense;
+      const summaryRows = [
+        ["Total Collection (Income)", monthTotal.toLocaleString() + " BDT"],
+        ["Total Expenses", monthExpense.toLocaleString() + " BDT"],
+        ["Net Balance", balance.toLocaleString() + " BDT"],
+        ["Yearly Goal Progress", currentYearTotal.toLocaleString() + " / " + YEARLY_GOAL.toLocaleString() + " BDT (" + goalPercentage.toFixed(1) + "%)"],
+      ];
+      autoTable(doc, {
+        startY: 75,
+        body: summaryRows,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: {
+          0: { fontStyle: "bold", fillColor: [255, 248, 220], textColor: [80, 60, 0], cellWidth: 70 },
+          1: { fontStyle: "bold" },
+        },
+        margin: { left: 20, right: 20 },
+      });
 
-      const tableData = filteredByMonth.map(c => [new Date(c.created_at).toLocaleDateString(), c.name, c.area || "-", c.target_month || "-", `${c.amount} BDT`]);
-      autoTable(doc, { startY: (doc as any).lastAutoTable.finalY + 10, head: [['Date', 'Member Name', 'Area', 'Month', 'Amount']], body: tableData, headStyles: { fillColor: [212, 175, 55] } });
+      // Detail header
+      let detailY = (doc as any).lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(33, 33, 33);
+      doc.text("Contribution Details", 20, detailY);
+      detailY += 4;
 
-      doc.save("Financial_Report.pdf");
+      // Full detail table
+      const detailRows = filteredByMonth.map((c, i) => [
+        String(i + 1),
+        new Date(c.created_at).toLocaleDateString(),
+        c.name,
+        c.area || "-",
+        c.target_month || "-",
+        c.amount.toLocaleString(),
+        c.payment_method || "Cash",
+        c.transaction_id || "-",
+      ]);
+      autoTable(doc, {
+        startY: detailY,
+        head: [["#", "Date", "Name", "Area", "Month", "Amount", "Payment", "TrxID"]],
+        body: detailRows,
+        theme: "grid",
+        headStyles: { fillColor: [33, 33, 33], textColor: [212, 175, 55], fontSize: 8 },
+        styles: { fontSize: 7.5, cellPadding: 3 },
+        columnStyles: { 0: { cellWidth: 8 }, 5: { fontStyle: "bold", halign: "right" } },
+        margin: { left: 15, right: 15 },
+        didDrawPage: () => { addPdfFooter(doc); },
+      });
+
+      // Grand total bar
+      const gtY = (doc as any).lastAutoTable.finalY + 8;
+      if (gtY < 270) {
+        doc.setFillColor(212, 175, 55);
+        doc.roundedRect(15, gtY, W - 30, 14, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("Grand Total: " + monthTotal.toLocaleString() + " BDT | Balance: " + balance.toLocaleString() + " BDT", W / 2, gtY + 10, { align: "center" });
+      }
+
+      addPdfFooter(doc);
+      doc.save("Financial_Report_" + (filterMonth || "all") + ".pdf");
       toast.success("রিপোর্ট ডাউনলোড হয়েছে");
     } catch (e) {
       console.error(e);
@@ -196,60 +311,88 @@ const CommitteeContributions = () => {
     setPdfLoading("area-report");
     try {
       const doc = new jsPDF();
-      
-      // Header
-      doc.setFillColor(212, 175, 55);
-      doc.rect(0, 0, 210, 40, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.text("CHANDANISH DARBAR SHARIF", 105, 18, { align: "center" });
-      doc.setFontSize(10);
-      doc.text("AREA-WISE CONTRIBUTION REPORT", 105, 30, { align: "center" });
+      const W = 210;
+      addPdfHeader(doc, "AREA-WISE CONTRIBUTION REPORT");
 
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 150, 50);
+      // Meta
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("Generated: " + new Date().toLocaleDateString(), W - 20, 62, { align: "right" });
+      doc.text("Total Areas: " + AREAS.length + " | Total Entries: " + contributions.length, 20, 62);
 
-      let finalY = 60;
+      let finalY = 72;
+      let grandTotal = 0;
+      let areaIndex = 0;
 
       AREAS.forEach((areaName) => {
-        const areaContributions = contributions.filter(c => c.area === areaName);
-        if (areaContributions.length === 0) return;
+        const ac = contributions.filter(c => c.area === areaName);
+        if (ac.length === 0) return;
+        areaIndex++;
+        const areaTotal = ac.reduce((sum, c) => sum + c.amount, 0);
+        grandTotal += areaTotal;
 
-        const areaTotal = areaContributions.reduce((sum, c) => sum + c.amount, 0);
-
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Area: ${areaName}`, 20, finalY);
-        doc.setFontSize(10);
-        doc.text(`Total: ${areaTotal.toLocaleString()} BDT`, 150, finalY);
-        
-        const tableData = areaContributions.map(c => [
-          new Date(c.created_at).toLocaleDateString(),
-          c.name,
-          c.target_month || "-",
-          `${c.amount.toLocaleString()} BDT`
-        ]);
-
-        autoTable(doc, {
-          startY: finalY + 5,
-          head: [['Date', 'Member Name', 'Month', 'Amount']],
-          body: tableData,
-          theme: 'grid',
-          headStyles: { fillColor: [212, 175, 55], textColor: [255, 255, 255] },
-          margin: { left: 20, right: 20 }
-        });
-
-        finalY = (doc as any).lastAutoTable.finalY + 15;
-
-        // Check for new page
-        if (finalY > 250) {
+        if (finalY > 230) {
+          addPdfFooter(doc);
           doc.addPage();
           finalY = 20;
         }
+
+        // Area header bar
+        doc.setFillColor(33, 33, 33);
+        doc.roundedRect(15, finalY, W - 30, 12, 2, 2, "F");
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text(areaIndex + ". " + areaName, 20, finalY + 8);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text(ac.length + " entries | Total: " + areaTotal.toLocaleString() + " BDT", W - 20, finalY + 8, { align: "right" });
+        finalY += 16;
+
+        const rows = ac.map((c, i) => [
+          String(i + 1),
+          new Date(c.created_at).toLocaleDateString(),
+          c.name,
+          c.target_month || "-",
+          c.amount.toLocaleString(),
+          c.payment_method || "Cash",
+          c.transaction_id || "-",
+        ]);
+
+        autoTable(doc, {
+          startY: finalY,
+          head: [["#", "Date", "Name", "Month", "Amount (BDT)", "Payment", "TrxID"]],
+          body: rows,
+          theme: "grid",
+          headStyles: { fillColor: [212, 175, 55], textColor: [33, 33, 33], fontSize: 8 },
+          styles: { fontSize: 7.5, cellPadding: 3 },
+          columnStyles: { 0: { cellWidth: 8 }, 4: { fontStyle: "bold", halign: "right" } },
+          margin: { left: 15, right: 15 },
+        });
+
+        // Area subtotal
+        const subY = (doc as any).lastAutoTable.finalY;
+        doc.setFillColor(255, 248, 220);
+        doc.rect(15, subY, W - 30, 8, "F");
+        doc.setTextColor(80, 60, 0);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text("Subtotal (" + areaName + "): " + areaTotal.toLocaleString() + " BDT", W - 20, subY + 6, { align: "right" });
+        finalY = subY + 18;
       });
 
-      doc.save(`Area_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      // Grand total
+      if (finalY > 260) { addPdfFooter(doc); doc.addPage(); finalY = 20; }
+      doc.setFillColor(33, 33, 33);
+      doc.roundedRect(15, finalY, W - 30, 16, 3, 3, "F");
+      doc.setTextColor(212, 175, 55);
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.text("Grand Total (All Areas): " + grandTotal.toLocaleString() + " BDT", W / 2, finalY + 11, { align: "center" });
+
+      addPdfFooter(doc);
+      doc.save("Area_Report_" + new Date().toISOString().slice(0, 10) + ".pdf");
       toast.success("এলাকা ভিত্তিক রিপোর্ট ডাউনলোড হয়েছে");
     } catch (e) {
       console.error(e);
@@ -269,10 +412,24 @@ const CommitteeContributions = () => {
   };
 
   const handleExportCSV = () => {
-    const headers = ["Date", "Name", "Area", "Month", "Amount"];
-    const rows = contributions.map(c => [new Date(c.created_at).toLocaleDateString(), c.name, c.area || "", c.target_month || "", c.amount]);
-    const csv = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-    const link = document.createElement("a"); link.setAttribute("href", encodeURI(csv)); link.setAttribute("download", "Contributions.csv"); link.click();
+    const headers = ["Date", "Name", "Area", "Month", "Amount (BDT)", "Payment Method", "Transaction ID", "Note"];
+    const rows = contributions.map(c => [
+      new Date(c.created_at).toLocaleDateString(),
+      `"${c.name}"`,
+      c.area || "",
+      c.target_month || "",
+      c.amount,
+      c.payment_method || "Cash",
+      c.transaction_id || "",
+      `"${c.note || ""}"`
+    ]);
+    const totalRow = ["", "", "", "TOTAL", contributions.reduce((s, c) => s + c.amount, 0), "", "", ""];
+    const csv = "\uFEFF" + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n") + "\n" + totalRow.join(",");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Contributions_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
   };
 
   const handleSubmitContribution = async (e: FormEvent) => {
