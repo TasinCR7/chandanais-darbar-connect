@@ -593,85 +593,84 @@ const CommitteeContributions = () => {
       <main className="container mx-auto px-4 mt-12">
         <AnimatePresence mode="wait">
           {activeTab === "overview" && (
-            <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   { label: "মোট সংগ্রহ", value: monthTotal, icon: <TrendingUp className="text-emerald-500" />, border: "border-emerald-500/20", text: "text-emerald-500" },
                   { label: "মোট খরচ", value: monthExpense, icon: <TrendingDown className="text-red-500" />, border: "border-red-500/20", text: "text-red-500" },
                   { label: "বর্তমান ব্যালেন্স", value: monthTotal - monthExpense, icon: <Wallet className="text-gold" />, border: "border-gold/20", text: "text-gold" },
                   { label: "লক্ষ্যমাত্রা", value: `${goalPercentage.toFixed(1)}%`, icon: <Target className="text-blue-500" />, border: "border-blue-500/20", text: "text-blue-500" }
                 ].map((stat, i) => (
-                  <div key={i} className={`bg-card p-6 rounded-3xl border ${stat.border} shadow-xl relative overflow-hidden group`}>
-                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">{stat.icon}</div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2 rounded-xl bg-background border ${stat.border}`}>{stat.icon}</div>
-                      <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-wider">{stat.label}</h3>
+                  <div key={i} className={`bg-card p-5 rounded-2xl border ${stat.border} shadow-lg relative overflow-hidden group`}>
+                    <div className="absolute -right-3 -bottom-3 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">{stat.icon}</div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`p-1.5 rounded-lg bg-background border ${stat.border}`}>{stat.icon}</div>
+                      <h3 className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">{stat.label}</h3>
                     </div>
-                    <p className={`text-3xl font-black ${stat.text}`}>
+                    <p className={`text-2xl font-black ${stat.text}`}>
                       {typeof stat.value === "number" ? `৳${stat.value.toLocaleString()}` : stat.value}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-card p-1 rounded-3xl border border-gold/10 shadow-2xl overflow-hidden">
-                <div className="bg-gold-gradient p-8 text-primary-foreground flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="bg-card p-1 rounded-2xl border border-gold/10 shadow-xl overflow-hidden">
+                <div className="bg-gold-gradient p-6 text-primary-foreground flex flex-col md:flex-row justify-between items-center gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-3"><Target size={30} /> বার্ষিক লক্ষ্যমাত্রা ({currentYear})</h2>
-                    <p className="text-sm opacity-80 mt-1">সর্বমোট সংগ্রহ: ৳{currentYearTotal.toLocaleString()} / ৳{YEARLY_GOAL.toLocaleString()}</p>
+                    <h2 className="text-xl font-bold flex items-center gap-2"><Target size={24} /> বার্ষিক লক্ষ্যমাত্রা ({currentYear})</h2>
+                    <p className="text-xs opacity-80 mt-0.5">সংগ্রহ: ৳{currentYearTotal.toLocaleString()} / ৳{YEARLY_GOAL.toLocaleString()}</p>
                   </div>
-                  <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-white text-gold px-8 py-3 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-2 whitespace-nowrap">
-                    {pdfLoading === "area-report" ? <Loader2 className="animate-spin" /> : <Printer size={20} />} এলাকা ভিত্তিক রিপোর্ট
+                  <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-white text-gold px-6 py-2.5 rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2 text-sm whitespace-nowrap">
+                    {pdfLoading === "area-report" ? <Loader2 className="animate-spin" /> : <Printer size={16} />} এলাকা ভিত্তিক রিপোর্ট
                   </button>
                 </div>
-                <div className="p-2 bg-background/50">
-                  <div className="h-4 bg-secondary/50 rounded-full overflow-hidden border border-gold/10">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${goalPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className="h-full bg-gold shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
+                <div className="p-1.5 bg-background/50">
+                  <div className="h-3 bg-secondary/50 rounded-full overflow-hidden border border-gold/10">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${goalPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className="h-full bg-gold shadow-[0_0_15px_rgba(212,175,55,0.4)]" />
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-card p-8 rounded-3xl border border-gold/10 shadow-lg h-[350px]">
-                  <h3 className="text-lg font-bold text-gold mb-6">মাসিক গ্রাফ</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-lg h-[300px]">
+                  <h3 className="text-md font-bold text-gold mb-4">মাসিক গ্রাফ</h3>
                   <ResponsiveContainer width="100%" height="100%"><BarChart data={getMonthlyChartData()}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" fontSize={10} /><YAxis fontSize={10} /><Tooltip /><Bar dataKey="total" fill="#D4AF37" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
                 </div>
-                <div className="bg-card p-8 rounded-3xl border border-gold/10 shadow-lg h-[350px]">
-                  <h3 className="text-lg font-bold text-gold mb-6">এলাকা ভিত্তিক ডাটা</h3>
-                  <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getAreaPieData()} cx="50%" cy="50%" outerRadius={80} dataKey="value">{getAreaPieData().map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: '11px' }} /></PieChart></ResponsiveContainer>
+                <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-lg h-[300px]">
+                  <h3 className="text-md font-bold text-gold mb-4">এলাকা ভিত্তিক ডাটা</h3>
+                  <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getAreaPieData()} cx="50%" cy="50%" outerRadius={70} dataKey="value">{getAreaPieData().map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip /><Legend wrapperStyle={{ fontSize: '10px' }} /></PieChart></ResponsiveContainer>
                 </div>
               </div>
             </motion.div>
           )}
 
           {activeTab === "search" && (
-            <motion.div key="search" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto space-y-8">
-              <div className="bg-card p-10 rounded-3xl border border-gold/20 shadow-2xl text-center">
-                <h2 className="text-3xl font-bold text-gold mb-4">রসিদ ডাউনলোড করুন</h2>
-                <div className="flex flex-col md:flex-row gap-3">
-                  <input type="text" placeholder="নাম বা আইডি..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMemberSearch()} className="flex-1 bg-background border-2 border-gold/10 rounded-2xl px-6 py-4 outline-none focus:border-gold" />
-                  <button onClick={handleMemberSearch} disabled={refreshing} className="bg-gold text-primary-foreground px-10 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2">{refreshing ? <Loader2 className="animate-spin" /> : <Search size={20} />} খুঁজুন</button>
+            <motion.div key="search" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto space-y-6">
+              <div className="bg-card p-6 rounded-2xl border border-gold/20 shadow-xl text-center">
+                <h2 className="text-xl font-bold text-gold mb-4">রসিদ ডাউনলোড করুন</h2>
+                <div className="flex flex-col md:flex-row gap-2">
+                  <input type="text" placeholder="নাম বা আইডি..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleMemberSearch()} className="flex-1 bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                  <button onClick={handleMemberSearch} disabled={refreshing} className="bg-gold text-primary-foreground px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">{refreshing ? <Loader2 className="animate-spin" /> : <Search size={18} />} খুঁজুন</button>
                 </div>
               </div>
               {searchResult && (
-                <div className="bg-card rounded-3xl border border-gold/10 overflow-hidden shadow-2xl">
-                  <table className="w-full text-left">
-                    <thead className="bg-gold/5 text-gold font-bold"><tr><th className="p-6">তারিখ</th><th className="p-6">মাস</th><th className="p-6 text-right">পরিমাণ</th><th className="p-6 text-center">রসিদ</th></tr></thead>
+                <div className="bg-card rounded-2xl border border-gold/10 overflow-hidden shadow-xl">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gold/5 text-gold font-bold"><tr><th className="p-4">তারিখ</th><th className="p-4">মাস</th><th className="p-4 text-right">পরিমাণ</th><th className="p-4 text-center">রসিদ</th></tr></thead>
                     <tbody className="divide-y divide-gold/10">
                       {searchResult.map(c => (
                         <tr key={c.id} className="hover:bg-gold/5">
-                          <td className="p-6">{new Date(c.created_at).toLocaleDateString()}</td>
-                          <td className="p-6 font-bold text-muted-foreground uppercase text-xs">{c.target_month || "-"}</td>
-                          <td className="p-6 text-right font-bold text-gold">৳{c.amount.toLocaleString()}</td>
-                          <td className="p-6 text-center">
-                            <button onClick={() => handleDownloadSingleReceipt(c)} disabled={pdfLoading === c.id} className="p-3 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-white transition-all">
-                              {pdfLoading === c.id ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                          <td className="p-4">{new Date(c.created_at).toLocaleDateString()}</td>
+                          <td className="p-4 font-bold text-muted-foreground uppercase text-[10px]">{formatMonthBn(c.target_month)}</td>
+                          <td className="p-4 text-right font-bold text-gold">৳{c.amount.toLocaleString()}</td>
+                          <td className="p-4 text-center">
+                            <button onClick={() => handleDownloadSingleReceipt(c)} disabled={pdfLoading === c.id} className="p-2 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-white transition-all">
+                              {pdfLoading === c.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                             </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {searchResult.length === 0 && <div className="p-20 text-center text-muted-foreground font-bold">রেকর্ড পাওয়া যায়নি।</div>}
                 </div>
               )}
             </motion.div>
@@ -750,61 +749,61 @@ const CommitteeContributions = () => {
           )}
 
           {activeTab === "admin" && isAdmin && (
-            <motion.div key="admin" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-                <h2 className="text-3xl font-bold text-gold flex items-center gap-3"><Shield size={32} /> অ্যাডমিন প্যানেল</h2>
-                <div className="flex flex-wrap gap-3">
-                  <button onClick={handleDownloadReport} disabled={pdfLoading === "report"} className="bg-gold text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2">{pdfLoading === "report" ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />} জেনারেল রিপোর্ট</button>
-                  <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2">{pdfLoading === "area-report" ? <Loader2 size={18} className="animate-spin" /> : <Printer size={18} />} এলাকা ভিত্তিক রিপোর্ট</button>
-                  <button onClick={handleExportCSV} className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl flex items-center gap-2"><FileSpreadsheet size={18} /> এক্সেল (CSV)</button>
+            <motion.div key="admin" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <h2 className="text-xl font-bold text-gold flex items-center gap-2"><Shield size={24} /> অ্যাডমিন প্যানেল</h2>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={handleDownloadReport} disabled={pdfLoading === "report"} className="bg-gold text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2">{pdfLoading === "report" ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />} জেনারেল রিপোর্ট</button>
+                  <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-orange-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2">{pdfLoading === "area-report" ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} এলাকা রিপোর্ট</button>
+                  <button onClick={handleExportCSV} className="bg-green-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2"><FileSpreadsheet size={16} /> সিএসভি</button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="bg-card p-10 rounded-3xl border-2 border-gold/20 shadow-2xl">
-                  <h3 className="text-2xl font-bold text-gold mb-8 flex items-center gap-3"><TrendingUp size={28} /> চাঁদা এন্ট্রি</h3>
-                  <form onSubmit={handleSubmitContribution} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
-                      <input type="number" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="পরিমাণ *" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-xl">
+                  <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><TrendingUp size={22} /> চাঁদা এন্ট্রি</h3>
+                  <form onSubmit={handleSubmitContribution} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                      <input type="number" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="পরিমাণ *" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <input type="month" required value={targetMonth} onChange={e => setTargetMonth(e.target.value)} className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
-                      <select value={area} onChange={e => setArea(e.target.value)} className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold cursor-pointer">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input type="month" required value={targetMonth} onChange={e => setTargetMonth(e.target.value)} className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                      <select value={area} onChange={e => setArea(e.target.value)} className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm cursor-pointer">
                         <option value="">এলাকা</option>
                         {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold cursor-pointer">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm cursor-pointer">
                         {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
-                      <input type="text" value={transactionId} onChange={e => setTransactionId(e.target.value)} placeholder="ট্রানজেকশন আইডি (ঐচ্ছিক)" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
+                      <input type="text" value={transactionId} onChange={e => setTransactionId(e.target.value)} placeholder="TrxID (ঐচ্ছিক)" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
                     </div>
-                    <button type="submit" className="w-full bg-gold-gradient text-primary-foreground py-5 rounded-2xl font-bold text-xl shadow-2xl uppercase tracking-widest">সেভ ও রসিদ ডাউনলোড</button>
+                    <button type="submit" className="w-full bg-gold-gradient text-primary-foreground py-4 rounded-xl font-bold text-lg shadow-xl uppercase tracking-widest">সেভ ও রশিদ</button>
                   </form>
                 </div>
-                <div className="bg-card p-10 rounded-3xl border-2 border-red-500/20 shadow-2xl">
-                  <h3 className="text-2xl font-bold text-red-500 mb-8 flex items-center gap-3"><TrendingDown size={28} /> খরচ এন্ট্রি</h3>
-                  <form onSubmit={handleSubmitExpense} className="space-y-6">
-                    <input type="text" required value={expenseTitle} onChange={e => setExpenseTitle(e.target.value)} placeholder="টাইটেল *" className="w-full bg-background border border-red-500/10 rounded-2xl px-5 py-4 outline-none focus:border-red-500 font-bold" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <input type="number" required value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} placeholder="পরিমাণ *" className="w-full bg-background border border-red-500/10 rounded-2xl px-5 py-4 outline-none focus:border-red-500 font-bold" />
-                      <input type="date" required value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="w-full bg-background border border-red-500/10 rounded-2xl px-5 py-4 outline-none focus:border-red-500 font-bold" />
+                <div className="bg-card p-6 rounded-2xl border border-red-500/10 shadow-xl">
+                  <h3 className="text-lg font-bold text-red-500 mb-6 flex items-center gap-2"><TrendingDown size={22} /> খরচ এন্ট্রি</h3>
+                  <form onSubmit={handleSubmitExpense} className="space-y-4">
+                    <input type="text" required value={expenseTitle} onChange={e => setExpenseTitle(e.target.value)} placeholder="টাইটেল *" className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input type="number" required value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} placeholder="পরিমাণ *" className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
+                      <input type="date" required value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="w-full bg-background border border-red-500/5 rounded-xl px-4 py-3 outline-none focus:border-red-500 text-sm" />
                     </div>
-                    <button type="submit" className="w-full bg-red-600 text-white py-5 rounded-2xl font-bold text-xl shadow-2xl uppercase tracking-widest">খরচ রেকর্ড করুন</button>
+                    <button type="submit" className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl uppercase tracking-widest">রেকর্ড করুন</button>
                   </form>
                 </div>
-                <div className="bg-card p-10 rounded-3xl border-2 border-gold/20 shadow-2xl lg:col-span-2">
-                  <h3 className="text-2xl font-bold text-gold mb-8 flex items-center gap-3"><UserIcon size={28} /> নতুন সদস্য যোগ করুন</h3>
-                  <form onSubmit={handleSubmitMember} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <input type="text" required value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
-                    <select value={newMemberArea} onChange={e => setNewMemberArea(e.target.value)} className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold cursor-pointer">
+                <div className="bg-card p-6 rounded-2xl border border-gold/10 shadow-xl lg:col-span-2">
+                  <h3 className="text-lg font-bold text-gold mb-6 flex items-center gap-2"><UserIcon size={22} /> সদস্য যোগ করুন</h3>
+                  <form onSubmit={handleSubmitMember} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input type="text" required value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="নাম *" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                    <select value={newMemberArea} onChange={e => setNewMemberArea(e.target.value)} className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm cursor-pointer">
                       <option value="">এলাকা</option>
                       {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
                     </select>
-                    <input type="text" value={newMemberPhone} onChange={e => setNewMemberPhone(e.target.value)} placeholder="ফোন" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
-                    <input type="text" value={newMemberDesignation} onChange={e => setNewMemberDesignation(e.target.value)} placeholder="পদবী" className="w-full bg-background border border-gold/20 rounded-2xl px-5 py-4 outline-none focus:border-gold font-bold" />
-                    <button type="submit" className="md:col-span-2 lg:col-span-4 bg-gold text-primary-foreground py-4 rounded-2xl font-bold text-lg shadow-xl uppercase tracking-widest">সদস্য যোগ করুন</button>
+                    <input type="text" value={newMemberPhone} onChange={e => setNewMemberPhone(e.target.value)} placeholder="ফোন" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                    <input type="text" value={newMemberDesignation} onChange={e => setNewMemberDesignation(e.target.value)} placeholder="পদবী" className="w-full bg-background border border-gold/10 rounded-xl px-4 py-3 outline-none focus:border-gold text-sm" />
+                    <button type="submit" className="md:col-span-2 lg:col-span-4 bg-gold text-primary-foreground py-3 rounded-xl font-bold text-md shadow-lg uppercase tracking-widest">সদস্য যুক্ত করুন</button>
                   </form>
                 </div>
               </div>
