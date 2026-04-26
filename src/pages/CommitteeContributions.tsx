@@ -139,7 +139,9 @@ const CommitteeContributions = () => {
       if (eData) setExpenses(eData as Expense[]);
       const { data: mData } = await supabase.from("committee_members").select("*").eq("is_active", true).order("name");
       if (mData) setMembers(mData as Member[]);
-    } catch (err) { toast.error("তথ্য লোড করতে সমস্যা হয়েছে"); }
+      const { data: aData } = await supabase.from("member_dues_adjustments").select("*").order("created_at", { ascending: false });
+      if (aData) setDuesAdjustments(aData as DuesAdjustment[]);
+    } catch (err) { toast.error("তথ্য লোড করতে সমস্যা হয়েছে"); }
     setRefreshing(false);
     setLoading(false);
   }, []);
