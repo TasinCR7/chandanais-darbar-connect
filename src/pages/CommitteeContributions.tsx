@@ -594,14 +594,41 @@ const CommitteeContributions = () => {
         <AnimatePresence mode="wait">
           {activeTab === "overview" && (
             <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-card p-8 rounded-3xl border border-gold/10 shadow-lg"><h3 className="text-muted-foreground text-xs font-bold uppercase mb-2">মোট সংগ্রহ</h3><p className="text-4xl font-bold text-gold">৳{monthTotal.toLocaleString()}</p></div>
-                <div className="bg-card p-8 rounded-3xl border border-red-500/10 shadow-lg"><h3 className="text-muted-foreground text-xs font-bold uppercase mb-2">মোট খরচ</h3><p className="text-4xl font-bold text-red-500">৳{monthExpense.toLocaleString()}</p></div>
-                <div className="bg-card p-8 rounded-3xl border border-green-500/10 shadow-lg"><h3 className="text-muted-foreground text-xs font-bold uppercase mb-2">ব্যালেন্স</h3><p className="text-4xl font-bold text-green-600">৳{(monthTotal - monthExpense).toLocaleString()}</p></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: "মোট সংগ্রহ", value: monthTotal, icon: <TrendingUp className="text-emerald-500" />, border: "border-emerald-500/20", text: "text-emerald-500" },
+                  { label: "মোট খরচ", value: monthExpense, icon: <TrendingDown className="text-red-500" />, border: "border-red-500/20", text: "text-red-500" },
+                  { label: "বর্তমান ব্যালেন্স", value: monthTotal - monthExpense, icon: <Wallet className="text-gold" />, border: "border-gold/20", text: "text-gold" },
+                  { label: "লক্ষ্যমাত্রা", value: `${goalPercentage.toFixed(1)}%`, icon: <Target className="text-blue-500" />, border: "border-blue-500/20", text: "text-blue-500" }
+                ].map((stat, i) => (
+                  <div key={i} className={`bg-card p-6 rounded-3xl border ${stat.border} shadow-xl relative overflow-hidden group`}>
+                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">{stat.icon}</div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`p-2 rounded-xl bg-background border ${stat.border}`}>{stat.icon}</div>
+                      <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-wider">{stat.label}</h3>
+                    </div>
+                    <p className={`text-3xl font-black ${stat.text}`}>
+                      {typeof stat.value === "number" ? `৳${stat.value.toLocaleString()}` : stat.value}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <div className="bg-card p-8 rounded-3xl border border-gold/10 shadow-xl">
-                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold text-gold flex items-center gap-3"><Target size={30} /> লক্ষ্যমাত্রা ({currentYear})</h2><p className="text-xl font-bold text-gold">৳{currentYearTotal.toLocaleString()} / ৳{YEARLY_GOAL.toLocaleString()}</p></div>
-                <div className="h-6 bg-secondary rounded-full overflow-hidden border border-gold/10"><motion.div initial={{ width: 0 }} animate={{ width: `${goalPercentage}%` }} transition={{ duration: 1 }} className="h-full bg-gold" /></div>
+
+              <div className="bg-card p-1 rounded-3xl border border-gold/10 shadow-2xl overflow-hidden">
+                <div className="bg-gold-gradient p-8 text-primary-foreground flex flex-col md:flex-row justify-between items-center gap-6">
+                  <div>
+                    <h2 className="text-2xl font-bold flex items-center gap-3"><Target size={30} /> বার্ষিক লক্ষ্যমাত্রা ({currentYear})</h2>
+                    <p className="text-sm opacity-80 mt-1">সর্বমোট সংগ্রহ: ৳{currentYearTotal.toLocaleString()} / ৳{YEARLY_GOAL.toLocaleString()}</p>
+                  </div>
+                  <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="bg-white text-gold px-8 py-3 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all flex items-center gap-2 whitespace-nowrap">
+                    {pdfLoading === "area-report" ? <Loader2 className="animate-spin" /> : <Printer size={20} />} এলাকা ভিত্তিক রিপোর্ট
+                  </button>
+                </div>
+                <div className="p-2 bg-background/50">
+                  <div className="h-4 bg-secondary/50 rounded-full overflow-hidden border border-gold/10">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${goalPercentage}%` }} transition={{ duration: 1, ease: "easeOut" }} className="h-full bg-gold shadow-[0_0_20px_rgba(212,175,55,0.5)]" />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-card p-8 rounded-3xl border border-gold/10 shadow-lg h-[350px]">
@@ -695,11 +722,28 @@ const CommitteeContributions = () => {
 
           {activeTab === "leaderboard" && (
             <motion.div key="leaderboard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto space-y-6">
-              <h2 className="text-2xl font-bold text-gold text-center mb-8">এলাকা ভিত্তিক র‍্যাঙ্কিং</h2>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-gold flex items-center gap-3"><Award size={32} /> এলাকা ভিত্তিক র‍্যাঙ্কিং</h2>
+                <button onClick={handleDownloadAreaReport} disabled={pdfLoading === "area-report"} className="text-xs bg-gold/10 text-gold px-4 py-2 rounded-xl font-bold hover:bg-gold hover:text-white transition-all flex items-center gap-2">
+                  <Download size={14} /> PDF রিপোর্ট
+                </button>
+              </div>
               {Object.entries(contributions.filter(c => !filterMonth || (c.target_month === filterMonth || c.created_at.startsWith(filterMonth))).reduce((acc, c) => { const a = c.area || "অন্যান্য"; acc[a] = (acc[a] || 0) + c.amount; return acc; }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]).map(([name, total], idx) => (
-                <div key={name} className="bg-card p-6 rounded-2xl border border-gold/10 flex justify-between items-center shadow-md hover:scale-[1.02] transition-transform">
-                  <div className="flex items-center gap-5"><div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${idx === 0 ? "bg-gold text-white" : "bg-gold/10 text-gold"}`}>{idx + 1}</div><span className="font-bold text-lg">{name}</span></div>
-                  <span className="font-bold text-xl text-gold">৳{total.toLocaleString()}</span>
+                <div key={name} className="bg-card p-6 rounded-3xl border border-gold/10 flex justify-between items-center shadow-xl hover:shadow-gold/5 hover:scale-[1.02] transition-all relative overflow-hidden group">
+                  <div className={`absolute left-0 top-0 w-1 h-full ${idx === 0 ? "bg-gold" : "bg-gold/20"}`} />
+                  <div className="flex items-center gap-5">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner ${idx === 0 ? "bg-gold text-primary-foreground" : "bg-gold/10 text-gold"}`}>
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <span className="font-bold text-lg block">{name}</span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-widest">{idx === 0 ? "শীর্ষ এলাকা" : "সক্রিয় এলাকা"}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-black text-2xl text-gold block">৳{total.toLocaleString()}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase">মোট সংগ্রহ</span>
+                  </div>
                 </div>
               ))}
             </motion.div>
