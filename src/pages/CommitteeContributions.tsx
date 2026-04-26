@@ -331,6 +331,28 @@ const CommitteeContributions = () => {
         didDrawPage: () => { addPdfFooter(doc); },
       });
 
+      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      
+      // Premium Summary Footer
+      if (finalY < 250) {
+        doc.setFillColor(10, 37, 64);
+        doc.roundedRect(15, finalY, W - 30, 25, 4, 4, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.text(`সর্বমোট আয়: ৳${monthTotal.toLocaleString("bn-BD")}`, 25, finalY + 10);
+        doc.text(`বর্তমান ব্যালেন্স: ৳${balance.toLocaleString("bn-BD")}`, 25, finalY + 18);
+        
+        // Mini Progress line
+        doc.setFillColor(0, 212, 200);
+        const barWidth = (W - 140);
+        const progress = Math.min(goalPercentage / 100, 1) * barWidth;
+        doc.rect(W - 15 - barWidth - 10, finalY + 14, barWidth, 2, "F");
+        doc.setFillColor(255, 255, 255);
+        doc.rect(W - 15 - barWidth - 10, finalY + 14, progress, 2, "F");
+        doc.setFontSize(10);
+        doc.text(`লক্ষ্যমাত্রা: ${goalPercentage.toFixed(1)}%`, W - 25, finalY + 10, { align: "right" });
+      }
+
       addPdfFooter(doc);
       doc.save("Financial_Report_" + (filterMonth || "all") + ".pdf");
       toast.success("রিপোর্ট ডাউনলোড হয়েছে");
@@ -404,7 +426,14 @@ const CommitteeContributions = () => {
           margin: { left: 15, right: 15 },
         });
 
-        finalY = (doc as any).lastAutoTable.finalY + 12;
+        const subY = (doc as any).lastAutoTable.finalY;
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, subY, W - 30, 8, "F");
+        doc.setTextColor(10, 37, 64);
+        doc.setFontSize(9);
+        doc.text(`সাবটোটাল (${areaName}): ৳${areaTotal.toLocaleString("bn-BD")}`, W - 20, subY + 6, { align: "right" });
+        
+        finalY = subY + 15;
       });
 
       // Grand total

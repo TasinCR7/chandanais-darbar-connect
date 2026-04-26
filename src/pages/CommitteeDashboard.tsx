@@ -26,7 +26,17 @@ interface TopicRecord {
 interface VoteRecord { id: string; topic_id: string; user_id: string; vote: string; }
 interface CommentRecord { id: string; user_id: string; message: string; created_at: string; }
 interface CommitteeNotice { id: string; title: string; message: string; created_at: string; }
-interface Contribution { id: string; name: string; amount: number; target_month: string; created_at: string; payment_method?: string; transaction_id?: string; }
+interface Contribution { 
+  id: string; 
+  name: string; 
+  amount: number; 
+  area?: string | null;
+  note?: string;
+  target_month: string; 
+  created_at: string; 
+  payment_method?: string; 
+  transaction_id?: string; 
+}
 
 export default function CommitteeDashboard() {
   const [member, setMember] = useState<{ id: string; name: string; designation: string } | null>(null);
@@ -244,6 +254,7 @@ export default function CommitteeDashboard() {
       // Main table
       const rows = [
         ["দাতার নাম", c.name || "-"],
+        ["এলাকা/অবস্থান", c.area || "N/A"],
         ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
         ["টাকার পরিমাণ", c.amount.toLocaleString("bn-BD") + " BDT"],
         ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
