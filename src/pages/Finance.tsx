@@ -67,7 +67,6 @@ const expenseSchema = z.object({
 const Finance = () => {
   const { user, isStaff, loading } = useAuth();
   const [tab, setTab] = useState<TabKey>('summary');
-  const [adminMode, setAdminMode] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -712,15 +711,6 @@ const Finance = () => {
             <Button onClick={loadAll} size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/30 text-primary-foreground" title="রিফ্রেশ">
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            {isStaff && (
-              <Button
-                onClick={() => setAdminMode((v) => !v)}
-                className={`font-bangla ${adminMode ? 'bg-background text-foreground' : 'bg-background/20 text-primary-foreground hover:bg-background/30'}`}
-              >
-                <ShieldCheck className="h-4 w-4 mr-1.5" />
-                {adminMode ? 'অ্যাডমিন মোড: চালু' : 'অ্যাডমিন মোড'}
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -731,7 +721,7 @@ const Finance = () => {
           {TABS.map((t) => {
             const Icon = t.icon;
             const isActive = tab === t.key;
-            const disabled = t.key === 'admin' && !adminMode;
+            const disabled = t.key === 'admin' && !isStaff;
             return (
               <button
                 key={t.key}
@@ -739,7 +729,7 @@ const Finance = () => {
                 disabled={disabled}
                 className={`flex-1 min-w-[110px] flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bangla text-sm transition-all
                   ${isActive ? 'bg-gradient-gold text-primary-foreground shadow-gold' :
-                    disabled ? 'opacity-40 cursor-not-allowed text-muted-foreground' :
+                    disabled ? 'hidden' :
                     'text-foreground/75 hover:bg-primary/10 hover:text-primary'}`}
               >
                 <Icon className="h-4 w-4" /> {t.label}
