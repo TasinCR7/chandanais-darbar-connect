@@ -93,6 +93,7 @@ const Finance = () => {
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [quickMemberOpen, setQuickMemberOpen] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState<number[]>([new Date().getMonth() + 1]);
+  const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const ORG_NAME_SLUG = 'chandanaish-darbar';
 
   const loadAll = async () => {
@@ -327,6 +328,41 @@ const Finance = () => {
     members as any, payments as any, reportYear,
     { activeOnly, month: areaScope === 'month' ? reportMonth : undefined },
   ), [members, payments, reportYear, reportMonth, areaScope, activeOnly]);
+
+  // Per-area member breakdown for expandable details
+  const areaMembers = useMemo(() => {
+    const endMonth = reportYear === new Date().getFullYear() ? new Date().getMonth() + 1 : 12;
+    const map = new Map<string, { code: string; name: string; phone: string; expected: number; paid: number; due: number; status: string }[]>();
+    const list = activeOnly ? members.filter((m) => (m as any).is_active !== false) : members;
+    for (const m of list) {
+      const area = ((m as any).area ?? '').trim() || 'অজানা / Unspecified';
+      const join = new Date((m as any).joined_date);
+      const startMonth = join.getFullYear() < reportYear ? 1 : (join.getFullYear() === reportYear ? join.getMonth() + 1 : 13);
+      if (startMonth > 12) continue;
+      const rate = Number((m as any).monthly_rate) || 0;
+      let expected = 0, paid = 0;
+      if (areaScope === 'month') {
+        if (reportMonth < startMonth) continue;
+        expected = rate;
+        paid = payments
+          .filter((p) => (p as any).member_id === m.id && (p as any).for_year === reportYear && (p as any).for_month === reportMonth)
+          .reduce((s, p) => s + Number(p.amount), 0);
+      } else {
+        expected = rate * Math.max(0, endMonth - startMonth + 1);
+        paid = payments
+          .filter((p) => (p as any).member_id === m.id && (p as any).for_year === reportYear && (p as any).for_month >= startMonth && (p as any).for_month <= endMonth)
+          .reduce((s, p) => s + Number(p.amount), 0);
+      }
+      const due = Math.max(0, expected - paid);
+      const status = paid >= expected ? 'পরিশোধিত' : paid > 0 ? 'আংশিক' : 'বাকি';
+      const arr = map.get(area) ?? [];
+      arr.push({ code: (m as any).member_code, name: (m as any).full_name, phone: (m as any).phone ?? '-', expected, paid, due, status });
+      map.set(area, arr);
+    }
+    // Sort members within each area by paid amount descending
+    for (const [, arr] of map) arr.sort((a, b) => b.paid - a.paid);
+    return map;
+  }, [members, payments, reportYear, reportMonth, areaScope, activeOnly]);
 
   const downloadAreaPDF = async () => {
     setBusy(true);
@@ -1394,39 +1430,116 @@ const Finance = () => {
             <div className="card-gold rounded-2xl p-6 overflow-x-auto">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <h3 className="font-display text-lg gold-text flex items-center gap-2">
-                  <MapPin className="h-5 w-5" /> এলাকা ভিত্তিক র‍্যাঙ্কিং 🌍
+                  <MapPin className="h-5 w-5" /> এলাকা ভিত্তিক চাঁদা হিসাব 🌍
                 </h3>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Select value={areaScope} onValueChange={(v) => setAreaScope(v as any)}>
                     <SelectTrigger className="h-8 w-32 font-bangla"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="year">পূর্ণ বছর</SelectItem>
-                      <SelectItem value="month">শুধু এই মাস</SelectItem>
+                      <SelectItem value="year">বার্ষিক হিসাব</SelectItem>
+                      <SelectItem value="month">মাসিক হিসাব</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={downloadAreaRanking} disabled={busy} size="sm" className="bg-gradient-gold text-primary-foreground font-bangla">
-                    <Download className="h-3.5 w-3.5 mr-1" /> PDF ডাউনলোড
+                    <Download className="h-3.5 w-3.5 mr-1" /> র‍্যাঙ্কিং PDF
+                  </Button>
+                  <Button onClick={downloadAreaPDF} disabled={busy} size="sm" variant="outline" className="font-bangla border-primary/40 text-primary">
+                    <FileText className="h-3.5 w-3.5 mr-1" /> বিস্তারিত PDF
                   </Button>
                 </div>
               </div>
+
+              <p className="font-bangla text-xs text-muted-foreground mb-3">
+                {areaScope === 'year'
+                  ? `📅 ${toBanglaNumber(reportYear)} সালের বার্ষিক হিসাব — ক্লিক করে সদস্যদের তথ্য দেখুন`
+                  : `📅 ${BANGLA_MONTHS[reportMonth - 1]} ${toBanglaNumber(reportYear)} — মাসিক হিসাব`}
+              </p>
+
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
-                    <th className="py-2">র‍্যাঙ্ক</th><th>এলাকা</th><th className="text-right">সদস্য</th><th className="text-right">মোট সংগ্রহ</th><th className="text-right">% অর্জন</th>
+                    <th className="py-2">র‍্যাঙ্ক</th><th>এলাকা</th><th className="text-right">সদস্য</th>
+                    <th className="text-right">প্রত্যাশিত</th><th className="text-right">সংগ্রহ</th>
+                    <th className="text-right">বকেয়া</th><th className="text-right">% অর্জন</th>
                   </tr>
                 </thead>
                 <tbody className="font-bangla">
                   {areaSummaries.map((a, i) => (
-                    <tr key={a.area} className="border-b border-border/40">
-                      <td className="py-2 font-bold gold-text">#{toBanglaNumber(i + 1)}</td>
-                      <td>{a.area}</td>
-                      <td className="text-right">{toBanglaNumber(a.members)}</td>
-                      <td className="text-right text-primary font-semibold">৳ {toBanglaNumber(a.paid.toFixed(0))}</td>
-                      <td className="text-right text-muted-foreground">{a.expected > 0 ? `${toBanglaNumber(Math.round((a.paid / a.expected) * 100))}%` : '—'}</td>
-                    </tr>
+                    <React.Fragment key={a.area}>
+                      <tr
+                        className={`border-b border-border/40 cursor-pointer transition-colors hover:bg-primary/5 ${expandedArea === a.area ? 'bg-primary/10' : ''}`}
+                        onClick={() => setExpandedArea(expandedArea === a.area ? null : a.area)}
+                      >
+                        <td className="py-2 font-bold gold-text">#{toBanglaNumber(i + 1)}</td>
+                        <td className="flex items-center gap-1">
+                          <span className={`transition-transform inline-block ${expandedArea === a.area ? 'rotate-90' : ''}`}>▶</span>
+                          {a.area}
+                        </td>
+                        <td className="text-right">{toBanglaNumber(a.members)}</td>
+                        <td className="text-right text-muted-foreground">৳ {toBanglaNumber(a.expected.toFixed(0))}</td>
+                        <td className="text-right text-primary font-semibold">৳ {toBanglaNumber(a.paid.toFixed(0))}</td>
+                        <td className="text-right text-destructive">{a.due > 0 ? `৳ ${toBanglaNumber(a.due.toFixed(0))}` : '—'}</td>
+                        <td className="text-right">
+                          {a.expected > 0 ? (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              (a.paid / a.expected) >= 1 ? 'bg-emerald-500/20 text-emerald-500' :
+                              (a.paid / a.expected) >= 0.5 ? 'bg-amber-500/20 text-amber-500' :
+                              'bg-rose-500/20 text-rose-500'
+                            }`}>
+                              {toBanglaNumber(Math.round((a.paid / a.expected) * 100))}%
+                            </span>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                      {expandedArea === a.area && (
+                        <tr>
+                          <td colSpan={7} className="p-0">
+                            <div className="bg-background/60 border-l-4 border-primary/40 my-1 mx-2 rounded-lg overflow-hidden">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="bg-primary/10 text-muted-foreground font-bangla">
+                                    <th className="py-1.5 px-3 text-left">কোড</th>
+                                    <th className="py-1.5 px-3 text-left">নাম</th>
+                                    <th className="py-1.5 px-3 text-left">ফোন</th>
+                                    <th className="py-1.5 px-3 text-right">প্রত্যাশিত</th>
+                                    <th className="py-1.5 px-3 text-right">জমা</th>
+                                    <th className="py-1.5 px-3 text-right">বকেয়া</th>
+                                    <th className="py-1.5 px-3 text-center">অবস্থা</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(areaMembers.get(a.area) ?? []).map((m) => (
+                                    <tr key={m.code} className="border-b border-border/20 hover:bg-primary/5">
+                                      <td className="py-1.5 px-3 font-mono text-primary">{m.code}</td>
+                                      <td className="py-1.5 px-3">{m.name}</td>
+                                      <td className="py-1.5 px-3 text-muted-foreground">{m.phone}</td>
+                                      <td className="py-1.5 px-3 text-right">৳ {toBanglaNumber(m.expected.toFixed(0))}</td>
+                                      <td className="py-1.5 px-3 text-right text-primary font-semibold">৳ {toBanglaNumber(m.paid.toFixed(0))}</td>
+                                      <td className="py-1.5 px-3 text-right text-destructive">{m.due > 0 ? `৳ ${toBanglaNumber(m.due.toFixed(0))}` : '—'}</td>
+                                      <td className="py-1.5 px-3 text-center">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                          m.status === 'পরিশোধিত' ? 'bg-emerald-500/20 text-emerald-500' :
+                                          m.status === 'আংশিক' ? 'bg-amber-500/20 text-amber-500' :
+                                          'bg-rose-500/20 text-rose-500'
+                                        }`}>
+                                          {m.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                  {(areaMembers.get(a.area) ?? []).length === 0 && (
+                                    <tr><td colSpan={7} className="py-4 text-center text-muted-foreground">কোনো সদস্য নেই</td></tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                   {areaSummaries.length === 0 && (
-                    <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">কোনো তথ্য নেই।</td></tr>
+                    <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">কোনো তথ্য নেই।</td></tr>
                   )}
                 </tbody>
               </table>

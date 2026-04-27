@@ -1128,8 +1128,8 @@ export async function downloadAreaReportPDF(
 
   drawOrgHeader(
     doc,
-    `Area-wise Collection Report — ${monthLabel}`,
-    `${options.activeOnly ? 'Active members only' : 'All members'} | Total: ${list.length}`,
+    `এলাকা ভিত্তিক চাঁদা হিসাব — ${monthLabel}`,
+    `${options.activeOnly ? 'শুধু সক্রিয় সদস্য' : 'সব সদস্য'} | মোট: ${list.length}`,
   );
 
   const summaries = computeAreaSummaries(members, payments, year, {
@@ -1146,23 +1146,23 @@ export async function downloadAreaReportPDF(
   doc.rect(14, sumY, pageWidth - 28, 18, 'F');
   doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
-  doc.text(`Areas: ${summaries.length}`, 18, sumY + 7);
-  doc.text(`Members: ${totMembers}`, 60, sumY + 7);
-  doc.text(`Expected: ${formatBDT(totExpected)}`, 110, sumY + 7);
+  doc.text(`এলাকা: ${summaries.length}`, 18, sumY + 7);
+  doc.text(`সদস্য: ${totMembers}`, 60, sumY + 7);
+  doc.text(`প্রত্যাশিত: ${formatBDT(totExpected)}`, 110, sumY + 7);
   doc.setTextColor(22, 117, 61);
-  doc.text(`Paid: ${formatBDT(totPaid)}`, 180, sumY + 7);
+  doc.text(`সংগ্রহ: ${formatBDT(totPaid)}`, 180, sumY + 7);
   if (totDue > 0) {
     doc.setTextColor(180, 24, 24);
-    doc.text(`Due: ${formatBDT(totDue)}`, 235, sumY + 7);
+    doc.text(`বকেয়া: ${formatBDT(totDue)}`, 235, sumY + 7);
   }
   doc.setTextColor(120, 120, 120);
   doc.setFontSize(8);
-  doc.text('Sorted by expected amount (highest first).', 18, sumY + 14);
+  doc.text('প্রত্যাশিত পরিমাণ অনুযায়ী সাজানো (সর্বোচ্চ প্রথমে)', 18, sumY + 14);
 
   // Per-area summary table
   autoTable(doc, {
     startY: sumY + 22,
-    head: [['Area', 'Members', 'Expected', 'Paid', 'Due', 'Collection %']],
+    head: [['এলাকা', 'সদস্য', 'প্রত্যাশিত', 'সংগ্রহ', 'বকেয়া', '% অর্জন']],
     body: summaries.map((a) => [
       a.area, a.members,
       formatBDT(a.expected), formatBDT(a.paid), formatBDT(a.due),
@@ -1175,7 +1175,7 @@ export async function downloadAreaReportPDF(
       3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' },
     },
     foot: [[
-      'TOTAL', totMembers, formatBDT(totExpected), formatBDT(totPaid), formatBDT(totDue),
+      'মোট', totMembers, formatBDT(totExpected), formatBDT(totPaid), formatBDT(totDue),
       totExpected > 0 ? `${Math.round((totPaid / totExpected) * 100)}%` : '—',
     ]],
     footStyles: { fillColor: [240, 230, 210], textColor: 0, fontStyle: 'bold' },
@@ -1204,10 +1204,10 @@ export async function downloadAreaReportPDF(
     doc.setTextColor(255, 255, 255);
     doc.setFont(BANGLA_FONT_NAME, 'bold');
     doc.setFontSize(12);
-    doc.text(`Area: ${area} — ${monthLabel}`, 14, 10);
+    doc.text(`এলাকা: ${area} — ${monthLabel}`, 14, 10);
     doc.setFont(BANGLA_FONT_NAME, 'normal');
     doc.setFontSize(9);
-    doc.text(`Members: ${areaMembers.length}`, pageWidth - 14, 10, { align: 'right' });
+    doc.text(`সদস্য: ${areaMembers.length}`, pageWidth - 14, 10, { align: 'right' });
 
     const rows: (string | number)[][] = [];
     let aExp = 0, aPaid = 0;
@@ -1235,7 +1235,7 @@ export async function downloadAreaReportPDF(
 
     autoTable(doc, {
       startY: 22,
-      head: [['Code', 'Name', 'Phone', 'Expected', 'Paid', 'Due', 'Status']],
+      head: [['কোড', 'নাম', 'ফোন', 'প্রত্যাশিত', 'জমা', 'বকেয়া', 'অবস্থা']],
       body: rows,
       headStyles: { fillColor: [180, 142, 73], textColor: 255, fontSize: 9 },
       bodyStyles: { fontSize: 8, cellPadding: 2 },
@@ -1270,7 +1270,7 @@ export async function downloadAreaReportPDF(
     });
   }
 
-  stampFooters(doc, `Area-wise collection report (${monthLabel})`);
+  stampFooters(doc, `এলাকা ভিত্তিক চাঁদা হিসাব (${monthLabel})`);
   const slug = options.month
     ? `area-${year}-${String(options.month).padStart(2, '0')}`
     : `area-${year}`;
