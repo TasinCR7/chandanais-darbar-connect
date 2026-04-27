@@ -35,8 +35,7 @@ const MemberPortal = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("members")
+      const { data, error } = await (supabase.from as any)("members")
         .select("*")
         .eq("member_code", code)
         .eq("phone", phone)
@@ -51,15 +50,14 @@ const MemberPortal = () => {
       }
 
       setMember(data);
-      const { data: pData } = await supabase
-        .from("payments")
+      const { data: pData } = await (supabase.from as any)("payments")
         .select("*")
-        .eq("member_id", data.id)
+        .eq("member_id", (data as any).id)
         .order("payment_date", { ascending: false });
       
       setPayments(pData || []);
       setIsLoggedIn(true);
-      toast({ title: "স্বাগতম", description: `${data.full_name}, আপনার পোর্টালে স্বাগতম।` });
+      toast({ title: "স্বাগতম", description: `${(data as any).full_name}, আপনার পোর্টালে স্বাগতম।` });
     } catch (err: any) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
     } finally {
@@ -109,8 +107,8 @@ const MemberPortal = () => {
 
     setPaymentBusy(true);
     try {
-      const { error } = await supabase.from("payments").insert({
-        member_id: member.id,
+      const { error } = await (supabase.from as any)("payments").insert({
+        member_id: (member as any).id,
         amount,
         for_month: month,
         for_year: new Date().getFullYear(),

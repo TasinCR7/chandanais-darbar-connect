@@ -6,6 +6,7 @@ export interface Member {
   monthly_rate: number;
   joined_date: string;
   is_active: boolean;
+  area?: string;
   address?: string;
   [key: string]: unknown;
 }
@@ -18,6 +19,8 @@ export interface Payment {
   for_year: number;
   payment_date: string;
   method?: string;
+  transaction_ref?: string;
+  status?: string;
   created_at?: string;
   created_by?: string;
   members?: {
@@ -33,6 +36,8 @@ export interface Expense {
   category?: string;
   expense_date: string;
   description?: string;
+  note?: string;
+  approved_by?: string;
   created_at?: string;
   created_by?: string;
 }
