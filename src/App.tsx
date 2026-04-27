@@ -34,6 +34,7 @@ const BookReader = lazy(() => import("./pages/BookReader"));
 const Finance = lazy(() => import("./pages/Finance"));
 const MemberSearch = lazy(() => import("./pages/MemberSearch"));
 const MemberProfile = lazy(() => import("./pages/MemberProfile"));
+const MemberPortal = lazy(() => import("./pages/MemberPortal"));
 const TransparencyNew = lazy(() => import("./pages/Transparency"));
 
 
@@ -82,6 +83,7 @@ const AppContent = () => {
               <Route path="/member-search" element={<MemberSearch />} />
               <Route path="/member/:id" element={<MemberProfile />} />
               <Route path="/transparency" element={<TransparencyNew />} />
+              <Route path="/member-portal" element={<MemberPortal />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -1,255 +1,359 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2 } from "lucide-react";
+import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut } from "lucide-react";
 import PremiumLoader from "@/components/PremiumLoader";
 import { calculateDues, downloadAnnualStatementPDF, type MemberLite, type PaymentLite } from "@/lib/statement";
 import SEO from "@/components/SEO";
-import { formatMonthBn } from "@/utils/dateHelpers";
+import { toBanglaNumber } from "@/lib/bangla";
+import { monthName, BANGLA_MONTHS } from "@/lib/months";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MemberPortal = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [authQuery, setAuthQuery] = useState({ code: "", phone: "" });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [member, setMember] = useState<MemberLite | null>(null);
-  const [payments, setPayments] = useState<PaymentLite[]>([]);
-  const [duesData, setDuesData] = useState<any>(null);
+  const [member, setMember] = useState<any>(null);
+  const [payments, setPayments] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [paymentBusy, setPaymentBusy] = useState(false);
   const { toast } = useToast();
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!authQuery.code.trim() || !authQuery.phone.trim()) {
+      toast({ title: "তথ্য দিন", description: "সদস্য কোড এবং ফোন নম্বর উভয়ই আবশ্যক।", variant: "destructive" });
+      return;
+    }
     
     setLoading(true);
-    setMember(null);
-    setPayments([]);
-    
     try {
-      // Fetch all active members to do a flexible match
-      const { data: members, error: mError } = await supabase
-        .from("committee_members")
+      const { data, error } = await supabase
+        .from("members")
         .select("*")
-        .eq("is_active", true);
+        .eq("member_code", authQuery.code.trim().toUpperCase())
+        .eq("phone", authQuery.phone.trim())
+        .maybeSingle();
         
-      if (mError) throw mError;
-      
-      const query = searchQuery.trim().toLowerCase();
-      // Match by ID prefix, phone, or name
-      const found = members?.find(m => 
-        m.id.toLowerCase().startsWith(query) || 
-        m.phone === query || 
-        m.name.toLowerCase() === query
-      );
-      
-      if (!found) {
-        toast({ title: "সদস্য পাওয়া যায়নি", description: "সঠিক সদস্য কোড বা ফোন নম্বর দিন।", variant: "destructive" });
+      if (error) throw error;
+      if (!data) {
+        toast({ title: "লগইন ব্যর্থ", description: "ভুল মেম্বার কোড বা ফোন নম্বর।", variant: "destructive" });
         setLoading(false);
         return;
       }
-      
-      const memberLite: MemberLite = {
-        id: found.id,
-        name: found.name,
-        phone: found.phone || undefined,
-        area: found.area || undefined,
-        monthly_due: found.monthly_due ?? 100
-      };
-      
-      setMember(memberLite);
-      
-      // Fetch contributions mapped by name
-      const { data: contribs, error: cError } = await supabase
-        .from("committee_contributions")
+
+      setMember(data);
+      const { data: pData } = await supabase
+        .from("payments")
         .select("*")
-        .eq("name", found.name)
-        .order("created_at", { ascending: false });
-        
-      if (cError) throw cError;
+        .eq("member_id", data.id)
+        .order("payment_date", { ascending: false });
       
-      const mappedPayments: PaymentLite[] = (contribs || []).map(c => ({
-        id: c.id,
-        name: c.name,
-        amount: c.amount || 0,
-        target_month: c.target_month || "",
-        payment_method: c.payment_method || "",
-        transaction_id: c.transaction_id || "",
-        created_at: c.created_at
-      }));
-      
-      setPayments(mappedPayments);
-      
-      // Compute dues
-      const dues = calculateDues(memberLite, mappedPayments);
-      setDuesData(dues);
-      
-      toast({ title: "সদস্য তথ্য লোড হয়েছে", description: `${found.name} এর তথ্য সফলভাবে পাওয়া গেছে।` });
-    } catch (err: unknown) {
+      setPayments(pData || []);
+      setIsLoggedIn(true);
+      toast({ title: "স্বাগতম", description: `${data.full_name}, আপনার পোর্টালে স্বাগতম।` });
+    } catch (err: any) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownloadAnnual = () => {
-    if (!member) return;
-    downloadAnnualStatementPDF(member, payments, selectedYear);
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setMember(null);
+    setPayments([]);
+    setAuthQuery({ code: "", phone: "" });
   };
 
+  const duesData = useMemo(() => {
+    if (!member) return null;
+    const liteMember: MemberLite = {
+      member_code: member.member_code,
+      full_name: member.full_name,
+      phone: member.phone,
+      joined_date: member.joined_date,
+      monthly_rate: Number(member.monthly_rate)
+    };
+    const litePayments: PaymentLite[] = payments
+      .filter(p => p.status !== 'rejected')
+      .map(p => ({
+        amount: Number(p.amount),
+        for_year: p.for_year,
+        for_month: p.for_month,
+        payment_date: p.payment_date,
+        method: p.method,
+        transaction_ref: p.transaction_ref
+      }));
+    return calculateDues(liteMember, litePayments);
+  }, [member, payments]);
+
+  const handleSubmitPayment = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!member) return;
+    const fd = new FormData(e.currentTarget);
+    const amount = Number(fd.get("amount"));
+    const month = Number(fd.get("for_month"));
+    const method = fd.get("method") as string;
+    const ref = fd.get("transaction_ref") as string;
+
+    if (!amount || amount <= 0) return;
+
+    setPaymentBusy(true);
+    try {
+      const { error } = await supabase.from("payments").insert({
+        member_id: member.id,
+        amount,
+        for_month: month,
+        for_year: new Date().getFullYear(),
+        method,
+        transaction_ref: ref,
+        status: 'pending',
+        note: 'সদস্য নিজে এন্ট্রি করেছেন (Online)'
+      } as any);
+
+      if (error) throw error;
+      toast({ title: "পেমেন্ট জমা হয়েছে", description: "অ্যাডমিন অনুমোদনের পর এটি আপনার স্টেটমেন্টে যোগ হবে।" });
+      e.currentTarget.reset();
+    } catch (err: any) {
+      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  if (loading && !isLoggedIn) return <div className="min-h-screen flex items-center justify-center"><PremiumLoader /></div>;
+
   return (
-    <>
-      <SEO title="সদস্য পোর্টাল - চন্দনাইশ দরবার শরীফ" description="চাঁদার পূর্ণ বিবরণী দেখুন" />
-      <div className="py-20 min-h-screen bg-gold/5">
-        <div className="container mx-auto px-4 max-w-4xl">
-          
-          <div className="text-center mb-10">
-            <h1 className="text-xl md:text-2xl font-bold text-gold/80">আপনার সদস্য কোড লিখে চাঁদার পূর্ণ বিবরণী দেখুন — <span className="text-gold">login প্রয়োজন নেই</span></h1>
+    <div className="min-h-screen bg-background pb-20 font-bengali">
+      <SEO title="সদস্য পোর্টাল - চন্দনাইশ দরবার শরীফ" description="চাঁদার বিবরণী ও অনলাইন পেমেন্ট" />
+      
+      {!isLoggedIn ? (
+        <div className="container mx-auto px-4 py-20 flex justify-center">
+          <div className="card-gold p-8 rounded-3xl w-full max-w-md shadow-2xl border border-primary/20">
+            <div className="text-center mb-8">
+              <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <LogIn className="h-8 w-8 text-primary" />
+              </div>
+              <h1 className="text-2xl font-heading font-bold text-premium-gradient">সদস্য পোর্টাল লগইন</h1>
+              <p className="text-sm text-muted-foreground mt-2">আপনার প্রোফাইল দেখতে তথ্য দিন</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">সদস্য কোড</Label>
+                <Input 
+                  placeholder="যেমন: CDS-001" 
+                  value={authQuery.code}
+                  onChange={(e) => setAuthQuery({...authQuery, code: e.target.value.toUpperCase()})}
+                  className="h-12 bg-background/50 border-primary/20 focus:border-primary font-mono"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ফোন নম্বর</Label>
+                <Input 
+                  type="tel"
+                  placeholder="০১৭..." 
+                  value={authQuery.phone}
+                  onChange={(e) => setAuthQuery({...authQuery, phone: e.target.value})}
+                  className="h-12 bg-background/50 border-primary/20 focus:border-primary"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full h-12 bg-gradient-gold text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
+                লগইন করুন
+              </Button>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <div className="container mx-auto px-4 pt-10 max-w-5xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-heading font-bold gold-text">আমার ড্যাশবোর্ড</h1>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-destructive hover:bg-destructive/10">
+              <LogOut className="h-4 w-4 mr-2" /> লগআউট
+            </Button>
           </div>
 
-          <form onSubmit={handleSearch} className="bg-card border border-gold/10 p-6 md:p-8 rounded-2xl mb-8 shadow-xl">
-            <p className="text-muted-foreground mb-4 text-sm font-medium">সদস্য কোড দিন (যেমন: M-001 / CDS-001 / ফোন নম্বর)</p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-background border border-gold/20 rounded-xl px-5 py-3.5 text-foreground focus:outline-none focus:border-gold/50 transition-colors" 
-                placeholder="M-001" 
-                required
-              />
-              <button 
-                type="submit"
-                disabled={loading}
-                className="bg-gold text-black font-bold px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-gold/90 transition-colors disabled:opacity-70"
-              >
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />} 
-                খুঁজুন
-              </button>
-            </div>
-          </form>
-
-          {loading && !member && (
-            <div className="flex justify-center py-20"><PremiumLoader /></div>
-          )}
-
-          {member && duesData && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Member Header */}
-              <div className="bg-card border border-gold/10 p-6 md:p-8 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
-                <div>
-                  <p className="text-gold text-sm font-bold tracking-widest mb-1">{member.id.slice(0, 8).toUpperCase()}</p>
-                  <h2 className="text-3xl font-bold text-foreground mb-2">{member.name}</h2>
-                  <p className="text-muted-foreground text-sm flex flex-wrap gap-2">
-                    <span>যোগদান: ২০২৬-০১-০১</span> 
-                    <span className="text-gold/30">•</span> 
-                    <span>মাসিক ৳ {(member.monthly_due || 0).toLocaleString("bn-BD")}</span>
-                  </p>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left Column: Member Info & Stats */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="card-gold p-6 rounded-3xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Users size={120} />
                 </div>
-                
-                <div className="flex gap-3 w-full md:w-auto">
-                  <select 
-                    value={selectedYear} 
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="bg-background border border-gold/20 text-foreground px-4 py-2.5 rounded-xl outline-none focus:border-gold/50"
-                  >
-                    {[...Array(5)].map((_, i) => {
-                      const yr = new Date().getFullYear() - i;
-                      return <option key={yr} value={yr}>{yr.toLocaleString("bn-BD", {useGrouping: false})}</option>;
-                    })}
-                  </select>
-                  <button 
-                    onClick={handleDownloadAnnual}
-                    className="bg-gold text-black font-bold px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-gold/90 transition-all flex-1 md:flex-none"
-                  >
-                    <Download size={16} /> বার্ষিক PDF
-                  </button>
-                </div>
-              </div>
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-card border border-gold/10 p-6 rounded-2xl shadow-xl flex flex-col gap-2 relative overflow-hidden group hover:border-gold/30 transition-colors">
-                  <div className="absolute right-0 top-0 w-24 h-24 bg-gold/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
-                  <Wallet className="text-gold/70" size={24} />
-                  <p className="text-muted-foreground text-sm font-medium mt-2">মোট জমা</p>
-                  <h3 className="text-3xl font-bold text-gold">৳ {duesData.totalPaid.toLocaleString("bn-BD")}</h3>
-                </div>
-                
-                <div className="bg-card border border-red-500/10 p-6 rounded-2xl shadow-xl flex flex-col gap-2 relative overflow-hidden group hover:border-red-500/30 transition-colors">
-                  <div className="absolute right-0 top-0 w-24 h-24 bg-red-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
-                  <AlertCircle className="text-red-500/70" size={24} />
-                  <p className="text-muted-foreground text-sm font-medium mt-2">বকেয়া</p>
-                  <div className="flex items-baseline gap-3">
-                    <h3 className="text-3xl font-bold text-red-500">৳ {duesData.dues.toLocaleString("bn-BD")}</h3>
-                    <p className="text-xs text-red-500/60 font-medium">{duesData.dueMonths.toLocaleString("bn-BD")} মাস বাকি</p>
+                <div className="relative z-10">
+                  <p className="text-primary font-mono text-sm tracking-widest">{member.member_code}</p>
+                  <h2 className="text-3xl font-heading font-bold gold-text mt-1">{member.full_name}</h2>
+                  <div className="grid sm:grid-cols-2 gap-4 mt-6 text-sm">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><CreditCard size={16} /></div>
+                      <span>মাসিক চাঁদা: ৳ {toBanglaNumber(member.monthly_rate)}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Search size={16} /></div>
+                      <span>এলাকা: {member.area || '—'}</span>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="bg-card border border-emerald-500/10 p-6 rounded-2xl shadow-xl flex flex-col gap-2 relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
-                  <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform" />
-                  <CheckCircle className="text-emerald-500/70" size={24} />
-                  <p className="text-muted-foreground text-sm font-medium mt-2">প্রত্যাশিত মোট</p>
-                  <h3 className="text-3xl font-bold text-emerald-500">৳ {duesData.totalExpected.toLocaleString("bn-BD")}</h3>
-                </div>
               </div>
 
-              {/* Monthly Statement Table */}
-              <div className="bg-card border border-gold/10 rounded-2xl overflow-hidden shadow-xl">
-                <div className="p-6 border-b border-gold/10">
-                  <h3 className="text-lg font-bold text-gold">মাসিক বিবরণী (যোগদানের পর থেকে)</h3>
+              {duesData && (
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="card-gold p-5 rounded-2xl border-emerald-500/10">
+                    <p className="text-xs text-muted-foreground font-bangla">মোট জমা</p>
+                    <p className="text-2xl font-display text-emerald-600 mt-1">৳ {toBanglaNumber(duesData.totalPaid.toFixed(0))}</p>
+                  </div>
+                  <div className="card-gold p-5 rounded-2xl border-rose-500/10">
+                    <p className="text-xs text-muted-foreground font-bangla">মোট বকেয়া</p>
+                    <p className="text-2xl font-display text-rose-600 mt-1">৳ {toBanglaNumber(duesData.dues.toFixed(0))}</p>
+                    <p className="text-[10px] text-rose-500/60 font-bangla mt-1">{toBanglaNumber(duesData.dueMonths)} মাস বাকি</p>
+                  </div>
+                  <div className="card-gold p-5 rounded-2xl border-primary/10">
+                    <p className="text-xs text-muted-foreground font-bangla">প্রত্যাশিত মোট</p>
+                    <p className="text-2xl font-display gold-text mt-1">৳ {toBanglaNumber(duesData.totalExpected.toFixed(0))}</p>
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-gold/5 text-muted-foreground">
-                      <tr>
-                        <th className="p-5 font-medium w-1/3">মাস / বছর</th>
-                        <th className="p-5 font-medium w-1/3">প্রত্যাশিত</th>
-                        <th className="p-5 font-medium w-1/3 text-right">পরিশোধিত অবস্থা</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gold/5">
-                      {[...duesData.rows].reverse().filter(r => r.year === selectedYear).map((row: { year: number, month: number, isPaid: boolean, isAdvance: boolean, expected: number }, i) => {
-                        const monthName = new Date(2000, row.month - 1).toLocaleDateString("bn-BD", { month: "long" });
-                        const isPaid = row.status === 'paid';
-                        const isPartial = row.status === 'partial';
-                        const isDue = row.status === 'due';
-                        
-                        return (
-                          <tr key={i} className="hover:bg-gold/5 transition-colors">
-                            <td className="p-5 font-bold text-foreground">{monthName} {row.year.toLocaleString("bn-BD", {useGrouping: false})}</td>
-                            <td className="p-5 text-muted-foreground">৳ {row.expected.toLocaleString("bn-BD")}</td>
-                            <td className="p-5 text-right">
-                              <div className="flex items-center justify-end gap-3">
-                                <span className={`font-bold ${isPaid ? 'text-gold' : isPartial ? 'text-orange-400' : 'text-red-500'}`}>
-                                  ৳ {row.paid.toLocaleString("bn-BD")}
-                                </span>
-                                <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${
-                                  isPaid ? 'bg-gold/10 text-gold border border-gold/20' : 
-                                  isPartial ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 
-                                  'bg-red-500/10 text-red-500 border border-red-500/20'
-                                }`}>
-                                  {isPaid ? 'পরিশোধিত' : isPartial ? 'আংশিক' : 'বকেয়া'}
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {duesData.rows.filter((r:any) => r.year === selectedYear).length === 0 && (
-                        <tr>
-                          <td colSpan={3} className="p-8 text-center text-muted-foreground">এই বছরের কোনো রেকর্ড পাওয়া যায়নি।</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+              )}
+
+              {/* Monthly Grid */}
+              <div className="card-gold p-6 rounded-3xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-display text-lg gold-text">মাসিক বিবরণী</h3>
+                  <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                    <SelectTrigger className="w-32 h-9 bg-background/50 border-primary/20"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[...Array(5)].map((_, i) => (
+                        <SelectItem key={i} value={String(new Date().getFullYear() - i)}>
+                          {toBanglaNumber(new Date().getFullYear() - i)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {BANGLA_MONTHS.map((name, i) => {
+                    const row = duesData?.rows.find(r => r.year === selectedYear && r.month === i + 1);
+                    const isPaid = row?.status === 'paid';
+                    const isPartial = row?.status === 'partial';
+                    return (
+                      <div key={i} className={`p-3 rounded-xl border text-center transition-all ${
+                        isPaid ? 'bg-emerald-500/10 border-emerald-500/30' : 
+                        isPartial ? 'bg-amber-500/10 border-amber-500/30' : 
+                        'bg-muted/30 border-border/50 opacity-60'
+                      }`}>
+                        <p className="text-[10px] uppercase tracking-tighter text-muted-foreground">{name}</p>
+                        <p className={`text-sm font-bold mt-1 ${isPaid ? 'text-emerald-600' : isPartial ? 'text-amber-600' : ''}`}>
+                          {row ? `৳ ${toBanglaNumber(row.paid)}` : '—'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-8 flex gap-3">
+                  <Button 
+                    className="flex-1 bg-gradient-gold text-primary-foreground font-bold"
+                    onClick={() => downloadAnnualStatementPDF({
+                      member_code: member.member_code,
+                      full_name: member.full_name,
+                      phone: member.phone,
+                      joined_date: member.joined_date,
+                      monthly_rate: member.monthly_rate
+                    }, payments, selectedYear)}
+                  >
+                    <Download className="h-4 w-4 mr-2" /> বার্ষিক PDF রিপোর্ট
+                  </Button>
                 </div>
               </div>
-
             </div>
-          )}
 
+            {/* Right Column: Pay Online */}
+            <div className="space-y-6">
+              <div className="card-gold p-6 rounded-3xl bg-primary/5 border-primary/30">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shadow-inner">
+                    <Send size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-bold text-primary">অনলাইন পেমেন্ট</h3>
+                    <p className="text-[10px] text-muted-foreground uppercase">Submit Monthly Contribution</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmitPayment} className="space-y-4 font-bangla">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] text-muted-foreground ml-1">মাস নির্বাচন করুন</Label>
+                    <Select name="for_month" defaultValue={String(new Date().getMonth() + 1)} required>
+                      <SelectTrigger className="bg-background/50 border-primary/20 h-10"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {BANGLA_MONTHS.map((m, i) => (
+                          <SelectItem key={i} value={String(i + 1)}>{m} {toBanglaNumber(new Date().getFullYear())}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] text-muted-foreground ml-1">টাকার পরিমাণ (৳)</Label>
+                    <Input name="amount" type="number" defaultValue={member.monthly_rate} required className="bg-background/50 border-primary/20 h-10" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] text-muted-foreground ml-1">পেমেন্ট মাধ্যম</Label>
+                    <Select name="method" defaultValue="bkash" required>
+                      <SelectTrigger className="bg-background/50 border-primary/20 h-10"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bkash">বিকাশ (bKash)</SelectItem>
+                        <SelectItem value="nagad">নগদ (Nagad)</SelectItem>
+                        <SelectItem value="rocket">রকেট (Rocket)</SelectItem>
+                        <SelectItem value="bank">ব্যাংক ট্রান্সফার</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] text-muted-foreground ml-1">TrxID / রেফারেন্স</Label>
+                    <Input name="transaction_ref" placeholder="যেমন: AX782S..." className="bg-background/50 border-primary/20 h-10" />
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 mb-4 text-[10px] text-primary/80 leading-relaxed italic">
+                      চাঁদা পাঠানোর পর আপনার ট্রানজেকশন আইডি দিয়ে এখানে সাবমিট করুন। অ্যাডমিন ভেরিফাই করে অ্যাপ্রুভ করলে আপনার হিসেবে যোগ হবে।
+                    </div>
+                    <Button disabled={paymentBusy} className="w-full bg-gradient-gold text-primary-foreground font-bold h-12 shadow-lg shadow-primary/10">
+                      {paymentBusy ? <Loader2 className="animate-spin h-5 w-5" /> : 'চাঁদা সাবমিট করুন'}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Pending Approvals */}
+              {payments.some(p => p.status === 'pending') && (
+                <div className="card-gold p-5 rounded-2xl border-amber-500/20 bg-amber-500/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <h4 className="text-xs font-bold text-amber-600 uppercase">Pending Approvals</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {payments.filter(p => p.status === 'pending').slice(0, 3).map(p => (
+                      <div key={p.id} className="flex justify-between items-center text-[11px] border-b border-amber-500/10 pb-2 last:border-0">
+                        <span className="font-bangla">{monthName(p.for_month)} {toBanglaNumber(p.for_year)}</span>
+                        <span className="font-bold">৳ {toBanglaNumber(p.amount)}</span>
+                        <span className="text-amber-600 italic">অপেক্ষমাণ</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 
