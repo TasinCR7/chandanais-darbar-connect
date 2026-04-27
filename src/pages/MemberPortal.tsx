@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut, Users } from "lucide-react";
@@ -83,7 +83,7 @@ const MemberPortal = () => {
       monthly_rate: Number(member.monthly_rate)
     };
     const litePayments: PaymentLite[] = payments
-      .filter(p => p.status === 'approved')
+      .filter(p => p.status === 'approved' || !p.status)
       .map(p => ({
         amount: Number(p.amount),
         for_year: p.for_year,

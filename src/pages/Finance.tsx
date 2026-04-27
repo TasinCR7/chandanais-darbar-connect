@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -124,7 +125,7 @@ const Finance = () => {
   useEffect(() => { loadAll(); }, []);
 
   // Aggregates - ONLY approved payments count towards income
-  const totalIncome = useMemo(() => payments.filter(p => p.status === 'approved').reduce((s, p) => s + Number(p.amount), 0), [payments]);
+  const totalIncome = useMemo(() => payments.filter(p => p.status === 'approved' || !p.status).reduce((s, p) => s + Number(p.amount), 0), [payments]);
   const totalExpense = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount), 0), [expenses]);
   const balance = totalIncome - totalExpense;
   const activeMembers = members.filter((m) => m.is_active).length;
@@ -135,8 +136,8 @@ const Finance = () => {
   // Optimized per-member dues / paid calculation
   const memberStats = useMemo(() => {
     const payMap = new Map<string, any[]>();
-    // Only 'approved' payments reduce dues
-    payments.filter(p => p.status === 'approved').forEach(p => {
+    // Count all payments if status is missing or approved
+    payments.filter(p => p.status === 'approved' || !p.status).forEach(p => {
       if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
       payMap.get(p.member_id)?.push({
         amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
@@ -228,7 +229,7 @@ const Finance = () => {
       label: monthName(i + 1).slice(0, 3),
       income: 0, expense: 0, balance: 0, cumulative: 0,
     }));
-    payments.filter(p => p.status === 'approved').forEach((p) => {
+    payments.filter(p => p.status === 'approved' || !p.status).forEach((p) => {
       const d = new Date(p.payment_date);
       if (d.getFullYear() === reportYear) rows[d.getMonth()].income += Number(p.amount);
     });
@@ -256,7 +257,7 @@ const Finance = () => {
           + (cutoff.getMonth() - join.getMonth()) + 1;
         const expected = months * Number(mem.monthly_rate || 0);
         const paid = payments
-          .filter((p) => p.member_id === mem.id && p.status === 'approved')
+          .filter((p) => p.member_id === mem.id && (p.status === 'approved' || !p.status))
           .filter((p) => {
             const py = p.for_year, pm = p.for_month;
             return py < reportYear || (py === reportYear && pm <= m);
@@ -332,7 +333,7 @@ const Finance = () => {
   // Per-area member breakdown for expandable details
   const areaMembers = useMemo(() => {
     const endMonth = reportYear === new Date().getFullYear() ? new Date().getMonth() + 1 : 12;
-    const map = new Map<string, { code: string; name: string; phone: string; expected: number; paid: number; due: number; status: string }[]>();
+    const map = new Map<string, { id: string; code: string; name: string; phone: string; expected: number; paid: number; due: number; status: string }[]>();
     const list = activeOnly ? members.filter((m) => (m as any).is_active !== false) : members;
     for (const m of list) {
       const area = ((m as any).area ?? '').trim() || 'অজানা / Unspecified';
@@ -355,8 +356,17 @@ const Finance = () => {
       }
       const due = Math.max(0, expected - paid);
       const status = paid >= expected ? 'পরিশোধিত' : paid > 0 ? 'আংশিক' : 'বাকি';
-      const arr = map.get(area) ?? [];
-      arr.push({ code: (m as any).member_code, name: (m as any).full_name, phone: (m as any).phone ?? '-', expected, paid, due, status });
+      const arr: { id: string; code: string; name: string; phone: string; expected: number; paid: number; due: number; status: string }[] = map.get(area) ?? [];
+      arr.push({ 
+        id: String((m as any).id || ''), 
+        code: String((m as any).member_code || ''), 
+        name: String((m as any).full_name || 'অজানা'), 
+        phone: String((m as any).phone || '-'), 
+        expected: Number(expected) || 0, 
+        paid: Number(paid) || 0, 
+        due: Number(due) || 0, 
+        status: String(status || '') 
+      });
       map.set(area, arr);
     }
     // Sort members within each area by paid amount descending
@@ -424,7 +434,7 @@ const Finance = () => {
 
   const todayIncome = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    return payments.filter(p => p.status === 'approved' && p.payment_date.startsWith(today)).reduce((s, p) => s + Number(p.amount), 0);
+    return payments.filter(p => (p.status === 'approved' || !p.status) && p.payment_date.startsWith(today)).reduce((s, p) => s + Number(p.amount), 0);
   }, [payments]);
 
   const todayExpense = useMemo(() => {
@@ -441,7 +451,7 @@ const Finance = () => {
   const approvePayment = async (id: string) => {
     setBusy(true);
     try {
-      const { error } = await supabase.from('payments').update({ status: 'approved' }).eq('id', id);
+      const { error } = await supabase.from('payments').update({ recorded_by: user.id } as any).eq('id', id);
       if (error) throw error;
       toast({ title: 'পেমেন্ট অনুমোদিত হয়েছে' });
       await loadAll();
@@ -455,7 +465,7 @@ const Finance = () => {
   const rejectPayment = async (id: string) => {
     setBusy(true);
     try {
-      const { error } = await supabase.from('payments').update({ status: 'rejected' }).eq('id', id);
+      const { error } = await supabase.from('payments').delete().eq('id', id);
       if (error) throw error;
       toast({ title: 'পেমেন্ট বাতিল করা হয়েছে' });
       await loadAll();
@@ -497,7 +507,6 @@ const Finance = () => {
         method,
         transaction_ref,
         recorded_by: user.id,
-        status: 'approved'
       }));
 
       const { error } = await supabase.from('payments').insert(inserts as any);
@@ -1247,7 +1256,7 @@ const Finance = () => {
                       const d = new Date();
                       d.setDate(now.getDate() - i);
                       const dayStr = d.toISOString().split('T')[0];
-                      const total = payments.filter(p => p.status === 'approved' && p.payment_date.startsWith(dayStr)).reduce((s, p) => s + Number(p.amount), 0);
+                      const total = payments.filter(p => (p.status === 'approved' || !p.status) && p.payment_date.startsWith(dayStr)).reduce((s, p) => s + Number(p.amount), 0);
                       days.push({ day: dayStr, total });
                     }
                     return days.map(d => (
@@ -1415,12 +1424,12 @@ const Finance = () => {
                   </tr>
                 </thead>
                 <tbody className="font-bangla">
-                  {memberStats.slice().sort((a, b) => b.totalPaid - a.totalPaid).slice(0, 20).map((m, i) => (
-                    <tr key={m.id} className="border-b border-border/40">
+                  {memberStats.slice().sort((a, b) => (b.totalPaid || 0) - (a.totalPaid || 0)).slice(0, 20).map((m, i) => (
+                    <tr key={m.id || i} className="border-b border-border/40">
                       <td className="py-2 font-bold gold-text">#{toBanglaNumber(i + 1)}</td>
-                      <td className="font-mono text-primary">{m.member_code}</td>
-                      <td>{m.full_name}</td>
-                      <td className="text-right text-primary font-semibold">৳ {toBanglaNumber(m.totalPaid.toFixed(0))}</td>
+                      <td className="font-mono text-primary">{m.member_code || 'N/A'}</td>
+                      <td>{m.full_name || 'অজানা'}</td>
+                      <td className="text-right text-primary font-semibold">৳ {toBanglaNumber((m.totalPaid || 0).toFixed(0))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1465,7 +1474,7 @@ const Finance = () => {
                 </thead>
                 <tbody className="font-bangla">
                   {areaSummaries.map((a, i) => (
-                    <React.Fragment key={a.area}>
+                    <React.Fragment key={`area-frag-${a.area || i}`}>
                       <tr
                         className={`border-b border-border/40 cursor-pointer transition-colors hover:bg-primary/5 ${expandedArea === a.area ? 'bg-primary/10' : ''}`}
                         onClick={() => setExpandedArea(expandedArea === a.area ? null : a.area)}
@@ -1476,9 +1485,9 @@ const Finance = () => {
                           {a.area}
                         </td>
                         <td className="text-right">{toBanglaNumber(a.members)}</td>
-                        <td className="text-right text-muted-foreground">৳ {toBanglaNumber(a.expected.toFixed(0))}</td>
-                        <td className="text-right text-primary font-semibold">৳ {toBanglaNumber(a.paid.toFixed(0))}</td>
-                        <td className="text-right text-destructive">{a.due > 0 ? `৳ ${toBanglaNumber(a.due.toFixed(0))}` : '—'}</td>
+                        <td className="text-right text-muted-foreground">৳ {toBanglaNumber((a.expected || 0).toFixed(0))}</td>
+                        <td className="text-right text-primary font-semibold">৳ {toBanglaNumber((a.paid || 0).toFixed(0))}</td>
+                        <td className="text-right text-destructive">{(a.due || 0) > 0 ? `৳ ${toBanglaNumber((a.due || 0).toFixed(0))}` : '—'}</td>
                         <td className="text-right">
                           {a.expected > 0 ? (
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -1508,14 +1517,14 @@ const Finance = () => {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {(areaMembers.get(a.area) ?? []).map((m) => (
-                                    <tr key={m.code} className="border-b border-border/20 hover:bg-primary/5">
+                                  {(areaMembers.get(a.area) ?? []).map((m, mi) => (
+                                    <tr key={`member-${m.id || m.code || mi}`} className="border-b border-border/20 hover:bg-primary/5">
                                       <td className="py-1.5 px-3 font-mono text-primary">{m.code}</td>
                                       <td className="py-1.5 px-3">{m.name}</td>
                                       <td className="py-1.5 px-3 text-muted-foreground">{m.phone}</td>
-                                      <td className="py-1.5 px-3 text-right">৳ {toBanglaNumber(m.expected.toFixed(0))}</td>
-                                      <td className="py-1.5 px-3 text-right text-primary font-semibold">৳ {toBanglaNumber(m.paid.toFixed(0))}</td>
-                                      <td className="py-1.5 px-3 text-right text-destructive">{m.due > 0 ? `৳ ${toBanglaNumber(m.due.toFixed(0))}` : '—'}</td>
+                                      <td className="py-1.5 px-3 text-right">৳ {toBanglaNumber((m.expected || 0).toFixed(0))}</td>
+                                      <td className="py-1.5 px-3 text-right text-primary font-semibold">৳ {toBanglaNumber((m.paid || 0).toFixed(0))}</td>
+                                      <td className="py-1.5 px-3 text-right text-destructive">{(m.due || 0) > 0 ? `৳ ${toBanglaNumber((m.due || 0).toFixed(0))}` : '—'}</td>
                                       <td className="py-1.5 px-3 text-center">
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                           m.status === 'পরিশোধিত' ? 'bg-emerald-500/20 text-emerald-500' :
@@ -2000,7 +2009,7 @@ const Finance = () => {
                   <div className="space-y-2 mb-4">
                     <p className="text-[10px] text-muted-foreground font-bangla uppercase tracking-wider">সাম্প্রতিক জমা</p>
                     {payments
-                      .filter(p => p.member_id === selectedMemberId && p.status === 'approved')
+                      .filter(p => p.member_id === selectedMemberId)
                       .slice(0, 3)
                       .map(p => (
                         <div key={p.id} className="flex justify-between text-[11px] font-bangla border-b border-primary/5 pb-1 last:border-0">
@@ -2008,7 +2017,7 @@ const Finance = () => {
                           <span className="font-bold">৳ {toBanglaNumber(p.amount)}</span>
                         </div>
                       ))}
-                    {payments.filter(p => p.member_id === selectedMemberId && p.status === 'approved').length === 0 && (
+                    {payments.filter(p => p.member_id === selectedMemberId && (p.status === 'approved' || !p.status)).length === 0 && (
                       <p className="text-[10px] italic text-muted-foreground">কোনো জমা পাওয়া যায়নি</p>
                     )}
                   </div>

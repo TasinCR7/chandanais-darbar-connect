@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MessageCircle, HeartHandshake, Home, Users, User, Calculator, CheckCircle2, CreditCard, Send, Download } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
@@ -57,7 +57,6 @@ const Hadia = () => {
           recipient_id: donationType === 'specific_shahjada' ? specificShahjada : null,
           payment_method: paymentMethod,
           transaction_id: transactionId,
-          status: 'pending'
         })
         .select()
         .single();
@@ -87,12 +86,10 @@ const Hadia = () => {
 অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
       `;
       
-      // Send Telegram Notification
       try {
         await sendTelegramNotification(textMessage);
-        console.log("Telegram notification sent successfully from Hadia page");
       } catch (err) {
-        console.error("Failed to send Telegram notification from Hadia page:", err);
+        console.error("Telegram notification error:", err);
       }
       
     } catch (error) {
@@ -125,7 +122,6 @@ const Hadia = () => {
         const pageW = pdf.internal.pageSize.getWidth();
         const pageH = pdf.internal.pageSize.getHeight();
         const imgH = (canvas.height * pageW) / canvas.width;
-        // Multi-page support if content overflows
         let heightLeft = imgH;
         let position = 0;
         pdf.addImage(imgData, "PNG", 0, position, pageW, imgH, undefined, 'FAST');
@@ -411,7 +407,7 @@ const Hadia = () => {
                       </h3>
                       <div className="space-y-5">
                         <div>
-                          <label className="block text-foreground mb-3 font-medium text-sm">মা মাধ্যম নির্বাচন করুন</label>
+                          <label className="block text-foreground mb-3 font-medium text-sm">পেমেন্ট মাধ্যম নির্বাচন করুন</label>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {[
                               { id: "bkash", name: "bKash" },
@@ -531,4 +527,3 @@ const Hadia = () => {
 };
 
 export default Hadia;
-

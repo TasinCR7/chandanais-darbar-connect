@@ -2,6 +2,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, setBanglaFontStyle, BANGLA_FONT_NAME } from './pdfFont';
+import { toBanglaNumber } from './bangla';
+import { BANGLA_MONTHS } from './months';
 
 /** Method labels in Bangla — used in every PDF for consistency. */
 const METHOD_BN: Record<string, string> = {
@@ -1066,7 +1068,11 @@ export interface AreaSummary {
 }
 
 const AREA_FALLBACK = 'অজানা / Unspecified';
-const normArea = (s?: string | null) => (s && s.trim()) ? s.trim() : AREA_FALLBACK;
+const normArea = (s?: any) => {
+  if (typeof s !== 'string') s = String(s || '');
+  const trimmed = s.trim();
+  return trimmed || AREA_FALLBACK;
+};
 
 /** Compute per-area collection summary for a year (and optional month). */
 export function computeAreaSummaries(
@@ -1124,7 +1130,7 @@ export async function downloadAreaReportPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   const list = filterReportMembers(members, !!options.activeOnly);
-  const monthLabel = options.month ? `${MONTHS_EN[options.month - 1]} ${year}` : `${year}`;
+  const monthLabel = options.month ? `${BANGLA_MONTHS[options.month - 1]} ${toBanglaNumber(year)}` : `${toBanglaNumber(year)}`;
 
   drawOrgHeader(
     doc,
@@ -1227,7 +1233,7 @@ export async function downloadAreaReportPDF(
         paid = payments.filter((p) => p.member_id === m.id && p.for_year === year && p.for_month >= startMonth && p.for_month <= endMonth)
           .reduce((s, p) => s + Number(p.amount), 0);
       }
-      const status = paid >= expected ? 'PAID' : paid > 0 ? 'PARTIAL' : 'DUE';
+      const status = paid >= expected ? 'পরিশোধিত' : paid > 0 ? 'আংশিক' : 'বাকি';
       const due = Math.max(0, expected - paid);
       aExp += expected; aPaid += paid;
       rows.push([m.member_code, m.full_name, m.phone ?? '-', formatBDT(expected), formatBDT(paid), formatBDT(due), status]);
@@ -1249,10 +1255,10 @@ export async function downloadAreaReportPDF(
       didParseCell: (data) => {
         if (data.section === 'body' && data.column.index === 6) {
           const v = data.cell.raw as string;
-          if (v === 'PAID') {
+          if (v === 'পরিশোধিত') {
             data.cell.styles.textColor = COL_PAID_TEXT;
             data.cell.styles.fillColor = COL_PAID_FILL;
-          } else if (v === 'DUE') {
+          } else if (v === 'বাকি') {
             data.cell.styles.textColor = COL_DUE_TEXT;
             data.cell.styles.fillColor = COL_DUE_FILL;
           } else {
@@ -1571,12 +1577,12 @@ export async function downloadAreaRankingPDF(
   const doc = new jsPDF();
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
-  const monthLabel = month ? `${MONTHS_EN[month - 1]} ${year}` : `${year}`;
+  const monthLabel = month ? `${BANGLA_MONTHS[month - 1]} ${toBanglaNumber(year)}` : `${toBanglaNumber(year)}`;
 
   drawOrgHeader(
     doc,
-    `Area-wise Collection Ranking — ${monthLabel}`,
-    `Ranked by total amount collected (highest first).`,
+    `এলাকা ভিত্তিক র‍্যাঙ্কিং — ${monthLabel}`,
+    `মোট সংগ্রহের ভিত্তিতে এলাকাগুলোর অবস্থান (সর্বোচ্চ সংগ্রহ প্রথমে)।`,
   );
 
   const totMembers = summaries.reduce((s, a) => s + a.members, 0);
@@ -1589,19 +1595,19 @@ export async function downloadAreaRankingPDF(
   doc.rect(14, sumY, pageWidth - 28, 18, 'F');
   doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
-  doc.text(`Areas: ${summaries.length}`, 18, sumY + 7);
-  doc.text(`Members: ${totMembers}`, 60, sumY + 7);
-  doc.text(`Total Paid: ${formatBDT(totPaid)}`, 110, sumY + 7);
+  doc.text(`মোট এলাকা: ${toBanglaNumber(summaries.length)}`, 18, sumY + 7);
+  doc.text(`মোট সদস্য: ${toBanglaNumber(totMembers)}`, 60, sumY + 7);
+  doc.text(`মোট সংগ্রহ: ${formatBDT(totPaid)}`, 110, sumY + 7);
 
   autoTable(doc, {
     startY: sumY + 22,
-    head: [['Rank', 'Area', 'Members', 'Total Paid', 'Collection %']],
+    head: [['র‍্যাঙ্ক', 'এলাকা', 'সদস্য', 'সংগৃহীত চাঁদা', '% অর্জন']],
     body: summaries.map((a, i) => [
-      `#${i + 1}`,
+      `#${toBanglaNumber(i + 1)}`,
       a.area,
-      a.members,
+      toBanglaNumber(a.members),
       formatBDT(a.paid),
-      a.expected > 0 ? `${Math.round((a.paid / a.expected) * 100)}%` : '—',
+      a.expected > 0 ? `${toBanglaNumber(Math.round((a.paid / a.expected) * 100))}%` : '—',
     ]),
     headStyles: { fillColor: [180, 142, 73], textColor: 255, fontSize: 10 },
     bodyStyles: { fontSize: 9 },
@@ -1612,13 +1618,13 @@ export async function downloadAreaRankingPDF(
       4: { halign: 'right' },
     },
     foot: [[
-      '', 'TOTAL', totMembers, formatBDT(totPaid),
-      totExpected > 0 ? `${Math.round((totPaid / totExpected) * 100)}%` : '—',
+      '', 'সর্বমোট', toBanglaNumber(totMembers), formatBDT(totPaid),
+      totExpected > 0 ? `${toBanglaNumber(Math.round((totPaid / totExpected) * 100))}%` : '—',
     ]],
     footStyles: { fillColor: [240, 230, 210], textColor: 0, fontStyle: 'bold' },
   });
 
-  stampFooters(doc, `Area-wise collection ranking — ${monthLabel}`);
+  stampFooters(doc, `এলাকা ভিত্তিক র‍্যাঙ্কিং — ${monthLabel}`);
   doc.save(`area-ranking-${year}${month ? `-${month}` : ''}.pdf`);
 }
 

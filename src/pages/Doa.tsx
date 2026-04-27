@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
