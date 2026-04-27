@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import SEO from '@/components/SEO';
@@ -38,13 +39,14 @@ import {
   LayoutGrid, UserSearch, AlertOctagon, PieChart as PieIcon, Trophy, Settings,
   Wallet, TrendingUp, TrendingDown, Users, FileText, Printer, Database,
   RefreshCcw, ShieldCheck, Receipt, Save, Search, Download, Plus, Eye, CalendarDays, Upload,
-  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown, Clock
+  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown, Clock,
+  Bell, Filter, ChevronRight, Menu, X
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 
-type TabKey = 'summary' | 'personal' | 'dues' | 'transparency' | 'ranking' | 'admin' | 'audit';
+type TabKey = 'summary' | 'personal' | 'dues' | 'transparency' | 'ranking' | 'admin' | 'audit' | 'settings';
 
 
 const paymentSchema = z.object({
@@ -720,6 +722,7 @@ const Finance = () => {
     { key: 'ranking', label: 'র‍্যাঙ্কিং', icon: Trophy },
     ...(isStaff ? [
       { key: 'admin', label: 'অ্যাডমিন', icon: Settings },
+      { key: 'settings', label: 'সেটিংস', icon: Settings },
       { key: 'audit', label: 'অডিট লগ', icon: Database }
     ] : []),
   ] as const;
@@ -730,54 +733,92 @@ const Finance = () => {
         title="অর্থব্যবস্থাপনা - চন্দনাইশ দরবার শরীফ"
         description="চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের সম্পূর্ণ অর্থব্যবস্থাপনা ড্যাশবোর্ড। আয়-ব্যয় হিসাব, সদস্যদের বকেয়া, স্বচ্ছতা রিপোর্ট এবং PDF ডাউনলোড।"
       />
-      {/* Gold gradient header */}
-      <div className="relative py-12 overflow-hidden">
-        <div className="absolute inset-0 bg-gold-gradient opacity-15" />
-        <div className="container mx-auto px-4 relative z-10 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-background/20 flex items-center justify-center backdrop-blur">
-              <Wallet className="h-6 w-6 text-primary-foreground" />
+      {/* Super-Premium Header Section */}
+      <div className="relative py-20 overflow-hidden bg-[#0a0a0a]">
+        {/* Animated Background Layers */}
+        <div className="absolute inset-0 opacity-20 islamic-pattern scale-150 animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-transparent to-gold/10" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-gold/10 blur-[120px] rounded-full" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/10 blur-[120px] rounded-full" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              {/* Icon with Glowing Glassmorphism */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gold blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
+                <div className="relative h-20 w-20 rounded-[2rem] bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center shadow-2xl backdrop-blur-xl ring-1 ring-gold/30">
+                  <Wallet className="h-10 w-10 text-gold animate-bounce-slow" />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h1 className="font-heading text-3xl md:text-5xl font-extrabold tracking-tighter text-white drop-shadow-2xl">
+                  অর্থ সংগ্রহ ও <span className="gold-text-gradient">ব্যবস্থাপনা</span>
+                </h1>
+                <div className="flex items-center gap-3">
+                  <div className="h-[2px] w-12 bg-gradient-to-r from-gold to-transparent rounded-full" />
+                  <p className="font-bangla text-base md:text-lg text-gold/80 font-semibold tracking-wide">
+                    চন্দনাইশ দরবার শরীফ কমিটি ফান্ড
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="font-display text-2xl md:text-3xl text-primary-foreground">অর্থ সংগ্রহ ও ব্যবস্থাপনা</h1>
-              <p className="font-bangla text-sm text-primary-foreground/80">চন্দনাইশ দরবার শরীফ কমিটি ফান্ড</p>
+
+            {/* Premium Action Buttons */}
+            <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md">
+              <Button 
+                onClick={() => setIsDark(!isDark)} 
+                size="icon" 
+                variant="ghost" 
+                className="h-12 w-12 rounded-xl bg-white/5 hover:bg-gold/20 hover:text-gold text-white/70 transition-all duration-300" 
+                title="ডার্ক মোড"
+              >
+                {isDark ? <Eye className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+              </Button>
+              <Button 
+                onClick={loadAll} 
+                size="icon" 
+                variant="ghost" 
+                className="h-12 w-12 rounded-xl bg-white/5 hover:bg-gold/20 hover:text-gold text-white/70 transition-all duration-300" 
+                title="রিফ্রেশ"
+              >
+                <RefreshCcw className="h-5 w-5" />
+              </Button>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              onClick={() => setIsDark(!isDark)} 
-              size="icon" 
-              variant="ghost" 
-              className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/30 text-primary-foreground" 
-              title="ডার্ক মোড"
-            >
-              {isDark ? <Eye className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-            </Button>
-            <Button onClick={loadAll} size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-background/20 hover:bg-background/30 text-primary-foreground" title="রিফ্রেশ">
-              <RefreshCcw className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Tab pill bar */}
-        <div className="bg-card/60 border border-primary/15 rounded-2xl p-2 flex flex-wrap gap-1 mb-8 backdrop-blur">
+        {/* Tab pill bar - Re-designed for Premium Feel */}
+        <div className="bg-card/40 border border-gold/10 rounded-2xl p-1.5 flex flex-wrap gap-2 mb-10 backdrop-blur-md shadow-inner relative group">
+          <div className="absolute inset-0 bg-gold/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           {TABS.map((t) => {
             const Icon = t.icon;
             const isActive = tab === t.key;
             const disabled = t.key === 'admin' && !isStaff;
+            if (disabled) return null;
+            
             return (
               <button
                 key={t.key}
-                onClick={() => !disabled && setTab(t.key as TabKey)}
-                disabled={disabled}
-                className={`flex-1 min-w-[110px] flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bangla text-sm transition-all
-                  ${isActive ? 'bg-gradient-gold text-primary-foreground shadow-gold' :
-                    disabled ? 'hidden' :
-                    'text-foreground/75 hover:bg-primary/10 hover:text-primary'}`}
+                onClick={() => setTab(t.key as TabKey)}
+                className={`flex-1 min-w-[120px] relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-heading text-sm font-semibold transition-all duration-300
+                  ${isActive 
+                    ? 'bg-gold-gradient text-primary-foreground shadow-lg shadow-gold/20 scale-[1.02]' 
+                    : 'text-muted-foreground hover:bg-gold/5 hover:text-gold hover:translate-y-[-1px]'
+                  }`}
               >
-                <Icon className="h-4 w-4" /> {t.label}
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-gold-gradient rounded-xl -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <Icon className={`h-4 w-4 ${isActive ? 'animate-pulse' : ''}`} />
+                <span className="font-bangla">{t.label}</span>
               </button>
             );
           })}
@@ -2246,6 +2287,151 @@ const Finance = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS TAB - A to Z Control for Admins */}
+        {tab === 'settings' && isStaff && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="card-gold rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 blur-3xl -mr-16 -mt-16 rounded-full" />
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-12 w-12 rounded-2xl bg-gold-gradient flex items-center justify-center shadow-lg">
+                  <Settings className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-heading font-bold gold-text">সিস্টেম সেটিংস</h2>
+                  <p className="text-sm text-muted-foreground font-bangla">পুরো ওয়েবসাইটের খুটিনাটি সবকিছু এখান থেকে নিয়ন্ত্রণ করুন</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-bangla">
+                {/* Global Notice Section */}
+                <div className="space-y-4 p-6 rounded-2xl bg-background/40 border border-gold/10 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold flex items-center gap-2 border-b border-gold/10 pb-2">
+                    <Bell className="h-4 w-4 text-gold" /> গ্লোবাল নোটিশ (Marquee)
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">নোটিশ শিরোনাম</Label>
+                      <Input 
+                        placeholder="যেমন: বিশেষ ঘোষণা" 
+                        defaultValue={settings.global_notice_title} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'global_notice_title', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'নোটিশ শিরোনাম পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">নোটিশ বার্তা</Label>
+                      <Textarea 
+                        placeholder="আপনার বার্তা এখানে লিখুন..." 
+                        defaultValue={settings.global_notice_message} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'global_notice_message', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'নোটিশ বার্তা পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Targets */}
+                <div className="space-y-4 p-6 rounded-2xl bg-background/40 border border-gold/10 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold flex items-center gap-2 border-b border-gold/10 pb-2">
+                    <TrendingUp className="h-4 w-4 text-gold" /> আর্থিক লক্ষ্যমাত্রা
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">বার্ষিক লক্ষ্যমাত্রা (৳)</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="যেমন: ২০০০০০" 
+                        defaultValue={settings.annual_target} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'annual_target', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'বার্ষিক লক্ষ্যমাত্রা পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">বাজেট নোট</Label>
+                      <Input 
+                        placeholder="বাজেট সম্পর্কে ছোট নোট..." 
+                        defaultValue={settings.target_note} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'target_note', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'লক্ষ্যমাত্রা নোট আপডেট করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Branding & Visuals */}
+                <div className="space-y-4 p-6 rounded-2xl bg-background/40 border border-gold/10 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold flex items-center gap-2 border-b border-gold/10 pb-2">
+                    <ShieldCheck className="h-4 w-4 text-gold" /> ব্র্যান্ডিং এবং ভিজ্যুয়াল
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">সাইটের শিরোনাম (Bangla)</Label>
+                      <Input 
+                        placeholder="চন্দনাইশ দরবার শরীফ" 
+                        defaultValue={settings.site_title_bn} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'site_title_bn', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'সাইটের শিরোনাম পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">লোগো URL</Label>
+                      <Input 
+                        placeholder="https://example.com/logo.png" 
+                        defaultValue={settings.site_logo_url} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'site_logo_url', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'লোগো আপডেট করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Maintenance & Emergency */}
+                <div className="space-y-4 p-6 rounded-2xl bg-background/40 border border-gold/10 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold flex items-center gap-2 border-b border-gold/10 pb-2 text-rose-500">
+                    <AlertOctagon className="h-4 w-4" /> মেইনটেইনেন্স মোড
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">ব্যানার টেক্সট (পুরো সাইটের উপরে দেখা যাবে)</Label>
+                      <Input 
+                        placeholder="যেমন: ওয়েবসাইট মেইনটেইনেন্স চলছে..." 
+                        defaultValue={settings.maintenance_text} 
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          const { error } = await supabase.from('app_settings').upsert({ key: 'maintenance_text', value: val });
+                          if (!error) { toast({ title: 'আপডেট সফল', description: 'মেইনটেইনেন্স ব্যানার আপডেট করা হয়েছে।' }); loadAll(); }
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground italic">
+                      দ্রষ্টব্য: এই অপশনগুলো সরাসরি ডাটাবেজে সেভ হবে এবং সাথে সাথে পুরো সাইটে পরিবর্তন দেখা যাবে।
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -47,22 +47,27 @@ const navLinks = [
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string | null } | null>(null);
+  const [appSettings, setAppSettings] = useState<Record<string, string>>({});
   const location = useLocation();
   const { isStaff, user } = useAuth();
 
   useEffect(() => {
-    const fetchNotice = async () => {
-      const { data } = await supabase
-        .from("notices")
-        .select("title, message")
-        .eq("is_active", true)
-        .not("title", "ilike", "%test%")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setNotice(data);
+    const fetchGlobalNotice = async () => {
+      const { data } = await supabase.from('app_settings').select('*');
+      if (data) {
+        const sObj: Record<string, string> = {};
+        data.forEach((row: any) => { sObj[row.key] = row.value; });
+        
+        if (sObj.global_notice_title || sObj.global_notice_message) {
+          setNotice({ 
+            title: sObj.global_notice_title || "নোটিশ", 
+            message: sObj.global_notice_message || "" 
+          });
+        }
+        setAppSettings(sObj);
+      }
     };
-    fetchNotice();
+    fetchGlobalNotice();
   }, []);
 
   return (
@@ -75,12 +80,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         মূল কন্টেন্টে যান
       </a>
 
+      {/* Maintenance Banner */}
+      {appSettings.maintenance_text && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-rose-600 text-white text-[10px] md:text-xs font-bold py-1 px-4 text-center shadow-md animate-pulse">
+          {appSettings.maintenance_text}
+        </div>
+      )}
+
       {/* Sticky Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20">
+      <header className={`fixed ${appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2" aria-label="হোম পেজ">
+          <Link to="/" className="flex items-center gap-3" aria-label="হোম পেজ">
+            {appSettings.site_logo_url && (
+              <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 object-contain" />
+            )}
             <span className="text-gold font-heading font-bold text-lg leading-tight">
-              চন্দনাইশ দরবার শরীফ
+              {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
             </span>
           </Link>
 
@@ -181,17 +196,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Notice Bar */}
       {notice && (
-        <div className="fixed top-16 left-0 right-0 z-40 bg-card/95 backdrop-blur-sm border-b border-gold/20 overflow-hidden shadow-sm">
-          <div className="flex items-center h-10 px-4">
-            <div className="bg-gold-gradient p-1.5 rounded-lg shrink-0 z-10 shadow-sm shadow-gold/20 ring-1 ring-gold/30">
-              <Bell size={14} className="text-primary-foreground" />
+        <div className="fixed top-16 left-0 right-0 z-40 bg-background/60 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-2xl">
+          <div className="container mx-auto px-4 flex items-center justify-center h-12 gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gold blur-md opacity-30 animate-pulse" />
+              <div className="relative bg-gold-gradient p-1.5 rounded-full z-10 shadow-lg ring-1 ring-gold/40">
+                <Bell size={14} className="text-primary-foreground animate-bounce" />
+              </div>
             </div>
-            <div className="overflow-hidden flex-1 relative h-full flex items-center">
-              {/* Fade masks for marquee */}
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-card to-transparent z-10" />
-              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card to-transparent z-10" />
-              
-              <p className="text-[13px] md:text-sm text-gold font-medium whitespace-nowrap animate-marquee pl-4">
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] md:text-sm text-gold font-heading font-bold tracking-wide uppercase">
+                নোটিশ:
+              </span>
+              <p className="text-[13px] md:text-sm text-foreground/90 font-medium font-bangla">
                 {notice.title}{notice.message ? ` — ${notice.message}` : ""}
               </p>
             </div>
@@ -200,7 +218,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Main Content */}
-      <main id="main-content" className={notice ? "pt-[104px]" : "pt-16"}>{children}</main>
+      <main id="main-content" className={notice ? "pt-[112px]" : "pt-16"}>{children}</main>
 
       <div className="border-t border-gold/20" />
       <DeveloperTeam />
