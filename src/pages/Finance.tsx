@@ -80,6 +80,9 @@ const Finance = () => {
   const [activeOnly, setActiveOnly] = useState<boolean>(true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewKind, setPreviewKind] = useState<'monthly' | 'annual' | 'combined'>('monthly');
+  const [reportFilename, setReportFilename] = useState<string>('');
+  const [areaFilter, setAreaFilter] = useState<string>('all');
+  const [areaScope, setAreaScope] = useState<'year' | 'month'>('year');
   const [memberSearchOpen, setMemberSearchOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [quickMemberOpen, setQuickMemberOpen] = useState(false);
