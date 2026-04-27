@@ -733,59 +733,95 @@ const Finance = () => {
         title="অর্থব্যবস্থাপনা - চন্দনাইশ দরবার শরীফ"
         description="চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের সম্পূর্ণ অর্থব্যবস্থাপনা ড্যাশবোর্ড। আয়-ব্যয় হিসাব, সদস্যদের বকেয়া, স্বচ্ছতা রিপোর্ট এবং PDF ডাউনলোড।"
       />
-      {/* Super-Premium Header Section */}
-      <div className="relative py-20 overflow-hidden bg-[#0a0a0a]">
-        {/* Animated Background Layers */}
-        <div className="absolute inset-0 opacity-20 islamic-pattern scale-150 animate-pulse" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-transparent to-gold/10" />
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-gold/10 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/10 blur-[120px] rounded-full" />
+      {/* Ultra-Premium Hero Section with Framer Motion */}
+      <div className="relative pt-24 pb-20 overflow-hidden bg-[#050505]">
+        {/* Animated Background Elements */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.15 }}
+          className="absolute inset-0 islamic-pattern scale-[2] pointer-events-none"
+        />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gold/5 via-transparent to-transparent" />
         
+        {/* Floating Orbs */}
+        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-gold/10 blur-[100px] rounded-full animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full animate-pulse-slow" />
+
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              {/* Icon with Glowing Glassmorphism */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gold blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
-                <div className="relative h-20 w-20 rounded-[2rem] bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center shadow-2xl backdrop-blur-xl ring-1 ring-gold/30">
-                  <Wallet className="h-10 w-10 text-gold animate-bounce-slow" />
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
+            <motion.div 
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left"
+            >
+              {/* Icon with Glowing Multi-Layered Glass */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gold blur-3xl opacity-30 animate-pulse" />
+                <div className="relative h-24 w-24 rounded-3xl bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_50px_rgba(212,175,55,0.1)] backdrop-blur-2xl group transition-transform duration-500 hover:scale-110">
+                  <div className="absolute inset-2 border border-gold/20 rounded-2xl rotate-12 group-hover:rotate-0 transition-transform duration-500" />
+                  <Wallet className="h-12 w-12 text-gold drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <h1 className="font-heading text-3xl md:text-5xl font-extrabold tracking-tighter text-white drop-shadow-2xl">
-                  অর্থ সংগ্রহ ও <span className="gold-text-gradient">ব্যবস্থাপনা</span>
+              <div className="space-y-3">
+                <h1 className="font-heading text-4xl md:text-6xl font-black tracking-tighter text-white">
+                  অর্থ সংগ্রহ ও <span className="relative inline-block">
+                    <span className="gold-text-shimmer">ব্যবস্থাপনা</span>
+                    <motion.span 
+                      initial={{ width: 0 }}
+                      animate={{ width: "100%" }}
+                      transition={{ delay: 0.5, duration: 1 }}
+                      className="absolute bottom-2 left-0 h-1 bg-gradient-to-r from-gold to-transparent rounded-full"
+                    />
+                  </span>
                 </h1>
-                <div className="flex items-center gap-3">
-                  <div className="h-[2px] w-12 bg-gradient-to-r from-gold to-transparent rounded-full" />
-                  <p className="font-bangla text-base md:text-lg text-gold/80 font-semibold tracking-wide">
-                    চন্দনাইশ দরবার শরীফ কমিটি ফান্ড
+                <div className="flex items-center gap-4 justify-center md:justify-start">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-6 w-6 rounded-full border-2 border-[#050505] bg-gold/20 backdrop-blur-sm" />
+                    ))}
+                  </div>
+                  <p className="font-bangla text-lg md:text-xl text-white/60 font-light tracking-[0.2em] uppercase">
+                    চন্দনাইশ দরবার শরীফ <span className="text-gold/80 font-bold">কমিটি ফান্ড</span>
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Premium Action Buttons */}
-            <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md">
-              <Button 
-                onClick={() => setIsDark(!isDark)} 
-                size="icon" 
-                variant="ghost" 
-                className="h-12 w-12 rounded-xl bg-white/5 hover:bg-gold/20 hover:text-gold text-white/70 transition-all duration-300" 
-                title="ডার্ক মোড"
-              >
-                {isDark ? <Eye className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
-              </Button>
-              <Button 
-                onClick={loadAll} 
-                size="icon" 
-                variant="ghost" 
-                className="h-12 w-12 rounded-xl bg-white/5 hover:bg-gold/20 hover:text-gold text-white/70 transition-all duration-300" 
-                title="রিফ্রেশ"
-              >
-                <RefreshCcw className="h-5 w-5" />
-              </Button>
-            </div>
+            {/* Quick Stats / Actions */}
+            <motion.div 
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="flex items-center gap-6"
+            >
+              <div className="hidden md:flex flex-col items-end gap-1">
+                <p className="text-[10px] text-gold/50 font-bold uppercase tracking-widest">System Status</p>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="text-emerald-500 text-xs font-mono font-bold tracking-wider uppercase">Live Connection</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/[0.03] p-2 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+                <Button 
+                  onClick={() => setIsDark(!isDark)} 
+                  variant="ghost" 
+                  className="h-14 w-14 rounded-xl hover:bg-gold/10 hover:text-gold text-white/40 transition-all duration-500" 
+                >
+                  {isDark ? <Eye className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
+                </Button>
+                <div className="w-[1px] h-8 bg-white/10" />
+                <Button 
+                  onClick={loadAll} 
+                  variant="ghost" 
+                  className="h-14 w-14 rounded-xl hover:bg-gold/10 hover:text-gold text-white/40 transition-all duration-500" 
+                >
+                  <RefreshCcw className="h-6 w-6" />
+                </Button>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
