@@ -136,4 +136,21 @@
     content-visibility: auto;
     contain-intrinsic-size: 1px 500px;
   }
+
+  /* Finance bundle utility classes */
+  .card-gold {
+    @apply bg-card/60 backdrop-blur-xl border border-gold/15 shadow-xl;
+  }
+
+  .gold-text {
+    @apply text-gold;
+  }
+
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-dark)));
+  }
+
+  .shadow-gold {
+    box-shadow: 0 4px 20px hsl(var(--gold) / 0.25);
+  }
 }

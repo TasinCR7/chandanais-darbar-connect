@@ -83,7 +83,7 @@ const MemberPortal = () => {
       setDuesData(dues);
       
       toast({ title: "সদস্য তথ্য লোড হয়েছে", description: `${found.name} এর তথ্য সফলভাবে পাওয়া গেছে।` });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
@@ -207,7 +207,7 @@ const MemberPortal = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gold/5">
-                      {[...duesData.rows].reverse().filter(r => r.year === selectedYear).map((row: any, i) => {
+                      {[...duesData.rows].reverse().filter(r => r.year === selectedYear).map((row: { year: number, month: number, isPaid: boolean, isAdvance: boolean, expected: number }, i) => {
                         const monthName = new Date(2000, row.month - 1).toLocaleDateString("bn-BD", { month: "long" });
                         const isPaid = row.status === 'paid';
                         const isPartial = row.status === 'partial';

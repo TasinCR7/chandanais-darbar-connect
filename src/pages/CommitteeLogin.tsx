@@ -53,8 +53,8 @@ const CommitteeLogin = () => {
           variant: "destructive" 
         });
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+     
+    } catch (error: unknown) {
       toast({ title: "ত্রুটি", description: error.message || "সার্ভারে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setLoading(false);

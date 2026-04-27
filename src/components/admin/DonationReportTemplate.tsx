@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { InvoiceData } from '@/components/DonationInvoiceTemplate';
+import type { InvoiceData } from '@/components/DonationInvoiceTemplate';
 
 interface DonationReportProps {
   donations: InvoiceData[];

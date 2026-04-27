@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import SuccessOverlay from "@/components/SuccessOverlay";
 
 interface FormData {

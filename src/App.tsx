@@ -11,6 +11,8 @@ import PremiumLoader from "./components/PremiumLoader";
 import ScrollToTop from "./components/ScrollToTop";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
@@ -29,8 +31,10 @@ const Committee = lazy(() => import("./pages/Committee"));
 const CommitteeLogin = lazy(() => import("./pages/CommitteeLogin"));
 const CommitteeDashboard = lazy(() => import("./pages/CommitteeDashboard"));
 const BookReader = lazy(() => import("./pages/BookReader"));
-const CommitteeContributions = lazy(() => import("./pages/CommitteeContributions"));
-const FundTransparency = lazy(() => import("./pages/FundTransparency"));
+const Finance = lazy(() => import("./pages/Finance"));
+const MemberSearch = lazy(() => import("./pages/MemberSearch"));
+const MemberProfile = lazy(() => import("./pages/MemberProfile"));
+const TransparencyNew = lazy(() => import("./pages/Transparency"));
 
 
 const queryClient = new QueryClient({
@@ -71,11 +75,13 @@ const AppContent = () => {
               <Route path="/notices" element={<Notices />} />
               <Route path="/committee" element={<Committee />} />
               <Route path="/committee-login" element={<CommitteeLogin />} />
-              <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
+              <Route path="/committee-dashboard" element={<ProtectedRoute allowedRoles={['admin', 'editor', 'moderator', 'treasurer']}><CommitteeDashboard /></ProtectedRoute>} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/book" element={<BookReader />} />
-              <Route path="/committee-contributions" element={<CommitteeContributions />} />
-              <Route path="/fund-transparency" element={<FundTransparency />} />
+              <Route path="/finance" element={<Finance />} />
+              <Route path="/member-search" element={<MemberSearch />} />
+              <Route path="/member/:id" element={<MemberProfile />} />
+              <Route path="/transparency" element={<TransparencyNew />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
@@ -93,8 +99,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <ScrollToTop />
-            <AppContent />
+            <AuthProvider>
+              <ScrollToTop />
+              <AppContent />
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </HelmetProvider>

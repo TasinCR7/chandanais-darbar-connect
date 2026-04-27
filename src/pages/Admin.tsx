@@ -12,7 +12,6 @@ import AdminLogin from "@/components/admin/AdminLogin";
 const NoticeManager = lazy(() => import("@/components/admin/NoticeManager"));
 const GalleryManager = lazy(() => import("@/components/admin/GalleryManager"));
 const SubmissionManager = lazy(() => import("@/components/admin/SubmissionManager"));
-const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"));
 const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"));
 const DonationManager = lazy(() => import("@/components/admin/DonationManager"));
@@ -296,8 +295,8 @@ const Admin = () => {
       toast({ title: "আপলোড সফল", description: "ছবিটি গ্যালারিতে যোগ করা হয়েছে।" });
       setGalleryCaption("");
       fetchGallery();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+     
+    } catch (err: unknown) {
       toast({ title: "আপলোড ব্যর্থ", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
@@ -363,7 +362,6 @@ const Admin = () => {
               <TabsTrigger value="donations" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold">হাদিয়া ও নজরানা</TabsTrigger>
               <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">আবেদনপত্র</TabsTrigger>
               <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
-              <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
               <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
               <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
               <TabsTrigger value="broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold text-premium-gold shadow-lg shadow-gold/10 ml-2">বার্তা পাঠান 📢</TabsTrigger>
@@ -414,11 +412,6 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
-          <TabsContent value="finance">
-            <Suspense fallback={<PremiumLoader />}>
-              <FinanceManager />
-            </Suspense>
-          </TabsContent>
 
           <TabsContent value="committee">
             <Suspense fallback={<PremiumLoader />}>

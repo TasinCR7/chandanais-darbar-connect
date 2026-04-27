@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Chandanaish Darbar Sharif — Dark + Gold design system */
+
+@layer base {
+  :root {
+    /* Dark spiritual theme */
+    --background: 30 18% 6%;
+    --foreground: 40 30% 92%;
+
+    --card: 30 20% 9%;
+    --card-foreground: 40 30% 92%;
+
+    --popover: 30 22% 8%;
+    --popover-foreground: 40 30% 92%;
+
+    /* Gold primary */
+    --primary: 43 65% 52%;
+    --primary-foreground: 30 30% 8%;
+    --primary-glow: 45 80% 65%;
+
+    --secondary: 30 18% 14%;
+    --secondary-foreground: 40 30% 92%;
+
+    --muted: 30 12% 16%;
+    --muted-foreground: 40 15% 65%;
+
+    --accent: 43 55% 45%;
+    --accent-foreground: 30 30% 8%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 40 30% 95%;
+
+    --border: 43 25% 22%;
+    --input: 30 15% 14%;
+    --ring: 43 65% 52%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(43 70% 55%), hsl(38 80% 45%));
+    --gradient-gold-soft: linear-gradient(135deg, hsl(43 55% 30% / 0.3), hsl(38 60% 20% / 0.3));
+    --gradient-hero: linear-gradient(180deg, hsl(30 25% 4% / 0.4) 0%, hsl(30 25% 4% / 0.85) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(30 20% 11%), hsl(30 18% 7%));
+
+    /* Shadows */
+    --shadow-gold: 0 8px 32px -8px hsl(43 70% 50% / 0.35);
+    --shadow-gold-strong: 0 0 40px hsl(43 80% 55% / 0.5);
+    --shadow-card: 0 4px 24px -6px hsl(30 30% 2% / 0.6);
+
+    /* Sidebar (kept for shadcn compatibility) */
+    --sidebar-background: 30 20% 8%;
+    --sidebar-foreground: 40 30% 90%;
+    --sidebar-primary: 43 65% 52%;
+    --sidebar-primary-foreground: 30 30% 8%;
+    --sidebar-accent: 30 15% 14%;
+    --sidebar-accent-foreground: 40 30% 92%;
+    --sidebar-border: 43 25% 22%;
+    --sidebar-ring: 43 65% 52%;
+  }
+
+  .dark {
+    /* Same — site is dark-first */
+    --background: 30 18% 6%;
+    --foreground: 40 30% 92%;
+    --card: 30 20% 9%;
+    --card-foreground: 40 30% 92%;
+    --popover: 30 22% 8%;
+    --popover-foreground: 40 30% 92%;
+    --primary: 43 65% 52%;
+    --primary-foreground: 30 30% 8%;
+    --secondary: 30 18% 14%;
+    --secondary-foreground: 40 30% 92%;
+    --muted: 30 12% 16%;
+    --muted-foreground: 40 15% 65%;
+    --accent: 43 55% 45%;
+    --accent-foreground: 30 30% 8%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 40 30% 95%;
+    --border: 43 25% 22%;
+    --input: 30 15% 14%;
+    --ring: 43 65% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+    font-feature-settings: "kern" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .font-arabic {
+    font-family: 'Amiri', 'Scheherazade New', serif;
+    direction: rtl;
+  }
+
+  .font-bangla {
+    font-family: 'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+  }
+
+  .font-display {
+    font-family: 'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .gold-text {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .gold-border-glow {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3),
+                0 4px 24px -8px hsl(var(--primary) / 0.25);
+  }
+
+  .ornament-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      hsl(var(--primary) / 0.6),
+      transparent);
+  }
+
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+
+  .card-gold {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--primary) / 0.18);
+    transition: all 0.35s ease;
+  }
+
+  .card-gold:hover {
+    border-color: hsl(var(--primary) / 0.45);
+    box-shadow: var(--shadow-gold);
+    transform: translateY(-2px);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

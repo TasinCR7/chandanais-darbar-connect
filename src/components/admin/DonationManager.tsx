@@ -9,7 +9,8 @@ import { HeartHandshake, Home, Users, CheckCircle, Clock, Download, Trash2, XCir
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
+import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
+import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { DonationReportTemplate } from "@/components/admin/DonationReportTemplate";
 
 interface Donation extends InvoiceData {

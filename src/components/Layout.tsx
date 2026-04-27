@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 // Map paths to their respective lazy import functions for prefetching
-const routeImports: Record<string, () => Promise<any>> = {
+const routeImports: Record<string, () => Promise<unknown>> = {
   "/": () => import("../pages/Index"),
   "/about": () => import("../pages/About"),
   "/pir": () => import("../pages/Pir"),
@@ -17,14 +17,14 @@ const routeImports: Record<string, () => Promise<any>> = {
   "/contact": () => import("../pages/Contact"),
   "/committee-login": () => import("../pages/CommitteeLogin"),
   "/admin": () => import("../pages/Admin"),
-  "/committee-contributions": () => import("../pages/CommitteeContributions"),
-  "/fund-transparency": () => import("../pages/FundTransparency"),
 };
 import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import DeveloperTeam from "./DeveloperTeam";
 import Chatbot from "./Chatbot";
+import { useAuth } from "@/hooks/useAuth";
+import { Lock } from "lucide-react";
 
 const navLinks = [
   { path: "/", label: "হোম" },
@@ -39,8 +39,8 @@ const navLinks = [
   { path: "/doa", label: "দোয়া আবেদন" },
   { path: "/qna", label: "প্রশ্ন ও অভিযোগ" },
   { path: "/contact", label: "যোগাযোগ" },
-  { path: "/committee-contributions", label: "অর্থ সংগ্রহ" },
-  { path: "/fund-transparency", label: "তহবিল স্বচ্ছতা" },
+  { path: "/finance", label: "অর্থ সংগ্রহ ও ফাইন্যান্স" },
+  { path: "/transparency", label: "তহবিল স্বচ্ছতা" },
   { path: "/committee-login", label: "কমিটি লগইন" },
 ];
 
@@ -48,6 +48,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string | null } | null>(null);
   const location = useLocation();
+  const { isStaff, user } = useAuth();
 
   useEffect(() => {
     const fetchNotice = async () => {

@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { DonationInvoiceTemplate, InvoiceData } from "@/components/DonationInvoiceTemplate";
+import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
+import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { sendTelegramNotification } from "@/utils/telegram";
 
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";

@@ -33,7 +33,7 @@ const SEO = ({ title, description, canonical, keywords, type = "website", faq, e
   const ogImage = `${BASE_URL}/logo.png`; 
 
   // Base Schema Markups
-  const structuredData: any[] = [
+  const structuredData: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
       "@type": "ReligiousOrganization",

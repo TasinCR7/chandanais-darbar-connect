@@ -4,13 +4,14 @@ import { LogIn, Mail, Phone, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
+import type { User } from "@supabase/supabase-js";
 
 interface AdminLoginProps {
   onLogin: (identifier: string, password: string, method: "email" | "phone") => void;
   loading: boolean;
   isVerifying?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  user: any;
+   
+  user: User | null;
   isAdmin: boolean;
   onLogout: () => void;
 }
