@@ -93,6 +93,7 @@ const Finance = () => {
   const [memberSearchOpen, setMemberSearchOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [quickMemberOpen, setQuickMemberOpen] = useState(false);
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([new Date().getMonth() + 1]);
   const ORG_NAME_SLUG = 'chandanaish-darbar';
 
   const loadAll = async () => {
@@ -439,21 +440,44 @@ const Finance = () => {
 
   const submitPayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user) return;
-    const fd = Object.fromEntries(new FormData(e.currentTarget));
-    const parsed = paymentSchema.safeParse(fd);
-    if (!parsed.success) {
-      toast({ title: 'ত্রুটি', description: parsed.error.issues[0].message, variant: 'destructive' });
+    if (!user || !selectedMemberId) return;
+    const fd = new FormData(e.currentTarget);
+    const amountPerMonth = Number(fd.get('amount'));
+    const method = fd.get('method') as any;
+    const transaction_ref = fd.get('transaction_ref') as string;
+    const for_year = Number(fd.get('for_year') || currentYear);
+
+    if (selectedMonths.length === 0) {
+      toast({ title: 'মাস নির্বাচন করুন', variant: 'destructive' });
       return;
     }
+
     setBusy(true);
-    const { error } = await supabase.from('payments').insert({ ...parsed.data, recorded_by: user.id } as any);
-    setBusy(false);
-    if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
-    toast({ title: 'চাঁদা রেকর্ড হয়েছে ✓' });
-    (e.target as HTMLFormElement).reset();
-    setSelectedMemberId("");
-    loadAll();
+    try {
+      const inserts = selectedMonths.map(month => ({
+        member_id: selectedMemberId,
+        amount: amountPerMonth,
+        for_year,
+        for_month: month,
+        method,
+        transaction_ref,
+        recorded_by: user.id,
+        status: 'approved'
+      }));
+
+      const { error } = await supabase.from('payments').insert(inserts as any);
+      if (error) throw error;
+
+      toast({ title: `${toBanglaNumber(selectedMonths.length)} মাসের চাঁদা রেকর্ড হয়েছে ✓` });
+      (e.target as HTMLFormElement).reset();
+      setSelectedMemberId("");
+      setSelectedMonths([new Date().getMonth() + 1]);
+      loadAll();
+    } catch (err: any) {
+      toast({ title: 'ব্যর্থ', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submitExpense = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -772,29 +796,51 @@ const Finance = () => {
                 </div>
               </div>
 
-              <div className="card-gold rounded-2xl p-6 flex flex-col">
-                <h3 className="font-display text-lg gold-text mb-6 flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5" /> আজকের সারাংশ
-                </h3>
-                <div className="flex-1 space-y-6">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-bangla">আজকের আয়</p>
-                    <p className="text-2xl font-display text-emerald-600">৳ {toBanglaNumber(todayIncome.toFixed(0))}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-bangla">আজকের খরচ</p>
-                    <p className="text-2xl font-display text-rose-600">৳ {toBanglaNumber(todayExpense.toFixed(0))}</p>
-                  </div>
-                  <div className="pt-4 border-t border-border/40">
-                    <p className="text-xs text-muted-foreground font-bangla">নেট ক্যাশ ফ্লো</p>
-                    <p className={`text-xl font-display mt-1 ${todayIncome - todayExpense >= 0 ? 'text-primary' : 'text-rose-600'}`}>
-                      ৳ {toBanglaNumber((todayIncome - todayExpense).toFixed(0))}
-                    </p>
+              <div className="space-y-6">
+                <div className="card-gold rounded-2xl p-6 flex flex-col">
+                  <h3 className="font-display text-lg gold-text mb-6 flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5" /> আজকের সারাংশ
+                  </h3>
+                  <div className="flex-1 space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground font-bangla">আজকের আয়</p>
+                      <p className="text-2xl font-display text-emerald-600">৳ {toBanglaNumber(todayIncome.toFixed(0))}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground font-bangla">আজকের খরচ</p>
+                      <p className="text-2xl font-display text-rose-600">৳ {toBanglaNumber(todayExpense.toFixed(0))}</p>
+                    </div>
+                    <div className="pt-4 border-t border-border/40">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs text-muted-foreground font-bangla">নেট ক্যাশ ফ্লো</p>
+                          <p className={`text-xl font-display mt-1 ${todayIncome - todayExpense >= 0 ? 'text-primary' : 'text-rose-600'}`}>
+                            ৳ {toBanglaNumber((todayIncome - todayExpense).toFixed(0))}
+                          </p>
+                        </div>
+                        <TrendingUp className={`h-8 w-8 opacity-10 ${todayIncome - todayExpense >= 0 ? 'text-primary' : 'text-rose-600'}`} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="mt-6 font-bangla w-full border border-primary/10" onClick={() => setTab('transparency')}>
-                  বিস্তারিত দেখুন →
-                </Button>
+
+                <div className="card-gold rounded-2xl p-6">
+                  <h3 className="font-display text-sm gold-text mb-4 flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" /> রিসেন্ট অ্যাক্টিভিটি
+                  </h3>
+                  <div className="space-y-3">
+                    {auditLogs.slice(0, 5).map((log, i) => (
+                      <div key={i} className="flex gap-3 items-start text-[11px] border-l-2 border-primary/20 pl-3 py-0.5">
+                        <div className="flex-1">
+                          <p className="font-bangla leading-tight">{log.action}</p>
+                          <p className="text-muted-foreground mt-0.5">{new Date(log.created_at).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {auditLogs.length === 0 && <p className="text-[11px] text-muted-foreground text-center py-4 font-bangla">কোনো লগ নেই</p>}
+                  </div>
+                  <Button variant="ghost" size="sm" className="w-full mt-4 text-[11px] font-bangla h-7" onClick={() => setTab('audit')}>সব অডিট লগ →</Button>
+                </div>
               </div>
             </div>
 
@@ -1790,7 +1836,7 @@ const Finance = () => {
                               {members.filter(m => m.is_active).map((m) => (
                                 <CommandItem
                                   key={m.id}
-                                  value={`${m.member_code} ${m.full_name}`}
+                                  value={`${m.member_code} ${m.full_name} ${m.phone || ''}`}
                                   onSelect={() => {
                                     setSelectedMemberId(m.id);
                                     setMemberSearchOpen(false);
@@ -1802,7 +1848,10 @@ const Finance = () => {
                                       selectedMemberId === m.id ? "opacity-100" : "opacity-0"
                                     )}
                                   />
-                                  {m.member_code} — {m.full_name}
+                                  <div className="flex flex-col">
+                                    <span>{m.member_code} — {m.full_name}</span>
+                                    <span className="text-[10px] text-muted-foreground">{m.phone} | {m.area}</span>
+                                  </div>
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -1862,17 +1911,45 @@ const Finance = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Select name="for_month" defaultValue={String(currentMonth)} required>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {BANGLA_MONTHS.map((mn, i) => (
-                        <SelectItem key={i} value={String(i + 1)}>{mn} {toBanglaNumber(currentYear)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input name="for_year" type="hidden" defaultValue={currentYear} />
+                <div className="space-y-2">
+                  <Label className="text-[11px] text-muted-foreground font-bangla">মাসসমূহ নির্বাচন করুন (Multi-month)</Label>
+                  <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-primary/10 bg-background/40">
+                    {BANGLA_MONTHS.map((mn, i) => {
+                      const mNum = i + 1;
+                      const isSelected = selectedMonths.includes(mNum);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) setSelectedMonths(selectedMonths.filter(m => m !== mNum));
+                            else setSelectedMonths([...selectedMonths, mNum].sort((a, b) => a - b));
+                          }}
+                          className={`px-2 py-1 rounded text-[10px] font-bangla transition-all border ${
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
+                              : 'bg-background border-border hover:border-primary/40'
+                          }`}
+                        >
+                          {mn}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-primary/5 border border-primary/10 p-2 flex items-center justify-between">
+                    <span className="text-[10px] font-bangla text-muted-foreground">মোট মাস:</span>
+                    <span className="text-sm font-bold gold-text">{toBanglaNumber(selectedMonths.length)}</span>
+                  </div>
+                  <div className="rounded-lg bg-primary/5 border border-primary/10 p-2 flex items-center justify-between">
+                    <span className="text-[10px] font-bangla text-muted-foreground">সর্বমোট:</span>
+                    <span className="text-sm font-bold text-emerald-600">৳ {toBanglaNumber((selectedMonths.length * (Number(members.find(m => m.id === selectedMemberId)?.monthly_rate) || 500)).toFixed(0))}</span>
+                  </div>
+                </div>
+
+                <Input name="for_year" type="hidden" defaultValue={currentYear} />
 
                 <div className="grid grid-cols-2 gap-3">
                   <Select name="method" defaultValue="cash" required>
