@@ -117,9 +117,9 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
 
   // ===== COVER HEADER =====
   doc.setFillColor(180, 142, 73);
-  doc.rect(0, 0, pageWidth, 50, 'F');
+  doc.rect(0, 0, pageWidth, 52, 'F');
 
-  // QR code (top-right of header) — encodes member code for quick verification
+  // QR code (top-right of header)
   let qrDataUrl = '';
   try {
     qrDataUrl = await QRCode.toDataURL(
@@ -129,39 +129,40 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   } catch { /* ignore */ }
 
   if (qrDataUrl) {
-    // White background tile for QR
     doc.setFillColor(255, 255, 255);
-    doc.rect(pageWidth - 38, 6, 32, 32, 'F');
-    doc.addImage(qrDataUrl, 'PNG', pageWidth - 36, 8, 28, 28);
+    doc.rect(pageWidth - 40, 5, 34, 34, 'F');
+    doc.addImage(qrDataUrl, 'PNG', pageWidth - 38, 7, 30, 30);
   }
 
-  // Title text on header
+  // Title
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', 14, 14);
+  doc.setFontSize(16);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 14);
+  doc.setFontSize(10);
+  doc.text('Chandanaish Darbar Sharif', 14, 21);
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setFontSize(11);
-  doc.text(`Annual Statement - ${targetYear}`, 14, 22);
+  doc.text(`বার্ষিক বিবরণী — ${targetYear}`, 14, 30);
   doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`, 14, 29);
+  doc.text(`তারিখ: ${new Date().toLocaleDateString('bn-BD')}`, 14, 37);
 
-  // Cover meta inside header
+  // Member info inside header
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(11);
-  doc.text(`Member: ${member.member_code}`, 14, 38);
+  doc.text(`সদস্য কোড: ${member.member_code}`, 14, 46);
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setFontSize(10);
-  doc.text(`${member.full_name}`, 14, 45);
+  doc.text(`${member.full_name}`, 80, 46);
 
   // ===== MEMBER INFO BLOCK =====
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
-  const yPos = 60;
-  doc.text(`Phone: ${member.phone ?? '-'}`, 14, yPos);
-  doc.text(`Joined: ${member.joined_date}`, 14, yPos + 6);
-  doc.text(`Monthly Rate: ${formatBDT(member.monthly_rate)}`, 110, yPos);
-  doc.text(`Statement Year: ${targetYear}`, 110, yPos + 6);
+  const yPos = 62;
+  doc.text(`ফোন: ${member.phone ?? '-'}`, 14, yPos);
+  doc.text(`যোগদান: ${member.joined_date}`, 14, yPos + 6);
+  doc.text(`মাসিক চাঁদা: ${formatTk(member.monthly_rate)}`, 110, yPos);
+  doc.text(`বিবরণীর বছর: ${targetYear}`, 110, yPos + 6);
 
   // ===== Build year rows =====
   const expected = Number(member.monthly_rate);
@@ -245,10 +246,10 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
 
   autoTable(doc, {
     startY: legendY + 16,
-    head: [['Month', 'Expected', 'Paid', 'Status', 'Date', 'Ref / Method']],
+    head: [['মাস (Month)', 'প্রত্যাশিত', 'পরিশোধিত', 'অবস্থা', 'তারিখ', 'রেফারেন্স']],
     body: renderRows,
-    headStyles: { fillColor: [180, 142, 73], textColor: 255, fontSize: 10 },
-    bodyStyles: { fontSize: 9 },
+    headStyles: { fillColor: [180, 142, 73], textColor: 255, fontSize: 10, font: BANGLA_FONT_NAME },
+    bodyStyles: { fontSize: 9, font: BANGLA_FONT_NAME },
     columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
     didParseCell: (data) => {
       if (data.section === 'body' && data.column.index === 3) {
@@ -267,24 +268,25 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
       }
     },
     foot: [[
-      'TOTAL',
-      formatBDT(totalExpectedThisYear),
-      formatBDT(totalPaidThisYear),
-      totalPaidThisYear >= totalExpectedThisYear ? 'CLEAR' : `DUE ${formatBDT(totalExpectedThisYear - totalPaidThisYear)}`,
+      'মোট (TOTAL)',
+      formatTk(totalExpectedThisYear),
+      formatTk(totalPaidThisYear),
+      totalPaidThisYear >= totalExpectedThisYear ? 'সম্পূর্ণ' : `বকেয়া ${formatTk(totalExpectedThisYear - totalPaidThisYear)}`,
       '', ''
     ]],
-    footStyles: { fillColor: [240, 230, 210], textColor: 0, fontStyle: 'bold' },
+    footStyles: { fillColor: [240, 230, 210], textColor: 0, fontStyle: 'bold', font: BANGLA_FONT_NAME },
   });
 
   // ===== Footer =====
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.text(
-    `Member Code: ${member.member_code} | Verify with QR on top-right`,
+    `সদস্য কোড: ${member.member_code} | QR কোড দিয়ে যাচাই করুন`,
     14,
     pageHeight - 10,
   );
-  doc.text('Auto-generated official statement.', pageWidth - 14, pageHeight - 10, { align: 'right' });
+  doc.text('চন্দনাইশ দরবার শরীফ — স্বয়ংক্রিয় বিবরণী', pageWidth - 14, pageHeight - 10, { align: 'right' });
 
   doc.save(`statement-${member.member_code}-${targetYear}.pdf`);
 }
@@ -297,31 +299,49 @@ export async function downloadReceiptPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFillColor(180, 142, 73);
-  doc.rect(0, 0, pageWidth, 28, 'F');
+  doc.rect(0, 0, pageWidth, 32, 'F');
   doc.setTextColor(255, 255, 255);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(16);
-  doc.text('Chandanaish Darbar Sharif', pageWidth / 2, 12, { align: 'center' });
-  doc.setFontSize(11);
-  doc.text('Payment Receipt', pageWidth / 2, 21, { align: 'center' });
+  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 12, { align: 'center' });
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(12);
+  doc.text('পেমেন্ট রশিদ (Payment Receipt)', pageWidth / 2, 22, { align: 'center' });
+  doc.setFontSize(8);
+  doc.text(`তারিখ: ${new Date().toLocaleDateString('bn-BD')}`, pageWidth / 2, 29, { align: 'center' });
 
   doc.setTextColor(0, 0, 0);
-  doc.setFontSize(12);
-  let y = 44;
-  const line = (k: string, v: string) => { doc.text(`${k}:`, 18, y); doc.text(v, 70, y); y += 9; };
-  line('Receipt No', payment.id?.slice(0, 8).toUpperCase() ?? '-');
-  line('Member Code', member.member_code);
-  line('Member Name', member.full_name);
-  line('Amount', formatBDT(payment.amount));
-  line('For', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`);
-  line('Payment Date', payment.payment_date);
-  line('Method', payment.method.toUpperCase());
-  line('Reference', payment.transaction_ref ?? '-');
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(11);
+  let y = 48;
+  const line = (k: string, v: string) => {
+    doc.setFont(BANGLA_FONT_NAME, 'bold');
+    doc.text(`${k}:`, 18, y);
+    doc.setFont(BANGLA_FONT_NAME, 'normal');
+    doc.text(v, 75, y);
+    y += 9;
+  };
+  line('রশিদ নং', payment.id?.slice(0, 8).toUpperCase() ?? '-');
+  line('সদস্য কোড', member.member_code);
+  line('সদস্যের নাম', member.full_name);
+  line('পরিমাণ', formatTk(payment.amount));
+  line('মাস', `${MONTHS_BN[payment.for_month - 1]} ${payment.for_year}`);
+  line('পেমেন্ট তারিখ', payment.payment_date);
+  line('পদ্ধতি', methodLabel(payment.method));
+  line('রেফারেন্স', payment.transaction_ref ?? '-');
 
+  // Divider line
+  y += 6;
+  doc.setDrawColor(180, 142, 73);
+  doc.setLineWidth(0.5);
+  doc.line(18, y, pageWidth - 18, y);
   y += 12;
+
   doc.setFontSize(10);
   doc.setTextColor(120, 120, 120);
-  doc.text('Authorized Signature: _____________________', 18, y + 20);
-  doc.text(`Generated: ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`, 18, y + 30);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text('অনুমোদিত স্বাক্ষর: _____________________', 18, y + 10);
+  doc.text('চন্দনাইশ দরবার শরীফ — স্বয়ংক্রিয় রশিদ', 18, y + 22);
 
   doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
 }
@@ -344,16 +364,23 @@ function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   doc.rect(0, 0, pageWidth, 40, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(16);
-  doc.text('Chandanaish Darbar Sharif', 14, 14);
+  doc.setFontSize(14);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 12);
+  doc.setFontSize(9);
+  doc.text('Chandanaish Darbar Sharif', 14, 18);
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setFontSize(11);
-  doc.text(title, 14, 22);
+  doc.text(title, 14, 27);
   doc.setFontSize(9);
-  doc.text(subtitle, 14, 29);
+  doc.text(subtitle, 14, 34);
+  doc.text(
+    `তারিখ: ${new Date().toLocaleDateString('bn-BD')}`,
+    pageWidth - 14, 12, { align: 'right' },
+  );
+  doc.setFontSize(8);
   doc.text(
     `Generated: ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
-    pageWidth - 14, 14, { align: 'right' },
+    pageWidth - 14, 18, { align: 'right' },
   );
 }
 
