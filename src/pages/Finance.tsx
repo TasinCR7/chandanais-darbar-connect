@@ -302,7 +302,7 @@ const Finance = () => {
   // Area-wise collection for current year
   const areaCollection = useMemo(() => {
     const memberArea = new Map<string, string>();
-    members.forEach((m) => memberArea.set(m.id, (m.area || 'অজানা').trim() || 'অজানা'));
+    (members as Member[]).forEach((m) => memberArea.set(m.id, (m.area || 'অজানা').trim() || 'অজানা'));
     const map = new Map<string, number>();
     payments
       .filter((p) => p.for_year === reportYear)
@@ -330,7 +330,7 @@ const Finance = () => {
 
   const downloadAreaPDF = async () => {
     setBusy(true);
-    await downloadAreaReportPDF(members, payments, reportYear, {
+    await downloadAreaReportPDF(members as any, payments as any, reportYear, {
       month: areaScope === 'month' ? reportMonth : undefined,
       activeOnly,
       filename: reportFilename,
@@ -725,7 +725,7 @@ const Finance = () => {
             return (
               <button
                 key={t.key}
-                onClick={() => !disabled && setTab(t.key)}
+                onClick={() => !disabled && setTab(t.key as TabKey)}
                 disabled={disabled}
                 className={`flex-1 min-w-[110px] flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bangla text-sm transition-all
                   ${isActive ? 'bg-gradient-gold text-primary-foreground shadow-gold' :
@@ -971,7 +971,7 @@ const Finance = () => {
             )}
 
             {(() => {
-              const memberById = new Map<string, any>(members.map((m) => [m.id, m]));
+              const memberById = new Map<string, Member>(members.map((m) => [m.id, m]));
               const areaOpts = Array.from(new Set(members.map((m) => (m.area ?? '').trim()).filter(Boolean))).sort();
               const matchArea = (area: string | null | undefined) =>
                 areaFilter === 'all' ? true :
@@ -1435,7 +1435,7 @@ const Finance = () => {
         )}
 
         {/* ADMIN */}
-        {tab === 'admin' && adminMode && (
+        {tab === 'admin' && isStaff && (
           <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="font-display text-2xl gold-text flex items-center gap-2">
@@ -1679,12 +1679,12 @@ const Finance = () => {
                 <div>
                   <label className="font-bangla text-xs text-muted-foreground">ডিফল্ট মাসিক রেট (৳)</label>
                   <Input type="number" defaultValue={Number(settings.default_monthly_rate ?? 500)}
-                    onBlur={(e) => { const v = Number(e.target.value); if (v >= 0 && v !== Number(settings.default_monthly_rate)) saveSetting('default_monthly_rate', v); }} />
+                    onBlur={(e) => { const v = Number(e.target.value); if (v >= 0 && v !== Number(settings.default_monthly_rate)) saveSetting('default_monthly_rate', String(v)); }} />
                 </div>
                 <div>
                   <label className="font-bangla text-xs text-muted-foreground">বার্ষিক লক্ষ্যমাত্রা (৳)</label>
                   <Input type="number" defaultValue={Number(settings.default_annual_target ?? 0)}
-                    onBlur={(e) => { const v = Number(e.target.value); if (v >= 0 && v !== Number(settings.default_annual_target)) saveSetting('default_annual_target', v); }} />
+                    onBlur={(e) => { const v = Number(e.target.value); if (v >= 0 && v !== Number(settings.default_annual_target)) saveSetting('default_annual_target', String(v)); }} />
                 </div>
               </div>
               <div className="grid sm:grid-cols-3 gap-3 mb-6">
@@ -1994,8 +1994,9 @@ const Finance = () => {
                             }
                           }}
                         />
-                      </div>
                     </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-bangla">বিভাগ (Category)</Label>
@@ -2093,7 +2094,7 @@ const Finance = () => {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary">
-                            <User className="h-3 w-3" />
+                            <Users className="h-3 w-3" />
                           </div>
                           <span className="font-medium text-foreground">{log.actor_name || 'System'}</span>
                         </div>
@@ -2127,10 +2128,10 @@ const Finance = () => {
           </div>
         )}
 
-        {tab === 'admin' && !adminMode && (
+        {tab === 'admin' && !isStaff && (
           <div className="card-gold rounded-2xl p-12 text-center">
             <ShieldCheck className="h-16 w-16 text-primary mx-auto mb-4" />
-            <p className="font-bangla text-lg">প্রবেশ করতে উপরের <span className="text-primary font-semibold">"অ্যাডমিন মোড"</span> বাটনে ক্লিক করুন</p>
+            <p className="font-bangla text-lg text-destructive">এই সেকশনটি শুধুমাত্র অ্যাডমিনদের জন্য।</p>
           </div>
         )}
       </div>

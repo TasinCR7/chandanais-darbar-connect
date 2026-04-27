@@ -14,6 +14,206 @@ export type Database = {
   }
   public: {
     Tables: {
+      members: {
+        Row: {
+          area: string | null
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          joined_date: string
+          member_code: string
+          monthly_rate: number
+          phone: string | null
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          joined_date?: string
+          member_code: string
+          monthly_rate?: number
+          phone?: string | null
+        }
+        Update: {
+          area?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          joined_date?: string
+          member_code?: string
+          monthly_rate?: number
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          for_month: number
+          for_year: number
+          id: string
+          member_id: string
+          method: string
+          note: string | null
+          payment_date: string
+          recorded_by: string | null
+          status: string
+          transaction_ref: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          for_month: number
+          for_year: number
+          id?: string
+          member_id: string
+          method: string
+          note?: string | null
+          payment_date?: string
+          recorded_by?: string | null
+          status?: string
+          transaction_ref?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          for_month?: number
+          for_year?: number
+          id?: string
+          member_id?: string
+          method?: string
+          note?: string | null
+          payment_date?: string
+          recorded_by?: string | null
+          status?: string
+          transaction_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          category: string | null
+          created_at: string
+          expense_date: string
+          id: string
+          note: string | null
+          recorded_by: string | null
+          title: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          category?: string | null
+          created_at?: string
+          expense_date: string
+          id?: string
+          note?: string | null
+          recorded_by?: string | null
+          title: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          category?: string | null
+          created_at?: string
+          expense_date?: string
+          id?: string
+          note?: string | null
+          recorded_by?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      monthly_targets: {
+        Row: {
+          created_at: string
+          for_month: number
+          for_year: number
+          id: string
+          note: string | null
+          target_amount: number
+        }
+        Insert: {
+          created_at?: string
+          for_month: number
+          for_year: number
+          id?: string
+          note?: string | null
+          target_amount: number
+        }
+        Update: {
+          created_at?: string
+          for_month?: number
+          for_year?: number
+          id?: string
+          note?: string | null
+          target_amount?: number
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       committee_comments: {
         Row: {
           created_at: string

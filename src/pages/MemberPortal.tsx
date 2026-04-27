@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut } from "lucide-react";
+import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut, Users } from "lucide-react";
 import PremiumLoader from "@/components/PremiumLoader";
 import { calculateDues, downloadAnnualStatementPDF, type MemberLite, type PaymentLite } from "@/lib/statement";
 import SEO from "@/components/SEO";
@@ -11,13 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Member, Payment } from "@/types/finance";
 
 const MemberPortal = () => {
   const [authQuery, setAuthQuery] = useState({ code: "", phone: "" });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [member, setMember] = useState<any>(null);
-  const [payments, setPayments] = useState<any[]>([]);
+  const [member, setMember] = useState<Member | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [paymentBusy, setPaymentBusy] = useState(false);
   const { toast } = useToast();
