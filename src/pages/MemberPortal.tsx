@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut, Users, MapPin, Calendar, Smartphone, ShieldCheck } from "lucide-react";
+import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut } from "lucide-react";
 import PremiumLoader from "@/components/PremiumLoader";
 import { calculateDues, downloadAnnualStatementPDF, type MemberLite, type PaymentLite } from "@/lib/statement";
 import SEO from "@/components/SEO";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MemberPortal = () => {
-  const [authQuery, setAuthQuery] = useState({ code: "", phone: "", name: "" });
+  const [authQuery, setAuthQuery] = useState({ code: "", phone: "" });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [member, setMember] = useState<any>(null);
@@ -25,39 +25,39 @@ const MemberPortal = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const phone = authQuery.phone.trim();
-    const code = authQuery.code.trim().toUpperCase();
-    const name = authQuery.name.trim();
-
-    if (!phone || !code || !name) {
-      toast({ title: "তথ্য দিন", description: "নাম, সদস্য কোড এবং ফোন নম্বর - সবকটি প্রদান করুন।", variant: "destructive" });
+    if (!phone) {
+      toast({ title: "তথ্য দিন", description: "আপনার ফোন নম্বর প্রদান করুন।", variant: "destructive" });
       return;
     }
     
     setLoading(true);
     try {
-      const { data, error } = await (supabase.from as any)("members")
-        .select("*")
-        .eq("member_code", code)
-        .eq("phone", phone)
-        .ilike("full_name", `%${name}%`)
-        .maybeSingle();
+      let query = supabase.from("members").select("*").eq("phone", phone);
+      
+      // If code is also provided, use it for extra precision
+      if (authQuery.code.trim()) {
+        query = query.eq("member_code", authQuery.code.trim().toUpperCase());
+      }
+
+      const { data, error } = await query.maybeSingle();
         
       if (error) throw error;
       if (!data) {
-        toast({ title: "তথ্য মেলেনি", description: "প্রদত্ত তথ্যের সাথে কোনো সদস্য খুঁজে পাওয়া যায়নি। দয়া করে সঠিক নাম, কোড ও ফোন দিন।", variant: "destructive" });
+        toast({ title: "তথ্য পাওয়া যায়নি", description: "এই ফোন নম্বরে কোনো সদস্য নিবন্ধিত নেই।", variant: "destructive" });
         setLoading(false);
         return;
       }
 
       setMember(data);
-      const { data: pData } = await (supabase.from as any)("payments")
+      const { data: pData } = await supabase
+        .from("payments")
         .select("*")
-        .eq("member_id", (data as any).id)
+        .eq("member_id", data.id)
         .order("payment_date", { ascending: false });
       
       setPayments(pData || []);
       setIsLoggedIn(true);
-      toast({ title: "স্বাগতম", description: `${(data as any).full_name}, আপনার পোর্টালে স্বাগতম।` });
+      toast({ title: "স্বাগতম", description: `${data.full_name}, আপনার পোর্টালে স্বাগতম।` });
     } catch (err: any) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
     } finally {
@@ -69,7 +69,7 @@ const MemberPortal = () => {
     setIsLoggedIn(false);
     setMember(null);
     setPayments([]);
-    setAuthQuery({ code: "", phone: "", name: "" });
+    setAuthQuery({ code: "", phone: "" });
   };
 
   const duesData = useMemo(() => {
@@ -107,8 +107,8 @@ const MemberPortal = () => {
 
     setPaymentBusy(true);
     try {
-      const { error } = await (supabase.from as any)("payments").insert({
-        member_id: (member as any).id,
+      const { error } = await supabase.from("payments").insert({
+        member_id: member.id,
         amount,
         for_month: month,
         for_year: new Date().getFullYear(),
@@ -145,39 +145,26 @@ const MemberPortal = () => {
               <p className="text-sm text-muted-foreground mt-2">আপনার প্রোফাইল দেখতে তথ্য দিন</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">পূর্ণ নাম *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ফোন নম্বর *</Label>
                 <Input 
-                  placeholder="যেমন: মোহাম্মদ করিম" 
-                  value={authQuery.name}
-                  onChange={(e) => setAuthQuery({...authQuery, name: e.target.value})}
-                  className="h-11 bg-background/50 border-primary/20 focus:border-primary"
+                  type="tel"
+                  placeholder="যেমন: ০১৭..." 
+                  value={authQuery.phone}
+                  onChange={(e) => setAuthQuery({...authQuery, phone: e.target.value})}
+                  className="h-12 bg-background/50 border-primary/20 focus:border-primary"
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">সদস্য কোড *</Label>
-                  <Input 
-                    placeholder="CDS-001" 
-                    value={authQuery.code}
-                    onChange={(e) => setAuthQuery({...authQuery, code: e.target.value.toUpperCase()})}
-                    className="h-11 bg-background/50 border-primary/20 focus:border-primary font-mono"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ফোন নম্বর *</Label>
-                  <Input 
-                    type="tel"
-                    placeholder="০১৭..." 
-                    value={authQuery.phone}
-                    onChange={(e) => setAuthQuery({...authQuery, phone: e.target.value})}
-                    className="h-11 bg-background/50 border-primary/20 focus:border-primary"
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">সদস্য কোড (ঐচ্ছিক)</Label>
+                <Input 
+                  placeholder="যেমন: CDS-001" 
+                  value={authQuery.code}
+                  onChange={(e) => setAuthQuery({...authQuery, code: e.target.value.toUpperCase()})}
+                  className="h-12 bg-background/50 border-primary/20 focus:border-primary font-mono"
+                />
               </div>
               <Button type="submit" className="w-full h-12 bg-gradient-gold text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
                 লগইন করুন
@@ -197,32 +184,25 @@ const MemberPortal = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column: Member Info & Stats */}
             <div className="lg:col-span-2 space-y-6">
-                <div className="card-gold p-6 rounded-3xl relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-background border-primary/20 shadow-2xl group transition-all duration-500 hover:shadow-primary/10">
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-700">
-                    <Users size={180} />
-                  </div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-                  
-                  <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center">
-                    <div className="h-24 w-24 rounded-2xl bg-gradient-gold p-0.5 shadow-lg shadow-primary/20">
-                      <div className="h-full w-full rounded-2xl bg-background flex items-center justify-center">
-                        <Users className="h-12 w-12 text-primary/40" />
-                      </div>
+              <div className="card-gold p-6 rounded-3xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Users size={120} />
+                </div>
+                <div className="relative z-10">
+                  <p className="text-primary font-mono text-sm tracking-widest">{member.member_code}</p>
+                  <h2 className="text-3xl font-heading font-bold gold-text mt-1">{member.full_name}</h2>
+                  <div className="grid sm:grid-cols-2 gap-4 mt-6 text-sm">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><CreditCard size={16} /></div>
+                      <span>মাসিক চাঁদা: ৳ {toBanglaNumber(member.monthly_rate)}</span>
                     </div>
-                    
-                    <div className="flex-1 text-center md:text-left">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-mono font-bold text-primary tracking-widest">{member.member_code}</span>
-                      </div>
-                      <h2 className="text-3xl font-heading font-bold gold-text leading-tight">{member.full_name}</h2>
-                      <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4 text-[11px] text-muted-foreground uppercase tracking-wider font-bangla">
-                        <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3 text-primary" /> যোগদান: {toBanglaNumber(member.joined_date)}</span>
-                        <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-primary" /> এলাকা: {member.area || '—'}</span>
-                      </div>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Search size={16} /></div>
+                      <span>এলাকা: {member.area || '—'}</span>
                     </div>
                   </div>
                 </div>
+              </div>
 
               {duesData && (
                 <div className="grid sm:grid-cols-3 gap-4">

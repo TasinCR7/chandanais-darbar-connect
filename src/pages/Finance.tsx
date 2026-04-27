@@ -37,7 +37,7 @@ import {
   LayoutGrid, UserSearch, AlertOctagon, PieChart as PieIcon, Trophy, Settings,
   Wallet, TrendingUp, TrendingDown, Users, FileText, Printer, Database,
   RefreshCcw, ShieldCheck, Receipt, Save, Search, Download, Plus, Eye, CalendarDays, Upload,
-  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown, Clock, User
+  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown, Clock
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -104,7 +104,7 @@ const Finance = () => {
         fetchExpenses(),
         fetchTargets(),
         fetchSettings(),
-        (supabase.from as any)('audit_logs').select('*').order('created_at', { ascending: false }).limit(100)
+        supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100)
       ]);
       setMembers(m);
       setPayments(p);
@@ -112,7 +112,7 @@ const Finance = () => {
       setTargets(t);
       setSettings(s);
       setAuditLogs(al.data || []);
-      setPendingPayments(p.filter(pay => (pay as any).status === 'pending'));
+      setPendingPayments(p.filter(pay => pay.status === 'pending'));
     } catch (err: unknown) {
       toast({ title: 'ডাটা লোড ব্যর্থ', variant: 'destructive' });
     } finally {
@@ -123,7 +123,7 @@ const Finance = () => {
   useEffect(() => { loadAll(); }, []);
 
   // Aggregates - ONLY approved payments count towards income
-  const totalIncome = useMemo(() => payments.filter(p => (p as any).status === 'approved').reduce((s, p) => s + Number(p.amount), 0), [payments]);
+  const totalIncome = useMemo(() => payments.filter(p => p.status === 'approved').reduce((s, p) => s + Number(p.amount), 0), [payments]);
   const totalExpense = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount), 0), [expenses]);
   const balance = totalIncome - totalExpense;
   const activeMembers = members.filter((m) => m.is_active).length;
@@ -139,7 +139,7 @@ const Finance = () => {
       if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
       payMap.get(p.member_id)?.push({
         amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
-        payment_date: p.payment_date, method: p.method, transaction_ref: (p as any).transaction_ref,
+        payment_date: p.payment_date, method: p.method, transaction_ref: p.transaction_ref,
       });
     });
 
@@ -170,7 +170,7 @@ const Finance = () => {
       });
 
       if (type === 'members') {
-        const { error } = await (supabase.from as any)('members').insert(rows as any);
+        const { error } = await supabase.from('members').insert(rows as any);
         if (error) throw error;
         toast({ title: `${rows.length} জন সদস্য যোগ হয়েছে` });
       } else {
@@ -183,7 +183,7 @@ const Finance = () => {
           }
           if (row.member_id) resolvedRows.push(row);
         }
-        const { error } = await (supabase.from as any)('payments').insert(resolvedRows as any);
+        const { error } = await supabase.from('payments').insert(resolvedRows as any);
         if (error) throw error;
         toast({ title: `${resolvedRows.length} টি পেমেন্ট যোগ হয়েছে` });
       }
@@ -302,7 +302,7 @@ const Finance = () => {
   // Area-wise collection for current year
   const areaCollection = useMemo(() => {
     const memberArea = new Map<string, string>();
-    members.forEach((m) => memberArea.set(m.id, ((m.area as string) || 'অজানা').trim() || 'অজানা'));
+    members.forEach((m) => memberArea.set(m.id, (m.area || 'অজানা').trim() || 'অজানা'));
     const map = new Map<string, number>();
     payments
       .filter((p) => p.for_year === reportYear)
@@ -1435,7 +1435,7 @@ const Finance = () => {
         )}
 
         {/* ADMIN */}
-        {tab === 'admin' && isStaff && (
+        {tab === 'admin' && adminMode && (
           <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="font-display text-2xl gold-text flex items-center gap-2">
@@ -1985,20 +1985,17 @@ const Finance = () => {
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             if (val >= 10000) {
-                              e.target.classList.add('border-rose-500', 'ring-rose-500');
+                              // Large expense visual cue
+                              e.target.classList.add('border-rose-500');
+                              e.target.classList.add('ring-rose-500');
                             } else {
-                              e.target.classList.remove('border-rose-500', 'ring-rose-500');
+                              e.target.classList.remove('border-rose-500');
+                              e.target.classList.remove('ring-rose-500');
                             }
                           }}
                         />
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-xs font-bangla">তারিখ *</Label>
-                      <Input name="expense_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required className="h-10" />
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-bangla">বিভাগ (Category)</Label>
@@ -2130,6 +2127,12 @@ const Finance = () => {
           </div>
         )}
 
+        {tab === 'admin' && !adminMode && (
+          <div className="card-gold rounded-2xl p-12 text-center">
+            <ShieldCheck className="h-16 w-16 text-primary mx-auto mb-4" />
+            <p className="font-bangla text-lg">প্রবেশ করতে উপরের <span className="text-primary font-semibold">"অ্যাডমিন মোড"</span> বাটনে ক্লিক করুন</p>
+          </div>
+        )}
       </div>
 
       {/* Preview modal for org-wide PDF reports */}
