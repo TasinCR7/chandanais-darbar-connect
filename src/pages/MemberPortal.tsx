@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut } from "lucide-react";
+import { Search, Download, AlertCircle, CheckCircle, Wallet, Loader2, LogIn, CreditCard, Send, LogOut, Users, MapPin, Calendar, Smartphone, ShieldCheck } from "lucide-react";
 import PremiumLoader from "@/components/PremiumLoader";
 import { calculateDues, downloadAnnualStatementPDF, type MemberLite, type PaymentLite } from "@/lib/statement";
 import SEO from "@/components/SEO";
@@ -199,25 +199,32 @@ const MemberPortal = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column: Member Info & Stats */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="card-gold p-6 rounded-3xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Users size={120} />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-primary font-mono text-sm tracking-widest">{member.member_code}</p>
-                  <h2 className="text-3xl font-heading font-bold gold-text mt-1">{member.full_name}</h2>
-                  <div className="grid sm:grid-cols-2 gap-4 mt-6 text-sm">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><CreditCard size={16} /></div>
-                      <span>মাসিক চাঁদা: ৳ {toBanglaNumber(member.monthly_rate)}</span>
+                <div className="card-gold p-6 rounded-3xl relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-background border-primary/20 shadow-2xl group transition-all duration-500 hover:shadow-primary/10">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-700">
+                    <Users size={180} />
+                  </div>
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+                  
+                  <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center">
+                    <div className="h-24 w-24 rounded-2xl bg-gradient-gold p-0.5 shadow-lg shadow-primary/20">
+                      <div className="h-full w-full rounded-2xl bg-background flex items-center justify-center">
+                        <Users className="h-12 w-12 text-primary/40" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Search size={16} /></div>
-                      <span>এলাকা: {member.area || '—'}</span>
+                    
+                    <div className="flex-1 text-center md:text-left">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-mono font-bold text-primary tracking-widest">{member.member_code}</span>
+                      </div>
+                      <h2 className="text-3xl font-heading font-bold gold-text leading-tight">{member.full_name}</h2>
+                      <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4 text-[11px] text-muted-foreground uppercase tracking-wider font-bangla">
+                        <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3 text-primary" /> যোগদান: {toBanglaNumber(member.joined_date)}</span>
+                        <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-primary" /> এলাকা: {member.area || '—'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
               {duesData && (
                 <div className="grid sm:grid-cols-3 gap-4">
