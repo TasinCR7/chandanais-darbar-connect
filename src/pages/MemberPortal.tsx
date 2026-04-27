@@ -24,23 +24,26 @@ const MemberPortal = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authQuery.code.trim() || !authQuery.phone.trim()) {
-      toast({ title: "তথ্য দিন", description: "সদস্য কোড এবং ফোন নম্বর উভয়ই আবশ্যক।", variant: "destructive" });
+    const phone = authQuery.phone.trim();
+    if (!phone) {
+      toast({ title: "তথ্য দিন", description: "আপনার ফোন নম্বর প্রদান করুন।", variant: "destructive" });
       return;
     }
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("members")
-        .select("*")
-        .eq("member_code", authQuery.code.trim().toUpperCase())
-        .eq("phone", authQuery.phone.trim())
-        .maybeSingle();
+      let query = supabase.from("members").select("*").eq("phone", phone);
+      
+      // If code is also provided, use it for extra precision
+      if (authQuery.code.trim()) {
+        query = query.eq("member_code", authQuery.code.trim().toUpperCase());
+      }
+
+      const { data, error } = await query.maybeSingle();
         
       if (error) throw error;
       if (!data) {
-        toast({ title: "লগইন ব্যর্থ", description: "ভুল মেম্বার কোড বা ফোন নম্বর।", variant: "destructive" });
+        toast({ title: "তথ্য পাওয়া যায়নি", description: "এই ফোন নম্বরে কোনো সদস্য নিবন্ধিত নেই।", variant: "destructive" });
         setLoading(false);
         return;
       }
@@ -144,24 +147,23 @@ const MemberPortal = () => {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">সদস্য কোড</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ফোন নম্বর *</Label>
+                <Input 
+                  type="tel"
+                  placeholder="যেমন: ০১৭..." 
+                  value={authQuery.phone}
+                  onChange={(e) => setAuthQuery({...authQuery, phone: e.target.value})}
+                  className="h-12 bg-background/50 border-primary/20 focus:border-primary"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">সদস্য কোড (ঐচ্ছিক)</Label>
                 <Input 
                   placeholder="যেমন: CDS-001" 
                   value={authQuery.code}
                   onChange={(e) => setAuthQuery({...authQuery, code: e.target.value.toUpperCase()})}
                   className="h-12 bg-background/50 border-primary/20 focus:border-primary font-mono"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">ফোন নম্বর</Label>
-                <Input 
-                  type="tel"
-                  placeholder="০১৭..." 
-                  value={authQuery.phone}
-                  onChange={(e) => setAuthQuery({...authQuery, phone: e.target.value})}
-                  className="h-12 bg-background/50 border-primary/20 focus:border-primary"
-                  required
                 />
               </div>
               <Button type="submit" className="w-full h-12 bg-gradient-gold text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
