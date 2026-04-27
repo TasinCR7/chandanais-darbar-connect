@@ -59,6 +59,7 @@ const expenseSchema = z.object({
   title: z.string().trim().min(2),
   amount: z.coerce.number().positive(),
   expense_date: z.string().min(1),
+  category: z.string().optional(),
   approved_by: z.string().trim().max(100).optional(),
   note: z.string().trim().max(500).optional(),
 });
@@ -121,8 +122,8 @@ const Finance = () => {
 
   useEffect(() => { loadAll(); }, []);
 
-  // Aggregates
-  const totalIncome = useMemo(() => payments.filter(p => p.status !== 'rejected').reduce((s, p) => s + Number(p.amount), 0), [payments]);
+  // Aggregates - ONLY approved payments count towards income
+  const totalIncome = useMemo(() => payments.filter(p => p.status === 'approved').reduce((s, p) => s + Number(p.amount), 0), [payments]);
   const totalExpense = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount), 0), [expenses]);
   const balance = totalIncome - totalExpense;
   const activeMembers = members.filter((m) => m.is_active).length;
@@ -133,7 +134,8 @@ const Finance = () => {
   // Optimized per-member dues / paid calculation
   const memberStats = useMemo(() => {
     const payMap = new Map<string, any[]>();
-    payments.filter(p => p.status !== 'rejected').forEach(p => {
+    // Only 'approved' payments reduce dues
+    payments.filter(p => p.status === 'approved').forEach(p => {
       if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
       payMap.get(p.member_id)?.push({
         amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
@@ -172,9 +174,18 @@ const Finance = () => {
         if (error) throw error;
         toast({ title: `${rows.length} জন সদস্য যোগ হয়েছে` });
       } else {
-        const { error } = await supabase.from('payments').insert(rows as any);
+        // Resolve member_code to member_id for convenience
+        const resolvedRows = [];
+        for (const row of rows as any) {
+          if (row.member_code && !row.member_id) {
+            const m = members.find(mem => mem.member_code === row.member_code);
+            if (m) row.member_id = m.id;
+          }
+          if (row.member_id) resolvedRows.push(row);
+        }
+        const { error } = await supabase.from('payments').insert(resolvedRows as any);
         if (error) throw error;
-        toast({ title: `${rows.length} টি পেমেন্ট যোগ হয়েছে` });
+        toast({ title: `${resolvedRows.length} টি পেমেন্ট যোগ হয়েছে` });
       }
       await loadAll();
     } catch (err: any) {
@@ -216,7 +227,7 @@ const Finance = () => {
       label: monthName(i + 1).slice(0, 3),
       income: 0, expense: 0, balance: 0, cumulative: 0,
     }));
-    payments.filter(p => p.status !== 'rejected').forEach((p) => {
+    payments.filter(p => p.status === 'approved').forEach((p) => {
       const d = new Date(p.payment_date);
       if (d.getFullYear() === reportYear) rows[d.getMonth()].income += Number(p.amount);
     });
@@ -244,7 +255,7 @@ const Finance = () => {
           + (cutoff.getMonth() - join.getMonth()) + 1;
         const expected = months * Number(mem.monthly_rate || 0);
         const paid = payments
-          .filter((p) => p.member_id === mem.id)
+          .filter((p) => p.member_id === mem.id && p.status === 'approved')
           .filter((p) => {
             const py = p.for_year, pm = p.for_month;
             return py < reportYear || (py === reportYear && pm <= m);
@@ -1461,7 +1472,7 @@ const Finance = () => {
                 <div className="space-y-3">
                   <Label className="text-xs font-bangla">পেমেন্ট হিস্ট্রি (CSV)</Label>
                   <Input type="file" accept=".csv" onChange={(e) => handleBulkUpload(e, 'payments')} className="h-9 text-xs" />
-                  <p className="text-[10px] text-muted-foreground">Headers: member_id, amount, for_month, for_year, method, payment_date</p>
+                  <p className="text-[10px] text-muted-foreground">Headers: member_code, amount, for_month, for_year, method, payment_date</p>
                 </div>
               </div>
             </div>
@@ -1727,8 +1738,29 @@ const Finance = () => {
                 </div>
 
                 <h3 className="font-display text-lg gold-text flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" /> চাঁদা এন্ট্রি
+                  <TrendingUp className="h-5 w-5" /> চাঁদা সংগ্রহ
                 </h3>
+
+                {selectedMemberId && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 animate-in fade-in slide-in-from-top-2">
+                    {(() => {
+                      const m = memberStats.find(ms => ms.id === selectedMemberId);
+                      if (!m) return null;
+                      return (
+                        <div className="flex justify-between items-center text-sm font-bangla">
+                          <div>
+                            <p className="text-xs text-muted-foreground">বর্তমান বকেয়া</p>
+                            <p className="text-lg font-bold text-rose-600">৳ {toBanglaNumber(m.dues.toFixed(0))}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">বকেয়া মাস</p>
+                            <p className="text-lg font-bold text-amber-600">{toBanglaNumber(m.dueMonths)} মাস</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-start">
                   <div className="relative">
@@ -1793,6 +1825,42 @@ const Finance = () => {
 
                   <Input name="amount" type="number" placeholder="পরিমাণ *" required className="h-10" />
                 </div>
+
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {[50, 100, 500, 1000].map(amt => (
+                    <Button 
+                      key={amt} 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] font-bangla border-primary/20 hover:bg-primary/10"
+                      onClick={(e) => {
+                        const input = (e.currentTarget.closest('form')?.querySelector('input[name="amount"]') as HTMLInputElement);
+                        if (input) input.value = String(amt);
+                      }}
+                    >
+                      ৳ {toBanglaNumber(amt)}
+                    </Button>
+                  ))}
+                </div>
+
+                {selectedMemberId && (
+                  <div className="space-y-2 mb-4">
+                    <p className="text-[10px] text-muted-foreground font-bangla uppercase tracking-wider">সাম্প্রতিক জমা</p>
+                    {payments
+                      .filter(p => p.member_id === selectedMemberId && p.status === 'approved')
+                      .slice(0, 3)
+                      .map(p => (
+                        <div key={p.id} className="flex justify-between text-[11px] font-bangla border-b border-primary/5 pb-1 last:border-0">
+                          <span className="text-muted-foreground">{BANGLA_MONTHS[p.for_month - 1]} {toBanglaNumber(p.for_year)}</span>
+                          <span className="font-bold">৳ {toBanglaNumber(p.amount)}</span>
+                        </div>
+                      ))}
+                    {payments.filter(p => p.member_id === selectedMemberId && p.status === 'approved').length === 0 && (
+                      <p className="text-[10px] italic text-muted-foreground">কোনো জমা পাওয়া যায়নি</p>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <Select name="for_month" defaultValue={String(currentMonth)} required>
@@ -1861,20 +1929,35 @@ const Finance = () => {
                         />
                       </div>
                     </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-bangla">বিভাগ (Category)</Label>
+                      <Select name="category" defaultValue="অন্যান্য">
+                        <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="অনুষ্ঠান">অনুষ্ঠান</SelectItem>
+                          <SelectItem value="আপ্যায়ন">আপ্যায়ন</SelectItem>
+                          <SelectItem value="যাতায়াত">যাতায়াত</SelectItem>
+                          <SelectItem value="মেরামত">মেরামত</SelectItem>
+                          <SelectItem value="বেতন">বেতন</SelectItem>
+                          <SelectItem value="অন্যান্য">অন্যান্য</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div>
                       <Label className="text-xs font-bangla">তারিখ *</Label>
-                      <Input name="expense_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
+                      <Input name="expense_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required className="h-10" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-bangla">অনুমোদনকারী (ঐচ্ছিক)</Label>
-                      <Input name="approved_by" placeholder="অনুমোদনকারী (ঐচ্ছিক)" />
+                      <Input name="approved_by" placeholder="অনুমোদনকারী" className="h-10" />
                     </div>
                     <div>
                       <Label className="text-xs font-bangla">মন্তব্য (ঐচ্ছিক)</Label>
-                      <Input name="note" placeholder="মন্তব্য (ঐচ্ছিক)" />
+                      <Input name="note" placeholder="মন্তব্য" className="h-10" />
                     </div>
                   </div>
                 </div>

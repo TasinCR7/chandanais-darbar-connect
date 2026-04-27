@@ -79,7 +79,7 @@ const MemberPortal = () => {
       monthly_rate: Number(member.monthly_rate)
     };
     const litePayments: PaymentLite[] = payments
-      .filter(p => p.status !== 'rejected')
+      .filter(p => p.status === 'approved')
       .map(p => ({
         amount: Number(p.amount),
         for_year: p.for_year,

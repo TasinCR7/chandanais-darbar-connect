@@ -55,6 +55,7 @@ export interface PaymentLite {
   payment_date: string;
   method: string;
   transaction_ref: string | null;
+  status?: string;
 }
 
 const MONTHS_EN = [
@@ -77,7 +78,7 @@ export function buildMonthlyStatement(member: MemberLite, payments: PaymentLite[
 
   while (y < endY || (y === endY && m <= endM)) {
     const paid = payments
-      .filter((p) => p.for_year === y && p.for_month === m)
+      .filter((p) => p.for_year === y && p.for_month === m && (p.status === 'approved' || !p.status))
       .reduce((s, p) => s + Number(p.amount), 0);
     const expected = Number(member.monthly_rate);
     const status: 'paid' | 'partial' | 'due' =
@@ -166,7 +167,7 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   const expected = Number(member.monthly_rate);
   const rows = MONTHS_EN.map((mn, idx) => {
     const monthNum = idx + 1;
-    const monthPays = payments.filter((p) => p.for_year === targetYear && p.for_month === monthNum);
+    const monthPays = payments.filter((p) => p.for_year === targetYear && p.for_month === monthNum && (p.status === 'approved' || !p.status));
     const paid = monthPays.reduce((s, p) => s + Number(p.amount), 0);
     const status = paid >= expected ? 'PAID' : paid > 0 ? 'PARTIAL' : 'DUE';
     const ref = monthPays.map((p) => p.transaction_ref || p.method).join(', ') || '-';
@@ -396,6 +397,7 @@ function drawStatusLegend(doc: jsPDF, yPos: number) {
 
 export interface OrgPaymentRow extends PaymentLite {
   member_id: string;
+  status?: string;
 }
 
 /** Build a Map keyed by member.id → MemberLite for robust payment-to-member resolution. */
@@ -487,7 +489,7 @@ export function computeOrgMonthlyTotals(
     count++;
     const rate = Number(m.monthly_rate);
     const memberPaid = payments
-      .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === month)
+      .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === month && (p.status === 'approved' || !p.status))
       .reduce((s, p) => s + Number(p.amount), 0);
     expected += rate;
     paid += memberPaid;
@@ -544,7 +546,7 @@ export function computeOrgAnnualTotals(
         continue;
       }
       const monthPaid = payments
-        .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === mo)
+        .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === mo && (p.status === 'approved' || !p.status))
         .reduce((s, p) => s + Number(p.amount), 0);
       mExpected += rate;
       mPaid += monthPaid;
