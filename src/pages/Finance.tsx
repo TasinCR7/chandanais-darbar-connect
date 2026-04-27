@@ -37,8 +37,11 @@ import {
   LayoutGrid, UserSearch, AlertOctagon, PieChart as PieIcon, Trophy, Settings,
   Wallet, TrendingUp, TrendingDown, Users, FileText, Printer, Database,
   RefreshCcw, ShieldCheck, Receipt, Save, Search, Download, Plus, Eye, CalendarDays,
-  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2,
+  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown,
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 type TabKey = 'summary' | 'personal' | 'dues' | 'transparency' | 'ranking' | 'admin';
 
@@ -77,9 +80,9 @@ const Finance = () => {
   const [activeOnly, setActiveOnly] = useState<boolean>(true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewKind, setPreviewKind] = useState<'monthly' | 'annual' | 'combined'>('monthly');
-  const [reportFilename, setReportFilename] = useState<string>('');
-  const [areaFilter, setAreaFilter] = useState<string>('all');
-  const [areaScope, setAreaScope] = useState<'year' | 'month'>('year');
+  const [memberSearchOpen, setMemberSearchOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [quickMemberOpen, setQuickMemberOpen] = useState(false);
   const ORG_NAME_SLUG = 'chandanaish-darbar';
 
   const loadAll = async () => {
@@ -338,6 +341,7 @@ const Finance = () => {
     if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
     toast({ title: 'চাঁদা রেকর্ড হয়েছে ✓' });
     (e.target as HTMLFormElement).reset();
+    setSelectedMemberId("");
     loadAll();
   };
 
@@ -1271,16 +1275,68 @@ const Finance = () => {
                   <TrendingUp className="h-5 w-5" /> চাঁদা এন্ট্রি
                 </h3>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Select name="member_id" required>
-                    <SelectTrigger><SelectValue placeholder="দাতার নাম নির্বাচন করুন *" /></SelectTrigger>
-                    <SelectContent>
-                      {members.filter((m) => m.is_active).map((m) => (
-                        <SelectItem key={m.id} value={m.id}>{m.member_code} — {m.full_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input name="amount" type="number" placeholder="পরিমাণ *" required />
+                <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-start">
+                  <div className="relative">
+                    <input type="hidden" name="member_id" value={selectedMemberId} />
+                    <Popover open={memberSearchOpen} onOpenChange={setMemberSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={memberSearchOpen}
+                          className="w-full justify-between font-bangla font-normal h-10 px-3"
+                        >
+                          <span className="truncate">
+                            {selectedMemberId
+                              ? members.find((m) => m.id === selectedMemberId)?.full_name
+                              : "সদস্য নির্বাচন করুন *"}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0" align="start">
+                        <Command className="font-bangla">
+                          <CommandInput placeholder="নাম বা কোড দিয়ে খুঁজুন..." />
+                          <CommandList>
+                            <CommandEmpty>কোনো সদস্য পাওয়া যায়নি।</CommandEmpty>
+                            <CommandGroup>
+                              {members.filter(m => m.is_active).map((m) => (
+                                <CommandItem
+                                  key={m.id}
+                                  value={`${m.member_code} ${m.full_name}`}
+                                  onSelect={() => {
+                                    setSelectedMemberId(m.id);
+                                    setMemberSearchOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedMemberId === m.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {m.member_code} — {m.full_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-10 w-10 border border-primary/20 text-primary hover:bg-primary/10"
+                    onClick={() => setQuickMemberOpen(true)}
+                    title="নতুন সদস্য যোগ করুন"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+
+                  <Input name="amount" type="number" placeholder="পরিমাণ *" required className="h-10" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -1468,6 +1524,47 @@ const Finance = () => {
               <Download className="h-4 w-4 mr-1" /> PDF ডাউনলোড
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Member Dialog */}
+      <Dialog open={quickMemberOpen} onOpenChange={setQuickMemberOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display gold-text">নতুন সদস্য যোগ করুন</DialogTitle>
+            <DialogDescription className="font-bangla">সদস্যের তথ্য দিয়ে তালিকায় যোগ করুন।</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = Object.fromEntries(new FormData(e.currentTarget));
+            setBusy(true);
+            const { data, error } = await supabase.from('members').insert({
+              full_name: fd.full_name,
+              member_code: fd.member_code,
+              phone: fd.phone,
+              area: fd.area,
+              monthly_rate: Number(fd.monthly_rate) || 500,
+            } as any).select().single();
+            setBusy(false);
+            if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
+            toast({ title: 'সদস্য যোগ হয়েছে' });
+            setQuickMemberOpen(false);
+            await loadAll();
+            if (data) setSelectedMemberId(data.id);
+          }} className="space-y-4 font-bangla">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">নাম *</Label><Input name="full_name" placeholder="যেমন: মোহাম্মদ করিম" required /></div>
+              <div><Label className="text-xs">মেম্বার কোড *</Label><Input name="member_code" placeholder="যেমন: CDS-001" required /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">ফোন নম্বর</Label><Input name="phone" placeholder="০১৭..." /></div>
+              <div><Label className="text-xs">এলাকা</Label><Input name="area" placeholder="যেমন: পটিয়া" /></div>
+            </div>
+            <div><Label className="text-xs">মাসিক চাঁদা (৳)</Label><Input name="monthly_rate" type="number" defaultValue={500} /></div>
+            <Button disabled={busy} className="w-full bg-gradient-gold text-primary-foreground">
+              {busy ? 'অপেক্ষা...' : 'সদস্য নিশ্চিত করুন'}
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
