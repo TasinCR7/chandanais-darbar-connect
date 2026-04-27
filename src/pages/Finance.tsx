@@ -1985,7 +1985,6 @@ const Finance = () => {
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             if (val >= 10000) {
-                              // Large expense visual cue
                               e.target.classList.add('border-rose-500');
                               e.target.classList.add('ring-rose-500');
                             } else {
@@ -1994,6 +1993,7 @@ const Finance = () => {
                             }
                           }}
                         />
+                      </div>
                     </div>
                   </div>
 
