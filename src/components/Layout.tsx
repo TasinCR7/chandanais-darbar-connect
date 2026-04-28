@@ -218,7 +218,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Advanced Maintenance Overlay for Public Users */}
-      {appSettings.maintenance_mode === 'true' && !isStaff && (
+      {appSettings.maintenance_mode === 'true' && !isStaff && location.pathname !== '/committee-login' && !location.pathname.startsWith('/admin') && (
         <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex items-center justify-center p-6 text-center overflow-hidden">
           {/* Animated Background Elements */}
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
