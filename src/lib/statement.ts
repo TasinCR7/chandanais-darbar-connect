@@ -55,6 +55,13 @@ export interface PaymentLite {
   status?: string;
 }
 
+/** Complete payment record with joined member data. */
+export interface OrgPaymentRow extends PaymentLite {
+  id: string;
+  member_id: string;
+  members?: MemberLite | null;
+}
+
 
 
 /**
@@ -1544,128 +1551,6 @@ function areaSlug(filters: AreaExportFilters, kind: 'payments' | 'expenses'): st
 }
 
 /**
- * PAYMENTS PDF grouped by member.area, honoring year/month/area filters.
- */
-export async function downloadAreaPaymentsPDF(
-  rows: AreaPaymentRow[],
-  filters: AreaExportFilters = {},
-) {
-  const doc = new jsPDF({ orientation: 'landscape' });
-  await ensureBanglaFont(doc);
-
-  // Apply filters defensively
-  const filtered = rows.filter((p) => {
-    if (filters.year && p.for_year !== filters.year) return false;
-    if (filters.month && p.for_month !== filters.month) return false;
-    const memArea = (p.members?.area ?? '').trim();
-    if (filters.area && filters.area !== '__all__' && memArea !== filters.area) return false;
-    return true;
-  });
-
-  drawOrgHeader(
-    doc,
-    'Area-grouped Payments Report',
-    filterLabel(filters),
-  );
-
-  // Group rows by area
-  const groups = new Map<string, AreaPaymentRow[]>();
-  for (const p of filtered) {
-    const key = (p.members?.area ?? '').trim() || UNASSIGNED_AREA;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(p);
-  }
-  const sortedAreas = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b));
-
-  const yCursor = 48;
-  let grandTotal = 0;
-  let grandCount = 0;
-
-  if (filtered.length === 0) {
-    doc.setFontSize(11);
-    doc.setTextColor(120, 120, 120);
-    doc.text('No payment records match the selected filters.', 14, yCursor + 4);
-  }
-
-  sortedAreas.forEach((area, idx) => {
-    const items = groups.get(area)!;
-    const subtotal = items.reduce((s, p) => s + Number(p.amount || 0), 0);
-    grandTotal += subtotal;
-    grandCount += items.length;
-
-    const startY = idx === 0 ? yCursor : (doc as any).lastAutoTable?.finalY + 10 || yCursor;
-
-    // Section banner — Modern Glassy look
-    doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(203, 213, 225);
-    doc.setLineWidth(0.5);
-    doc.rect(14, startY - 7, doc.internal.pageSize.getWidth() - 28, 10, 'FD');
-    doc.setTextColor(51, 65, 85);
-    doc.setFont(BANGLA_FONT_NAME, 'bold');
-    doc.setFontSize(10);
-    doc.text(`AREA: ${area.toUpperCase()}`, 18, startY);
-    doc.setFont(BANGLA_FONT_NAME, 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    doc.text(
-      `Records: ${items.length} | Subtotal: ${formatBDT(subtotal)}`,
-      doc.internal.pageSize.getWidth() - 18, startY,
-      { align: 'right' },
-    );
-
-    autoTable(doc, {
-      startY: startY + 5,
-      margin: { left: 14, right: 14 },
-      head: [['Date', 'Code', 'Member', 'Period', 'Method', 'Reference', 'Amount']],
-      body: items.map((p) => [
-        p.payment_date,
-        p.members?.member_code ?? '-',
-        p.members?.full_name ?? '-',
-        `${MONTH_SHORT[p.for_month - 1]} ${p.for_year}`,
-        String(p.method ?? '').toUpperCase(),
-        p.transaction_ref ?? '-',
-        formatBDT(Number(p.amount || 0)),
-      ]),
-      foot: [[
-        '', '', '', '', '', 'Subtotal',
-        formatBDT(subtotal),
-      ]],
-      styles: { font: BANGLA_FONT_NAME, fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [30, 30, 30], textColor: 255, fontStyle: 'bold' },
-      footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
-      columnStyles: {
-        0: { cellWidth: 24 },
-        1: { cellWidth: 22 },
-        3: { cellWidth: 26 },
-        4: { cellWidth: 22 },
-        6: { cellWidth: 28, halign: 'right' },
-      },
-      rowPageBreak: 'avoid',
-      showHead: 'everyPage',
-    });
-  });
-
-  // Grand total banner
-  if (filtered.length > 0) {
-    const lastY = (doc as any).lastAutoTable?.finalY ?? yCursor;
-    const gY = lastY + 10;
-    doc.setFillColor(30, 30, 30);
-    doc.rect(14, gY - 6, doc.internal.pageSize.getWidth() - 28, 11, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont(BANGLA_FONT_NAME, 'bold');
-    doc.setFontSize(12);
-    doc.text(
-      `Areas: ${sortedAreas.length}   Records: ${grandCount}   Grand Total: ${formatBDT(grandTotal)}`,
-      doc.internal.pageSize.getWidth() / 2, gY + 1,
-      { align: 'center' },
-    );
-  }
-
-  stampFooters(doc, `Area-grouped payments — ${filterLabel(filters)}`);
-  doc.save(safeFilename(filters.filename ?? '', areaSlug(filters, 'payments')));
-}
-
-/**
  * EXPENSES PDF grouped by category, honoring year/month filters.
  * (Expenses don't link to members, so "area" filter is intentionally ignored
  *  and a note is shown in the header when one was set.)
@@ -1918,8 +1803,8 @@ export async function downloadOrganizationStatementPDF(
   // Build a member map for fast lookup
   const memberMap = new Map<string, MemberLite>();
   payments.forEach(p => {
-    if (p.members && !memberMap.has(p.member_id)) {
-      memberMap.set(p.member_id, p.members as any);
+    if ((p as any).members && !memberMap.has(p.member_id)) {
+      memberMap.set(p.member_id, (p as any).members as any);
     }
   });
 
