@@ -1849,6 +1849,7 @@ const Finance = () => {
                     <th className="text-right px-3">জমা</th>
                     <th className="text-right px-3">বকেয়া</th>
                     <th className="text-right px-3">% সংগ্রহ</th>
+                    <th className="text-right px-3">অ্যাকশন</th>
                   </tr></thead>
                   <tbody>
                     {areaSummaries.map((a) => (
@@ -1859,10 +1860,25 @@ const Finance = () => {
                         <td className="text-right px-3 text-emerald-600">৳ {toBanglaNumber(a.paid.toFixed(0))}</td>
                         <td className="text-right px-3 text-rose-600">৳ {toBanglaNumber(a.due.toFixed(0))}</td>
                         <td className="text-right px-3">{a.expected > 0 ? `${Math.round((a.paid / a.expected) * 100)}%` : '—'}</td>
+                        <td className="text-right px-3">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-8 w-8 p-0 hover:bg-primary/10"
+                            onClick={() => downloadAreaReportPDF(members as any, payments as any, reportYear, {
+                              month: areaScope === 'month' ? reportMonth : undefined,
+                              activeOnly,
+                              area: a.area,
+                              filename: `collection-${a.area}-${reportYear}-${areaScope === 'month' ? reportMonth : 'annual'}`
+                            })}
+                          >
+                            <Download className="h-4 w-4 text-primary" />
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                     {areaSummaries.length === 0 && (
-                      <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">কোনো এলাকা নেই — সদস্য এডিটে এলাকা যোগ করুন।</td></tr>
+                      <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">কোনো এলাকা নেই — সদস্য এডিটে এলাকা যোগ করুন।</td></tr>
                     )}
                   </tbody>
                 </table>

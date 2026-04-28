@@ -769,6 +769,8 @@ export interface OrgReportOptions {
   activeOnly?: boolean;
   /** Filename override (with or without .pdf extension). */
   filename?: string;
+  /** Optional: only include this area in the report. */
+  area?: string;
 }
 
 function safeFilename(name: string, fallback: string, ext = 'pdf'): string {
@@ -1285,10 +1287,14 @@ export async function downloadAreaReportPDF(
   const pageWidth = doc.internal.pageSize.getWidth();
   const list = filterReportMembers(members, !!options.activeOnly);
   const monthLabel = options.month ? `${BANGLA_MONTHS[options.month - 1]} ${toBanglaNumber(year)}` : `${toBanglaNumber(year)}`;
+  
+  const title = options.area 
+    ? `এলাকা ভিত্তিক চাঁদা আদায় রিপোর্ট — ${options.area}`
+    : `এলাকা ভিত্তিক চাঁদা আদায় রিপোর্ট (সব এলাকা)`;
 
   drawOrgHeader(
     doc,
-    `এলাকা ভিত্তিক চাঁদা হিসাব — ${monthLabel}`,
+    `${title} — ${monthLabel}`,
     `${options.activeOnly ? 'শুধু সক্রিয় সদস্য' : 'সব সদস্য'} | মোট: ${list.length}`,
   );
 
@@ -1342,15 +1348,20 @@ export async function downloadAreaReportPDF(
     margin: { left: 14, right: 14 },
   });
 
-  // Per-area member breakdown — each area on a new page
+  // If a specific area was requested, we only want its details, and we might skip the summary page.
+  // Actually, for consistency, let's just filter the groups.
   const groups = new Map<string, MemberLite[]>();
   for (const m of list) {
     const key = normArea(m.area);
+    if (options.area && key !== options.area) continue; // Filter by area
     const arr = groups.get(key) ?? [];
     arr.push(m);
     groups.set(key, arr);
   }
-  const sortedAreas = summaries.map((s) => s.area);
+  
+  const sortedAreas = options.area 
+    ? [options.area] 
+    : summaries.map((s) => s.area);
   const endMonth = year === new Date().getFullYear() ? new Date().getMonth() + 1 : 12;
 
   for (const area of sortedAreas) {
