@@ -257,7 +257,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="pt-8 grid grid-cols-1 gap-4">
               <div className="p-6 rounded-2xl bg-white/5 border border-gold/10 backdrop-blur-sm">
                 <p className="text-xs text-gold uppercase tracking-widest mb-2">জরুরি প্রয়োজনে</p>
-                <p className="text-xl font-bold text-white">০১৭১১-২৩৪৫৬৭</p>
+                <p className="text-xl font-bold text-white">০১৬২২-৭২১৯৯৬</p>
               </div>
               
               <Link 
@@ -315,7 +315,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Phone size={14} className="text-gold" />
-                  <span>০১৭১১-২৩৪৫৬৭</span>
+                  <span>০১৬২২-৭২১৯৯৬</span>
                 </div>
                 <a 
                   href="https://maps.app.goo.gl/pWk7MFAWh51PiMeX6" 
