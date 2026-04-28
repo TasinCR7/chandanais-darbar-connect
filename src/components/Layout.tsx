@@ -279,7 +279,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Main Content */}
-      <main id="main-content" className={notice ? "pt-[112px]" : "pt-16"}>{children}</main>
+      <main id="main-content" className={scrollingNotices.length > 0 ? "pt-[112px]" : "pt-16"}>{children}</main>
 
       <div className="border-t border-gold/20" />
       <DeveloperTeam />

@@ -65,7 +65,7 @@ const CommitteeLogin = () => {
         });
       }
      
-    } catch (error: unknown) {
+    } catch (error: any) {
       toast({ title: "ত্রুটি", description: error.message || "সার্ভারে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setLoading(false);
