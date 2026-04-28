@@ -1912,6 +1912,7 @@ export async function downloadOrganizationStatementPDF(
   doc.text('Official Financial Document — Confidential', pageWidth - 14, 32, { align: 'right' });
 
   // 2. DATA PREPARATION
+  interface TxRow { date: string; desc: string; cat: string; ref: string; credit: number; debit: number; monthKey: string; }
   const txs: TxRow[] = [];
   
   // Build a member map for fast lookup
@@ -1925,7 +1926,7 @@ export async function downloadOrganizationStatementPDF(
   payments.filter(p => 
     p.for_year === year && (!month || p.for_month === month) && (p.status === 'approved' || !p.status)
   ).forEach(p => {
-    const m = p.members || memberMap.get(p.member_id);
+    const m = (p as any).members || memberMap.get(p.member_id);
     txs.push({
       date: p.payment_date || '-',
       desc: m ? `Member Subscription: ${m.full_name} (${m.member_code})` : `Member Subscription [${p.member_id.slice(0,8)}]`, 
@@ -2188,4 +2189,69 @@ export async function downloadOrganizationStatementPDF(
 
   stampFooters(doc, `Official Ledger Statement — ${period} — Chandanaish Darbar Sharif`);
   doc.save(`Ledger-${year}${month ? '-' + month : ''}.pdf`);
+}
+
+/**
+ * NEW: Area-wise Payment Records PDF.
+ */
+export async function downloadAreaPaymentsPDF(
+  payments: OrgPaymentRow[],
+  options: { year: number; month: number | null }
+) {
+  const doc = new jsPDF({ orientation: 'landscape' });
+  await ensureBanglaFont(doc);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const { year, month } = options;
+  const monthLabel = month ? `${MONTHS_EN[month - 1]} ${year}` : `Year ${year}`;
+
+  drawOrgHeader(doc, 'Area Payment Records', `Official Collection Log — ${monthLabel}`);
+
+  // Group by area
+  const areaGroups = new Map<string, OrgPaymentRow[]>();
+  payments.filter(p => p.for_year === year && (!month || p.for_month === month) && (p.status === 'approved' || !p.status)).forEach(p => {
+    const a = (p as any).members?.area || 'General';
+    const arr = areaGroups.get(a) ?? [];
+    arr.push(p);
+    areaGroups.set(a, arr);
+  });
+
+  const sortedAreas = Array.from(areaGroups.keys()).sort();
+  
+  if (sortedAreas.length === 0) {
+    doc.setFontSize(12);
+    doc.text('No payment records found for this period.', pageWidth / 2, 80, { align: 'center' });
+    doc.save(`Area-Payments-${year}.pdf`);
+    return;
+  }
+
+  sortedAreas.forEach((area, idx) => {
+    if (idx > 0) doc.addPage('a4', 'landscape');
+    
+    doc.setFillColor(30, 30, 30);
+    doc.rect(0, 0, pageWidth, 14, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(BANGLA_FONT_NAME, 'bold');
+    doc.text(`Area: ${area} — ${monthLabel}`, 14, 9);
+
+    const areaP = areaGroups.get(area)!;
+    autoTable(doc, {
+      startY: 20,
+      head: [['Date', 'Member Code', 'Name', 'Month/Year', 'Amount', 'Method', 'Reference']],
+      body: areaP.map(p => [
+        formatDateNice(p.payment_date || ''),
+        (p as any).members?.member_code || '-',
+        (p as any).members?.full_name || '-',
+        `${MONTHS_EN[p.for_month - 1]} ${p.for_year}`,
+        formatBDT(p.amount),
+        methodLabel(p.method),
+        p.transaction_ref || '-'
+      ]),
+      headStyles: { fillColor: [60, 60, 60], textColor: 255, font: BANGLA_FONT_NAME, fontSize: 9 },
+      bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8.5 },
+      columnStyles: { 4: { halign: 'right', fontStyle: 'bold' } }
+    });
+  });
+
+  stampFooters(doc, `Area Payment Records — Generated ${new Date().toLocaleDateString()}`);
+  doc.save(`Area-Payments-${year}${month ? '-' + month : ''}.pdf`);
 }

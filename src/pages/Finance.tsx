@@ -26,6 +26,7 @@ import {
   downloadOrgAllMonthsCombinedPDF,
   downloadOrgMonthlyReportCSV, downloadOrgAnnualReportCSV,
   downloadAreaRankingPDF,
+  downloadAreaPaymentsPDF,
   computeOrgMonthlyTotals, computeOrgAnnualTotals,
   downloadAreaReportPDF, computeAreaSummaries,
   downloadReceiptPDF,
