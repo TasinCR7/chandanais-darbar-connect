@@ -25,12 +25,12 @@ const Index = () => {
 
   useEffect(() => {
     const fetchDetailedNotices = async () => {
-      const { data } = await (supabase
-        .from('notices' as any)
+      const { data } = await supabase
+        .from('notices')
         .select('*')
         .eq('type', 'detailed')
         .eq('is_active', true)
-        .order('created_at', { ascending: false }) as any);
+        .order('created_at', { ascending: false });
       if (data) setDetailedNotices(data);
     };
     fetchDetailedNotices();
@@ -122,7 +122,7 @@ const Index = () => {
                         {n.title}
                       </h3>
                       <p className="text-[10px] text-gold/50 font-bold uppercase tracking-widest mt-1">
-                        ঘোষিত: {new Date(n.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        ঘোষিত: {n.created_at ? new Date(n.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }) : 'অজানা তারিখ'}
                       </p>
                     </div>
                   </div>
