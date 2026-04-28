@@ -293,6 +293,160 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   doc.save(`statement-${member.member_code}-${targetYear}.pdf`);
 }
 
+/**
+ * NEW: Professional Bank-style Transaction Statement for a Member.
+ */
+export async function downloadMemberBankStatementPDF(member: MemberLite, payments: PaymentLite[]) {
+  const doc = new jsPDF();
+  await ensureBanglaFont(doc);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // 1. HEADER (Professional Bank Style)
+  doc.setFillColor(20, 20, 20); // Dark professional header
+  doc.rect(0, 0, pageWidth, 45, 'F');
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(20);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 16);
+  doc.setFontSize(10);
+  doc.text('Chandanaish Darbar Sharif', 14, 23);
+  doc.setFontSize(14);
+  doc.text('ACCOUNT STATEMENT', pageWidth - 14, 16, { align: 'right' });
+  doc.setFontSize(9);
+  doc.text(`Generated on: ${new Date().toLocaleString('bn-BD')}`, pageWidth - 14, 23, { align: 'right' });
+  doc.text(`Official Transaction Ledger`, pageWidth - 14, 28, { align: 'right' });
+
+  // 2. MEMBER INFO BOX
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(10);
+  
+  const infoY = 55;
+  doc.text('ACCOUNT HOLDER DETAILS', 14, infoY);
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, infoY + 2, 80, infoY + 2);
+  
+  doc.setFontSize(9);
+  doc.text('Name:', 14, infoY + 10);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(member.full_name, 40, infoY + 10);
+  
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text('Member ID:', 14, infoY + 16);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(member.member_code, 40, infoY + 16);
+  
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text('Phone:', 14, infoY + 22);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(member.phone || '-', 40, infoY + 22);
+  
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text('Area:', 110, infoY + 10);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(member.area || '-', 140, infoY + 10);
+  
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text('Joined:', 110, infoY + 16);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(member.joined_date, 140, infoY + 16);
+
+  // 3. SUMMARY BANNER
+  const stats = calculateDues(member, payments);
+  const summaryY = infoY + 30;
+  
+  doc.setFillColor(245, 245, 245);
+  doc.rect(14, summaryY, pageWidth - 28, 20, 'F');
+  doc.setDrawColor(220, 220, 220);
+  doc.rect(14, summaryY, pageWidth - 28, 20);
+  
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL EXPECTED (CHARGES)', 18, summaryY + 8);
+  doc.text('TOTAL PAID (CREDITS)', 80, summaryY + 8);
+  doc.text('OUTSTANDING BALANCE', 145, summaryY + 8);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.text(formatTk(stats.totalExpected), 18, summaryY + 15);
+  doc.setTextColor(22, 122, 50);
+  doc.text(formatTk(stats.totalPaid), 80, summaryY + 15);
+  doc.setTextColor(stats.dues > 0 ? 180 : 22, stats.dues > 0 ? 24 : 122, stats.dues > 0 ? 24 : 50);
+  doc.text(formatTk(stats.dues), 145, summaryY + 15);
+
+  // 4. TRANSACTION LEDGER
+  const txs: any[] = [];
+  
+  // Add monthly charges
+  stats.rows.forEach(r => {
+    txs.push({
+      date: `${r.year}-${String(r.month).padStart(2, '0')}-01`,
+      desc: `${MONTHS_BN[r.month-1]} ${toBanglaNumber(r.year)} - মাসিক চাঁদা ধার্য`,
+      ref: 'System Charge',
+      debit: r.expected,
+      credit: 0
+    });
+  });
+  
+  // Add payments
+  payments.forEach(p => {
+    if (p.status === 'approved' || !p.status) {
+      txs.push({
+        date: p.payment_date,
+        desc: `${MONTHS_BN[p.for_month-1]} ${toBanglaNumber(p.for_year)} - চাঁদা জমা`,
+        ref: p.transaction_ref || methodLabel(p.method),
+        debit: 0,
+        credit: p.amount
+      });
+    }
+  });
+  
+  txs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  let runningDue = 0;
+  const tableData = txs.map(t => {
+    runningDue += (t.debit - t.credit);
+    return [
+      t.date,
+      t.desc,
+      t.ref,
+      t.debit > 0 ? formatTk(t.debit) : '',
+      t.credit > 0 ? formatTk(t.credit) : '',
+      formatTk(Math.max(0, runningDue))
+    ];
+  });
+
+  autoTable(doc, {
+    startY: summaryY + 28,
+    head: [['Date', 'Description', 'Reference', 'Debit (Charge)', 'Credit (Pay)', 'Balance Due']],
+    body: tableData,
+    headStyles: { fillColor: [30, 30, 30], textColor: 255, font: BANGLA_FONT_NAME, fontSize: 9 },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8.5 },
+    columnStyles: {
+      3: { halign: 'right' },
+      4: { halign: 'right' },
+      5: { halign: 'right', fontStyle: 'bold' }
+    },
+    alternateRowStyles: { fillColor: [252, 252, 252] },
+    margin: { bottom: 25 },
+    didDrawPage: (data) => {
+      // Small header for overflow pages
+      if (data.pageNumber > 1) {
+        doc.setFillColor(30, 30, 30);
+        doc.rect(0, 0, pageWidth, 12, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.text(`Statement: ${member.full_name} (${member.member_code}) - Continued`, 14, 8);
+      }
+    }
+  });
+
+  stampFooters(doc, 'This is a computer generated bank statement. For any queries, contact the committee.');
+  doc.save(`Statement-${member.member_code}.pdf`);
+}
+
 export async function downloadReceiptPDF(
   member: MemberLite,
   payment: PaymentLite & { id?: string },
@@ -1625,6 +1779,123 @@ export async function downloadAreaRankingPDF(
   });
 
   stampFooters(doc, `এলাকা ভিত্তিক র‍্যাঙ্কিং — ${monthLabel}`);
-  doc.save(`area-ranking-${year}${month ? `-${month}` : ''}.pdf`);
+  doc.save(safeFilename('', `area-ranking-${year}${month ? '-' + month : ''}`));
 }
 
+/**
+ * NEW: Organization-wide Bank Statement / General Ledger.
+ * Shows all income and expenses in a chronological list.
+ */
+export async function downloadOrganizationStatementPDF(
+  payments: OrgPaymentRow[],
+  expenses: AreaExpenseRow[],
+  year: number,
+  month?: number
+) {
+  const doc = new jsPDF();
+  await ensureBanglaFont(doc);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // 1. HEADER
+  doc.setFillColor(30, 30, 30);
+  doc.rect(0, 0, pageWidth, 45, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(20);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 16);
+  doc.setFontSize(14);
+  doc.text('ORGANIZATION LEDGER', pageWidth - 14, 16, { align: 'right' });
+  
+  doc.setFontSize(10);
+  doc.text('Chandanaish Darbar Sharif', 14, 23);
+  const period = month ? `${BANGLA_MONTHS[month-1]} ${toBanglaNumber(year)}` : `${toBanglaNumber(year)} সাল`;
+  doc.text(`Statement Period: ${period}`, pageWidth - 14, 23, { align: 'right' });
+  doc.setFontSize(8);
+  doc.text(`Generated: ${new Date().toLocaleString('bn-BD')}`, pageWidth - 14, 28, { align: 'right' });
+
+  // 2. DATA PREPARATION
+  const txs: any[] = [];
+  
+  // Collections (In)
+  payments.filter(p => 
+    p.for_year === year && (!month || p.for_month === month) && (p.status === 'approved' || !p.status)
+  ).forEach(p => {
+    txs.push({
+      date: p.payment_date,
+      desc: `চাঁদা সংগ্রহ - ${p.member_id.slice(0,6)}...`, // We don't have member names here usually unless joined
+      cat: 'Collection',
+      ref: p.transaction_ref || methodLabel(p.method),
+      in: Number(p.amount),
+      out: 0
+    });
+  });
+  
+  // Expenses (Out)
+  expenses.filter(e => {
+    const d = new Date(e.expense_date);
+    return d.getFullYear() === year && (!month || (d.getMonth() + 1) === month);
+  }).forEach(e => {
+    txs.push({
+      date: e.expense_date,
+      desc: e.title,
+      cat: e.category || 'Expense',
+      ref: e.approved_by || '-',
+      in: 0,
+      out: Number(e.amount)
+    });
+  });
+  
+  txs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  let balance = 0;
+  const tableData = txs.map(t => {
+    balance += (t.in - t.out);
+    return [
+      t.date,
+      t.desc,
+      t.cat,
+      t.ref,
+      t.in > 0 ? formatTk(t.in) : '',
+      t.out > 0 ? formatTk(t.out) : '',
+      formatTk(balance)
+    ];
+  });
+
+  // Summary Banner
+  const totalIn = txs.reduce((s, t) => s + t.in, 0);
+  const totalOut = txs.reduce((s, t) => s + t.out, 0);
+  
+  doc.setFillColor(245, 245, 245);
+  doc.rect(14, 55, pageWidth - 28, 18, 'F');
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text('TOTAL INCOME (+)', 18, 62);
+  doc.text('TOTAL EXPENSE (-)', 80, 62);
+  doc.text('NET BALANCE', 145, 62);
+  
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(formatTk(totalIn), 18, 68);
+  doc.setTextColor(180, 24, 24);
+  doc.text(formatTk(totalOut), 80, 68);
+  doc.setTextColor(totalIn - totalOut >= 0 ? 22 : 180, totalIn - totalOut >= 0 ? 122 : 24, totalIn - totalOut >= 0 ? 50 : 24);
+  doc.text(formatTk(totalIn - totalOut), 145, 68);
+
+  autoTable(doc, {
+    startY: 80,
+    head: [['Date', 'Description', 'Category', 'Ref/By', 'In (Credit)', 'Out (Debit)', 'Balance']],
+    body: tableData,
+    headStyles: { fillColor: [40, 40, 40], textColor: 255, font: BANGLA_FONT_NAME, fontSize: 8.5 },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8 },
+    columnStyles: {
+      4: { halign: 'right' },
+      5: { halign: 'right' },
+      6: { halign: 'right', fontStyle: 'bold' }
+    },
+    alternateRowStyles: { fillColor: [252, 252, 252] },
+    margin: { bottom: 20 }
+  });
+
+  stampFooters(doc, `Official Ledger Statement — ${period}`);
+  doc.save(`Ledger-${year}${month ? '-' + month : ''}.pdf`);
+}

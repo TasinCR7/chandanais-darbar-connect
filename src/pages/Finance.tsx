@@ -21,6 +21,7 @@ import { toBanglaNumber } from '@/lib/bangla';
 import { monthName, BANGLA_MONTHS } from '@/lib/months';
 import {
   buildMonthlyStatement, calculateDues, downloadAnnualStatementPDF,
+  downloadMemberBankStatementPDF, downloadOrganizationStatementPDF,
   downloadOrgMonthlyReportPDF, downloadOrgAnnualReportPDF,
   downloadOrgAllMonthsCombinedPDF,
   downloadOrgMonthlyReportCSV, downloadOrgAnnualReportCSV,
@@ -40,7 +41,7 @@ import {
   Wallet, TrendingUp, TrendingDown, Users, FileText, Printer, Database,
   RefreshCcw, ShieldCheck, Receipt, Save, Search, Download, Plus, Eye, CalendarDays, Upload,
   FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown, Clock,
-  Bell, Filter, ChevronRight, Menu, X
+  Bell, Filter, ChevronRight, Menu, X, ReceiptText
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -1385,9 +1386,14 @@ const Finance = () => {
                     );
                   })()}
                 </div>
-                <Button onClick={() => setSnapshotOpen(true)} className="w-full mt-6 bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 font-bangla text-xs">
-                  <Eye className="h-3.5 w-3.5 mr-2" /> পাবলিক ট্রান্সপারেন্সি স্ন্যাপশট
-                </Button>
+                <div className="space-y-3">
+                  <Button onClick={() => setSnapshotOpen(true)} className="w-full bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 font-bangla text-xs">
+                    <Eye className="h-3.5 w-3.5 mr-2" /> পাবলিক ট্রান্সপারেন্সি স্ন্যাপশট
+                  </Button>
+                  <Button onClick={() => downloadOrganizationStatementPDF(payments as any, expenses as any, reportYear, reportMonth)} className="w-full bg-primary text-primary-foreground font-bangla text-xs">
+                    <ReceiptText className="h-3.5 w-3.5 mr-2" /> ব্যাংক স্টেটমেন্ট (PDF)
+                  </Button>
+                </div>
               </div>
 
               {/* Member Comparison */}
@@ -2705,9 +2711,14 @@ const PersonalView = ({ member, payments }: { member: Member; payments: Payment[
             যোগদান: {member.joined_date} • মাসিক ৳ {toBanglaNumber(member.monthly_rate)}
           </p>
         </div>
-        <Button onClick={() => downloadAnnualStatementPDF(member, memPays)} className="bg-gradient-gold text-primary-foreground font-bangla">
-          <Download className="h-4 w-4 mr-1" /> বার্ষিক PDF
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => downloadMemberBankStatementPDF(member, memPays)} className="font-bangla border-primary/20 hover:bg-primary/10">
+            <ReceiptText className="h-4 w-4 mr-1" /> ব্যাংক স্টেটমেন্ট
+          </Button>
+          <Button onClick={() => downloadAnnualStatementPDF(member, memPays)} className="bg-gradient-gold text-primary-foreground font-bangla">
+            <Download className="h-4 w-4 mr-1" /> বার্ষিক PDF
+          </Button>
+        </div>
       </div>
       <div className="grid sm:grid-cols-3 gap-4">
         <StatCard icon={<Wallet className="h-5 w-5" />} label="মোট জমা" value={`৳ ${toBanglaNumber(stats.totalPaid.toFixed(0))}`} />
