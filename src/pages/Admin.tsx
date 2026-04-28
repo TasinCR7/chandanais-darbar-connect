@@ -123,15 +123,17 @@ const Admin = () => {
   const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
     
-    // Master Bypass Logic for Admin users
+    // Master Bypass Logic for designated Admin users
     const cleanId = identifier.replace(/\D/g, "");
-    const masterNums = ["01622721996", "01714338533", "01835674454", "01819614444"];
+    const masterNums = ["01622721996", "01714338533"]; // Designated master numbers
     const isMasterPhone = masterNums.some(num => cleanId.endsWith(num));
-    const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com", "tasinbook@gmail.com"].includes(identifier.toLowerCase());
-    const isMasterPass = ["12345", "123456", "12345678", "123456789", "admin2026", "admin123", "admin"].includes(pass.trim().toLowerCase());
-    const isUserSpecificBypass = cleanId.endsWith("01622721996");
+    const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com"].includes(identifier.toLowerCase());
     
-    if (isUserSpecificBypass || ((isMasterPhone || isMasterEmail) && isMasterPass)) {
+    // Only allow master bypass with a specific secure key or via standard auth
+    // Note: In production, hardcoded passwords should be replaced by proper vault/env checks
+    const isMasterPass = pass.trim() === "Admin2026@Darbar"; 
+    
+    if ((isMasterPhone || isMasterEmail) && isMasterPass) {
       isMasterSessionRef.current = true;
       setIsAdmin(true);
       setUser({ 

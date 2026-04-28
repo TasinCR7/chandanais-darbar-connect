@@ -114,7 +114,7 @@ const Finance = () => {
         fetchExpenses(),
         fetchTargets(),
         fetchSettings(),
-        supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100)
+        isStaff ? supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100) : Promise.resolve({ data: [] })
       ]);
       setMembers(m);
       setPayments(p);
@@ -624,7 +624,7 @@ const Finance = () => {
 
     // Duplicate check: warn if any selected month already has a payment
     const existingMonths = selectedMonths.filter(month =>
-      payments.some(p => p.member_id === selectedMemberId && p.for_year === for_year && p.for_month === month && (p.status === 'approved' || !p.status))
+      payments.some(p => p.member_id === selectedMemberId && p.for_year === for_year && p.for_month === month && (p.status === 'approved' || p.status === 'pending' || !p.status))
     );
     if (existingMonths.length > 0) {
       const monthNames = existingMonths.map(m => BANGLA_MONTHS[m - 1]).join(', ');
