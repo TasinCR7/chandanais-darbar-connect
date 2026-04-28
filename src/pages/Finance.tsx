@@ -480,9 +480,13 @@ const Finance = () => {
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
-    const found = members.find((m) => m.member_code.toLowerCase() === searchCode.trim().toLowerCase());
+    const query = searchCode.trim().toLowerCase();
+    const found = members.find((m) => 
+      m.member_code.toLowerCase() === query || 
+      (m.phone && m.phone.replace(/[^0-9]/g, '').includes(query.replace(/[^0-9]/g, '')))
+    );
     setSelectedMember(found ?? null);
-    if (!found && searchCode) toast({ title: 'কোড পাওয়া যায়নি', variant: 'destructive' });
+    if (!found && searchCode) toast({ title: 'সদস্য পাওয়া যায়নি', variant: 'destructive' });
   };
 
   const submitPayment = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -1167,9 +1171,9 @@ const Finance = () => {
         {tab === 'personal' && (
           <div className="space-y-6">
             <form onSubmit={handleSearch} className="card-gold rounded-2xl p-4 sm:p-6 max-w-2xl">
-              <label className="font-bangla text-sm text-muted-foreground mb-2 block">সদস্য কোড দিন</label>
+              <label className="font-bangla text-sm text-muted-foreground mb-2 block">সদস্য কোড বা মোবাইল নম্বর দিন</label>
               <div className="flex gap-2">
-                <Input value={searchCode} onChange={(e) => setSearchCode(e.target.value)} placeholder="CDS-001" className="font-mono" />
+                <Input value={searchCode} onChange={(e) => setSearchCode(e.target.value)} placeholder="CDS-001 বা ০১৭..." className="font-mono" />
                 <Button type="submit" className="bg-gradient-gold text-primary-foreground font-bangla">
                   <Search className="h-4 w-4 mr-1" /> খুঁজুন
                 </Button>
