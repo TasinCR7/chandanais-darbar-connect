@@ -55,10 +55,7 @@ export interface PaymentLite {
   status?: string;
 }
 
-const MONTHS_EN = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+
 
 /**
  * Build month-by-month status from join date to current month.
