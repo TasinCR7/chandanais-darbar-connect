@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
-import { ensureBanglaFont, setBanglaFontStyle, BANGLA_FONT_NAME } from './pdfFont';
+import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
 import { toBanglaNumber } from './bangla';
 import { BANGLA_MONTHS } from './months';
 
@@ -488,6 +488,64 @@ export async function downloadReceiptPDF(
   doc.text('Chandanaish Darbar Sharif — Digital Receipt', 18, y + 22);
 
   doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
+}
+
+/**
+ * Consolidated receipt for multiple months/payments.
+ */
+export async function downloadConsolidatedReceiptPDF(
+  member: MemberLite,
+  payments: (PaymentLite & { id?: string })[],
+) {
+  if (payments.length === 0) return;
+  if (payments.length === 1) return downloadReceiptPDF(member, payments[0]);
+
+  const doc = new jsPDF();
+  await ensureBanglaFont(doc);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  doc.setFillColor(30, 30, 30);
+  doc.rect(0, 0, pageWidth, 35, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(18);
+  doc.text('Chandanaish Darbar Sharif', pageWidth / 2, 15, { align: 'center' });
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(12);
+  doc.text('CONSOLIDATED PAYMENT RECEIPT', pageWidth / 2, 26, { align: 'center' });
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(`Member: ${member.full_name} (${member.member_code})`, 14, 45);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(10);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 45, { align: 'right' });
+
+  const totalAmount = payments.reduce((s, p) => s + p.amount, 0);
+  
+  autoTable(doc, {
+    startY: 52,
+    head: [['Month', 'Amount', 'Date', 'Method', 'Reference']],
+    body: payments.map(p => [
+      `${MONTHS_EN[p.for_month - 1]} ${p.for_year}`,
+      formatBDT(p.amount),
+      p.payment_date,
+      methodLabel(p.method),
+      p.transaction_ref || '-'
+    ]),
+    headStyles: { fillColor: [40, 40, 40], font: BANGLA_FONT_NAME },
+    bodyStyles: { font: BANGLA_FONT_NAME },
+    foot: [['GRAND TOTAL', formatBDT(totalAmount), '', '', '']],
+    footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', font: BANGLA_FONT_NAME },
+  });
+
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Authorized Signature: _____________________', 14, finalY + 10);
+  doc.text('Digital Receipt — Chandanaish Darbar Sharif', 14, finalY + 20);
+
+  doc.save(`receipt-bulk-${member.member_code}-${payments.length}-months.pdf`);
 }
 
 /* ===========================================================
@@ -1174,7 +1232,7 @@ export interface AreaSummary {
   due: number;
 }
 
-const AREA_FALLBACK = 'অজানা / Unspecified';
+const AREA_FALLBACK = 'Unspecified';
 const normArea = (s?: any) => {
   if (typeof s !== 'string') s = String(s || '');
   const trimmed = s.trim();
@@ -1258,29 +1316,61 @@ export async function downloadAreaReportPDF(
   const totPaid = summaries.reduce((s, a) => s + a.paid, 0);
   const totDue = Math.max(0, totExpected - totPaid);
 
+  // 3. SUMMARY BOXES — Premium 4-column style
   const sumY = 46;
-  doc.setFillColor(245, 245, 245);
-  doc.rect(14, sumY, pageWidth - 28, 20, 'F');
-  doc.setDrawColor(220, 220, 220);
-  doc.rect(14, sumY, pageWidth - 28, 20);
+  const colW = (pageWidth - 28) / 4;
   
-  doc.setFontSize(9);
+  // Members box
+  doc.setFillColor(248, 250, 252);
+  doc.rect(14, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.rect(14, sumY, colW - 2, 22);
+  doc.setFontSize(7);
   doc.setTextColor(100, 100, 100);
-  doc.text('TOTAL AREAS', 18, sumY + 8);
-  doc.text('MEMBERS', 55, sumY + 8);
-  doc.text('EXPECTED', 90, sumY + 8);
-  doc.text('COLLECTED', 140, sumY + 8);
-  doc.text('DUE', 195, sumY + 8);
-
+  doc.text('TOTAL MEMBERS', 18, sumY + 8);
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  doc.text(String(summaries.length), 18, sumY + 15);
-  doc.text(String(totMembers), 55, sumY + 15);
-  doc.text(formatBDT(totExpected), 90, sumY + 15);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(String(totMembers), 18, sumY + 16);
+
+  // Expected box
+  const ex = 14 + colW;
+  doc.setFillColor(255, 251, 235);
+  doc.rect(ex, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(252, 211, 77);
+  doc.rect(ex, sumY, colW - 2, 22);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('EXPECTED REVENUE', ex + 4, sumY + 8);
+  doc.setFontSize(11);
+  doc.setTextColor(120, 95, 35);
+  doc.text(formatBDT(totExpected), ex + 4, sumY + 16);
+
+  // Collected box
+  const col = 14 + colW * 2;
+  doc.setFillColor(236, 253, 245);
+  doc.rect(col, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(52, 211, 153);
+  doc.rect(col, sumY, colW - 2, 22);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL COLLECTED', col + 4, sumY + 8);
+  doc.setFontSize(11);
   doc.setTextColor(22, 122, 50);
-  doc.text(formatBDT(totPaid), 140, sumY + 15);
-  doc.setTextColor(totDue > 0 ? 180 : 0, totDue > 0 ? 24 : 0, totDue > 0 ? 24 : 0);
-  doc.text(formatBDT(totDue), 195, sumY + 15);
+  doc.text(formatBDT(totPaid), col + 4, sumY + 16);
+
+  // Due box
+  const due = 14 + colW * 3;
+  doc.setFillColor(254, 242, 242);
+  doc.rect(due, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(252, 165, 165);
+  doc.rect(due, sumY, colW - 2, 22);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('OUTSTANDING DUE', due + 4, sumY + 8);
+  doc.setFontSize(11);
+  doc.setTextColor(180, 24, 24);
+  doc.text(formatBDT(totDue), due + 4, sumY + 16);
 
   // Per-area summary table
   autoTable(doc, {
@@ -1422,7 +1512,7 @@ export interface AreaExportFilters {
   filename?: string;
 }
 
-const UNASSIGNED_AREA = '— এলাকা বিহীন —';
+const UNASSIGNED_AREA = '— Unassigned Area —';
 
 function filterLabel(filters: AreaExportFilters): string {
   const parts: string[] = [];
@@ -1491,19 +1581,20 @@ export async function downloadAreaPaymentsPDF(
 
     const startY = idx === 0 ? yCursor : (doc as any).lastAutoTable?.finalY + 10 || yCursor;
 
-    // Section banner
-    doc.setFillColor(245, 238, 220);
-    doc.setDrawColor(180, 142, 73);
-    doc.setLineWidth(0.3);
-    doc.rect(14, startY - 6, doc.internal.pageSize.getWidth() - 28, 9, 'FD');
-    doc.setTextColor(120, 95, 35);
+    // Section banner — Modern Glassy look
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.rect(14, startY - 7, doc.internal.pageSize.getWidth() - 28, 10, 'FD');
+    doc.setTextColor(51, 65, 85);
     doc.setFont(BANGLA_FONT_NAME, 'bold');
-    doc.setFontSize(11);
-    doc.text(`Area: ${area}`, 18, startY);
+    doc.setFontSize(10);
+    doc.text(`AREA: ${area.toUpperCase()}`, 18, startY);
     doc.setFont(BANGLA_FONT_NAME, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
     doc.text(
-      `Records: ${items.length}   Subtotal: ${formatBDT(subtotal)}`,
+      `Records: ${items.length} | Subtotal: ${formatBDT(subtotal)}`,
       doc.internal.pageSize.getWidth() - 18, startY,
       { align: 'right' },
     );
@@ -1612,18 +1703,20 @@ export async function downloadAreaExpensesPDF(
 
     const startY = idx === 0 ? yCursor : (doc as any).lastAutoTable?.finalY + 10 || yCursor;
 
-    doc.setFillColor(245, 238, 220);
-    doc.setDrawColor(180, 142, 73);
-    doc.setLineWidth(0.3);
-    doc.rect(14, startY - 6, doc.internal.pageSize.getWidth() - 28, 9, 'FD');
-    doc.setTextColor(120, 95, 35);
+    // Section banner — Modern Glassy look
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.rect(14, startY - 7, doc.internal.pageSize.getWidth() - 28, 10, 'FD');
+    doc.setTextColor(51, 65, 85);
     doc.setFont(BANGLA_FONT_NAME, 'bold');
-    doc.setFontSize(11);
-    doc.text(`Category: ${cat}`, 18, startY);
+    doc.setFontSize(10);
+    doc.text(`CATEGORY: ${cat.toUpperCase()}`, 18, startY);
     doc.setFont(BANGLA_FONT_NAME, 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
     doc.text(
-      `Records: ${items.length}   Subtotal: ${formatBDT(subtotal)}`,
+      `Records: ${items.length} | Subtotal: ${formatBDT(subtotal)}`,
       doc.internal.pageSize.getWidth() - 18, startY,
       { align: 'right' },
     );
@@ -1695,18 +1788,52 @@ export async function downloadAreaRankingPDF(
   const totPaid = summaries.reduce((s, a) => s + a.paid, 0);
   const totDue = Math.max(0, totExpected - totPaid);
 
+  // 3. SUMMARY BOXES — Premium 3-column style
   const sumY = 46;
-  doc.setFillColor(248, 244, 235);
-  doc.rect(14, sumY, pageWidth - 28, 18, 'F');
-  doc.setFontSize(10);
-  doc.setTextColor(80, 80, 80);
-  doc.text(`Total Areas: ${summaries.length}`, 18, sumY + 7);
-  doc.text(`Total Members: ${totMembers}`, 60, sumY + 7);
-  doc.text(`Total Collection: ${formatBDT(totPaid)}`, 110, sumY + 7);
+  const colW = (pageWidth - 28) / 3;
+  
+  // Areas box
+  doc.setFillColor(248, 250, 252);
+  doc.rect(14, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.rect(14, sumY, colW - 2, 22);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL AREAS', 18, sumY + 8);
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(String(summaries.length), 18, sumY + 16);
+
+  // Members box
+  const ex = 14 + colW;
+  doc.setFillColor(236, 253, 245);
+  doc.rect(ex, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(52, 211, 153);
+  doc.rect(ex, sumY, colW - 2, 22);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL MEMBERS', ex + 4, sumY + 8);
+  doc.setFontSize(11);
+  doc.setTextColor(22, 122, 50);
+  doc.text(String(totMembers), ex + 4, sumY + 16);
+
+  // Collection box
+  const col = 14 + colW * 2;
+  doc.setFillColor(255, 251, 235);
+  doc.rect(col, sumY, colW - 2, 22, 'F');
+  doc.setDrawColor(252, 211, 77);
+  doc.rect(col, sumY, colW - 2, 22);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL COLLECTION', col + 4, sumY + 8);
+  doc.setFontSize(11);
+  doc.setTextColor(120, 95, 35);
+  doc.text(formatBDT(totPaid), col + 4, sumY + 16);
 
   autoTable(doc, {
-    startY: sumY + 22,
-    head: [['Rank', 'Area', 'Members', 'Collected Amount', '% Achievement']],
+    startY: sumY + 30,
+    head: [['Rank', 'Area Name', 'Member Count', 'Collected Amount', '% Achievement']],
     body: summaries.map((a, i) => [
       `#${i + 1}`,
       a.area,
@@ -1746,35 +1873,45 @@ export async function downloadOrganizationStatementPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // 1. HEADER
+  // 1. HEADER — Premium dark style
   doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 45, 'F');
+  doc.rect(0, 0, pageWidth, 48, 'F');
+  // Gold accent line
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 48, pageWidth, 2, 'F');
+
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', 14, 18);
-  doc.setFontSize(14);
-  doc.text('ORGANIZATION LEDGER', pageWidth - 14, 18, { align: 'right' });
+  doc.text('Chandanaish Darbar Sharif', 14, 16);
+  doc.setFontSize(13);
+  doc.setTextColor(180, 142, 73);
+  doc.text('ORGANIZATION LEDGER', pageWidth - 14, 16, { align: 'right' });
   
   doc.setFontSize(10);
-  const period = month ? `${MONTHS_EN[month-1]} ${year}` : `${year}`;
-  doc.text(`Statement Period: ${period}`, pageWidth - 14, 25, { align: 'right' });
+  doc.setTextColor(200, 200, 200);
+  const period = month ? `${MONTHS_EN[month-1]} ${year}` : `Full Year ${year}`;
+  doc.text(`Statement Period: ${period}`, 14, 26);
   doc.setFontSize(8);
-  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 30, { align: 'right' });
+  doc.text(`Document ID: LED-${year}${month ? String(month).padStart(2,'0') : '00'}-${Date.now().toString(36).toUpperCase()}`, 14, 32);
+  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
+  doc.text('Official Financial Document — Confidential', pageWidth - 14, 32, { align: 'right' });
 
   // 2. DATA PREPARATION
-  const txs: any[] = [];
+  interface TxRow { date: string; desc: string; cat: string; ref: string; credit: number; debit: number; monthKey: string; }
+  const txs: TxRow[] = [];
   
   payments.filter(p => 
     p.for_year === year && (!month || p.for_month === month) && (p.status === 'approved' || !p.status)
   ).forEach(p => {
     txs.push({
-      date: p.payment_date,
-      desc: `Collection [${p.member_id.slice(0,6)}]`, 
+      date: p.payment_date || '-',
+      desc: `Member Subscription [${p.member_id.slice(0,8)}]`, 
       cat: 'Income',
       ref: p.transaction_ref || methodLabel(p.method),
-      in: Number(p.amount),
-      out: 0
+      credit: Number(p.amount),
+      debit: 0,
+      monthKey: p.payment_date ? p.payment_date.slice(0,7) : `${year}-${String(p.for_month).padStart(2,'0')}`,
     });
   });
   
@@ -1785,67 +1922,248 @@ export async function downloadOrganizationStatementPDF(
     txs.push({
       date: e.expense_date,
       desc: e.title,
-      cat: e.category || 'Expense',
+      cat: e.category || 'General Expense',
       ref: e.approved_by || '-',
-      in: 0,
-      out: Number(e.amount)
+      credit: 0,
+      debit: Number(e.amount),
+      monthKey: e.expense_date.slice(0,7),
     });
   });
   
   txs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Compute totals
+  const totalIn = txs.reduce((s, t) => s + t.credit, 0);
+  const totalOut = txs.reduce((s, t) => s + t.debit, 0);
+  const netBalance = totalIn - totalOut;
+  const txCount = txs.length;
+  const incomeCount = txs.filter(t => t.credit > 0).length;
+  const expenseCount = txs.filter(t => t.debit > 0).length;
+
+  // 3. SUMMARY BANNER — Professional 4-column grid
+  const sumY = 56;
+  const colW = (pageWidth - 28) / 4;
   
+  // Income box
+  doc.setFillColor(236, 253, 245);
+  doc.rect(14, sumY, colW - 2, 28, 'F');
+  doc.setDrawColor(34, 197, 94);
+  doc.rect(14, sumY, colW - 2, 28);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL INCOME (CREDITS)', 16, sumY + 8);
+  doc.setFontSize(12);
+  doc.setTextColor(22, 122, 50);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(formatBDT(totalIn), 16, sumY + 17);
+  doc.setFontSize(7);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(`${incomeCount} transactions`, 16, sumY + 23);
+
+  // Expense box
+  const ex = 14 + colW;
+  doc.setFillColor(254, 242, 242);
+  doc.rect(ex, sumY, colW - 2, 28, 'F');
+  doc.setDrawColor(239, 68, 68);
+  doc.rect(ex, sumY, colW - 2, 28);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL EXPENSE (DEBITS)', ex + 2, sumY + 8);
+  doc.setFontSize(12);
+  doc.setTextColor(180, 24, 24);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(formatBDT(totalOut), ex + 2, sumY + 17);
+  doc.setFontSize(7);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(`${expenseCount} transactions`, ex + 2, sumY + 23);
+
+  // Net Balance box
+  const nb = 14 + colW * 2;
+  const isProfit = netBalance >= 0;
+  doc.setFillColor(isProfit ? 240 : 254, isProfit ? 253 : 242, isProfit ? 244 : 242);
+  doc.rect(nb, sumY, colW - 2, 28, 'F');
+  doc.setDrawColor(isProfit ? 180 : 220, isProfit ? 142 : 50, isProfit ? 73 : 50);
+  doc.rect(nb, sumY, colW - 2, 28);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('NET BALANCE', nb + 2, sumY + 8);
+  doc.setFontSize(14);
+  doc.setTextColor(isProfit ? 22 : 180, isProfit ? 122 : 24, isProfit ? 50 : 24);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(formatBDT(netBalance), nb + 2, sumY + 17);
+  doc.setFontSize(7);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(isProfit ? 'SURPLUS' : 'DEFICIT', nb + 2, sumY + 23);
+
+  // Ratio box
+  const rb = 14 + colW * 3;
+  doc.setFillColor(248, 248, 248);
+  doc.rect(rb, sumY, colW - 2, 28, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(rb, sumY, colW - 2, 28);
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('EXPENSE RATIO', rb + 2, sumY + 8);
+  const ratio = totalIn > 0 ? Math.round((totalOut / totalIn) * 100) : 0;
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(`${ratio}%`, rb + 2, sumY + 17);
+  doc.setFontSize(7);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(`${txCount} total entries`, rb + 2, sumY + 23);
+
+  // 4. BUILD TABLE DATA with running balance
   let balance = 0;
   const tableData = txs.map(t => {
-    balance += (t.in - t.out);
+    balance += (t.credit - t.debit);
     return [
-      t.date,
+      formatDateNice(t.date),
       t.desc,
       t.cat,
       t.ref,
-      t.in > 0 ? formatBDT(t.in) : '',
-      t.out > 0 ? formatBDT(t.out) : '',
-      formatBDT(balance)
+      t.credit > 0 ? formatBDT(t.credit) : '',
+      t.debit > 0 ? formatBDT(t.debit) : '',
+      formatBDT(balance),
+      t.credit, // hidden — used for cell coloring
+      t.debit,  // hidden
     ];
   });
 
-  // Summary Banner
-  const totalIn = txs.reduce((s, t) => s + t.in, 0);
-  const totalOut = txs.reduce((s, t) => s + t.out, 0);
-  
-  doc.setFillColor(245, 245, 245);
-  doc.rect(14, 55, pageWidth - 28, 20, 'F');
-  doc.setDrawColor(220, 220, 220);
-  doc.rect(14, 55, pageWidth - 28, 20);
-  
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text('TOTAL INCOME (+)', 18, 62);
-  doc.text('TOTAL EXPENSE (-)', 80, 62);
-  doc.text('NET BALANCE', 145, 62);
-  
-  doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0);
-  doc.text(formatBDT(totalIn), 18, 68);
-  doc.setTextColor(180, 24, 24);
-  doc.text(formatBDT(totalOut), 80, 68);
-  doc.setTextColor(totalIn - totalOut >= 0 ? 22 : 180, totalIn - totalOut >= 0 ? 122 : 24, totalIn - totalOut >= 0 ? 50 : 24);
-  doc.text(formatBDT(totalIn - totalOut), 145, 68);
-
+  // 5. TRANSACTION TABLE
   autoTable(doc, {
-    startY: 85,
-    head: [['Date', 'Description', 'Category', 'Ref/By', 'Credit (In)', 'Debit (Out)', 'Balance']],
-    body: tableData,
+    startY: sumY + 34,
+    head: [['Date', 'Description', 'Category', 'Ref / Approved', 'Credit (+)', 'Debit (−)', 'Running Balance']],
+    body: tableData.map(r => r.slice(0, 7)),
     headStyles: { fillColor: [30, 30, 30], textColor: 255, font: BANGLA_FONT_NAME, fontSize: 8.5 },
-    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8 },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8, cellPadding: 2.5 },
     columnStyles: {
-      4: { halign: 'right' },
-      5: { halign: 'right' },
-      6: { halign: 'right', fontStyle: 'bold' }
+      0: { cellWidth: 24 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 24, fontSize: 7 },
+      3: { cellWidth: 24, fontSize: 7 },
+      4: { halign: 'right', cellWidth: 26 },
+      5: { halign: 'right', cellWidth: 26 },
+      6: { halign: 'right', fontStyle: 'bold', cellWidth: 28 },
     },
-    alternateRowStyles: { fillColor: [252, 252, 252] },
-    margin: { bottom: 20 }
+    alternateRowStyles: { fillColor: [250, 250, 250] },
+    margin: { bottom: 22, left: 14, right: 14 },
+    showHead: 'everyPage',
+    didParseCell: (data) => {
+      if (data.section === 'body') {
+        const rowIdx = data.row.index;
+        // Color credit cells green
+        if (data.column.index === 4 && tableData[rowIdx]?.[7]) {
+          data.cell.styles.textColor = [22, 122, 50];
+        }
+        // Color debit cells red
+        if (data.column.index === 5 && tableData[rowIdx]?.[8]) {
+          data.cell.styles.textColor = [180, 24, 24];
+        }
+        // Color balance based on value
+        if (data.column.index === 6) {
+          let runBal = 0;
+          for (let i = 0; i <= rowIdx; i++) {
+            runBal += ((tableData[i]?.[7] as number) || 0) - ((tableData[i]?.[8] as number) || 0);
+          }
+          data.cell.styles.textColor = runBal >= 0 ? [22, 122, 50] : [180, 24, 24];
+        }
+      }
+    },
+    foot: [[
+      '', '', '', 'CLOSING TOTALS',
+      formatBDT(totalIn),
+      formatBDT(totalOut),
+      formatBDT(netBalance),
+    ]],
+    footStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: 'bold', font: BANGLA_FONT_NAME },
+    didDrawPage: (data) => {
+      if (data.pageNumber > 1) {
+        doc.setFillColor(30, 30, 30);
+        doc.rect(0, 0, pageWidth, 14, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont(BANGLA_FONT_NAME, 'normal');
+        doc.text(`Chandanaish Darbar Sharif — Ledger (${period}) — Continued`, 14, 9);
+        doc.text(`Page ${data.pageNumber}`, pageWidth - 14, 9, { align: 'right' });
+      }
+    },
   });
 
-  stampFooters(doc, `Official Ledger Statement — ${period}`);
+  // 6. MONTHLY BREAKDOWN TABLE (if showing full year)
+  if (!month && txs.length > 0) {
+    const lastY = (doc as any).lastAutoTable?.finalY ?? 200;
+    const breakdownY = lastY + 12;
+
+    // Check if we need a new page
+    if (breakdownY > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+    }
+    const startBreakdownY = breakdownY > doc.internal.pageSize.getHeight() - 60 ? 20 : breakdownY;
+
+    doc.setFillColor(245, 238, 220);
+    doc.rect(14, startBreakdownY - 6, pageWidth - 28, 10, 'F');
+    doc.setTextColor(120, 95, 35);
+    doc.setFont(BANGLA_FONT_NAME, 'bold');
+    doc.setFontSize(10);
+    doc.text('MONTHLY BREAKDOWN SUMMARY', 18, startBreakdownY);
+
+    const monthlyMap = new Map<number, { income: number; expense: number; count: number }>();
+    for (let mo = 1; mo <= 12; mo++) monthlyMap.set(mo, { income: 0, expense: 0, count: 0 });
+
+    txs.forEach(t => {
+      const moNum = parseInt(t.monthKey.split('-')[1] || '0', 10);
+      if (moNum >= 1 && moNum <= 12) {
+        const cur = monthlyMap.get(moNum)!;
+        cur.income += t.credit;
+        cur.expense += t.debit;
+        cur.count += 1;
+      }
+    });
+
+    const monthRows = Array.from(monthlyMap.entries()).map(([mo, d]) => [
+      MONTHS_EN[mo - 1],
+      d.count > 0 ? formatBDT(d.income) : '-',
+      d.count > 0 ? formatBDT(d.expense) : '-',
+      d.count > 0 ? formatBDT(d.income - d.expense) : '-',
+      d.count > 0 ? String(d.count) : '-',
+    ]);
+
+    autoTable(doc, {
+      startY: startBreakdownY + 6,
+      head: [['Month', 'Income', 'Expense', 'Net', 'Transactions']],
+      body: monthRows,
+      headStyles: { fillColor: [30, 30, 30], textColor: 255, fontSize: 9, font: BANGLA_FONT_NAME },
+      bodyStyles: { fontSize: 8.5, font: BANGLA_FONT_NAME },
+      columnStyles: {
+        1: { halign: 'right' },
+        2: { halign: 'right' },
+        3: { halign: 'right', fontStyle: 'bold' },
+        4: { halign: 'center' },
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 3) {
+          const raw = data.cell.raw as string;
+          if (raw.startsWith('BDT -') || raw.startsWith('BDT -')) {
+            data.cell.styles.textColor = [180, 24, 24];
+          } else if (raw !== '-') {
+            data.cell.styles.textColor = [22, 122, 50];
+          }
+        }
+      },
+      foot: [['TOTAL', formatBDT(totalIn), formatBDT(totalOut), formatBDT(netBalance), String(txCount)]],
+      footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  // No transactions at all
+  if (txs.length === 0) {
+    doc.setFontSize(11);
+    doc.setTextColor(120, 120, 120);
+    doc.text('No financial transactions recorded for this period.', pageWidth / 2, sumY + 50, { align: 'center' });
+  }
+
+  stampFooters(doc, `Official Ledger Statement — ${period} — Chandanaish Darbar Sharif`);
   doc.save(`Ledger-${year}${month ? '-' + month : ''}.pdf`);
 }

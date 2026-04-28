@@ -28,6 +28,8 @@ import {
   downloadAreaRankingPDF,
   computeOrgMonthlyTotals, computeOrgAnnualTotals,
   downloadAreaReportPDF, computeAreaSummaries,
+  downloadReceiptPDF,
+  downloadConsolidatedReceiptPDF,
   formatBDT,
   type OrgMonthlyTotals, type OrgAnnualTotals,
 } from '@/lib/statement';
@@ -40,7 +42,7 @@ import {
   LayoutGrid, UserSearch, AlertOctagon, PieChart as PieIcon, Trophy, Settings,
   Wallet, TrendingUp, TrendingDown, Users, FileText, Printer, Database,
   RefreshCcw, ShieldCheck, Receipt, Save, Search, Download, Plus, Eye, CalendarDays, Upload,
-  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Trash2, Check, ChevronsUpDown, Clock,
+  FileSpreadsheet, CreditCard, MapPin, Target, Pencil, Edit, Trash2, Check, ChevronsUpDown, Clock,
   Bell, Filter, ChevronRight, Menu, X, ReceiptText
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -98,6 +100,8 @@ const Finance = () => {
   const [quickMemberOpen, setQuickMemberOpen] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState<number[]>([new Date().getMonth() + 1]);
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const ORG_NAME_SLUG = 'chandanaish-darbar';
 
   const loadAll = async () => {
@@ -454,7 +458,7 @@ const Finance = () => {
   const approvePayment = async (id: string) => {
     setBusy(true);
     try {
-      const { error } = await supabase.from('payments').update({ recorded_by: user.id } as any).eq('id', id);
+      const { error } = await supabase.from('payments').update({ status: 'approved', recorded_by: user.id } as any).eq('id', id);
       if (error) throw error;
       toast({ title: 'পেমেন্ট অনুমোদিত হয়েছে' });
       await loadAll();
@@ -471,6 +475,86 @@ const Finance = () => {
       const { error } = await supabase.from('payments').delete().eq('id', id);
       if (error) throw error;
       toast({ title: 'পেমেন্ট বাতিল করা হয়েছে' });
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deletePayment = async (id: string) => {
+    if (!confirm('এই পেমেন্টটি মুছে ফেলবেন?')) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('payments').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'পেমেন্ট মুছে ফেলা হয়েছে' });
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    if (!confirm('এই খরচটি মুছে ফেলবেন?')) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('expenses').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'খরচ মুছে ফেলা হয়েছে' });
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updatePayment = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+    const fd = Object.fromEntries(new FormData(e.currentTarget));
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('payments').update({
+        amount: Number(fd.amount),
+        for_year: Number(fd.for_year),
+        for_month: Number(fd.for_month),
+        method: fd.method as any,
+        transaction_ref: fd.transaction_ref as string,
+        payment_date: fd.payment_date as string,
+      } as any).eq('id', editingPayment.id);
+      if (error) throw error;
+      toast({ title: 'পেমেন্ট আপডেট হয়েছে' });
+      setEditingPayment(null);
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updateExpense = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingExpense) return;
+    const fd = Object.fromEntries(new FormData(e.currentTarget));
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('expenses').update({
+        title: fd.title as string,
+        amount: Number(fd.amount),
+        expense_date: fd.expense_date as string,
+        category: fd.category as string,
+        approved_by: fd.approved_by as string,
+        note: fd.note as string,
+      } as any).eq('id', editingExpense.id);
+      if (error) throw error;
+      toast({ title: 'খরচ আপডেট হয়েছে' });
+      setEditingExpense(null);
       await loadAll();
     } catch (err: any) {
       toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
@@ -498,10 +582,20 @@ const Finance = () => {
     const method = fd.get('method') as any;
     const transaction_ref = fd.get('transaction_ref') as string;
     const for_year = Number(fd.get('for_year') || currentYear);
+    const payment_date = (fd.get('payment_date') as string) || new Date().toISOString().split('T')[0];
 
     if (selectedMonths.length === 0) {
       toast({ title: 'মাস নির্বাচন করুন', variant: 'destructive' });
       return;
+    }
+
+    // Duplicate check: warn if any selected month already has a payment
+    const existingMonths = selectedMonths.filter(month =>
+      payments.some(p => p.member_id === selectedMemberId && p.for_year === for_year && p.for_month === month && (p.status === 'approved' || !p.status))
+    );
+    if (existingMonths.length > 0) {
+      const monthNames = existingMonths.map(m => BANGLA_MONTHS[m - 1]).join(', ');
+      if (!window.confirm(`⚠️ ${monthNames} মাসে ইতিমধ্যে পেমেন্ট আছে। আবারও যোগ করতে চান?`)) return;
     }
 
     setBusy(true);
@@ -513,6 +607,7 @@ const Finance = () => {
         for_month: month,
         method,
         transaction_ref,
+        payment_date,
         recorded_by: user.id,
       }));
 
@@ -520,6 +615,25 @@ const Finance = () => {
       if (error) throw error;
 
       toast({ title: `${toBanglaNumber(selectedMonths.length)} মাসের চাঁদা রেকর্ড হয়েছে ✓` });
+
+      // Auto-download consolidated receipt
+      const receiptMember = members.find(m => m.id === selectedMemberId);
+      if (receiptMember) {
+        try {
+          await downloadConsolidatedReceiptPDF(
+            receiptMember as any,
+            selectedMonths.map(month => ({
+              amount: amountPerMonth,
+              for_year,
+              for_month: month,
+              payment_date,
+              method,
+              transaction_ref
+            }))
+          );
+        } catch { /* receipt generation failure shouldn't block the flow */ }
+      }
+
       (e.target as HTMLFormElement).reset();
       setSelectedMemberId("");
       setSelectedMonths([new Date().getMonth() + 1]);
@@ -670,7 +784,8 @@ const Finance = () => {
     loadAll();
   };
 
-  const deleteTarget = async (id: string) => {
+  const deleteTarget = async (id: string | undefined) => {
+    if (!id) return;
     if (!confirm('এই লক্ষ্যমাত্রা মুছে ফেলবেন?')) return;
     const { error } = await supabase.from('monthly_targets').delete().eq('id', id);
     if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
@@ -1492,6 +1607,34 @@ const Finance = () => {
                     </ResponsiveContainer>
                   </div>
                 )}
+                
+                {/* Collection Trend Chart */}
+                <div className="mt-12">
+                  <h4 className="font-display text-md gold-text mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> মাসিক কালেকশন ট্রেন্ড ({toBanglaNumber(reportYear)})
+                  </h4>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={Array.from({ length: 12 }, (_, i) => {
+                        const m = i + 1;
+                        const income = payments.filter(p => p.for_year === reportYear && p.for_month === m && (p.status === 'approved' || !p.status)).reduce((s, p) => s + Number(p.amount), 0);
+                        return { name: BANGLA_MONTHS[i], collection: income };
+                      })}>
+                        <defs>
+                          <linearGradient id="colorCol" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                        <Tooltip />
+                        <Area type="monotone" dataKey="collection" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorCol)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1501,8 +1644,11 @@ const Finance = () => {
         {tab === 'ranking' && (
           <div className="space-y-6">
             <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <h3 className="font-display text-lg gold-text">শীর্ষ দাতা র‍্যাঙ্কিং 🏆</h3>
+                <Button onClick={downloadAreaRanking} size="sm" variant="outline" className="h-8 font-bangla border-primary/40">
+                  <Download className="h-4 w-4 mr-1" /> র‍্যাঙ্কিং PDF
+                </Button>
               </div>
               <table className="w-full text-sm whitespace-nowrap">
                 <thead>
@@ -1804,6 +1950,16 @@ const Finance = () => {
                 <Button onClick={downloadOrgEachMonth} variant="outline" className="font-bangla border-primary/40">
                   <Download className="h-4 w-4 mr-1" /> ১২ আলাদা PDF
                 </Button>
+                <Button 
+                  onClick={() => {
+                    setBusy(true);
+                    downloadOrganizationStatementPDF(payments as any, expenses as any, reportYear, reportMonth)
+                      .finally(() => setBusy(false));
+                  }} 
+                  className="bg-slate-800 hover:bg-slate-900 text-white font-bangla col-span-1 sm:col-span-2 lg:col-span-4"
+                >
+                  <FileText className="h-4 w-4 mr-1" /> জেনারেল লেজার (Organization Statement) PDF
+                </Button>
               </div>
 
               {/* CSV exports */}
@@ -1885,7 +2041,18 @@ const Finance = () => {
               </div>
               <div className="flex flex-wrap gap-3 mt-4">
                 <Button onClick={downloadAreaPDF} className="bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bangla">
-                  <Download className="h-4 w-4 mr-1" /> এলাকা PDF ডাউনলোড
+                  <Download className="h-4 w-4 mr-1" /> এলাকা ভিত্তিক কালেকশন রিপোর্ট PDF
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setBusy(true);
+                    downloadAreaPaymentsPDF(payments as any, { year: reportYear, month: areaScope === 'month' ? reportMonth : null })
+                      .finally(() => setBusy(false));
+                  }} 
+                  variant="outline" 
+                  className="font-bangla border-primary/40"
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" /> এলাকার পেমেন্ট রেকর্ডস PDF
                 </Button>
               </div>
             </div>
@@ -2166,6 +2333,11 @@ const Finance = () => {
 
                 <Input name="for_year" type="hidden" defaultValue={currentYear} />
 
+                <div>
+                  <Label className="text-[11px] text-muted-foreground font-bangla">পেমেন্টের তারিখ</Label>
+                  <Input name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="h-10 font-mono" />
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Select name="method" defaultValue="cash" required>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -2381,10 +2553,9 @@ const Finance = () => {
                       <Input 
                         placeholder="যেমন: বিশেষ ঘোষণা" 
                         defaultValue={settings.global_notice_title} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'global_notice_title', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'নোটিশ শিরোনাম পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.global_notice_title) saveSetting('global_notice_title', val);
                         }}
                       />
                     </div>
@@ -2393,10 +2564,9 @@ const Finance = () => {
                       <Textarea 
                         placeholder="আপনার বার্তা এখানে লিখুন..." 
                         defaultValue={settings.global_notice_message} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'global_notice_message', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'নোটিশ বার্তা পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.global_notice_message) saveSetting('global_notice_message', val);
                         }}
                       />
                     </div>
@@ -2415,10 +2585,9 @@ const Finance = () => {
                         type="number" 
                         placeholder="যেমন: ২০০০০০" 
                         defaultValue={settings.annual_target} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'annual_target', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'বার্ষিক লক্ষ্যমাত্রা পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.annual_target) saveSetting('annual_target', val);
                         }}
                       />
                     </div>
@@ -2427,10 +2596,9 @@ const Finance = () => {
                       <Input 
                         placeholder="বাজেট সম্পর্কে ছোট নোট..." 
                         defaultValue={settings.target_note} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'target_note', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'লক্ষ্যমাত্রা নোট আপডেট করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.target_note) saveSetting('target_note', val);
                         }}
                       />
                     </div>
@@ -2448,10 +2616,9 @@ const Finance = () => {
                       <Input 
                         placeholder="চন্দনাইশ দরবার শরীফ" 
                         defaultValue={settings.site_title_bn} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'site_title_bn', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'সাইটের শিরোনাম পরিবর্তন করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.site_title_bn) saveSetting('site_title_bn', val);
                         }}
                       />
                     </div>
@@ -2460,10 +2627,9 @@ const Finance = () => {
                       <Input 
                         placeholder="https://example.com/logo.png" 
                         defaultValue={settings.site_logo_url} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'site_logo_url', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'লোগো আপডেট করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.site_logo_url) saveSetting('site_logo_url', val);
                         }}
                       />
                     </div>
@@ -2481,10 +2647,9 @@ const Finance = () => {
                       <Input 
                         placeholder="যেমন: ওয়েবসাইট মেইনটেইনেন্স চলছে..." 
                         defaultValue={settings.maintenance_text} 
-                        onBlur={async (e) => {
-                          const val = e.target.value;
-                          const { error } = await supabase.from('app_settings').upsert({ key: 'maintenance_text', value: val });
-                          if (!error) { toast({ title: 'আপডেট সফল', description: 'মেইনটেইনেন্স ব্যানার আপডেট করা হয়েছে।' }); loadAll(); }
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== settings.maintenance_text) saveSetting('maintenance_text', val);
                         }}
                       />
                     </div>
@@ -2673,6 +2838,178 @@ const Finance = () => {
           <DialogFooter>
             <Button onClick={() => setSnapshotOpen(false)} className="w-full bg-gradient-gold text-primary-foreground font-bold">বন্ধ করুন</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Recent Financial Records */}
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
+        {/* Recent Payments */}
+        <div className="card-gold rounded-2xl p-4 sm:p-6">
+          <h3 className="font-display text-lg gold-text mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" /> সাম্প্রতিক চাঁদা জমা
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm font-bangla whitespace-nowrap">
+              <thead>
+                <tr className="border-b border-border/40 text-left text-muted-foreground">
+                  <th className="py-2">সদস্য</th>
+                  <th className="py-2 text-right">পরিমাণ</th>
+                  <th className="py-2 text-right">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.slice(0, 10).map((p) => (
+                  <tr key={p.id} className="border-b border-border/20 last:border-0">
+                    <td className="py-3">
+                      <div className="font-semibold">{(p as any).members?.full_name}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {BANGLA_MONTHS[p.for_month - 1]} {toBanglaNumber(p.for_year)} • {p.method}
+                      </div>
+                    </td>
+                    <td className="text-right font-bold">৳ {toBanglaNumber(p.amount)}</td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={() => setEditingPayment(p)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deletePayment(p.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Recent Expenses */}
+        <div className="card-gold rounded-2xl p-4 sm:p-6">
+          <h3 className="font-display text-lg text-destructive mb-4 flex items-center gap-2">
+            <TrendingDown className="h-5 w-5" /> সাম্প্রতিক খরচ
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm font-bangla whitespace-nowrap">
+              <thead>
+                <tr className="border-b border-border/40 text-left text-muted-foreground">
+                  <th className="py-2">টাইটেল</th>
+                  <th className="py-2 text-right">পরিমাণ</th>
+                  <th className="py-2 text-right">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.slice(0, 10).map((e) => (
+                  <tr key={e.id} className="border-b border-border/20 last:border-0">
+                    <td className="py-3">
+                      <div className="font-semibold">{e.title}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {new Date(e.expense_date).toLocaleDateString('bn-BD')} • {e.category}
+                      </div>
+                    </td>
+                    <td className="text-right font-bold text-destructive">৳ {toBanglaNumber(e.amount)}</td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={() => setEditingExpense(e)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteExpense(e.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={!!editingPayment} onOpenChange={(open) => !open && setEditingPayment(null)}>
+        <DialogContent className="max-w-md font-bangla">
+          <DialogHeader>
+            <DialogTitle className="gold-text">পেমেন্ট এডিট করুন</DialogTitle>
+          </DialogHeader>
+          {editingPayment && (
+            <form onSubmit={updatePayment} className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs">পরিমাণ</Label><Input name="amount" type="number" defaultValue={editingPayment.amount} required /></div>
+                <div><Label className="text-xs">তারিখ</Label><Input name="payment_date" type="date" defaultValue={editingPayment.payment_date} required /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs">বছর</Label><Input name="for_year" type="number" defaultValue={editingPayment.for_year} required /></div>
+                <div>
+                  <Label className="text-xs">মাস</Label>
+                  <Select name="for_month" defaultValue={String(editingPayment.for_month)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {BANGLA_MONTHS.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">পদ্ধতি</Label>
+                  <Select name="method" defaultValue={editingPayment.method}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="bkash">bKash</SelectItem>
+                      <SelectItem value="nagad">Nagad</SelectItem>
+                      <SelectItem value="rocket">Rocket</SelectItem>
+                      <SelectItem value="bank">Bank</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label className="text-xs">TrxID</Label><Input name="transaction_ref" defaultValue={editingPayment.transaction_ref || ''} /></div>
+              </div>
+              <Button disabled={busy} className="w-full bg-gradient-gold text-primary-foreground">
+                {busy ? 'আপডেট হচ্ছে...' : 'পরিবর্তন সেভ করুন'}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Expense Dialog */}
+      <Dialog open={!!editingExpense} onOpenChange={(open) => !open && setEditingExpense(null)}>
+        <DialogContent className="max-w-md font-bangla">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">খরচ এডিট করুন</DialogTitle>
+          </DialogHeader>
+          {editingExpense && (
+            <form onSubmit={updateExpense} className="space-y-4 pt-4">
+              <div><Label className="text-xs">টাইটেল</Label><Input name="title" defaultValue={editingExpense.title} required /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs">পরিমাণ</Label><Input name="amount" type="number" defaultValue={editingExpense.amount} required /></div>
+                <div><Label className="text-xs">তারিখ</Label><Input name="expense_date" type="date" defaultValue={editingExpense.expense_date} required /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">বিভাগ</Label>
+                  <Select name="category" defaultValue={editingExpense.category}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="অনুষ্ঠান">অনুষ্ঠান</SelectItem>
+                      <SelectItem value="আপ্যায়ন">আপ্যায়ন</SelectItem>
+                      <SelectItem value="যাতায়াত">যাতায়াত</SelectItem>
+                      <SelectItem value="মেরামত">মেরামত</SelectItem>
+                      <SelectItem value="বেতন">বেতন</SelectItem>
+                      <SelectItem value="অন্যান্য">অন্যান্য</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label className="text-xs">অনুমোদনকারী</Label><Input name="approved_by" defaultValue={editingExpense.approved_by || ''} /></div>
+              </div>
+              <div><Label className="text-xs">মন্তব্য</Label><Input name="note" defaultValue={editingExpense.note || ''} /></div>
+              <Button disabled={busy} className="w-full bg-destructive text-white">
+                {busy ? 'আপডেট হচ্ছে...' : 'পরিবর্তন সেভ করুন'}
+              </Button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
