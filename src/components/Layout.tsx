@@ -46,28 +46,37 @@ const navLinks = [
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notice, setNotice] = useState<{ title: string; message: string | null } | null>(null);
+  const [scrollingNotices, setScrollingNotices] = useState<string[]>([]);
   const [appSettings, setAppSettings] = useState<Record<string, string>>({});
   const location = useLocation();
   const { isStaff, user } = useAuth();
 
   useEffect(() => {
-    const fetchGlobalNotice = async () => {
-      const { data } = await supabase.from('app_settings').select('*');
-      if (data) {
-        const sObj: Record<string, string> = {};
-        data.forEach((row: any) => { sObj[row.key] = row.value; });
-        
-        if (sObj.global_notice_title || sObj.global_notice_message) {
-          setNotice({ 
-            title: sObj.global_notice_title || "নোটিশ", 
-            message: sObj.global_notice_message || "" 
-          });
-        }
+    const fetchData = async () => {
+      // 1. Fetch App Settings (Title, Maintenance, etc)
+      const { data: sData } = await supabase.from('app_settings').select('*');
+      const sObj: Record<string, string> = {};
+      if (sData) {
+        sData.forEach((row: any) => { sObj[row.key] = row.value; });
         setAppSettings(sObj);
       }
+
+      // 2. Fetch Active Scrolling Notices from 'notices' table
+      const { data: nData } = await supabase
+        .from('notices')
+        .select('title')
+        .eq('type', 'scrolling')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      
+      if (nData && nData.length > 0) {
+        setScrollingNotices(nData.map(n => n.title));
+      } else if (sObj.global_notice_message) {
+        // Fallback to old global notice if no specific scrolling notices exist
+        setScrollingNotices([sObj.global_notice_message]);
+      }
     };
-    fetchGlobalNotice();
+    fetchData();
   }, []);
 
   return (
@@ -194,24 +203,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </AnimatePresence>
       </header>
 
-      {/* Notice Bar */}
-      {notice && (
-        <div className="fixed top-16 left-0 right-0 z-40 bg-background/60 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-2xl">
-          <div className="container mx-auto px-4 flex items-center justify-center h-12 gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gold blur-md opacity-30 animate-pulse" />
-              <div className="relative bg-gold-gradient p-1.5 rounded-full z-10 shadow-lg ring-1 ring-gold/40">
-                <Bell size={14} className="text-primary-foreground animate-bounce" />
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] md:text-sm text-gold font-heading font-bold tracking-wide uppercase">
-                নোটিশ:
-              </span>
-              <p className="text-[13px] md:text-sm text-foreground/90 font-medium font-bangla">
-                {notice.title}{notice.message ? ` — ${notice.message}` : ""}
-              </p>
+      {/* Premium Scrolling Marquee */}
+      {scrollingNotices.length > 0 && (
+        <div className={`fixed ${appSettings.maintenance_text ? 'top-22' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
+          <div className="bg-gold-gradient text-primary-foreground px-5 h-full flex items-center gap-2 z-10 shadow-xl font-heading font-black text-[11px] md:text-xs uppercase tracking-wider">
+            <Bell className="h-3.5 w-3.5 animate-bounce" /> নোটিশ
+          </div>
+          <div className="flex-1 whitespace-nowrap overflow-hidden relative">
+            <div className="inline-block animate-marquee-fast md:animate-marquee">
+              {scrollingNotices.map((n, i) => (
+                <span key={i} className="inline-flex items-center text-[13px] md:text-sm text-foreground/90 font-bangla font-semibold ml-16">
+                  <span className="w-2 h-2 rounded-full bg-gold animate-pulse mr-4 shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
+                  {n}
+                </span>
+              ))}
+              {/* Seamless loop duplication */}
+              {scrollingNotices.map((n, i) => (
+                <span key={`dup-${i}`} className="inline-flex items-center text-[13px] md:text-sm text-foreground/90 font-bangla font-semibold ml-16">
+                  <span className="w-2 h-2 rounded-full bg-gold animate-pulse mr-4 shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
+                  {n}
+                </span>
+              ))}
             </div>
           </div>
         </div>
