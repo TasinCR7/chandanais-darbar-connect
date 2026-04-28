@@ -829,7 +829,7 @@ const Finance = () => {
   const saveSetting = async (key: string, value: string) => {
     const { error } = await supabase
       .from('app_settings')
-      .upsert({ key, value, updated_by: user?.id ?? null } as any, { onConflict: 'key' });
+      .upsert({ key, value } as any, { onConflict: 'key' });
     if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
     toast({ title: 'সেটিংস সেভ হয়েছে ✓' });
     loadAll();
