@@ -35,6 +35,11 @@ const Gallery = () => {
     fetchGallery();
   }, []);
 
+  const filtered =
+    activeCategory === "সকল"
+      ? galleryItems
+      : galleryItems.filter((item) => item.category === activeCategory);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (lightbox === null) return;
@@ -45,11 +50,6 @@ const Gallery = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightbox, filtered.length]);
-
-  const filtered =
-    activeCategory === "সকল"
-      ? galleryItems
-      : galleryItems.filter((item) => item.category === activeCategory);
 
   return (
     <>
