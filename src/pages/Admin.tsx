@@ -298,7 +298,7 @@ const Admin = () => {
       setGalleryCaption("");
       fetchGallery();
      
-    } catch (err: unknown) {
+    } catch (err: any) {
       toast({ title: "আপলোড ব্যর্থ", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
