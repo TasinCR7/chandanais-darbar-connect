@@ -262,7 +262,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               
               <Link 
                 to="/committee-login" 
-                className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-4"
+                onClick={() => window.location.href = '/committee-login'}
+                className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-4 cursor-pointer relative z-20"
               >
                 <Lock className="h-3 w-3" /> কমিটি লগইন (অফিসিয়াল)
               </Link>
