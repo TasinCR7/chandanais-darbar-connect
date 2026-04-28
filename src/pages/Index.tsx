@@ -26,7 +26,7 @@ const Index = () => {
   useEffect(() => {
     const fetchDetailedNotices = async () => {
       const { data } = await (supabase
-        .from('notices')
+        .from('notices' as any)
         .select('*')
         .eq('type', 'detailed')
         .eq('is_active', true)
