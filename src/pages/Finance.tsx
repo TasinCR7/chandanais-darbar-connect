@@ -765,7 +765,7 @@ const Finance = () => {
               </div>
               
               <div className="space-y-3">
-                <h1 className="font-heading text-4xl md:text-6xl font-black tracking-tighter text-white">
+                <h1 className="font-heading text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter text-white">
                   অর্থ সংগ্রহ ও <span className="relative inline-block">
                     <span className="gold-text-shimmer">ব্যবস্থাপনা</span>
                     <motion.span 
@@ -828,7 +828,7 @@ const Finance = () => {
 
       <div className="container mx-auto px-4 py-8">
         {/* Tab pill bar - Re-designed for Premium Feel */}
-        <div className="bg-card/40 border border-gold/10 rounded-2xl p-1.5 flex flex-wrap gap-2 mb-10 backdrop-blur-md shadow-inner relative group">
+        <div className="bg-card/40 border border-gold/10 rounded-2xl p-1.5 flex overflow-x-auto whitespace-nowrap scrollbar-hide gap-2 mb-10 backdrop-blur-md shadow-inner relative group snap-x snap-mandatory">
           <div className="absolute inset-0 bg-gold/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -840,7 +840,7 @@ const Finance = () => {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key as TabKey)}
-                className={`flex-1 min-w-[120px] relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-heading text-sm font-semibold transition-all duration-300
+                className={`flex-1 min-w-[120px] snap-center relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-heading text-sm font-semibold transition-all duration-300
                   ${isActive 
                     ? 'bg-gold-gradient text-primary-foreground shadow-lg shadow-gold/20 scale-[1.02]' 
                     : 'text-muted-foreground hover:bg-gold/5 hover:text-gold hover:translate-y-[-1px]'
@@ -863,7 +863,7 @@ const Finance = () => {
         {/* SUMMARY */}
         {tab === 'summary' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative">
                 <StatCard icon={<TrendingUp className="h-5 w-5" />} label="মোট আয়" value={`৳ ${toBanglaNumber(totalIncome.toFixed(0))}`} />
                 {pendingPayments.length > 0 && (
@@ -891,7 +891,7 @@ const Finance = () => {
             )}
 
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 card-gold rounded-2xl p-6">
+              <div className="md:col-span-2 card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-4">গত ৬ মাসের আয়-ব্যয়</h3>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -909,7 +909,7 @@ const Finance = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="card-gold rounded-2xl p-6 flex flex-col">
+                <div className="card-gold rounded-2xl p-4 sm:p-6 flex flex-col">
                   <h3 className="font-display text-lg gold-text mb-6 flex items-center gap-2">
                     <CalendarDays className="h-5 w-5" /> আজকের সারাংশ
                   </h3>
@@ -936,7 +936,7 @@ const Finance = () => {
                   </div>
                 </div>
 
-                <div className="card-gold rounded-2xl p-6">
+                <div className="card-gold rounded-2xl p-4 sm:p-6">
                   <h3 className="font-display text-sm gold-text mb-4 flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4" /> রিসেন্ট অ্যাক্টিভিটি
                   </h3>
@@ -957,7 +957,7 @@ const Finance = () => {
             </div>
 
             {/* === Year trend (income/expense/cumulative balance) === */}
-            <div className="card-gold rounded-2xl p-6">
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
               <h3 className="font-display text-lg gold-text mb-4">
                 {toBanglaNumber(reportYear)} বার্ষিক প্রবাহ — আয়, ব্যয় ও ক্রমপুঞ্জিত ব্যালেন্স
               </h3>
@@ -988,7 +988,7 @@ const Finance = () => {
             </div>
 
             {/* === Dues trend (cumulative bakeya by month) === */}
-            <div className="card-gold rounded-2xl p-6">
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
               <h3 className="font-display text-lg gold-text mb-4">
                 {toBanglaNumber(reportYear)} মাসিক বকেয়া প্রবণতা
               </h3>
@@ -1014,7 +1014,7 @@ const Finance = () => {
 
             {/* === Two side-by-side donuts: expense category + payment method === */}
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-4">খরচের ক্যাটাগরি ({toBanglaNumber(reportYear)})</h3>
                 <div className="h-72">
                   {categoryBreakdown.length === 0 ? (
@@ -1042,7 +1042,7 @@ const Finance = () => {
                 </div>
               </div>
 
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-4">পেমেন্ট পদ্ধতি ({toBanglaNumber(reportYear)})</h3>
                 <div className="h-72">
                   {methodBreakdown.length === 0 ? (
@@ -1073,7 +1073,7 @@ const Finance = () => {
 
             {/* === Area-wise collection bars === */}
             {areaCollection.length > 0 && (
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-4">এলাকা ভিত্তিক চাঁদা সংগ্রহ ({toBanglaNumber(reportYear)})</h3>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1126,7 +1126,7 @@ const Finance = () => {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div className="card-gold rounded-2xl p-6">
+                    <div className="card-gold rounded-2xl p-4 sm:p-6">
                       <h3 className="font-display text-lg gold-text mb-4">
                         সাম্প্রতিক জমা {areaFilter !== 'all' && <span className="text-xs font-bangla text-muted-foreground">({areaFilter === '__none__' ? 'এলাকা বিহীন' : areaFilter})</span>}
                       </h3>
@@ -1143,7 +1143,7 @@ const Finance = () => {
                       ))}
                       {filteredPayments.length === 0 && <p className="font-bangla text-center text-muted-foreground py-4">কোনো রেকর্ড নেই</p>}
                     </div>
-                    <div className="card-gold rounded-2xl p-6">
+                    <div className="card-gold rounded-2xl p-4 sm:p-6">
                       <h3 className="font-display text-lg gold-text mb-4">সাম্প্রতিক খরচ</h3>
                       {filteredExpenses.slice(0, 6).map((e) => (
                         <div key={e.id} className="flex justify-between border-b border-border/40 py-2 font-bangla text-sm">
@@ -1166,7 +1166,7 @@ const Finance = () => {
         {/* PERSONAL */}
         {tab === 'personal' && (
           <div className="space-y-6">
-            <form onSubmit={handleSearch} className="card-gold rounded-2xl p-6 max-w-2xl">
+            <form onSubmit={handleSearch} className="card-gold rounded-2xl p-4 sm:p-6 max-w-2xl">
               <label className="font-bangla text-sm text-muted-foreground mb-2 block">সদস্য কোড দিন</label>
               <div className="flex gap-2">
                 <Input value={searchCode} onChange={(e) => setSearchCode(e.target.value)} placeholder="CDS-001" className="font-mono" />
@@ -1218,7 +1218,7 @@ const Finance = () => {
               </div>
             </div>
 
-            <div className="card-gold rounded-2xl p-6 overflow-x-auto">
+            <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
@@ -1281,7 +1281,7 @@ const Finance = () => {
         {tab === 'transparency' && (
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-4">আয় বনাম খরচ</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1297,7 +1297,7 @@ const Finance = () => {
                   </ResponsiveContainer>
                 </div>
               </div>
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-4">পেমেন্ট পদ্ধতি</h3>
                 <ul className="space-y-2 font-bangla text-sm">
                   {['cash', 'bkash', 'nagad', 'rocket', 'bank', 'other'].map((m) => {
@@ -1313,7 +1313,7 @@ const Finance = () => {
               </div>
 
               {/* Heatmap */}
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-display text-lg gold-text">কালেকশন হিটম্যাপ</h3>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -1355,7 +1355,7 @@ const Finance = () => {
               </div>
 
               {/* Donor Pyramid */}
-              <div className="card-gold rounded-2xl p-6">
+              <div className="card-gold rounded-2xl p-4 sm:p-6">
                 <h3 className="font-display text-lg gold-text mb-6">ডোনার-পিরামিড (Contribution Analysis)</h3>
                 <div className="space-y-4">
                   {(() => {
@@ -1387,7 +1387,7 @@ const Finance = () => {
               </div>
 
               {/* Member Comparison */}
-              <div className="card-gold rounded-2xl p-6 md:col-span-2">
+              <div className="card-gold rounded-2xl p-4 sm:p-6 md:col-span-2">
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
                   <h3 className="font-display text-lg gold-text flex items-center gap-2">
                     <Users className="h-5 w-5" /> সদস্য বনাম সদস্য তুলনা
@@ -1490,7 +1490,7 @@ const Finance = () => {
         {/* RANKING */}
         {tab === 'ranking' && (
           <div className="space-y-6">
-            <div className="card-gold rounded-2xl p-6 overflow-x-auto">
+            <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display text-lg gold-text">শীর্ষ দাতা র‍্যাঙ্কিং 🏆</h3>
               </div>
@@ -1513,7 +1513,7 @@ const Finance = () => {
               </table>
             </div>
 
-            <div className="card-gold rounded-2xl p-6 overflow-x-auto">
+            <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <h3 className="font-display text-lg gold-text flex items-center gap-2">
                   <MapPin className="h-5 w-5" /> এলাকা ভিত্তিক চাঁদা হিসাব 🌍
@@ -1657,7 +1657,7 @@ const Finance = () => {
             </div>
             {/* ===== Pending Online Payments ===== */}
             {pendingPayments.length > 0 && (
-              <div className="card-gold rounded-2xl p-6 mb-6 border-amber-500/30">
+              <div className="card-gold rounded-2xl p-4 sm:p-6 mb-6 border-amber-500/30">
                 <h3 className="font-display text-lg text-amber-600 flex items-center gap-2 mb-4">
                   <Clock className="h-5 w-5" /> অনুমোদনহীন পেমেন্ট ({toBanglaNumber(pendingPayments.length)} টি)
                 </h3>
@@ -1694,7 +1694,7 @@ const Finance = () => {
             )}
 
             {/* ===== Bulk CSV Upload ===== */}
-            <div className="card-gold rounded-2xl p-6 bg-primary/5 border-primary/20">
+            <div className="card-gold rounded-2xl p-4 sm:p-6 bg-primary/5 border-primary/20">
               <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
                 <Upload className="h-5 w-5" /> বাল্ক সিএসভি আপলোড (Bulk CSV Upload)
               </h3>
@@ -1713,7 +1713,7 @@ const Finance = () => {
             </div>
 
             {/* Org-wide Monthly + Annual chanda PDF reports */}
-            <div className="card-gold rounded-2xl p-6">
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
               <div className="flex items-start justify-between flex-wrap gap-3 mb-2">
                 <div>
                   <h3 className="font-display text-lg gold-text flex items-center gap-2">
@@ -1809,7 +1809,7 @@ const Finance = () => {
 
 
             {/* ===== এলাকা ভিত্তিক চাঁদা PDF ===== */}
-            <div className="card-gold rounded-2xl p-6">
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
               <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
                 <div>
                   <h3 className="font-display text-lg gold-text flex items-center gap-2">
@@ -1865,7 +1865,7 @@ const Finance = () => {
             </div>
 
             {/* ===== লক্ষ্যমাত্রা / Targets ===== */}
-            <div className="card-gold rounded-2xl p-6">
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
               <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
                 <Target className="h-5 w-5" /> লক্ষ্যমাত্রা ও সেটিংস
               </h3>
@@ -1931,7 +1931,7 @@ const Finance = () => {
             </div>
 
             {/* ===== Expense category breakdown ===== */}
-            <div className="card-gold rounded-2xl p-6">
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
               <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
                 <PieIcon className="h-5 w-5" /> খরচ বিভাগ অনুযায়ী ({toBanglaNumber(reportYear)})
               </h3>
@@ -1963,7 +1963,7 @@ const Finance = () => {
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* চাঁদা এন্ট্রি */}
-              <form onSubmit={submitPayment} className="card-gold rounded-2xl p-6 space-y-4">
+              <form onSubmit={submitPayment} className="card-gold rounded-2xl p-4 sm:p-6 space-y-4">
                 <div className="bg-orange-950/30 border border-orange-700/40 rounded-lg p-3 flex gap-2 text-sm">
                   <AlertOctagon className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
                   <div className="font-bangla">
@@ -1997,7 +1997,7 @@ const Finance = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-start">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-start">
                   <div className="relative">
                     <input type="hidden" name="member_id" value={selectedMemberId} />
                     <Popover open={memberSearchOpen} onOpenChange={setMemberSearchOpen}>
@@ -2127,7 +2127,7 @@ const Finance = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-lg bg-primary/5 border border-primary/10 p-2 flex items-center justify-between">
                     <span className="text-[10px] font-bangla text-muted-foreground">মোট মাস:</span>
                     <span className="text-sm font-bold gold-text">{toBanglaNumber(selectedMonths.length)}</span>
@@ -2140,7 +2140,7 @@ const Finance = () => {
 
                 <Input name="for_year" type="hidden" defaultValue={currentYear} />
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Select name="method" defaultValue="cash" required>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -2161,7 +2161,7 @@ const Finance = () => {
               </form>
 
               {/* খরচ এন্ট্রি */}
-              <form onSubmit={submitExpense} className="card-gold rounded-2xl p-6 space-y-4">
+              <form onSubmit={submitExpense} className="card-gold rounded-2xl p-4 sm:p-6 space-y-4">
                 <h3 className="font-display text-lg text-destructive flex items-center gap-2">
                   <TrendingDown className="h-5 w-5" /> খরচ এন্ট্রি
                 </h3>
@@ -2172,7 +2172,7 @@ const Finance = () => {
                     <Input name="title" placeholder="টাইটেল *" required />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-bangla">পরিমাণ *</Label>
                       <div className="relative">
@@ -2196,7 +2196,7 @@ const Finance = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-bangla">বিভাগ (Category)</Label>
                       <Select name="category" defaultValue="অন্যান্য">
@@ -2217,7 +2217,7 @@ const Finance = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-bangla">অনুমোদনকারী (ঐচ্ছিক)</Label>
                       <Input name="approved_by" placeholder="অনুমোদনকারী" className="h-10" />
@@ -2235,7 +2235,7 @@ const Finance = () => {
               </form>
             </div>
 
-            <div className="card-gold rounded-2xl p-6 overflow-x-auto">
+            <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
               <h3 className="font-display text-lg gold-text mb-4">সদস্য তালিকা</h3>
               <table className="w-full text-sm">
                 <thead>
@@ -2268,7 +2268,7 @@ const Finance = () => {
 
         {/* AUDIT LOGS */}
         {tab === 'audit' && (
-          <div className="card-gold rounded-2xl p-6">
+          <div className="card-gold rounded-2xl p-4 sm:p-6">
             <h3 className="font-display text-lg gold-text mb-4">অডিট লগ (সাম্প্রতিক ১০০টি রেকর্ড)</h3>
             <div className="overflow-x-auto rounded-lg border border-primary/20">
               <table className="w-full text-sm">
@@ -2598,11 +2598,11 @@ const Finance = () => {
             await loadAll();
             if (data) setSelectedMemberId(data.id);
           }} className="space-y-4 font-bangla">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label className="text-xs">নাম *</Label><Input name="full_name" placeholder="যেমন: মোহাম্মদ করিম" required /></div>
               <div><Label className="text-xs">মেম্বার কোড *</Label><Input name="member_code" placeholder="যেমন: CDS-001" required /></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label className="text-xs">ফোন নম্বর</Label><Input name="phone" placeholder="০১৭..." /></div>
               <div><Label className="text-xs">এলাকা</Label><Input name="area" placeholder="যেমন: পটিয়া" /></div>
             </div>
@@ -2693,7 +2693,7 @@ const PersonalView = ({ member, payments }: { member: Member; payments: Payment[
 
   return (
     <>
-      <div className="card-gold rounded-2xl p-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="card-gold rounded-2xl p-4 sm:p-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-mono text-sm text-primary">{member.member_code}</p>
           <h3 className="font-display text-2xl gold-text mt-1">{member.full_name}</h3>
@@ -2710,7 +2710,7 @@ const PersonalView = ({ member, payments }: { member: Member; payments: Payment[
         <StatCard icon={<AlertOctagon className="h-5 w-5" />} label={`বকেয়া (${toBanglaNumber(stats.dueMonths)} মাস)`} value={`৳ ${toBanglaNumber(stats.dues.toFixed(0))}`} tone="danger" />
         <StatCard icon={<Receipt className="h-5 w-5" />} label="প্রত্যাশিত মোট" value={`৳ ${toBanglaNumber(stats.totalExpected.toFixed(0))}`} />
       </div>
-      <div className="card-gold rounded-2xl p-6 overflow-x-auto">
+      <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
         <h3 className="font-display text-lg gold-text mb-4">মাসিক বিবরণী</h3>
         <table className="w-full text-sm">
           <thead>
@@ -2762,7 +2762,7 @@ const PreviewBlock = ({
       : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300';
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-lg border border-primary/20 bg-background/40 p-3">
           <p className="font-bangla text-xs text-muted-foreground">সদস্য সংখ্যা</p>
           <p className="font-display text-xl gold-text">{toBanglaNumber(members)}</p>
