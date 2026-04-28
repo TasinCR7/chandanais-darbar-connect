@@ -498,6 +498,38 @@ const Finance = () => {
     }
   };
 
+  const deleteMember = async (id: string) => {
+    if (!confirm('সতর্কতা: এই সদস্যকে মুছে ফেললে তার সকল পেমেন্ট রেকর্ডও মুছে যেতে পারে। আপনি কি নিশ্চিত?')) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('members').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'সদস্য মুছে ফেলা হয়েছে' });
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleMemberStatus = async (id: string, currentStatus: boolean) => {
+    setBusy(true);
+    try {
+      const { error } = await supabase
+        .from('members')
+        .update({ is_active: !currentStatus } as any)
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: `সদস্য ${!currentStatus ? 'সক্রিয়' : 'নিষ্ক্রিয়'} করা হয়েছে` });
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const deleteExpense = async (id: string) => {
     if (!confirm('এই খরচটি মুছে ফেলবেন?')) return;
     setBusy(true);
@@ -1849,6 +1881,77 @@ const Finance = () => {
               </div>
             )}
 
+            {/* ===== সদস্য ব্যবস্থাপনা / Member Management ===== */}
+            <div className="card-gold rounded-2xl p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h3 className="font-display text-lg gold-text flex items-center gap-2">
+                  <UserSearch className="h-5 w-5" /> সদস্য ব্যবস্থাপনা (Member Management)
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="সদস্য খুঁজুন..." 
+                      className="pl-9 h-9 w-48 text-xs font-bangla"
+                      onChange={(e) => {
+                        const q = e.target.value.toLowerCase();
+                        // Local filtering via state would be better, but for now we can just use a local ref or simple query
+                      }}
+                    />
+                  </div>
+                  <Button onClick={() => setQuickMemberOpen(true)} size="sm" className="h-9 bg-primary text-primary-foreground font-bangla">
+                    <Plus className="h-4 w-4 mr-1" /> নতুন সদস্য
+                  </Button>
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-lg border border-border/40">
+                <table className="w-full text-sm font-bangla whitespace-nowrap">
+                  <thead className="bg-muted/40 text-left">
+                    <tr>
+                      <th className="py-2 px-3">কোড</th>
+                      <th className="px-3">নাম</th>
+                      <th className="px-3">ফোন</th>
+                      <th className="px-3">এলাকা</th>
+                      <th className="px-3">অবস্থা</th>
+                      <th className="px-3 text-right">অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.slice().sort((a, b) => (a.member_code || '').localeCompare(b.member_code || '')).map((m) => (
+                      <tr key={m.id} className="border-t border-border/40 hover:bg-primary/5 transition-colors">
+                        <td className="py-2 px-3 font-mono text-primary">{m.member_code}</td>
+                        <td className="px-3 font-semibold">{m.full_name}</td>
+                        <td className="px-3 text-muted-foreground">{m.phone || '-'}</td>
+                        <td className="px-3 text-[12px]">{m.area || '-'}</td>
+                        <td className="px-3">
+                          <button 
+                            onClick={() => toggleMemberStatus(m.id, !!m.is_active)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              m.is_active ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'
+                            }`}
+                          >
+                            {m.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                          </button>
+                        </td>
+                        <td className="px-3">
+                          <div className="flex justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-rose-600 hover:bg-rose-500/10"
+                              onClick={() => deleteMember(m.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* ===== Bulk CSV Upload ===== */}
             <div className="card-gold rounded-2xl p-4 sm:p-6 bg-primary/5 border-primary/20">
               <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
@@ -2637,10 +2740,32 @@ const Finance = () => {
                 </div>
 
                 {/* Maintenance & Emergency */}
-                <div className="space-y-4 p-6 rounded-2xl bg-background/40 border border-gold/10 backdrop-blur-sm">
-                  <h3 className="text-lg font-bold flex items-center gap-2 border-b border-gold/10 pb-2 text-rose-500">
-                    <AlertOctagon className="h-4 w-4" /> মেইনটেইনেন্স মোড
-                  </h3>
+                <div className="space-y-4 p-6 rounded-2xl bg-background/40 border border-gold/10 backdrop-blur-sm relative overflow-hidden group">
+                  {settings.maintenance_mode === 'true' && (
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-12 -mt-12 group-hover:bg-rose-500/20 transition-all" />
+                  )}
+                  
+                  <div className="flex items-center justify-between border-b border-gold/10 pb-2">
+                    <h3 className="text-lg font-bold flex items-center gap-2 text-rose-500">
+                      <AlertOctagon className="h-4 w-4" /> মেইনটেইনেন্স মোড
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Status:</span>
+                      <button
+                        onClick={() => saveSetting('maintenance_mode', settings.maintenance_mode === 'true' ? 'false' : 'true')}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 ${
+                          settings.maintenance_mode === 'true' ? 'bg-rose-600' : 'bg-muted'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            settings.maintenance_mode === 'true' ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-3">
                     <div>
                       <Label className="text-xs text-muted-foreground">ব্যানার টেক্সট (পুরো সাইটের উপরে দেখা যাবে)</Label>
@@ -2654,7 +2779,7 @@ const Finance = () => {
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground italic">
-                      দ্রষ্টব্য: এই অপশনগুলো সরাসরি ডাটাবেজে সেভ হবে এবং সাথে সাথে পুরো সাইটে পরিবর্তন দেখা যাবে।
+                      দ্রষ্টব্য: মেইনটেইনেন্স মোড <b>ON</b> থাকলে সাধারণ ভিজিটররা সাইটে ঢুকতে পারবে না। শুধুমাত্র অ্যাডমিন এবং স্টাফরা সাইটে প্রবেশ করতে পারবেন।
                     </p>
                   </div>
                 </div>

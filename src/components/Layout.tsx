@@ -217,6 +217,55 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       )}
 
+      {/* Advanced Maintenance Overlay for Public Users */}
+      {appSettings.maintenance_mode === 'true' && !isStaff && (
+        <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex items-center justify-center p-6 text-center overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
+          
+          <div className="max-w-md w-full space-y-8 relative z-10 animate-in fade-in zoom-in duration-700">
+            <div className="relative mx-auto w-24 h-24 mb-8">
+              <div className="absolute inset-0 bg-gold/20 blur-2xl rounded-full animate-ping" />
+              <div className="relative bg-gold-gradient p-6 rounded-3xl shadow-2xl flex items-center justify-center border border-white/10">
+                <Settings className="h-10 w-10 text-primary-foreground animate-[spin_4s_linear_infinite]" />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h1 className="text-4xl font-heading font-bold gold-text leading-tight">
+                ওয়েবসাইট আপডেট চলছে
+              </h1>
+              <div className="h-1 w-20 bg-gold-gradient mx-auto rounded-full" />
+              <p className="text-lg text-muted-foreground font-bangla leading-relaxed">
+                {appSettings.maintenance_text || "আমরা সাইটটির উন্নয়নে কাজ করছি। খুব শীঘ্রই আমরা ফিরে আসছি। সাময়িক অসুবিধার জন্য আমরা আন্তরিকভাবে দুঃখিত।"}
+              </p>
+            </div>
+
+            <div className="pt-8 grid grid-cols-1 gap-4">
+              <div className="p-6 rounded-2xl bg-white/5 border border-gold/10 backdrop-blur-sm">
+                <p className="text-xs text-gold uppercase tracking-widest mb-2">জরুরি প্রয়োজনে</p>
+                <p className="text-xl font-bold text-white">০১৭১১-২৩৪৫৬৭</p>
+              </div>
+              
+              <Link 
+                to="/committee-login" 
+                className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-4"
+              >
+                <Lock className="h-3 w-3" /> কমিটি লগইন (অফিসিয়াল)
+              </Link>
+            </div>
+          </div>
+          
+          {/* Stylized Footer */}
+          <div className="absolute bottom-8 left-0 right-0">
+            <p className="text-[10px] text-muted-foreground/40 font-heading tracking-widest uppercase">
+              Chandanaish Dorbar Sharif — Financial System
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main id="main-content" className={notice ? "pt-[112px]" : "pt-16"}>{children}</main>
 

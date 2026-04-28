@@ -129,31 +129,34 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   }
 
   // Title
+  // 1. HEADER — Premium dark style
+  doc.setFillColor(20, 20, 20);
+  doc.rect(0, 0, pageWidth, 52, 'F');
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 52, pageWidth, 2, 'F');
+
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(18);
   doc.text('Chandanaish Darbar Sharif', 14, 18);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setFontSize(11);
-  doc.text(`Annual Account Statement — ${targetYear}`, 14, 28);
-  doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-US')}`, 14, 35);
-
-  // Member info inside header
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(11);
-  doc.text(`Member ID: ${member.member_code}`, 14, 46);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(`${member.full_name}`, 80, 46);
-
-  // ===== MEMBER INFO BLOCK =====
-  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(13);
+  doc.setTextColor(180, 142, 73);
+  doc.text('MEMBER ACCOUNT STATEMENT', pageWidth - 14, 18, { align: 'right' });
+  
   doc.setFontSize(10);
-  const yPos = 62;
-  doc.text(`Phone: ${member.phone ?? '-'}`, 14, yPos);
-  doc.text(`Joined: ${member.joined_date}`, 14, yPos + 6);
-  doc.text(`Rate: ${formatBDT(member.monthly_rate)}`, 110, yPos);
-  doc.text(`Period: ${targetYear}`, 110, yPos + 6);
+  doc.setTextColor(200, 200, 200);
+  doc.text(`Member: ${member.full_name} (${member.member_code})`, 14, 28);
+  doc.text(`Area: ${member.area || '-'}`, 14, 34);
+  doc.text(`Statement Year: ${targetYear}`, pageWidth - 14, 28, { align: 'right' });
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-US')}`, pageWidth - 14, 34, { align: 'right' });
+  doc.setFontSize(8);
+  doc.text(`Doc ID: MST-${member.member_code}-${targetYear}-${Date.now().toString(36).toUpperCase()}`, 14, 42);
+
+  const yPos = 68;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(`This document is an official statement of account for the specified member. All records are verified against the central database.`, 14, yPos - 8);
 
   // ===== Build year rows =====
   const expected = Number(member.monthly_rate);
@@ -1297,15 +1300,26 @@ export async function downloadAreaReportPDF(
   const list = filterReportMembers(members, !!options.activeOnly);
   const monthLabel = options.month ? `${MONTHS_EN[options.month - 1]} ${year}` : `${year}`;
   
-  const title = options.area 
-    ? `Area Collection Report — ${options.area}`
-    : `Area Collection Report (All Areas)`;
+  // 1. HEADER — Premium dark style
+  doc.setFillColor(20, 20, 20);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 42, pageWidth, 2, 'F');
 
-  drawOrgHeader(
-    doc,
-    `${title} — ${monthLabel}`,
-    `${options.activeOnly ? 'Active members only' : 'All members'} | Total: ${list.length}`,
-  );
+  doc.setTextColor(255, 255, 255);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(18);
+  doc.text('Chandanaish Darbar Sharif', 14, 16);
+  doc.setFontSize(12);
+  doc.setTextColor(180, 142, 73);
+  doc.text(options.area ? `AREA COLLECTION: ${options.area.toUpperCase()}` : 'AREA COLLECTION SUMMARY', pageWidth - 14, 16, { align: 'right' });
+  
+  doc.setFontSize(10);
+  doc.setTextColor(200, 200, 200);
+  doc.text(`Statement Period: ${monthLabel}`, 14, 26);
+  doc.text(`Scope: ${options.activeOnly ? 'Active members only' : 'All members'} | Total: ${list.length} members`, 14, 32);
+  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
+  doc.text('Official Summary Report', pageWidth - 14, 32, { align: 'right' });
 
   const summaries = computeAreaSummaries(members, payments, year, {
     month: options.month, activeOnly: options.activeOnly,
@@ -1898,15 +1912,23 @@ export async function downloadOrganizationStatementPDF(
   doc.text('Official Financial Document — Confidential', pageWidth - 14, 32, { align: 'right' });
 
   // 2. DATA PREPARATION
-  interface TxRow { date: string; desc: string; cat: string; ref: string; credit: number; debit: number; monthKey: string; }
   const txs: TxRow[] = [];
   
+  // Build a member map for fast lookup
+  const memberMap = new Map<string, MemberLite>();
+  payments.forEach(p => {
+    if (p.members && !memberMap.has(p.member_id)) {
+      memberMap.set(p.member_id, p.members as any);
+    }
+  });
+
   payments.filter(p => 
     p.for_year === year && (!month || p.for_month === month) && (p.status === 'approved' || !p.status)
   ).forEach(p => {
+    const m = p.members || memberMap.get(p.member_id);
     txs.push({
       date: p.payment_date || '-',
-      desc: `Member Subscription [${p.member_id.slice(0,8)}]`, 
+      desc: m ? `Member Subscription: ${m.full_name} (${m.member_code})` : `Member Subscription [${p.member_id.slice(0,8)}]`, 
       cat: 'Income',
       ref: p.transaction_ref || methodLabel(p.method),
       credit: Number(p.amount),
