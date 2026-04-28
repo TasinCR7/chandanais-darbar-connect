@@ -62,12 +62,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
 
       // 2. Fetch Active Scrolling Notices from 'notices' table
-      const { data: nData } = await supabase
-        .from('notices')
+      const { data: nData } = await (supabase
+        .from('notices' as any)
         .select('title')
         .eq('type', 'scrolling')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
       
       if (nData && nData.length > 0) {
         setScrollingNotices(nData.map(n => n.title));
