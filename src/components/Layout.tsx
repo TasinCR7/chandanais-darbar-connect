@@ -164,7 +164,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               exit={{ opacity: 0, height: 0 }}
               className="lg:hidden bg-background/95 backdrop-blur-md border-b border-gold/20 overflow-hidden"
             >
-              <div className="container mx-auto px-4 py-4 pb-8 flex flex-col gap-1.5 max-h-[calc(100vh-64px)] overflow-y-auto overscroll-contain">
+              <div className="container mx-auto px-4 py-4 flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}

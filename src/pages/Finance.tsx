@@ -1219,7 +1219,7 @@ const Finance = () => {
             </div>
 
             <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
                     <th className="py-2">সদস্য</th><th>এলাকা</th><th className="text-right">মাসিক</th><th className="text-right">জমা</th><th className="text-right">বকেয়া</th><th>বকেয়া মাস</th><th>অ্যাকশন</th>
@@ -1494,7 +1494,7 @@ const Finance = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display text-lg gold-text">শীর্ষ দাতা র‍্যাঙ্কিং 🏆</h3>
               </div>
-              <table className="w-full text-sm">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
                     <th className="py-2">র‍্যাঙ্ক</th><th>কোড</th><th>নাম</th><th className="text-right">মোট জমা</th>
@@ -1541,7 +1541,7 @@ const Finance = () => {
                   : `📅 ${BANGLA_MONTHS[reportMonth - 1]} ${toBanglaNumber(reportYear)} — মাসিক হিসাব`}
               </p>
 
-              <table className="w-full text-sm">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
                     <th className="py-2">র‍্যাঙ্ক</th><th>এলাকা</th><th className="text-right">সদস্য</th>
@@ -1581,7 +1581,7 @@ const Finance = () => {
                         <tr>
                           <td colSpan={7} className="p-0">
                             <div className="bg-background/60 border-l-4 border-primary/40 my-1 mx-2 rounded-lg overflow-hidden">
-                              <table className="w-full text-xs">
+                              <table className="w-full text-xs whitespace-nowrap">
                                 <thead>
                                   <tr className="bg-primary/10 text-muted-foreground font-bangla">
                                     <th className="py-1.5 px-3 text-left">কোড</th>
@@ -1662,7 +1662,7 @@ const Finance = () => {
                   <Clock className="h-5 w-5" /> অনুমোদনহীন পেমেন্ট ({toBanglaNumber(pendingPayments.length)} টি)
                 </h3>
                 <div className="overflow-x-auto rounded-lg">
-                  <table className="w-full text-sm font-bangla">
+                  <table className="w-full text-sm font-bangla whitespace-nowrap">
                     <thead>
                       <tr className="border-b border-amber-500/10 text-left">
                         <th className="py-2">সদস্য</th><th>মাস</th><th>পরিমাণ</th><th>পদ্ধতি</th><th>রেফারেন্স</th><th className="text-right">অ্যাকশন</th>
@@ -1831,7 +1831,7 @@ const Finance = () => {
                 </div>
               </div>
               <div className="overflow-x-auto rounded-lg border border-border/40">
-                <table className="w-full text-sm font-bangla">
+                <table className="w-full text-sm font-bangla whitespace-nowrap">
                   <thead className="bg-muted/40"><tr className="text-left">
                     <th className="py-2 px-3">এলাকা</th>
                     <th className="text-right px-3">সদস্য</th>
@@ -1909,7 +1909,7 @@ const Finance = () => {
               </form>
               {targets.length > 0 && (
                 <div className="overflow-x-auto rounded-lg border border-border/40">
-                  <table className="w-full text-sm font-bangla">
+                  <table className="w-full text-sm font-bangla whitespace-nowrap">
                     <thead className="bg-muted/40 text-left"><tr>
                       <th className="py-2 px-3">বছর</th><th className="px-3">মাস</th>
                       <th className="text-right px-3">লক্ষ্যমাত্রা</th><th className="px-3">নোট</th><th className="px-3 w-20"></th>
@@ -2237,7 +2237,7 @@ const Finance = () => {
 
             <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
               <h3 className="font-display text-lg gold-text mb-4">সদস্য তালিকা</h3>
-              <table className="w-full text-sm">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
                     <th className="py-2">কোড</th><th>নাম</th><th>ফোন</th>
@@ -2271,7 +2271,7 @@ const Finance = () => {
           <div className="card-gold rounded-2xl p-4 sm:p-6">
             <h3 className="font-display text-lg gold-text mb-4">অডিট লগ (সাম্প্রতিক ১০০টি রেকর্ড)</h3>
             <div className="overflow-x-auto rounded-lg border border-primary/20">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground bg-primary/5">
                     <th className="py-3 px-4">সময়</th>
@@ -2712,7 +2712,7 @@ const PersonalView = ({ member, payments }: { member: Member; payments: Payment[
       </div>
       <div className="card-gold rounded-2xl p-4 sm:p-6 overflow-x-auto">
         <h3 className="font-display text-lg gold-text mb-4">মাসিক বিবরণী</h3>
-        <table className="w-full text-sm">
+        <table className="w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
               <th className="py-2">মাস</th><th className="text-right">প্রত্যাশিত</th><th className="text-right">পরিশোধিত</th><th>অবস্থা</th>
