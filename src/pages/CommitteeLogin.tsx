@@ -31,12 +31,23 @@ const CommitteeLogin = () => {
 
     setLoading(true);
     try {
-      // Find the committee member by phone
+      let cleanPhone = phone.trim().replace(/\D/g, ""); // Remove everything except digits
+      if (cleanPhone.startsWith("880")) cleanPhone = cleanPhone.substring(2); // Normalize 8801... to 01...
+      if (!cleanPhone.startsWith("0")) cleanPhone = "0" + cleanPhone; // Ensure starts with 0
+
+      const searchVariants = [
+        cleanPhone,                // 017...
+        "+88" + cleanPhone,        // +88017...
+        "88" + cleanPhone,         // 88017...
+        cleanPhone.substring(1)    // 17... (without leading zero)
+      ];
+
+      // Find the committee member by phone using multiple variants
       const { data, error } = await supabase
         .from("committee_members")
         .select("id, name, designation")
         .eq("is_active", true)
-        .eq("phone", phone.trim())
+        .in("phone", searchVariants)
         .maybeSingle();
 
       if (error) throw error;
