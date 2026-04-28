@@ -25,12 +25,12 @@ const Index = () => {
 
   useEffect(() => {
     const fetchDetailedNotices = async () => {
-      const { data } = await supabase
+      const { data } = await (supabase
         .from('notices')
         .select('*')
         .eq('type', 'detailed')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
       if (data) setDetailedNotices(data);
     };
     fetchDetailedNotices();
