@@ -32,7 +32,7 @@ import {
   downloadReceiptPDF,
   downloadConsolidatedReceiptPDF,
   formatBDT,
-  type OrgMonthlyTotals, type OrgAnnualTotals,
+  type OrgMonthlyTotals, type OrgAnnualTotals, type PaymentLite, type MemberLite,
 } from '@/lib/statement';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -142,11 +142,10 @@ const Finance = () => {
 
   // Per-member dues / paid
   const [compareIds, setCompareIds] = useState<string[]>([]);
-  type PayInfo = { amount: number; for_year: number; for_month: number; payment_date: string; method: string; transaction_ref?: string };
 
   // Optimized per-member dues / paid calculation
   const memberStats = useMemo(() => {
-    const payMap = new Map<string, PayInfo[]>();
+    const payMap = new Map<string, PaymentLite[]>();
     // Count all payments except rejected
     payments.filter(p => p.status !== 'rejected').forEach(p => {
       if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
@@ -158,7 +157,7 @@ const Finance = () => {
 
     return members.map((m) => {
       const memPays = payMap.get(m.id) || [];
-      const stats = calculateDues(m, memPays);
+      const stats = calculateDues(m as unknown as MemberLite, memPays);
       return { ...m, ...stats, memPays };
     });
   }, [members, payments]);
