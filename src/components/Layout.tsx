@@ -62,12 +62,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
 
       // 2. Fetch Active Scrolling Notices from 'notices' table
-      const { data: nData } = await (supabase
+      const { data: nData } = await ((supabase as any)
         .from('notices')
         .select('title')
         .eq('type', 'scrolling')
         .eq('is_active', true)
-        .order('created_at', { ascending: false }) as any);
+        .order('created_at', { ascending: false }));
       
       if (nData && nData.length > 0) {
         setScrollingNotices(nData.map(n => n.title));
@@ -77,6 +77,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
     };
     fetchData();
+
+    // 3. Real-time Subscription for App Settings
+    const channel = supabase
+      .channel('app_settings_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_settings' },
+        () => {
+          fetchData(); // Re-fetch all settings when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
@@ -90,20 +106,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </a>
 
       {/* Maintenance Banner */}
-      {appSettings.maintenance_text && (
+      {String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-rose-600 text-white text-[10px] md:text-xs font-bold py-1 px-4 text-center shadow-md animate-pulse">
           {appSettings.maintenance_text}
         </div>
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
+      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3" aria-label="হোম পেজ">
             {appSettings.site_logo_url && (
               <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 object-contain" />
             )}
-            <span className="text-gold font-heading font-bold text-lg leading-tight">
+            <span className="text-gold font-heading font-bold text-base md:text-lg leading-tight">
               {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
             </span>
           </Link>
@@ -205,12 +221,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Premium Scrolling Marquee */}
       {scrollingNotices.length > 0 && (
-        <div className={`fixed ${appSettings.maintenance_text ? 'top-22' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
-          <div className="bg-gold-gradient text-primary-foreground px-5 h-full flex items-center gap-2 z-10 shadow-xl font-heading font-black text-[11px] md:text-xs uppercase tracking-wider">
-            <Bell className="h-3.5 w-3.5 animate-bounce" /> নোটিশ
+        <div className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-22' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
+          <div className="bg-gold-gradient text-primary-foreground px-3 md:px-5 h-full flex items-center gap-1 md:gap-2 z-10 shadow-xl font-heading font-black text-[10px] md:text-xs uppercase tracking-wider">
+            <Bell className="h-3 w-3 md:h-3.5 md:w-3.5 animate-bounce" /> নোটিশ
           </div>
           <div className="flex-1 whitespace-nowrap overflow-hidden relative">
-            <div className="inline-block animate-marquee-fast md:animate-marquee">
+            <div className="inline-block animate-marquee md:animate-marquee-slow">
               {scrollingNotices.map((n, i) => (
                 <span key={i} className="inline-flex items-center text-[13px] md:text-sm text-foreground/90 font-bangla font-semibold ml-16">
                   <span className="w-2 h-2 rounded-full bg-gold animate-pulse mr-4 shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
@@ -230,7 +246,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Advanced Maintenance Overlay for Public Users */}
-      {appSettings.maintenance_mode === 'true' && !isStaff && location.pathname !== '/committee-login' && !location.pathname.startsWith('/admin') && (
+      {String(appSettings.maintenance_mode) === 'true' && !isStaff && location.pathname !== '/committee-login' && !location.pathname.startsWith('/admin') && (
         <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex items-center justify-center p-6 text-center overflow-hidden">
           {/* Animated Background Elements */}
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />

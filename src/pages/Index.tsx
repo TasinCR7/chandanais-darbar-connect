@@ -219,7 +219,7 @@ const Index = () => {
       </section>
 
       {/* QnA Section */}
-      <section className="py-20 bg-card">
+      <section className="py-12 md:py-20 bg-card">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -227,8 +227,8 @@ const Index = () => {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6 }}
           >
-            <p className="font-arabic text-gold text-xl mb-4">الأسئلة والشكاوى</p>
-            <h2 className="text-3xl font-heading font-bold text-cream mb-4">
+            <p className="font-arabic text-gold text-lg md:text-xl mb-4">الأسئلة والشكاوى</p>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-cream mb-4">
               প্রশ্ন-উত্তর ও অভিযোগ
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto mb-8">
@@ -236,7 +236,7 @@ const Index = () => {
             </p>
             <Link
               to="/qna"
-              className="border border-gold/40 text-gold px-8 py-3 rounded-md font-semibold hover:bg-gold/10 transition-all duration-300 inline-flex items-center gap-2"
+              className="border border-gold/40 text-gold px-6 md:px-8 py-3 rounded-md font-semibold hover:bg-gold/10 transition-all duration-300 inline-flex items-center gap-2 text-sm md:text-base"
             >
               <Info size={18} />
               প্রশ্ন বা অভিযোগ জানান
@@ -246,7 +246,7 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-20 islamic-pattern">
+      <section className="py-12 md:py-20 islamic-pattern">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -254,8 +254,8 @@ const Index = () => {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6 }}
           >
-            <p className="font-arabic text-gold text-xl mb-4">صَدَقَة</p>
-            <h2 className="text-3xl font-heading font-bold text-cream mb-4">
+            <p className="font-arabic text-gold text-lg md:text-xl mb-4">صَدَقَة</p>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-cream mb-4">
               হাদিয়া ও নজরানা
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto mb-8">

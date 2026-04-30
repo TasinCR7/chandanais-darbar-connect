@@ -2639,6 +2639,17 @@ const Finance = () => {
                     <Label className="text-xs text-muted-foreground">নোটিশ বার্তা</Label>
                     <Textarea defaultValue={settings.global_notice_message} onBlur={(e) => saveSetting('global_notice_message', e.target.value)} />
                   </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">মেইনটেইনেন্স টেক্সট (লাল বার)</Label>
+                    <Input defaultValue={settings.maintenance_text} onBlur={(e) => saveSetting('maintenance_text', e.target.value)} />
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-gold/10">
+                    <div>
+                      <Label className="text-xs font-bold text-rose-500">লাল বার (নোটিশ) দেখান</Label>
+                      <p className="text-[10px] text-muted-foreground">এটি অফ করলে উপরের লাল বারটি চলে যাবে</p>
+                    </div>
+                    <Switch checked={settings.show_maintenance_banner === 'true'} onCheckedChange={(v) => saveSetting('show_maintenance_banner', String(v))} />
+                  </div>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-xl bg-background/40 border border-gold/10">
