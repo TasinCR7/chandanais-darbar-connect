@@ -1926,17 +1926,18 @@ export async function downloadOrganizationStatementPDF(
   });
   
   expenses.filter(e => {
+    if (!e.expense_date) return false;
     const d = new Date(e.expense_date);
-    return d.getFullYear() === year && (!month || (d.getMonth() + 1) === month);
+    return !isNaN(d.getTime()) && d.getFullYear() === year && (!month || (d.getMonth() + 1) === month);
   }).forEach(e => {
     txs.push({
       date: e.expense_date,
-      desc: e.title,
+      desc: e.title || 'Expense',
       cat: e.category || 'General Expense',
       ref: e.approved_by || '-',
       credit: 0,
-      debit: Number(e.amount),
-      monthKey: e.expense_date.slice(0,7),
+      debit: Number(e.amount || 0),
+      monthKey: (e.expense_date || '').slice(0,7) || `${year}-01`,
     });
   });
   
