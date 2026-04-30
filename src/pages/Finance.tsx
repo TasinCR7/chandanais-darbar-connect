@@ -126,7 +126,7 @@ const Finance = () => {
       setAuditLogs(al.data || []);
       setPendingPayments(p.filter(pay => pay.status === 'pending'));
     } catch (err: unknown) {
-      toast({ title: 'ডাটা লোড ব্যর্থ', variant: 'destructive' });
+      toast({ title: err instanceof Error ? err.message : 'ডাটা লোড ব্যর্থ', variant: 'destructive' });
     } finally {
       setBusy(false);
     }
@@ -134,20 +134,21 @@ const Finance = () => {
 
   useEffect(() => { loadAll(); }, []);
 
-  // Aggregates - ONLY approved payments count towards income
-  const totalIncome = useMemo(() => payments.filter(p => p.status === 'approved' || !p.status).reduce((s, p) => s + Number(p.amount), 0), [payments]);
+  // Aggregates - ONLY approved and pending payments count towards income
+  const totalIncome = useMemo(() => payments.filter(p => p.status !== 'rejected').reduce((s, p) => s + Number(p.amount), 0), [payments]);
   const totalExpense = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount), 0), [expenses]);
   const balance = totalIncome - totalExpense;
   const activeMembers = members.filter((m) => m.is_active).length;
 
   // Per-member dues / paid
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  type PayInfo = { amount: number; for_year: number; for_month: number; payment_date: string; method: string; transaction_ref?: string };
 
   // Optimized per-member dues / paid calculation
   const memberStats = useMemo(() => {
-    const payMap = new Map<string, any[]>();
-    // Count all payments if status is missing or approved
-    payments.filter(p => p.status === 'approved' || !p.status).forEach(p => {
+    const payMap = new Map<string, PayInfo[]>();
+    // Count all payments except rejected
+    payments.filter(p => p.status !== 'rejected').forEach(p => {
       if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
       payMap.get(p.member_id)?.push({
         amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
@@ -174,7 +175,7 @@ const Finance = () => {
     setBusy(true);
     try {
       const text = await file.text();
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
       const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
       const rows = lines.slice(1).map(l => {
         const values = l.split(',').map(v => v.replace(/"/g, ''));
@@ -201,7 +202,7 @@ const Finance = () => {
       }
       await loadAll();
     } catch (err: any) {
-      toast({ title: 'আপলোড ব্যর্থ', description: err.message, variant: 'destructive' });
+      toast({ title: 'আপলোড ব্যর্থ', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     } finally {
       setBusy(false);
       e.target.value = '';
@@ -239,7 +240,7 @@ const Finance = () => {
       label: monthName(i + 1).slice(0, 3),
       income: 0, expense: 0, balance: 0, cumulative: 0,
     }));
-    payments.filter(p => p.status === 'approved' || !p.status).forEach((p) => {
+    payments.filter(p => p.status !== 'rejected').forEach((p) => {
       const d = new Date(p.payment_date);
       if (d.getFullYear() === reportYear) rows[d.getMonth()].income += Number(p.amount);
     });
@@ -267,7 +268,7 @@ const Finance = () => {
           + (cutoff.getMonth() - join.getMonth()) + 1;
         const expected = months * Number(mem.monthly_rate || 0);
         const paid = payments
-          .filter((p) => p.member_id === mem.id && (p.status === 'approved' || !p.status))
+          .filter((p) => p.member_id === mem.id && p.status !== 'rejected')
           .filter((p) => {
             const py = p.for_year, pm = p.for_month;
             return py < reportYear || (py === reportYear && pm <= m);

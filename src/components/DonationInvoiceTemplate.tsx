@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import QRCode from 'qrcode';
+import { toBanglaNumber } from '@/lib/bangla';
 
 export interface InvoiceData {
   id?: string;
@@ -66,6 +68,31 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
   // Distribution for combined shahjadas
   const showDistribution = donation.donation_category === 'combined_shahjadas';
   const perPerson = showDistribution ? donation.amount / SHAHJADAS.length : 0;
+
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (verificationCode !== 'N/A') {
+      const qrText = `DONATION:${verificationCode}|AMOUNT:${donation.amount}|DATE:${donation.created_at || new Date().toISOString()}`;
+      QRCode.toDataURL(qrText, { width: 120, margin: 1, color: { dark: '#065f46', light: '#ffffff' } })
+        .then(setQrCodeUrl)
+        .catch(console.error);
+    }
+  }, [verificationCode, donation.amount, donation.created_at]);
+
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'verified':
+        return { text: '✔ গৃহীত (Verified)', bg: '#dcfce7', textCol: '#166534', border: '#86efac', containerBg: '#f0fdf4' };
+      case 'rejected':
+        return { text: '✖ বাতিল (Rejected)', bg: '#fee2e2', textCol: '#991b1b', border: '#fca5a5', containerBg: '#fef2f2' };
+      case 'pending':
+      default:
+        return { text: '⏳ অপেক্ষমান (Pending)', bg: '#ffedd5', textCol: '#9a3412', border: '#fb923c', containerBg: '#fff7ed' };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay(donation.status);
 
   return (
     <div style={{ position: 'fixed', top: '-20000px', left: '-20000px', pointerEvents: 'none', zIndex: -1000 }}>
@@ -228,7 +255,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
               }}
             >
               <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>রশিদ নম্বর / Invoice No.</div>
-              <div style={{ fontSize: '20px', fontWeight: '900', color: '#065f46', fontFamily: 'monospace' }}>#{invoiceNo}</div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#065f46', fontFamily: 'monospace' }}>#{toBanglaNumber(invoiceNo.replace(/\D/g, ''))}{invoiceNo.replace(/[0-9]/g, '')}</div>
             </div>
 
             {/* Middle: Date */}
@@ -243,8 +270,8 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
               }}
             >
               <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>তারিখ / Date</div>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#92400e' }}>{invoiceDate}</div>
-              <div style={{ fontSize: '12px', color: '#b45309' }}>{invoiceTime}</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#92400e' }}>{toBanglaNumber(invoiceDate)}</div>
+              <div style={{ fontSize: '12px', color: '#b45309' }}>{toBanglaNumber(invoiceTime)}</div>
             </div>
 
             {/* Right: Status */}
@@ -266,12 +293,12 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   borderRadius: '99px',
                   fontSize: '13px',
                   fontWeight: '700',
-                  background: isVerified ? '#dcfce7' : '#ffedd5',
-                  color: isVerified ? '#166534' : '#9a3412',
-                  border: `1px solid ${isVerified ? '#86efac' : '#fb923c'}`,
+                  background: statusDisplay.bg,
+                  color: statusDisplay.textCol,
+                  border: `1px solid ${statusDisplay.border}`,
                 }}
               >
-                {isVerified ? '✔ গৃহীত (Verified)' : '⏳ অপেক্ষমান (Pending)'}
+                {statusDisplay.text}
               </div>
             </div>
           </div>
@@ -310,7 +337,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
               </div>
               <div>
                 <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>মোবাইল / Phone</div>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', fontFamily: 'monospace' }}>{donation.donor_phone}</div>
+                <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', fontFamily: 'monospace' }}>{toBanglaNumber(donation.donor_phone)}</div>
               </div>
               <div>
                 <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>যাচাই কোড / Verify Code</div>
@@ -361,10 +388,10 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   </span>
                 </td>
                 <td style={{ padding: '16px', borderRight: '1px solid #e5e7eb', fontFamily: 'monospace', fontSize: '13px', color: '#374151', letterSpacing: '1px' }}>
-                  {donation.transaction_id}
+                  {donation.transaction_id || '-'}
                 </td>
                 <td style={{ padding: '16px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontSize: '20px', fontWeight: '900', color: '#065f46' }}>
-                  {donation.amount.toLocaleString('en-US')} ৳
+                  {toBanglaNumber(donation.amount.toLocaleString('en-US'))} ৳
                 </td>
               </tr>
             </tbody>
@@ -385,7 +412,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 }}
               >
                 <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '1px' }}>সর্বমোট / TOTAL</span>
-                <span style={{ fontSize: '26px', fontWeight: '900' }}>{donation.amount.toLocaleString('en-US')} ৳</span>
+                <span style={{ fontSize: '26px', fontWeight: '900' }}>{toBanglaNumber(donation.amount.toLocaleString('en-US'))} ৳</span>
               </div>
             </div>
           </div>
@@ -417,7 +444,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                     }}
                   >
                     <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>{s.name}</div>
-                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#b45309' }}>{perPerson.toFixed(2)} ৳</div>
+                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#b45309' }}>{toBanglaNumber(perPerson.toFixed(2))} ৳</div>
                   </div>
                 ))}
               </div>
@@ -454,14 +481,19 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   justifyContent: 'center',
                   color: '#065f46',
                   fontSize: '10px',
-                  opacity: 0.5,
+                  opacity: qrCodeUrl ? 1 : 0.5,
                   textAlign: 'center',
-                  padding: '8px',
+                  padding: qrCodeUrl ? '0px' : '8px',
                   lineHeight: '1.4',
                   marginBottom: '4px',
+                  overflow: 'hidden',
                 }}
               >
-                অফিসিয়াল<br />সিলমোহর<br />Official Seal
+                {qrCodeUrl ? (
+                  <img src={qrCodeUrl} alt="QR Code" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <>অফিসিয়াল<br />সিলমোহর<br />Official Seal</>
+                )}
               </div>
             </div>
 

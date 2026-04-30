@@ -2,6 +2,63 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
+
+// ---------- PDF Styling Helpers ----------
+const PDF_COLORS = {
+  headerBg: [30, 30, 30] as [number, number, number],
+  headerText: [255, 255, 255] as [number, number, number],
+  accent: [180, 142, 73] as [number, number, number],
+  successFill: [231, 245, 236] as [number, number, number],
+  successText: [22, 117, 61] as [number, number, number],
+  partialFill: [253, 243, 214] as [number, number, number],
+  partialText: [160, 104, 0] as [number, number, number],
+  dueFill: [253, 226, 226] as [number, number, number],
+  dueText: [180, 24, 24] as [number, number, number],
+};
+
+function addPdfHeader(
+  doc: jsPDF,
+  title: string,
+  subtitle: string,
+  extraLines: string[] = [],
+) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  // Dark header background
+  doc.setFillColor(...PDF_COLORS.headerBg);
+  doc.rect(0, 0, pageWidth, 45, 'F');
+  // Main organization name (left)
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setTextColor(...PDF_COLORS.headerText);
+  doc.setFontSize(18);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
+  // Subtitle (left)
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_COLORS.accent);
+  doc.text(subtitle, 14, 24);
+  // Title (right)
+  doc.setFontSize(14);
+  doc.setTextColor(...PDF_COLORS.headerText);
+  doc.text(title, pageWidth - 14, 18, { align: 'right' });
+  // Extra lines (left)
+  doc.setFontSize(9);
+  doc.setTextColor(...PDF_COLORS.accent);
+  extraLines.forEach((txt, idx) => {
+    doc.text(txt, 14, 32 + idx * 6);
+  });
+}
+
+function addPdfFooter(doc: jsPDF) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageCount = doc.getNumberOfPages();
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
+  }
+}
+
 import { toBanglaNumber } from './bangla';
 import { BANGLA_MONTHS } from './months';
 
