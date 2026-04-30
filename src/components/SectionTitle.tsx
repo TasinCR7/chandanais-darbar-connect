@@ -19,7 +19,7 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName }:
     {arabic && (
       <p className="font-arabic text-gold text-2xl mb-2" lang="ar" dir="rtl">{arabic}</p>
     )}
-    <h2 className="text-3xl md:text-4xl font-heading font-bold text-cream mb-3">
+    <h2 className="text-3xl md:text-5xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold mb-3">
       {title}
     </h2>
     {subtitle && (

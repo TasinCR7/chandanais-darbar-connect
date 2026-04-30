@@ -61,7 +61,7 @@ const Index = () => {
             <p className="font-arabic text-gold text-base md:text-2xl mb-4">
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </p>
-            <h1 className="text-3xl md:text-6xl lg:text-7xl font-heading font-bold text-cream mb-4 leading-tight px-2">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-4 leading-tight px-2 bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold drop-shadow-sm">
               চন্দনাইশ দরবার শরীফ
             </h1>
             <h2 className="text-gold text-base md:text-xl mb-2 font-medium">
@@ -93,6 +93,21 @@ const Index = () => {
             </Link>
           </motion.div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        >
+          <span className="text-[10px] uppercase tracking-[0.3em] text-gold/40 font-bold">নিচে দেখুন</span>
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-px h-12 bg-gradient-to-b from-gold/40 to-transparent"
+          />
+        </motion.div>
       </section>
 
       {/* Detailed Notices Section */}

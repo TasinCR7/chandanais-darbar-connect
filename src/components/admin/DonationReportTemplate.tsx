@@ -72,10 +72,12 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
           <div className="flex justify-between items-start border-b-[3px] border-black pb-6 mb-8">
             <div className="w-2/3">
               <h1 className="text-4xl font-black uppercase mb-1 tracking-tighter">চন্দনাইশ দরবার শরীফ</h1>
-              <p className="text-lg font-bold text-gray-800">অফিস অফ দ্য খাদেম | ফিন্যান্সিয়াল রেকর্ডস</p>
-              <div className="mt-4 text-xs font-mono">
-                <p>Location: Chandanaish, Chittagong, Bangladesh</p>
-                <p>Contact: +88017*********** | info@chandanaishdarbar.com</p>
+              <p className="text-lg font-bold text-emerald-800">সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া</p>
+              <p className="text-sm font-bold text-gray-800">অফিস অফ দ্য খাদেম | ফিন্যান্সিয়াল রেকর্ডস</p>
+              <div className="mt-4 text-[10px] font-mono leading-tight">
+                <p>Location: Chitrasala, Chandanaish, Chittagong, Bangladesh</p>
+                <p>Contact: +8801622-721996 | +8801819-614050</p>
+                <p>Email: chandanaishdarbarsharif@gmail.com</p>
               </div>
             </div>
             <div className="w-1/3 text-right">

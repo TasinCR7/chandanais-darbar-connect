@@ -170,11 +170,14 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
             <div style={{ fontSize: '30px', fontWeight: '900', color: '#065f46', letterSpacing: '1px', marginBottom: '4px' }}>
               চন্দনাইশ দরবার শরীফ
             </div>
+            <div style={{ fontSize: '14px', color: '#b45309', fontWeight: 'bold', marginBottom: '4px' }}>
+              সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
+            </div>
             <div style={{ fontSize: '13px', color: '#6b7280', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '4px' }}>
               Chandanais Darbar Sharif
             </div>
             <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-              চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ &nbsp;|&nbsp; chandanaishdarbarsharif@gmail.com
+              চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ &nbsp;|&nbsp; হটলাইন: ০১৬২২-৭২১৯৯৬
             </div>
 
             {/* Decorative divider */}

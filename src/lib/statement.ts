@@ -145,19 +145,27 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', 14, 18);
-  doc.setFontSize(13);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
+  doc.setFontSize(10);
   doc.setTextColor(180, 142, 73);
+  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 24);
+  
+  doc.setFontSize(13);
+  doc.setTextColor(255, 255, 255);
   doc.text('MEMBER ACCOUNT STATEMENT', pageWidth - 14, 18, { align: 'right' });
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
+  doc.setTextColor(180, 142, 73);
+  doc.text('চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | ০১৬২২-৭২১৯৯৬', 14, 45);
+
+  doc.setFontSize(9);
   doc.setTextColor(200, 200, 200);
-  doc.text(`Member: ${member.full_name} (${member.member_code})`, 14, 28);
-  doc.text(`Area: ${member.area || '-'}`, 14, 34);
+  doc.text(`Member: ${member.full_name}`, 14, 32);
+  doc.text(`ID: ${member.member_code} | Area: ${member.area || '-'}`, 14, 38);
   doc.text(`Statement Year: ${targetYear}`, pageWidth - 14, 28, { align: 'right' });
   doc.text(`Generated: ${new Date().toLocaleDateString('en-US')}`, pageWidth - 14, 34, { align: 'right' });
-  doc.setFontSize(8);
-  doc.text(`Doc ID: MST-${member.member_code}-${targetYear}-${Date.now().toString(36).toUpperCase()}`, 14, 42);
+  doc.setFontSize(7);
+  doc.text(`Doc ID: MST-${member.member_code}-${targetYear}-${Date.now().toString(36).toUpperCase()}`, pageWidth - 14, 42, { align: 'right' });
 
   const yPos = 68;
   doc.setTextColor(0, 0, 0);
@@ -308,8 +316,14 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(20);
-  doc.text('Chandanaish Darbar Sharif', 14, 18);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
+  doc.setFontSize(10);
+  doc.setTextColor(180, 142, 73);
+  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 24);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 38);
+
   doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.text('ACCOUNT STATEMENT', pageWidth - 14, 18, { align: 'right' });
   doc.setFontSize(9);
@@ -453,16 +467,21 @@ export async function downloadReceiptPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFillColor(30, 30, 30);
-  doc.rect(0, 0, pageWidth, 32, 'F');
+  doc.rect(0, 0, pageWidth, 42, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(16);
-  doc.text('Chandanaish Darbar Sharif', pageWidth / 2, 12, { align: 'center' });
+  doc.setFontSize(18);
+  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 12, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(180, 142, 73);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', pageWidth / 2, 18, { align: 'center' });
+  
   doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
-  doc.text('PAYMENT RECEIPT', pageWidth / 2, 22, { align: 'center' });
+  doc.text('PAYMENT RECEIPT (পেমেন্ট রসিদ)', pageWidth / 2, 28, { align: 'center' });
   doc.setFontSize(8);
-  doc.text(`Date: ${new Date().toLocaleDateString('en-US')}`, pageWidth / 2, 29, { align: 'center' });
+  doc.text(`Digital Verification Code: ${payment.id?.slice(0, 12).toUpperCase()}`, pageWidth / 2, 36, { align: 'center' });
 
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'normal');
@@ -475,14 +494,17 @@ export async function downloadReceiptPDF(
     doc.text(v, 75, y);
     y += 9;
   };
-  line('Receipt No', payment.id?.slice(0, 8).toUpperCase() ?? '-');
+  line('Receipt No', payment.id?.slice(0, 12).toUpperCase() ?? '-');
   line('Member ID', member.member_code);
   line('Full Name', member.full_name);
+  line('Phone', member.phone || '-');
+  line('Area', member.area || '-');
   line('Amount', formatBDT(payment.amount));
   line('Month', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`);
   line('Payment Date', payment.payment_date);
   line('Method', methodLabel(payment.method));
   line('Reference', payment.transaction_ref ?? '-');
+  line('Generated', new Date().toLocaleString());
 
   // Divider line
   y += 6;
@@ -514,22 +536,32 @@ export async function downloadConsolidatedReceiptPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  doc.setFillColor(30, 30, 30);
-  doc.rect(0, 0, pageWidth, 35, 'F');
+  doc.setFillColor(20, 20, 20);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 42, pageWidth, 2, 'F');
+
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', pageWidth / 2, 15, { align: 'center' });
+  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 15, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setTextColor(180, 142, 73);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', pageWidth / 2, 21, { align: 'center' });
+
   doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setFontSize(12);
-  doc.text('CONSOLIDATED PAYMENT RECEIPT', pageWidth / 2, 26, { align: 'center' });
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.text('CONSOLIDATED PAYMENT RECEIPT', pageWidth / 2, 32, { align: 'center' });
 
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.text(`Member: ${member.full_name} (${member.member_code})`, 14, 45);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setFontSize(10);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 45, { align: 'right' });
+  doc.text(`Member: ${member.full_name} (${member.member_code})`, 14, 52);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(9);
+  doc.text(`Area: ${member.area || '-'} | Phone: ${member.phone || '-'}`, 14, 58);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 52, { align: 'right' });
 
   const totalAmount = payments.reduce((s, p) => s + p.amount, 0);
   
@@ -572,17 +604,26 @@ const COL_DUE_TEXT: [number, number, number] = [180, 24, 24];
 
 function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setFillColor(30, 30, 30);
-  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.setFillColor(20, 20, 20);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 42, pageWidth, 2, 'F');
+
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(14);
-  doc.text('Chandanaish Darbar Sharif', 14, 15);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setFontSize(11);
-  doc.text(title, 14, 25);
+  doc.setFontSize(16);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 15);
   doc.setFontSize(9);
-  doc.text(subtitle, 14, 32);
+  doc.setTextColor(180, 142, 73);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 22);
+
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.text(title, 14, 30);
+  doc.setFontSize(9);
+  doc.text(subtitle, 14, 37);
+  
   doc.text(
     `Date: ${new Date().toLocaleDateString('en-US')}`,
     pageWidth - 14, 12, { align: 'right' },

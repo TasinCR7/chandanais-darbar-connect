@@ -68,7 +68,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .eq('type', 'scrolling')
         .eq('is_active', true)
         .order('created_at', { ascending: false }));
-      
+
       if (nData && nData.length > 0) {
         setScrollingNotices(nData.map(n => n.title));
       } else if (sObj.global_notice_message) {
@@ -98,8 +98,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Skip to Content for Accessibility */}
-      <a 
-        href="#main-content" 
+      <a
+        href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-gold focus:text-primary-foreground focus:rounded-md"
       >
         মূল কন্টেন্টে যান
@@ -137,11 +137,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     routeImports[route]();
                   }
                 }}
-                className={`text-sm font-medium transition-colors duration-300 hover:text-gold ${
-                  location.pathname === link.path
+                className={`text-sm font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
                     ? "text-gold"
                     : "text-muted-foreground"
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
@@ -183,38 +182,73 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         {/* Mobile Nav */}
         <AnimatePresence>
           {menuOpen && (
-            <motion.nav
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-background/95 backdrop-blur-md border-b border-gold/20 overflow-hidden"
-            >
-              <div className="container mx-auto px-4 py-4 flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                onClick={() => setMenuOpen(false)}
+              />
+              <motion.nav
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed top-0 right-0 bottom-0 w-[85%] max-w-[320px] z-50 bg-background/95 backdrop-blur-xl border-l border-gold/20 lg:hidden shadow-2xl flex flex-col"
+              >
+                <div className="p-4 flex justify-end border-b border-gold/10">
+                  <button
                     onClick={() => setMenuOpen(false)}
-                    className={`text-sm font-medium py-2 px-3 rounded-md transition-colors duration-300 ${
-                      location.pathname === link.path
-                        ? "text-gold bg-gold/10"
-                        : "text-muted-foreground hover:text-gold"
-                    }`}
+                    className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors"
                   >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="pt-2">
+                    <X size={28} />
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto py-6 px-6">
+                  <div className="flex flex-col gap-1">
+                    {navLinks.map((link, i) => (
+                      <motion.div
+                        key={link.path}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 + i * 0.05 }}
+                      >
+                        <Link
+                          to={link.path}
+                          onClick={() => setMenuOpen(false)}
+                          className={`text-base font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group ${
+                            location.pathname === link.path
+                              ? "text-gold bg-gold/10 shadow-sm"
+                              : "text-muted-foreground hover:text-gold hover:bg-white/5"
+                          }`}
+                        >
+                          {link.label}
+                          {location.pathname === link.path && <div className="w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_rgba(212,175,55,1)]" />}
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
                   <Link
                     to="/hadia"
                     onClick={() => setMenuOpen(false)}
-                    className="bg-gold-gradient text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-bold text-center block shadow-lg shadow-gold/20"
+                    className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform"
                   >
                     হাদিয়া দিন
                   </Link>
+                  <div className="flex flex-col gap-2 pt-2">
+                    <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
+                    <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
+                      <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
+                    </a>
+                  </div>
                 </div>
-              </div>
-            </motion.nav>
+              </motion.nav>
+            </>
           )}
         </AnimatePresence>
       </header>
@@ -251,15 +285,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* Animated Background Elements */}
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
-          
+
           <div className="max-w-md w-full space-y-8 relative z-10 animate-in fade-in zoom-in duration-700">
             <div className="relative mx-auto w-24 h-24 mb-8">
               <div className="absolute inset-0 bg-gold/20 blur-2xl rounded-full animate-ping" />
               <div className="relative bg-gold-gradient p-6 rounded-3xl shadow-2xl flex items-center justify-center border border-white/10">
-                <Settings className="h-10 w-10 text-primary-foreground animate-[spin_4s_linear_infinite]" />
+                <Settings className="h-10 w-10 text-primary-foreground animate-[spin_2s_linear_infinite]" />
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <h1 className="text-4xl font-heading font-bold gold-text leading-tight">
                 ওয়েবসাইট আপডেট চলছে
@@ -275,9 +309,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <p className="text-xs text-gold uppercase tracking-widest mb-2">জরুরি প্রয়োজনে</p>
                 <p className="text-xl font-bold text-white">০১৬২২-৭২১৯৯৬</p>
               </div>
-              
-              <Link 
-                to="/committee-login" 
+
+              <Link
+                to="/committee-login"
                 onClick={() => window.location.href = '/committee-login'}
                 className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-4 cursor-pointer relative z-20"
               >
@@ -285,7 +319,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             </div>
           </div>
-          
+
           {/* Stylized Footer */}
           <div className="absolute bottom-8 left-0 right-0">
             <p className="text-[10px] text-muted-foreground/40 font-heading tracking-widest uppercase">
@@ -334,9 +368,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <Phone size={14} className="text-gold" />
                   <span>০১৬২২-৭২১৯৯৬</span>
                 </div>
-                <a 
-                  href="https://maps.app.goo.gl/pWk7MFAWh51PiMeX6" 
-                  target="_blank" 
+                <a
+                  href="https://maps.app.goo.gl/pWk7MFAWh51PiMeX6"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-muted-foreground text-sm hover:text-gold transition-colors inline-flex"
                 >
