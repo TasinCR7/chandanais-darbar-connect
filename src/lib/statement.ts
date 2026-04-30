@@ -483,28 +483,32 @@ export async function downloadReceiptPDF(
   doc.setFontSize(8);
   doc.text(`Digital Verification Code: ${payment.id?.slice(0, 12).toUpperCase()}`, pageWidth / 2, 36, { align: 'center' });
 
-  doc.setTextColor(0, 0, 0);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setFontSize(11);
-  let y = 48;
-  const line = (k: string, v: string) => {
-    doc.setFont(BANGLA_FONT_NAME, 'bold');
-    doc.text(`${k}:`, 18, y);
-    doc.setFont(BANGLA_FONT_NAME, 'normal');
-    doc.text(v, 75, y);
-    y += 9;
-  };
-  line('Receipt No', payment.id?.slice(0, 12).toUpperCase() ?? '-');
-  line('Member ID', member.member_code);
-  line('Full Name', member.full_name);
-  line('Phone', member.phone || '-');
-  line('Area', member.area || '-');
-  line('Amount', formatBDT(payment.amount));
-  line('Month', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`);
-  line('Payment Date', payment.payment_date);
-  line('Method', methodLabel(payment.method));
-  line('Reference', payment.transaction_ref ?? '-');
-  line('Generated', new Date().toLocaleString());
+  autoTable(doc, {
+    startY: 55,
+    body: [
+      ['Receipt No (রশিদ নং)', payment.id?.slice(0, 12).toUpperCase() ?? '-'],
+      ['Member ID (মেম্বার আইডি)', member.member_code],
+      ['Full Name (নাম)', member.full_name],
+      ['Phone (মোবাইল)', member.phone || '-'],
+      ['Area (এলাকা)', member.area || '-'],
+      ['Amount (পরিমাণ)', formatBDT(payment.amount)],
+      ['Month (মাস)', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`],
+      ['Payment Date (তারিখ)', payment.payment_date],
+      ['Method (পেমেন্ট মাধ্যম)', methodLabel(payment.method)],
+      ['Reference (রেফারেন্স)', payment.transaction_ref ?? '-'],
+      ['Generated At (প্রস্তুত সময়)', new Date().toLocaleString()],
+    ],
+    theme: 'striped',
+    styles: { font: BANGLA_FONT_NAME, fontSize: 10, cellPadding: 4, lineColor: [220, 220, 220], lineWidth: 0.1 },
+    columnStyles: { 
+      0: { fontStyle: 'bold', cellWidth: 70, fillColor: [245, 245, 245], textColor: [60, 60, 60] },
+      1: { textColor: [0, 0, 0] }
+    },
+    margin: { left: 18, right: 18 },
+  });
+
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
+  let y = finalY;
 
   // Divider line
   y += 6;
