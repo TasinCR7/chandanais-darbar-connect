@@ -310,42 +310,50 @@ const Hadia = () => {
                       <div className="space-y-5">
                         <div>
                           <label className="block text-foreground capitalize mb-3 font-medium text-sm">খাত নির্বাচন করুন</label>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3">
                             <button
                               onClick={() => setDonationType("mosque_fund")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                                donationType === "mosque_fund" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
+                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                                donationType === "mosque_fund" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
-                              <Home size={24} className="mb-2" />
-                              <span className="text-sm font-semibold text-center">মসজিদ ফান্ড</span>
+                              <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "mosque_fund" ? "bg-gold/20" : "bg-black/20"}`}>
+                                <Home size={22} />
+                              </div>
+                              <span className="text-sm font-bold text-center">মসজিদ ফান্ড</span>
                             </button>
                             <button
                               onClick={() => setDonationType("darbar_fund")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                                donationType === "darbar_fund" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
+                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                                donationType === "darbar_fund" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
-                              <HeartHandshake size={24} className="mb-2" />
-                              <span className="text-sm font-semibold text-center">দরবার ফান্ড</span>
+                              <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "darbar_fund" ? "bg-gold/20" : "bg-black/20"}`}>
+                                <HeartHandshake size={22} />
+                              </div>
+                              <span className="text-sm font-bold text-center">দরবার ফান্ড</span>
                             </button>
                             <button
                               onClick={() => setDonationType("combined_shahjadas")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                                donationType === "combined_shahjadas" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
+                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                                donationType === "combined_shahjadas" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
-                              <Users size={24} className="mb-2" />
-                              <span className="text-sm font-semibold text-center">সম্মিলিত শাহজাদাগণ</span>
+                              <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "combined_shahjadas" ? "bg-gold/20" : "bg-black/20"}`}>
+                                <Users size={22} />
+                              </div>
+                              <span className="text-sm font-bold text-center">সম্মিলিত শাহজাদাগণ</span>
                             </button>
                             <button
                               onClick={() => setDonationType("specific_shahjada")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
-                                donationType === "specific_shahjada" ? "border-gold bg-gold/10 text-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
+                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                                donationType === "specific_shahjada" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
-                              <User size={24} className="mb-2" />
-                              <span className="text-sm font-semibold text-center">নির্দিষ্ট শাহজাদা</span>
+                              <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "specific_shahjada" ? "bg-gold/20" : "bg-black/20"}`}>
+                                <User size={22} />
+                              </div>
+                              <span className="text-sm font-bold text-center text-xs">নির্দিষ্ট শাহজাদা</span>
                             </button>
                           </div>
                         </div>
@@ -410,19 +418,28 @@ const Hadia = () => {
                           <label className="block text-foreground mb-3 font-medium text-sm">পেমেন্ট মাধ্যম নির্বাচন করুন</label>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {[
-                              { id: "bkash", name: "bKash" },
-                              { id: "nagad", name: "Nagad" },
-                              { id: "rocket", name: "Rocket" },
-                              { id: "card", name: "Card" }
+                              { id: "bkash", name: "bKash", color: "from-[#d12053] to-[#e2136e]" },
+                              { id: "nagad", name: "Nagad", color: "from-[#f7941d] to-[#ed1c24]" },
+                              { id: "rocket", name: "Rocket", color: "from-[#8c3494] to-[#6d2d91]" },
+                              { id: "card", name: "Card", color: "from-slate-700 to-slate-900" }
                             ].map(method => (
                               <button
                                 key={method.id}
                                 onClick={() => setPaymentMethod(method.id as PaymentMethod)}
-                                className={`flex items-center justify-center p-3 rounded-lg border transition-all ${
-                                  paymentMethod === method.id ? "border-gold bg-gold/10 text-gold font-bold" : "border-gold/20 text-foreground hover:border-gold/50"
+                                className={`flex items-center justify-center p-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
+                                  paymentMethod === method.id 
+                                    ? `border-white/20 text-white font-bold bg-gradient-to-br ${method.color} shadow-lg scale-[1.02]` 
+                                    : "border-gold/20 text-foreground hover:border-gold/50 bg-background/40"
                                 }`}
                               >
-                                {method.name}
+                                {paymentMethod === method.id && (
+                                  <motion.div 
+                                    layoutId="payment-active"
+                                    className="absolute inset-0 bg-white/10"
+                                    initial={false}
+                                  />
+                                )}
+                                <span className="relative z-10">{method.name}</span>
                               </button>
                             ))}
                           </div>

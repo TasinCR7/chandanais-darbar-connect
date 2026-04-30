@@ -25,12 +25,12 @@ const Index = () => {
 
   useEffect(() => {
     const fetchDetailedNotices = async () => {
-      const { data } = await (supabase
+      const { data } = await ((supabase as any)
         .from('notices')
         .select('*')
         .eq('type', 'detailed')
         .eq('is_active', true)
-        .order('created_at', { ascending: false }) as any);
+        .order('created_at', { ascending: false }));
       if (data) setDetailedNotices(data);
     };
     fetchDetailedNotices();
@@ -215,6 +215,33 @@ const Index = () => {
               সকল অনুষ্ঠান দেখুন <ArrowRight size={14} />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* QnA Section */}
+      <section className="py-20 bg-card">
+        <div className="container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+          >
+            <p className="font-arabic text-gold text-xl mb-4">الأسئلة والشكاوى</p>
+            <h2 className="text-3xl font-heading font-bold text-cream mb-4">
+              প্রশ্ন-উত্তর ও অভিযোগ
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+              শরিয়তের যেকোনো বিষয়ে আলেম সাহেবকে প্রশ্ন করুন অথবা দরবার শরীফ সংক্রান্ত আপনার কোনো অভিযোগ বা মতামত থাকলে আমাদের সরাসরি জানান।
+            </p>
+            <Link
+              to="/qna"
+              className="border border-gold/40 text-gold px-8 py-3 rounded-md font-semibold hover:bg-gold/10 transition-all duration-300 inline-flex items-center gap-2"
+            >
+              <Info size={18} />
+              প্রশ্ন বা অভিযোগ জানান
+            </Link>
+          </motion.div>
         </div>
       </section>
 

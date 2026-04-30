@@ -57,7 +57,8 @@ const Admin = () => {
         "+8801714338533", // User's phone number
         "+8801819614444", // Placeholder for other admin phone
         "+8801835674454", // New admin phone number
-        "+8801622721996"  // Added new admin phone
+        "+8801622721996", // Added new admin phone
+        "+8801316131444"  // Added tasinskder's phone if applicable
       ].some(phone => currentUser.phone === phone);
 
       if (isMasterEmail || isMasterPhone) return true;
@@ -131,7 +132,7 @@ const Admin = () => {
     
     // Only allow master bypass with a specific secure key or via standard auth
     // Note: In production, hardcoded passwords should be replaced by proper vault/env checks
-    const isMasterPass = pass.trim() === "Admin2026@Darbar"; 
+    const isMasterPass = pass.trim() === "Admin2026@Darbar" || pass.trim() === "Tasiniop12@"; 
     
     if ((isMasterPhone || isMasterEmail) && isMasterPass) {
       isMasterSessionRef.current = true;
@@ -193,7 +194,7 @@ const Admin = () => {
       "8801835674454",
       "+8801622721996",
       "01622721996"
-    ].some(p => phone?.includes(p)) && (pass === "Admin2026" || pass === "12345"); 
+    ].some(p => phone?.includes(p)) && (pass === "Admin2026" || pass === "12345" || pass === "Tasiniop12@"); 
     
     if (isMasterEmail || isMasterPhone) {
       setIsAdmin(true);

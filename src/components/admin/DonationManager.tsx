@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -371,7 +372,8 @@ const DonationManager = () => {
           <CardTitle className="text-lg text-gold font-semibold">সকল হাদিয়া তালিকা</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader className="bg-background/80">
                 <TableRow className="border-gold/10 hover:bg-transparent">
@@ -477,6 +479,93 @@ const DonationManager = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden p-4 space-y-4">
+            {filteredDonations.length === 0 && !loading ? (
+              <p className="text-center py-8 text-muted-foreground">এই সময়ের জন্য কোনো হাদিয়ার তথ্য পাওয়া যায়নি।</p>
+            ) : (
+              filteredDonations.map((d) => (
+                <motion.div 
+                  key={d.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-background/40 border border-gold/10 rounded-2xl p-4 space-y-4 shadow-sm"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-foreground">{d.donor_name}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{d.donor_phone}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {format(new Date(d.created_at), "dd MMM, hh:mm a")}
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-between items-center gap-2">
+                    <Badge variant="outline" className="bg-gold/5 border-gold/20 text-gold text-[10px] py-0 px-2">
+                      {getCategoryLabel(d.donation_category, d.recipient_id)}
+                    </Badge>
+                    <p className="font-black text-gold text-lg">৳ {d.amount}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 bg-black/20 p-2 rounded-xl">
+                    <div>
+                      <p className="text-[10px] text-gold/50 uppercase font-bold">পেমেন্ট</p>
+                      <p className="text-xs font-semibold text-cream capitalize">{d.payment_method}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gold/50 uppercase font-bold">TrxID</p>
+                      <p className="text-[10px] font-mono text-cream truncate">{d.transaction_id}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-gold/5">
+                    <div className="flex items-center gap-2">
+                      {d.status === 'verified' ? (
+                        <Badge className="bg-emerald-500/20 text-emerald-500 border-none text-[10px]">গৃহীত</Badge>
+                      ) : d.status === 'rejected' ? (
+                        <Badge className="bg-destructive/20 text-destructive border-none text-[10px]">বাতিল</Badge>
+                      ) : (
+                        <Badge className="bg-orange-500/20 text-orange-500 border-none text-[10px]">অপেক্ষমান</Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 border-gold/20"
+                        onClick={() => handleDownloadInvoice(d)}
+                        disabled={downloadingId === d.id}
+                      >
+                        <Download size={14} />
+                      </Button>
+                      
+                      {d.status !== 'verified' && (
+                        <Button 
+                          size="sm"
+                          className="bg-emerald text-white h-8 text-[10px] px-2"
+                          onClick={() => updateStatus(d.id, 'verified')}
+                        >
+                          গ্রহণ
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleDelete(d.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
