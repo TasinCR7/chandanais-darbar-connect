@@ -1,6 +1,5 @@
-import React from 'react';
-import { format } from 'date-fns';
 import type { InvoiceData } from '@/components/DonationInvoiceTemplate';
+import { toBanglaNumber } from '@/lib/bangla';
 
 interface DonationReportProps {
   donations: InvoiceData[];
@@ -85,9 +84,9 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
                 <h2 className="text-xl font-black uppercase tracking-widest leading-none">STATEMENT OF<br/>ACCOUNT</h2>
               </div>
               <div className="text-[10px] space-y-0.5">
-                <p><span className="font-bold">Date:</span> {format(new Date(), 'dd/MM/yyyy')}</p>
-                <p><span className="font-bold">Time:</span> {format(new Date(), 'hh:mm:ss a')}</p>
-                <p><span className="font-bold">Ref No:</span> CD-{(Math.random()*100000).toFixed(0)}</p>
+                <p><span className="font-bold">Date:</span> {toBanglaNumber(format(new Date(), 'dd/MM/yyyy'))}</p>
+                <p><span className="font-bold">Time:</span> {toBanglaNumber(format(new Date(), 'hh:mm:ss a'))}</p>
+                <p><span className="font-bold">Ref No:</span> CD-{toBanglaNumber((Math.random()*100000).toFixed(0))}</p>
               </div>
             </div>
           </div>
@@ -104,15 +103,15 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
               <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Financial Summary</p>
               <div className="flex justify-between items-baseline border-b border-gray-300 pb-1 mb-1">
                 <span className="text-xs">Total Net Collections:</span>
-                <span className="font-bold">৳ {totalAmount.toLocaleString()}</span>
+                <span className="font-bold">৳ {toBanglaNumber(totalAmount.toLocaleString())}</span>
               </div>
               <div className="flex justify-between items-baseline border-b border-gray-300 pb-1 mb-1">
                 <span className="text-xs">Mosque Fund Allocation:</span>
-                <span className="font-bold">৳ {mosqueTotal.toLocaleString()}</span>
+                <span className="font-bold">৳ {toBanglaNumber(mosqueTotal.toLocaleString())}</span>
               </div>
               <div className="flex justify-between items-baseline font-black">
                 <span className="text-sm">Balance for Distribution:</span>
-                <span className="text-lg">৳ {combinedShahjadasTotal.toLocaleString()}</span>
+                <span className="text-lg">৳ {toBanglaNumber(combinedShahjadasTotal.toLocaleString())}</span>
               </div>
             </div>
           </div>
@@ -138,9 +137,9 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
                   return (
                     <tr key={s.id} className="text-xs">
                       <td className="border border-black p-2 font-black">{s.name}</td>
-                      <td className="border border-black p-2 text-right">{perShahjadaCombined.toLocaleString()}</td>
-                      <td className="border border-black p-2 text-right">{specific.toLocaleString()}</td>
-                      <td className="border border-black p-2 text-right font-black text-sm bg-gray-50">৳ {totalForThisShahjada.toLocaleString()}</td>
+                      <td className="border border-black p-2 text-right">{toBanglaNumber(perShahjadaCombined.toLocaleString())}</td>
+                      <td className="border border-black p-2 text-right">{toBanglaNumber(specific.toLocaleString())}</td>
+                      <td className="border border-black p-2 text-right font-black text-sm bg-gray-50">৳ {toBanglaNumber(totalForThisShahjada.toLocaleString())}</td>
                     </tr>
                   );
                 })}
@@ -166,7 +165,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
                 {donations.map((d, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="border border-black px-2 py-3 font-mono">
-                      {d.created_at ? format(new Date(d.created_at), 'dd-MM-yy') : '--/--/--'}
+                      {d.created_at ? toBanglaNumber(format(new Date(d.created_at), 'dd-MM-yy')) : '--/--/--'}
                     </td>
                     <td className="border border-black px-2 py-3">
                       <div className="font-bold text-xs uppercase">{d.donor_name}</div>
@@ -176,7 +175,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
                       {getCategoryLabel(d.donation_category, d.recipient_id)}
                     </td>
                     <td className="border border-black px-2 py-3 text-right font-black text-xs">
-                      {d.amount.toLocaleString()}.00
+                      {toBanglaNumber(d.amount.toLocaleString())}.০০
                     </td>
                   </tr>
                 ))}
@@ -185,7 +184,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
                 <tr className="bg-gray-200 font-black text-sm">
                   <td colSpan={3} className="border border-black p-3 text-right tracking-[0.2em]">CUMULATIVE COLLECTIONS (TOTAL)</td>
                   <td className="border border-black p-3 text-right underline decoration-double">
-                    ৳ {totalAmount.toLocaleString()}
+                    ৳ {toBanglaNumber(totalAmount.toLocaleString())}
                   </td>
                 </tr>
               </tfoot>
