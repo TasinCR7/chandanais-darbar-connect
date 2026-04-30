@@ -523,62 +523,79 @@ export async function downloadReceiptPDF(
   const doc = new jsPDF();
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setFillColor(30, 30, 30);
+  
+  // Header
+  doc.setFillColor(20, 20, 20);
   doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 42, pageWidth, 2, 'F');
+  
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 12, { align: 'center' });
+  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 16, { align: 'center' });
   doc.setFontSize(10);
   doc.setTextColor(180, 142, 73);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', pageWidth / 2, 18, { align: 'center' });
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', pageWidth / 2, 23, { align: 'center' });
   
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);
-  doc.text('PAYMENT RECEIPT (পেমেন্ট রসিদ)', pageWidth / 2, 28, { align: 'center' });
-  doc.setFontSize(8);
-  doc.text(`Digital Verification Code: ${payment.id?.slice(0, 12).toUpperCase()}`, pageWidth / 2, 36, { align: 'center' });
+  doc.text('PAYMENT RECEIPT (পেমেন্ট রসিদ)', pageWidth / 2, 33, { align: 'center' });
+
+  // Generate QR Code
+  const qrData = `Receipt: ${payment.id || 'N/A'}\nMember: ${member.member_code}\nAmount: BDT ${payment.amount}\nDate: ${payment.payment_date}`;
+  try {
+    const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrl, 'PNG', pageWidth - 40, 50, 25, 25);
+  } catch (e) {
+    console.warn("QR generation failed", e);
+  }
+
+  // Financial calculations
+  const expected = Number(member.monthly_rate) || 0;
+  const due = Math.max(0, expected - Number(payment.amount));
+  const status = payment.amount >= expected ? 'PAID' : payment.amount > 0 ? 'PARTIAL' : 'DUE';
 
   autoTable(doc, {
-    startY: 55,
+    startY: 50,
     body: [
       ['Receipt No (রশিদ নং)', payment.id?.slice(0, 12).toUpperCase() ?? '-'],
       ['Member ID (মেম্বার আইডি)', member.member_code],
       ['Full Name (নাম)', member.full_name],
       ['Phone (মোবাইল)', member.phone || '-'],
       ['Area (এলাকা)', member.area || '-'],
-      ['Amount (পরিমাণ)', formatBDT(payment.amount)],
-      ['Month (মাস)', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`],
+      ['Month (মাসের নাম)', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`],
+      ['Expected (নির্ধারিত চাঁদা)', formatBDT(expected)],
+      ['Paid Amount (পরিশোধিত)', formatBDT(payment.amount)],
+      ['Due Amount (বকেয়া)', formatBDT(due)],
+      ['Status (স্ট্যাটাস)', status],
       ['Payment Date (তারিখ)', payment.payment_date],
-      ['Method (পেমেন্ট মাধ্যম)', methodLabel(payment.method)],
-      ['Reference (রেফারেন্স)', payment.transaction_ref ?? '-'],
+      ['Method (মাধ্যম)', methodLabel(payment.method)],
+      ['Reference (রেফারেন্স)', payment.transaction_ref || '-'],
+      ['Approved By (অ্যাপ্রুভাল)', 'Admin / System Verified'],
       ['Generated At (প্রস্তুত সময়)', new Date().toLocaleString()],
     ],
     theme: 'striped',
-    styles: { font: BANGLA_FONT_NAME, fontSize: 10, cellPadding: 4, lineColor: [220, 220, 220], lineWidth: 0.1 },
+    styles: { font: BANGLA_FONT_NAME, fontSize: 10, cellPadding: 5, lineColor: [220, 220, 220], lineWidth: 0.1 },
     columnStyles: { 
-      0: { fontStyle: 'bold', cellWidth: 70, fillColor: [245, 245, 245], textColor: [60, 60, 60] },
-      1: { textColor: [0, 0, 0] }
+      0: { fontStyle: 'bold', cellWidth: 70, fillColor: [248, 250, 252], textColor: [51, 65, 85] },
+      1: { textColor: [15, 23, 42] }
     },
-    margin: { left: 18, right: 18 },
+    margin: { left: 14, right: 45 }, // Leave space for QR code
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 15;
-  let y = finalY;
-
-  // Divider line
-  y += 6;
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  
   doc.setDrawColor(180, 142, 73);
   doc.setLineWidth(0.5);
-  doc.line(18, y, pageWidth - 18, y);
-  y += 12;
+  doc.line(14, finalY, pageWidth - 14, finalY);
 
-  doc.setFontSize(10);
-  doc.setTextColor(120, 120, 120);
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
   doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text('Authorized Signature: _____________________', 18, y + 10);
-  doc.text('Chandanaish Darbar Sharif — Digital Receipt', 18, y + 22);
+  doc.text('Authorized Signature: _____________________', 14, finalY + 15);
+  doc.text('Chandanaish Darbar Sharif — Digital Receipt', 14, finalY + 22);
 
   doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
 }
@@ -617,29 +634,56 @@ export async function downloadConsolidatedReceiptPDF(
 
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(10);
-  doc.text(`Member: ${member.full_name} (${member.member_code})`, 14, 52);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setFontSize(9);
-  doc.text(`Area: ${member.area || '-'} | Phone: ${member.phone || '-'}`, 14, 58);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 52, { align: 'right' });
-
-  const totalAmount = payments.reduce((s, p) => s + p.amount, 0);
+  doc.setFontSize(11);
+  doc.text('MEMBER DETAILS (সদস্যের তথ্য)', 14, 52);
   
+  doc.setFontSize(10);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.text(`Name: ${member.full_name} (${member.member_code})`, 14, 58);
+  doc.text(`Area: ${member.area || '-'} | Phone: ${member.phone || '-'}`, 14, 64);
+  
+  const expectedPerMonth = Number(member.monthly_rate) || 0;
+  const totalExpected = expectedPerMonth * payments.length;
+  const totalAmount = payments.reduce((s, p) => s + Number(p.amount), 0);
+  const totalDue = Math.max(0, totalExpected - totalAmount);
+
+  doc.text(`Monthly Rate: ${formatBDT(expectedPerMonth)}`, pageWidth / 2, 58);
+  doc.text(`Total Due (বকেয়া): ${formatBDT(totalDue)}`, pageWidth / 2, 64);
+  
+  doc.text(`Approved By: Admin / Verified`, pageWidth - 45, 58, { align: 'right' });
+  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 64, { align: 'right' });
+
+  // QR Code for Consolidated
+  const qrDataC = `Bulk Receipt: ${payments.length} Months\nMember: ${member.member_code}\nTotal: BDT ${totalAmount}\nGenerated: ${new Date().toLocaleDateString()}`;
+  try {
+    const qrDataUrlC = await QRCode.toDataURL(qrDataC, { margin: 1, width: 25 });
+    doc.addImage(qrDataUrlC, 'PNG', pageWidth - 40, 48, 25, 25);
+  } catch (e) {
+    console.warn("QR generation failed", e);
+  }
+
   autoTable(doc, {
-    startY: 52,
-    head: [['Month', 'Amount', 'Date', 'Method', 'Reference']],
-    body: payments.map(p => [
-      `${MONTHS_EN[p.for_month - 1]} ${p.for_year}`,
-      formatBDT(p.amount),
-      p.payment_date,
-      methodLabel(p.method),
-      p.transaction_ref || '-'
-    ]),
-    headStyles: { fillColor: [40, 40, 40], font: BANGLA_FONT_NAME },
+    startY: 75,
+    head: [['Month', 'Expected', 'Paid', 'Due', 'Date', 'Method', 'Reference']],
+    body: payments.map(p => {
+      const pExpected = expectedPerMonth;
+      const pPaid = Number(p.amount);
+      const pDue = Math.max(0, pExpected - pPaid);
+      return [
+        `${MONTHS_EN[p.for_month - 1]} ${p.for_year}`,
+        formatBDT(pExpected),
+        formatBDT(pPaid),
+        formatBDT(pDue),
+        p.payment_date,
+        methodLabel(p.method),
+        p.transaction_ref || '-'
+      ];
+    }),
+    headStyles: { fillColor: [40, 40, 40], font: BANGLA_FONT_NAME, textColor: 255 },
     bodyStyles: { font: BANGLA_FONT_NAME },
-    foot: [['GRAND TOTAL', formatBDT(totalAmount), '', '', '']],
-    footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', font: BANGLA_FONT_NAME },
+    columnStyles: { 2: { fontStyle: 'bold' } },
+    foot: [['GRAND TOTAL', formatBDT(totalExpected), formatBDT(totalAmount), formatBDT(totalDue), '', '', '']],
+    footStyles: { fillColor: [240, 240, 240], textColor: [22, 117, 61], fontStyle: 'bold', font: BANGLA_FONT_NAME },
   });
 
   const finalY = (doc as any).lastAutoTable.finalY + 15;
