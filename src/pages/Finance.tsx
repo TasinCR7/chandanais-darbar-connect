@@ -722,25 +722,35 @@ const Finance = () => {
   };
 
   // Reports
-  const downloadGeneralReport = () => {
-    const data = {
-      generated: new Date().toISOString(),
-      total_income: totalIncome,
-      total_expense: totalExpense,
-      balance,
-      active_members: activeMembers,
-      members: memberStats.map((m) => ({
-        code: m.member_code, name: m.full_name, paid: m.totalPaid, dues: m.dues,
-      })),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `general-report-${Date.now()}.json`; a.click();
-    URL.revokeObjectURL(url);
+  const downloadGeneralReport = async () => {
+    setBusy(true);
+    try {
+      await downloadOrganizationStatementPDF(payments as any, expenses as any, reportYear, reportMonth);
+      toast({ title: 'জেনারেল রিপোর্ট ডাউনলোড হয়েছে' });
+    } catch (err: any) {
+      console.error("General Report Error:", err);
+      toast({ title: 'রিপোর্ট তৈরি ব্যর্থ', description: err.stack || err.message || String(err), variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const printAreaReport = () => window.print();
+  const printAreaReport = async () => {
+    setBusy(true);
+    try {
+      await downloadAreaReportPDF(members as any, payments as any, reportYear, {
+        month: areaScope === 'month' ? reportMonth : undefined,
+        activeOnly,
+        filename: reportFilename || `area-report-${reportYear}`,
+      });
+      toast({ title: 'এলাকা রিপোর্ট ডাউনলোড হয়েছে' });
+    } catch (err: any) {
+      console.error("Area Report Error:", err);
+      toast({ title: 'রিপোর্ট তৈরি ব্যর্থ', description: err.stack || err.message || String(err), variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const exportCSV = () => {
     const rows = [['Member Code', 'Name', 'Phone', 'Joined', 'Monthly Rate', 'Total Paid', 'Dues', 'Due Months']];
