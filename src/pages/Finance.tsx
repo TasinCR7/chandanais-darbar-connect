@@ -103,6 +103,8 @@ const Finance = () => {
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [viewingMember, setViewingMember] = useState<Member | null>(null);
   const ORG_NAME_SLUG = 'chandanaish-darbar';
 
   const loadAll = async () => {
@@ -596,6 +598,29 @@ const Finance = () => {
     }
   };
 
+  const updateMember = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    const fd = Object.fromEntries(new FormData(e.currentTarget));
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('members').update({
+        full_name: fd.full_name as string,
+        phone: fd.phone as string,
+        area: fd.area as string,
+        monthly_rate: Number(fd.monthly_rate),
+      } as any).eq('id', editingMember.id);
+      if (error) throw error;
+      toast({ title: 'সদস্য আপডেট হয়েছে' });
+      setEditingMember(null);
+      await loadAll();
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
     const query = searchCode.trim().toLowerCase();
@@ -860,6 +885,24 @@ const Finance = () => {
     if (previewKind === 'monthly') downloadCsvMonthly();
     else downloadCsvAnnual();
     setPreviewOpen(false);
+  };
+
+  const downloadSampleMembersCsv = () => {
+    const csv = 'full_name,member_code,phone,area,monthly_rate\nAbdul Karim,CDS-001,01700000000,Dhaka,100';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'sample_members.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadSamplePaymentsCsv = () => {
+    const csv = 'member_code,amount,for_month,for_year,method,payment_date\nCDS-001,100,1,2026,cash,2026-01-15';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'sample_payments.csv'; a.click();
+    URL.revokeObjectURL(url);
   };
 
   const currentYear = new Date().getFullYear();
@@ -2005,9 +2048,9 @@ const Finance = () => {
                   </Button>
                 </div>
               </div>
-              <div className="overflow-x-auto rounded-lg border border-border/40">
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px] rounded-lg border border-border/40 relative">
                 <table className="w-full text-sm font-bangla whitespace-nowrap">
-                  <thead className="bg-muted/40 text-left">
+                  <thead className="bg-muted text-left sticky top-0 z-10 shadow-sm">
                     <tr>
                       <th className="py-2 px-3">কোড</th>
                       <th className="px-3">নাম</th>
@@ -2039,8 +2082,30 @@ const Finance = () => {
                             <Button 
                               variant="ghost" 
                               size="icon" 
+                              className="h-7 w-7 text-emerald-600 hover:bg-emerald-500/10"
+                              onClick={() => {
+                                setSelectedMember(m);
+                                setTab('personal');
+                              }}
+                              title="বিস্তারিত দেখুন"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-blue-600 hover:bg-blue-500/10"
+                              onClick={() => setEditingMember(m)}
+                              title="এডিট করুন"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
                               className="h-7 w-7 text-rose-600 hover:bg-rose-500/10"
                               onClick={() => deleteMember(m.id)}
+                              title="মুছে ফেলুন"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -2059,13 +2124,23 @@ const Finance = () => {
                 <Upload className="h-5 w-5" /> বাল্ক সিএসভি আপলোড (Bulk CSV Upload)
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-xs font-bangla">সদস্য তালিকা (CSV)</Label>
+                <div className="space-y-3 relative">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-bangla">সদস্য তালিকা (CSV)</Label>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-[10px]" onClick={downloadSampleMembersCsv}>
+                      <Download className="h-3 w-3 mr-1"/> টেমপ্লেট ডাউনলোড
+                    </Button>
+                  </div>
                   <Input type="file" accept=".csv" onChange={(e) => handleBulkUpload(e, 'members')} className="h-9 text-xs" />
                   <p className="text-[10px] text-muted-foreground">Headers: full_name, member_code, phone, area, monthly_rate</p>
                 </div>
-                <div className="space-y-3">
-                  <Label className="text-xs font-bangla">পেমেন্ট হিস্ট্রি (CSV)</Label>
+                <div className="space-y-3 relative">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-bangla">পেমেন্ট হিস্ট্রি (CSV)</Label>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-[10px]" onClick={downloadSamplePaymentsCsv}>
+                      <Download className="h-3 w-3 mr-1"/> টেমপ্লেট ডাউনলোড
+                    </Button>
+                  </div>
                   <Input type="file" accept=".csv" onChange={(e) => handleBulkUpload(e, 'payments')} className="h-9 text-xs" />
                   <p className="text-[10px] text-muted-foreground">Headers: member_code, amount, for_month, for_year, method, payment_date</p>
                 </div>
@@ -2778,6 +2853,25 @@ const Finance = () => {
                 <div className="space-y-1.5"><Label className="text-xs">তারিখ</Label><Input name="expense_date" type="date" defaultValue={editingExpense.expense_date} required /></div>
               </div>
               <Button disabled={busy} className="w-full bg-rose-600 text-white">পরিবর্তন সেভ করুন</Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingMember} onOpenChange={(open) => !open && setEditingMember(null)}>
+        <DialogContent className="max-w-md font-bangla">
+          <DialogHeader><DialogTitle>সদস্য এডিট</DialogTitle></DialogHeader>
+          {editingMember && (
+            <form onSubmit={updateMember} className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">নাম *</Label><Input name="full_name" defaultValue={editingMember.full_name} required /></div>
+                <div className="space-y-1.5"><Label className="text-xs">ফোন</Label><Input name="phone" defaultValue={editingMember.phone} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">এলাকা</Label><Input name="area" defaultValue={editingMember.area} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">মাসিক চাঁদা</Label><Input name="monthly_rate" type="number" defaultValue={editingMember.monthly_rate} required /></div>
+              </div>
+              <Button disabled={busy} className="w-full bg-blue-600 text-white">সদস্য তথ্য আপডেট করুন</Button>
             </form>
           )}
         </DialogContent>
