@@ -367,8 +367,10 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   const pageHeight = doc.internal.pageSize.getHeight();
 
   // 1. HEADER (Professional Bank Style)
-  doc.setFillColor(20, 20, 20); // Dark professional header
+  doc.setFillColor(20, 20, 20);
   doc.rect(0, 0, pageWidth, 45, 'F');
+  doc.setFillColor(180, 142, 73);
+  doc.rect(0, 45, pageWidth, 2, 'F');
   
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
@@ -384,47 +386,34 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   doc.setFontSize(14);
   doc.text('ACCOUNT STATEMENT', pageWidth - 14, 18, { align: 'right' });
   doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 25, { align: 'right' });
-  doc.text(`Official Transaction Ledger`, pageWidth - 14, 30, { align: 'right' });
+  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
+  doc.text(`Official Transaction Ledger`, pageWidth - 14, 32, { align: 'right' });
 
-  // 2. MEMBER INFO BOX
+  // 2. MEMBER INFO BOX & QR
+  const infoY = 60;
+  const qrDataS = `Statement: ${member.member_code}\nMember: ${member.full_name}\nStatus: ${calculateDues(member, payments).dues > 0 ? 'Dues Pending' : 'Clear'}`;
+  try {
+    const qrDataUrlS = await QRCode.toDataURL(qrDataS, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlS, 'PNG', pageWidth - 38, infoY - 8, 25, 25);
+  } catch (e) { console.warn(e); }
+
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(10);
-  
-  const infoY = 55;
+  doc.setFontSize(11);
   doc.text('ACCOUNT HOLDER DETAILS', 14, infoY);
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, infoY + 2, 80, infoY + 2);
+  doc.setDrawColor(220, 220, 220);
+  doc.line(14, infoY + 3, 100, infoY + 3);
   
   doc.setFontSize(9);
-  doc.text('Name:', 14, infoY + 10);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(member.full_name, 40, infoY + 10);
-  
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.text('Member ID:', 14, infoY + 16);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(member.member_code, 40, infoY + 16);
-  
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.text('Phone:', 14, infoY + 22);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(member.phone || '-', 40, infoY + 22);
-  
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.text('Area:', 110, infoY + 10);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(member.area || '-', 140, infoY + 10);
-  
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.text('Joined:', 110, infoY + 16);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(member.joined_date, 140, infoY + 16);
+  doc.text(`Name: ${member.full_name}`, 14, infoY + 12);
+  doc.text(`Member ID: ${member.member_code}`, 14, infoY + 18);
+  doc.text(`Phone: ${member.phone || '-'}`, 14, infoY + 24);
+  doc.text(`Area: ${member.area || '-'}`, 110, infoY + 12);
+  doc.text(`Joined: ${member.joined_date}`, 110, infoY + 18);
 
   // 3. SUMMARY BANNER
   const stats = calculateDues(member, payments);
-  const summaryY = infoY + 30;
+  const summaryY = infoY + 35;
   
   doc.setFillColor(245, 245, 245);
   doc.rect(14, summaryY, pageWidth - 28, 20, 'F');
@@ -1004,6 +993,13 @@ async function renderOrgMonthlyReport(
     `${options.activeOnly ? 'Active members only' : 'All members'} | Total: ${list.length}`,
   );
 
+  // QR for Monthly Summary
+  const qrDataM = `Monthly Report: ${monthLabel}\nTotal Members: ${list.length}`;
+  try {
+    const qrDataUrlM = await QRCode.toDataURL(qrDataM, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlM, 'PNG', pageWidth - 35, 10, 25, 25);
+  } catch (e) { console.warn(e); }
+
   const rows: (string | number)[][] = [];
   let totExpected = 0, totPaid = 0;
   let nPaid = 0, nPartial = 0, nDue = 0;
@@ -1455,14 +1451,14 @@ export async function downloadAreaReportPDF(
   
   // 1. HEADER — Premium dark style
   doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.rect(0, 0, pageWidth, 45, 'F');
   doc.setFillColor(180, 142, 73);
-  doc.rect(0, 42, pageWidth, 2, 'F');
+  doc.rect(0, 45, pageWidth, 2, 'F');
 
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', 14, 16);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 16);
   doc.setFontSize(12);
   doc.setTextColor(180, 142, 73);
   doc.text(options.area ? `AREA COLLECTION: ${options.area.toUpperCase()}` : 'AREA COLLECTION SUMMARY', pageWidth - 14, 16, { align: 'right' });
@@ -1473,6 +1469,13 @@ export async function downloadAreaReportPDF(
   doc.text(`Scope: ${options.activeOnly ? 'Active members only' : 'All members'} | Total: ${list.length} members`, 14, 32);
   doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
   doc.text('Official Summary Report', pageWidth - 14, 32, { align: 'right' });
+
+  // QR for Area Summary
+  const qrDataA = `Area Report: ${monthLabel}\nMembers: ${list.length}\nGen: ${new Date().toLocaleDateString()}`;
+  try {
+    const qrDataUrlA = await QRCode.toDataURL(qrDataA, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlA, 'PNG', pageWidth / 2 - 12, 10, 25, 25);
+  } catch (e) { console.warn(e); }
 
   const summaries = computeAreaSummaries(members, payments, year, {
     month: options.month, activeOnly: options.activeOnly,
@@ -1828,6 +1831,13 @@ export async function downloadAreaRankingPDF(
     `Ranked by total collections (Highest first).`,
   );
 
+  // QR for Ranking
+  const qrDataR = `Ranking: ${monthLabel}\nTotal: ${formatBDT(summaries.reduce((s,a)=>s+a.paid,0))}`;
+  try {
+    const qrDataUrlR = await QRCode.toDataURL(qrDataR, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlR, 'PNG', pageWidth - 35, 10, 25, 25);
+  } catch (e) { console.warn(e); }
+
   const totMembers = summaries.reduce((s, a) => s + a.members, 0);
   const totExpected = summaries.reduce((s, a) => s + a.expected, 0);
   const totPaid = summaries.reduce((s, a) => s + a.paid, 0);
@@ -1928,19 +1938,24 @@ export async function downloadOrganizationStatementPDF(
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', 14, 16);
-  doc.setFontSize(13);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 16);
+  doc.setFontSize(12);
   doc.setTextColor(180, 142, 73);
-  doc.text('ORGANIZATION LEDGER', pageWidth - 14, 16, { align: 'right' });
+  doc.text('ORGANIZATION GENERAL LEDGER', pageWidth - 14, 16, { align: 'right' });
   
   doc.setFontSize(10);
   doc.setTextColor(200, 200, 200);
   const period = month ? `${MONTHS_EN[month-1]} ${year}` : `Full Year ${year}`;
   doc.text(`Statement Period: ${period}`, 14, 26);
-  doc.setFontSize(8);
-  doc.text(`Document ID: LED-${year}${month ? String(month).padStart(2,'0') : '00'}-${Date.now().toString(36).toUpperCase()}`, 14, 32);
-  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
+  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 26, { align: 'right' });
   doc.text('Official Financial Document — Confidential', pageWidth - 14, 32, { align: 'right' });
+
+  // QR for Ledger
+  const qrDataL = `Ledger: ${period}\nGen: ${new Date().toLocaleDateString()}\nStatus: Official Verified`;
+  try {
+    const qrDataUrlL = await QRCode.toDataURL(qrDataL, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlL, 'PNG', pageWidth / 2 - 12, 10, 25, 25);
+  } catch (e) { console.warn(e); }
 
   // 2. DATA PREPARATION
   interface TxRow { date: string; desc: string; cat: string; ref: string; credit: number; debit: number; monthKey: string; }
