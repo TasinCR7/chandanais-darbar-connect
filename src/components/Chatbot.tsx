@@ -60,7 +60,7 @@ const Chatbot: React.FC = () => {
               scale: 1, 
               y: 0,
               height: isMinimized ? "60px" : "500px",
-              width: "350px"
+              width: "min(350px, calc(100vw - 2rem))"
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             className={`bg-background/80 backdrop-blur-xl border border-gold/30 rounded-2xl shadow-2xl overflow-hidden mb-4 flex flex-col transition-all duration-300 ${isMinimized ? 'h-[60px]' : 'h-[500px]'}`}

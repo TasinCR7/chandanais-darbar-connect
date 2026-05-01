@@ -71,7 +71,7 @@ const TimeBox = ({ value, label }: { value: number; label: string }) => (
     animate={{ scale: 1, opacity: 1 }}
     transition={{ duration: 0.5 }}
   >
-    <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-18 h-18 sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden">
+    <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-[72px] h-[72px] sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden">
       <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-gold/50 rounded-tl-xl" />
       <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-gold/50 rounded-tr-xl" />
       <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-gold/50 rounded-bl-xl" />

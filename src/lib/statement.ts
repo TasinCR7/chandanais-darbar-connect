@@ -173,56 +173,18 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // ===== COVER HEADER =====
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 0, pageWidth, 52, 'F');
+  drawOrgHeader(
+    doc,
+    'ANNUAL ACCOUNT STATEMENT',
+    `Statement Year: ${targetYear}`
+  );
 
-  // QR code (top-right of header)
-  let qrDataUrl = '';
+  // QR for Annual
+  const qrDataAn = `Member: ${member.member_code}\nYear: ${targetYear}\nName: ${member.full_name}`;
   try {
-    qrDataUrl = await QRCode.toDataURL(
-      `MEMBER:${member.member_code}|YEAR:${targetYear}|NAME:${member.full_name}`,
-      { width: 200, margin: 1, color: { dark: '#000000', light: '#FFFFFF' } },
-    );
-  } catch { /* ignore */ }
-
-  if (qrDataUrl) {
-    doc.setFillColor(255, 255, 255);
-    doc.rect(pageWidth - 40, 5, 34, 34, 'F');
-    doc.addImage(qrDataUrl, 'PNG', pageWidth - 38, 7, 30, 30);
-  }
-
-  // Title
-  // 1. HEADER — Premium dark style
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 52, 'F');
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 52, pageWidth, 2, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
-  doc.setFontSize(10);
-  doc.setTextColor(180, 142, 73);
-  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 24);
-  
-  doc.setFontSize(13);
-  doc.setTextColor(255, 255, 255);
-  doc.text('MEMBER ACCOUNT STATEMENT', pageWidth - 14, 18, { align: 'right' });
-  
-  doc.setFontSize(9);
-  doc.setTextColor(180, 142, 73);
-  doc.text('চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | ০১৬২২-৭২১৯৯৬', 14, 45);
-
-  doc.setFontSize(9);
-  doc.setTextColor(200, 200, 200);
-  doc.text(`Member: ${member.full_name}`, 14, 32);
-  doc.text(`ID: ${member.member_code} | Area: ${member.area || '-'}`, 14, 38);
-  doc.text(`Statement Year: ${targetYear}`, pageWidth - 14, 28, { align: 'right' });
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-US')}`, pageWidth - 14, 34, { align: 'right' });
-  doc.setFontSize(7);
-  doc.text(`Doc ID: MST-${member.member_code}-${targetYear}-${Date.now().toString(36).toUpperCase()}`, pageWidth - 14, 42, { align: 'right' });
+    const qrDataUrlAn = await QRCode.toDataURL(qrDataAn, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlAn, 'PNG', pageWidth - 38, 10, 25, 25);
+  } catch (e) { console.warn(e); }
 
   const yPos = 68;
   doc.setTextColor(0, 0, 0);
@@ -366,28 +328,11 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // 1. HEADER (Professional Bank Style)
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 45, 'F');
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 45, pageWidth, 2, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(20);
-  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
-  doc.setFontSize(10);
-  doc.setTextColor(180, 142, 73);
-  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 24);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 38);
-
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.text('ACCOUNT STATEMENT', pageWidth - 14, 18, { align: 'right' });
-  doc.setFontSize(9);
-  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
-  doc.text(`Official Transaction Ledger`, pageWidth - 14, 32, { align: 'right' });
+  drawOrgHeader(
+    doc,
+    'MEMBER ACCOUNT STATEMENT',
+    'Official Transaction Ledger'
+  );
 
   // 2. MEMBER INFO BOX & QR
   const infoY = 60;
@@ -513,30 +458,17 @@ export async function downloadReceiptPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Header
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 42, 'F');
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 42, pageWidth, 2, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 16, { align: 'center' });
-  doc.setFontSize(10);
-  doc.setTextColor(180, 142, 73);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', pageWidth / 2, 23, { align: 'center' });
-  
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.text('PAYMENT RECEIPT (পেমেন্ট রসিদ)', pageWidth / 2, 33, { align: 'center' });
+  drawOrgHeader(
+    doc,
+    'PAYMENT RECEIPT (পেমেন্ট রসিদ)',
+    `Official Digitally Verified Receipt`
+  );
 
   // Generate QR Code
   const qrData = `Receipt: ${payment.id || 'N/A'}\nMember: ${member.member_code}\nAmount: BDT ${payment.amount}\nDate: ${payment.payment_date}`;
   try {
     const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 80 });
-    doc.addImage(qrDataUrl, 'PNG', pageWidth - 40, 50, 25, 25);
+    doc.addImage(qrDataUrl, 'PNG', pageWidth - 38, 10, 25, 25);
   } catch (e) {
     console.warn("QR generation failed", e);
   }
@@ -603,23 +535,11 @@ export async function downloadConsolidatedReceiptPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 42, 'F');
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 42, pageWidth, 2, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', pageWidth / 2, 15, { align: 'center' });
-  doc.setFontSize(9);
-  doc.setTextColor(180, 142, 73);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', pageWidth / 2, 21, { align: 'center' });
-
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.text('CONSOLIDATED PAYMENT RECEIPT', pageWidth / 2, 32, { align: 'center' });
+  drawOrgHeader(
+    doc,
+    'CONSOLIDATED PAYMENT RECEIPT',
+    `Official Bulk Collection Statement`
+  );
 
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
@@ -699,9 +619,9 @@ const COL_DUE_TEXT: [number, number, number] = [180, 24, 24];
 function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.rect(0, 0, pageWidth, 45, 'F');
   doc.setFillColor(180, 142, 73);
-  doc.rect(0, 42, pageWidth, 2, 'F');
+  doc.rect(0, 45, pageWidth, 2, 'F');
 
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
@@ -709,23 +629,19 @@ function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   doc.text('চন্দনাইশ দরবার শরীফ', 14, 15);
   doc.setFontSize(9);
   doc.setTextColor(180, 142, 73);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 22);
+  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 21);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 27);
 
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.text(title, 14, 30);
+  doc.setFontSize(12);
+  doc.text(title, 14, 37);
   doc.setFontSize(9);
-  doc.text(subtitle, 14, 37);
+  doc.text(subtitle, pageWidth - 14, 37, { align: 'right' });
   
   doc.text(
     `Date: ${new Date().toLocaleDateString('en-US')}`,
     pageWidth - 14, 12, { align: 'right' },
-  );
-  doc.setFontSize(8);
-  doc.text(
-    `System Generated: ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
-    pageWidth - 14, 18, { align: 'right' },
   );
 }
 
@@ -1449,32 +1365,17 @@ export async function downloadAreaReportPDF(
   const list = filterReportMembers(members, !!options.activeOnly);
   const monthLabel = options.month ? `${MONTHS_EN[options.month - 1]} ${year}` : `${year}`;
   
-  // 1. HEADER — Premium dark style
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 45, 'F');
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 45, pageWidth, 2, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', 14, 16);
-  doc.setFontSize(12);
-  doc.setTextColor(180, 142, 73);
-  doc.text(options.area ? `AREA COLLECTION: ${options.area.toUpperCase()}` : 'AREA COLLECTION SUMMARY', pageWidth - 14, 16, { align: 'right' });
-  
-  doc.setFontSize(10);
-  doc.setTextColor(200, 200, 200);
-  doc.text(`Statement Period: ${monthLabel}`, 14, 26);
-  doc.text(`Scope: ${options.activeOnly ? 'Active members only' : 'All members'} | Total: ${list.length} members`, 14, 32);
-  doc.text(`Generated: ${new Date().toLocaleString('en-US')}`, pageWidth - 14, 26, { align: 'right' });
-  doc.text('Official Summary Report', pageWidth - 14, 32, { align: 'right' });
+  drawOrgHeader(
+    doc,
+    options.area ? `AREA COLLECTION: ${options.area.toUpperCase()}` : 'AREA COLLECTION SUMMARY',
+    `Statement Period: ${monthLabel}`
+  );
 
   // QR for Area Summary
   const qrDataA = `Area Report: ${monthLabel}\nMembers: ${list.length}\nGen: ${new Date().toLocaleDateString()}`;
   try {
     const qrDataUrlA = await QRCode.toDataURL(qrDataA, { margin: 1, width: 80 });
-    doc.addImage(qrDataUrlA, 'PNG', pageWidth / 2 - 12, 10, 25, 25);
+    doc.addImage(qrDataUrlA, 'PNG', pageWidth - 38, 10, 25, 25);
   } catch (e) { console.warn(e); }
 
   const summaries = computeAreaSummaries(members, payments, year, {
@@ -1928,33 +1829,19 @@ export async function downloadOrganizationStatementPDF(
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // 1. HEADER — Premium dark style
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 48, 'F');
-  // Gold accent line
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 48, pageWidth, 2, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', 14, 16);
-  doc.setFontSize(12);
-  doc.setTextColor(180, 142, 73);
-  doc.text('ORGANIZATION GENERAL LEDGER', pageWidth - 14, 16, { align: 'right' });
-  
-  doc.setFontSize(10);
-  doc.setTextColor(200, 200, 200);
   const period = month ? `${MONTHS_EN[month-1]} ${year}` : `Full Year ${year}`;
-  doc.text(`Statement Period: ${period}`, 14, 26);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 26, { align: 'right' });
-  doc.text('Official Financial Document — Confidential', pageWidth - 14, 32, { align: 'right' });
+
+  drawOrgHeader(
+    doc,
+    'ORGANIZATION GENERAL LEDGER STATEMENT',
+    `Statement Period: ${period}`
+  );
 
   // QR for Ledger
   const qrDataL = `Ledger: ${period}\nGen: ${new Date().toLocaleDateString()}\nStatus: Official Verified`;
   try {
     const qrDataUrlL = await QRCode.toDataURL(qrDataL, { margin: 1, width: 80 });
-    doc.addImage(qrDataUrlL, 'PNG', pageWidth / 2 - 12, 10, 25, 25);
+    doc.addImage(qrDataUrlL, 'PNG', pageWidth - 38, 10, 25, 25);
   } catch (e) { console.warn(e); }
 
   // 2. DATA PREPARATION

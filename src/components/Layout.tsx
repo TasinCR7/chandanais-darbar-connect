@@ -115,11 +115,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Sticky Navigation */}
       <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-3" aria-label="হোম পেজ">
+          <Link to="/" className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2" aria-label="হোম পেজ">
             {appSettings.site_logo_url && (
-              <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 object-contain" />
+              <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
             )}
-            <span className="text-gold font-heading font-bold text-base md:text-lg leading-tight">
+            <span className="text-gold font-heading font-bold text-sm md:text-lg leading-tight truncate">
               {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
             </span>
           </Link>
@@ -179,83 +179,84 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
 
-        {/* Mobile Nav */}
-        <AnimatePresence>
-          {menuOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-                onClick={() => setMenuOpen(false)}
-              />
-              <motion.nav
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed top-0 right-0 bottom-0 w-[85%] max-w-[320px] z-50 bg-background/95 backdrop-blur-xl border-l border-gold/20 lg:hidden shadow-2xl flex flex-col"
-              >
-                <div className="p-4 flex justify-end border-b border-gold/10">
-                  <button
-                    onClick={() => setMenuOpen(false)}
-                    className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors"
-                  >
-                    <X size={28} />
-                  </button>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto py-6 px-6">
-                  <div className="flex flex-col gap-1">
-                    {navLinks.map((link, i) => (
-                      <motion.div
-                        key={link.path}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + i * 0.05 }}
-                      >
-                        <Link
-                          to={link.path}
-                          onClick={() => setMenuOpen(false)}
-                          className={`text-base font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group ${
-                            location.pathname === link.path
-                              ? "text-gold bg-gold/10 shadow-sm"
-                              : "text-muted-foreground hover:text-gold hover:bg-white/5"
-                          }`}
-                        >
-                          {link.label}
-                          {location.pathname === link.path && <div className="w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_rgba(212,175,55,1)]" />}
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
-                  <Link
-                    to="/hadia"
-                    onClick={() => setMenuOpen(false)}
-                    className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform"
-                  >
-                    হাদিয়া দিন
-                  </Link>
-                  <div className="flex flex-col gap-2 pt-2">
-                    <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
-                    <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
-                      <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
-                    </a>
-                  </div>
-                </div>
-              </motion.nav>
-            </>
-          )}
-        </AnimatePresence>
       </header>
+      
+      {/* Mobile Nav */}
+      <AnimatePresence mode="wait">
+        {menuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm lg:hidden"
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.nav
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-[320px] z-[80] bg-background/95 backdrop-blur-xl border-l border-gold/20 lg:hidden shadow-2xl flex flex-col"
+            >
+              <div className="p-4 flex justify-end border-b border-gold/10">
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors"
+                >
+                  <X size={28} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto py-6 px-6">
+                <div className="flex flex-col gap-1">
+                  {navLinks.map((link, i) => (
+                    <motion.div
+                      key={link.path}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + i * 0.05 }}
+                    >
+                      <Link
+                        to={link.path}
+                        onClick={() => setMenuOpen(false)}
+                        className={`text-base font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group ${
+                          location.pathname === link.path
+                            ? "text-gold bg-gold/10 shadow-sm"
+                            : "text-muted-foreground hover:text-gold hover:bg-white/5"
+                        }`}
+                      >
+                        {link.label}
+                        {location.pathname === link.path && <div className="w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_rgba(212,175,55,1)]" />}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
+                <Link
+                  to="/hadia"
+                  onClick={() => setMenuOpen(false)}
+                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform"
+                >
+                  হাদিয়া দিন
+                </Link>
+                <div className="flex flex-col gap-2 pt-2">
+                  <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
+                  <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
+                    <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
+                  </a>
+                </div>
+              </div>
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Premium Scrolling Marquee */}
       {scrollingNotices.length > 0 && (
-        <div className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-22' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
+        <div className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-[88px]' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
           <div className="bg-gold-gradient text-primary-foreground px-3 md:px-5 h-full flex items-center gap-1 md:gap-2 z-10 shadow-xl font-heading font-black text-[10px] md:text-xs uppercase tracking-wider">
             <Bell className="h-3 w-3 md:h-3.5 md:w-3.5 animate-bounce" /> নোটিশ
           </div>
@@ -330,7 +331,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Main Content */}
-      <main id="main-content" className={scrollingNotices.length > 0 ? "pt-[112px]" : "pt-16"}>{children}</main>
+      <main id="main-content" className={
+        scrollingNotices.length > 0 
+          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[132px]" : "pt-[108px]") 
+          : (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[88px]" : "pt-16")
+      }>{children}</main>
 
       <div className="border-t border-gold/20" />
       <DeveloperTeam />
