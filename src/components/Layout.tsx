@@ -54,7 +54,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchData = async () => {
       // 1. Fetch App Settings (Title, Maintenance, etc)
-      const { data: sData } = await supabase.from('app_settings').select('*');
+      const { data: sData } = await supabase.from('app_settings').select('key, value');
       const sObj: Record<string, string> = {};
       if (sData) {
         sData.forEach((row: any) => { sObj[row.key] = row.value; });

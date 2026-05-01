@@ -23,7 +23,7 @@ const Notices = () => {
     const fetchNotices = async () => {
       const { data } = await supabase
         .from("notices")
-        .select("*")
+        .select("id, title, message, created_at")
         .eq("is_active", true)
         .not("title", "ilike", "%test%")
         .order("created_at", { ascending: false });

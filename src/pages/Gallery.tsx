@@ -24,7 +24,7 @@ const Gallery = () => {
   useEffect(() => {
     const fetchGallery = async () => {
       const { data } = await supabase.from("gallery")
-        .select("*")
+        .select("id, url, caption, category")
         .order("created_at", { ascending: false });
       
       if (data) {

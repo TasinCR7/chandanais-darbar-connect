@@ -27,7 +27,7 @@ const Index = () => {
     const fetchDetailedNotices = async () => {
       const { data } = await ((supabase as any)
         .from('notices')
-        .select('*')
+        .select('id, title, message, created_at')
         .eq('type', 'detailed')
         .eq('is_active', true)
         .order('created_at', { ascending: false }));
