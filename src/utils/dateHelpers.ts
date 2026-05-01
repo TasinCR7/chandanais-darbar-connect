@@ -7,12 +7,3 @@ export const formatMonthBn = (m: string | null | undefined) => {
     return m;
   }
 };
-
-export const formatMonthEn = (m: string | null | undefined) => {
-  if (!m) return "-";
-  try {
-    return new Date(m + "-01").toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  } catch {
-    return m;
-  }
-};

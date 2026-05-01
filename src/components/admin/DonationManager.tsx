@@ -72,10 +72,10 @@ const DonationManager = () => {
         const invoiceId = donation.id.substring(0, 6).toUpperCase();
         const dateStr = new Date().toISOString().slice(0, 10);
         pdf.save(`Rashid-${donation.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
-        toast({ title: "Receipt downloaded successfully" });
+        toast({ title: "রশিদ ডাউনলোড সম্পন্ন হয়েছে" });
       } catch (error) {
         console.error(error);
-        toast({ title: "Error generating invoice", variant: "destructive" });
+        toast({ title: "ইনভয়েস তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
       } finally {
         setDownloadingId(null);
         setSelectedInvoice(null);
@@ -93,7 +93,7 @@ const DonationManager = () => {
     });
 
     if (filteredDonations.length === 0) {
-      toast({ title: "No verified donations found for this period", variant: "destructive" });
+      toast({ title: "এই সময়ের জন্য কোন ভেরিফাইড হাদিয়া পাওয়া যায়নি", variant: "destructive" });
       return;
     }
     
@@ -156,10 +156,10 @@ const DonationManager = () => {
 
         const periodString = viewMode === "all" ? "Total" : viewMode === "monthly" ? selectedDate : selectedDate.slice(0, 4);
         pdf.save(`Donation-Report-${periodString}-${format(new Date(), 'dd-MM-yyyy')}.pdf`);
-        toast({ title: "Financial report downloaded successfully" });
+        toast({ title: "হিসাব বিবরণী ডাউনলোড সম্পন্ন হয়েছে" });
       } catch (error) {
         console.error("PDF Report Error:", error);
-        toast({ title: "Error generating report", variant: "destructive" });
+        toast({ title: "রিপোর্ট তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
       } finally {
         setIsGeneratingReport(false);
       }
@@ -173,13 +173,13 @@ const DonationManager = () => {
   });
 
   const getPeriodLabel = () => {
-    if (viewMode === "all") return "Total Donations & Hadia";
+    if (viewMode === "all") return "সর্বমোট হাদিয়া ও নজরানা";
     if (viewMode === "monthly") {
       const [year, month] = selectedDate.split("-");
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      return `Donations for ${monthNames[parseInt(month) - 1]} ${year}`;
+      const monthNames = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+      return `${monthNames[parseInt(month) - 1]} ${year} এর হাদিয়া ও নজরানা`;
     }
-    return `Donations for the Year ${selectedDate.slice(0, 4)}`;
+    return `${selectedDate.slice(0, 4)} সালের হাদিয়া ও নজরানা`;
   };
 
   const fetchDonations = useCallback(async () => {
@@ -213,7 +213,7 @@ const DonationManager = () => {
 
       if (error) throw error;
       
-      toast({ title: `Status updated to '${newStatus === 'verified' ? 'Verified' : 'Rejected'}'` });
+      toast({ title: `স্ট্যাটাস '${newStatus === 'verified' ? 'গৃহীত' : 'বাতিল'}' করা হয়েছে` });
       fetchDonations();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update status";
@@ -232,7 +232,7 @@ const DonationManager = () => {
 
       if (error) throw error;
       
-      toast({ title: "Donation record deleted" });
+      toast({ title: "হাদিয়াটি ডিলিট করা হয়েছে" });
       fetchDonations();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to delete donation";
@@ -241,17 +241,17 @@ const DonationManager = () => {
   };
 
   const getCategoryLabel = (category: string, recipientId: string | null) => {
-    if (category === 'mosque' || category === 'mosque_fund') return 'Mosque Fund';
-    if (category === 'darbar_fund') return 'Darbar Fund';
-    if (category === 'combined_shahjadas') return 'Combined Shahjadas';
+    if (category === 'mosque' || category === 'mosque_fund') return 'মসজিদ ফান্ড';
+    if (category === 'darbar_fund') return 'দরবার ফান্ড';
+    if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {
-        'boro': 'Boro Shahjada',
-        'mej': 'Mej Shahjada',
-        'sej': 'Sej Shahjada',
-        'choto': 'Choto Shahjada'
+        'boro': 'বড় শাহজাদা',
+        'mej': 'মেজ শাহজাদা',
+        'sej': 'সেজ শাহজাদা',
+        'choto': 'ছোট শাহজাদা'
       };
-      return map[recipientId || ''] || 'Specific Shahjada';
+      return map[recipientId || ''] || 'নির্দিষ্ট শাহজাদা';
     }
     return category;
   };
@@ -268,9 +268,9 @@ const DonationManager = () => {
         <div>
           <h2 className="text-2xl font-bold text-gold flex items-center gap-3">
             <HeartHandshake className="text-emerald" /> 
-            Donation & Hadia Management
+            হাদিয়া ও নজরানা পরিচালনা
           </h2>
-          <p className="text-muted-foreground mt-1">Manage contributions and fund distributions</p>
+          <p className="text-muted-foreground mt-1">ভক্তদের অবদান এবং ফান্ডের বিস্তারিত বিবরণ</p>
         </div>
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex bg-background border border-gold/20 rounded-xl overflow-hidden">
@@ -278,19 +278,19 @@ const DonationManager = () => {
               onClick={() => setViewMode("all")} 
               className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "all" ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-gold"}`}
             >
-              All
+              সকল
             </button>
             <button 
               onClick={() => setViewMode("monthly")} 
               className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "monthly" ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-gold"}`}
             >
-              Monthly
+              মাসিক
             </button>
             <button 
               onClick={() => setViewMode("yearly")} 
               className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "yearly" ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-gold"}`}
             >
-              Yearly
+              বার্ষিক
             </button>
           </div>
           
@@ -313,7 +313,7 @@ const DonationManager = () => {
             disabled={isGeneratingReport}
             className="bg-emerald hover:bg-emerald/90 text-white font-semibold flex items-center gap-2"
           >
-            {isGeneratingReport ? <span className="animate-pulse">Generating...</span> : <><Download size={18} /> Download Report</>}
+            {isGeneratingReport ? <span className="animate-pulse">তৈরি হচ্ছে...</span> : <><Download size={18} /> হিসাব বিবরণী ডাউনলোড</>}
           </Button>
           <Button onClick={fetchDonations} variant="outline" className="border-gold/30 hover:bg-gold/10 text-gold">
             Refresh
@@ -325,7 +325,7 @@ const DonationManager = () => {
         <Card className="bg-gradient-to-br from-emerald/20 to-emerald-light/5 border-emerald/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-emerald font-medium flex items-center gap-2">
-              <CheckCircle size={18} /> Total Verified
+              <CheckCircle size={18} /> সর্বমোট গৃহীত হাদিয়া
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -336,7 +336,7 @@ const DonationManager = () => {
         <Card className="bg-gradient-to-br from-blue-500/20 to-blue-400/5 border-blue-500/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-blue-500 font-medium flex items-center gap-2">
-              <Home size={18} /> Mosque Fund
+              <Home size={18} /> মসজিদ ফান্ড
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -347,7 +347,7 @@ const DonationManager = () => {
         <Card className="bg-gradient-to-br from-purple-500/20 to-purple-400/5 border-purple-500/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-purple-500 font-medium flex items-center gap-2">
-              <Users size={18} /> Darbar Fund
+              <Users size={18} /> দরবার ফান্ড
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -358,18 +358,18 @@ const DonationManager = () => {
         <Card className="bg-gradient-to-br from-orange-500/20 to-orange-400/5 border-orange-500/30 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-orange-500 font-medium flex items-center gap-2">
-              <Clock size={18} /> Pending Donations
+              <Clock size={18} /> অপেক্ষমান ডোনেশন
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-foreground">{pendingCount}</p>
+            <p className="text-3xl font-bold text-foreground">{pendingCount} টি</p>
           </CardContent>
         </Card>
       </div>
 
       <Card className="bg-card/50 border-gold/20 shadow-xl overflow-hidden">
         <CardHeader className="bg-background/50 border-b border-gold/10 pb-4">
-          <CardTitle className="text-lg text-gold font-semibold">Donation List</CardTitle>
+          <CardTitle className="text-lg text-gold font-semibold">সকল হাদিয়া তালিকা</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {/* Desktop Table View */}
@@ -377,13 +377,13 @@ const DonationManager = () => {
             <Table>
               <TableHeader className="bg-background/80">
                 <TableRow className="border-gold/10 hover:bg-transparent">
-                  <TableHead className="text-emerald font-semibold mx-4 py-4">Date</TableHead>
-                  <TableHead className="text-emerald font-semibold py-4">Donor Name & Phone</TableHead>
-                  <TableHead className="text-emerald font-semibold py-4">Category</TableHead>
-                  <TableHead className="text-emerald font-semibold py-4">Amount</TableHead>
-                  <TableHead className="text-emerald font-semibold py-4">Payment & TrxID</TableHead>
-                  <TableHead className="text-emerald font-semibold py-4">Status</TableHead>
-                  <TableHead className="text-emerald font-semibold py-4 text-right pr-6">Action</TableHead>
+                  <TableHead className="text-emerald font-semibold mx-4 py-4">তারিখ</TableHead>
+                  <TableHead className="text-emerald font-semibold py-4">দাতার নাম ও ফোন</TableHead>
+                  <TableHead className="text-emerald font-semibold py-4">খাত</TableHead>
+                  <TableHead className="text-emerald font-semibold py-4">পরিমাণ</TableHead>
+                  <TableHead className="text-emerald font-semibold py-4">পেমেন্ট ও TrxID</TableHead>
+                  <TableHead className="text-emerald font-semibold py-4">স্ট্যাটাস</TableHead>
+                  <TableHead className="text-emerald font-semibold py-4 text-right pr-6">অ্যাকশন</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -421,11 +421,11 @@ const DonationManager = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         {d.status === 'verified' ? (
-                          <Badge className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 border-none px-2.5 py-0.5 font-medium">Verified</Badge>
+                          <Badge className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 border-none px-2.5 py-0.5 font-medium">গৃহীত</Badge>
                         ) : d.status === 'rejected' ? (
-                          <Badge className="bg-destructive/20 hover:bg-destructive/30 text-destructive border-none px-2.5 py-0.5 font-medium">Rejected</Badge>
+                          <Badge className="bg-destructive/20 hover:bg-destructive/30 text-destructive border-none px-2.5 py-0.5 font-medium">বাতিল</Badge>
                         ) : (
-                          <Badge className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-500 border-none px-2.5 py-0.5 font-medium">Pending</Badge>
+                          <Badge className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-500 border-none px-2.5 py-0.5 font-medium">অপেক্ষমান</Badge>
                         )}
                       </TableCell>
                       <TableCell className="py-4 text-right pr-6">
@@ -448,7 +448,7 @@ const DonationManager = () => {
                               className="bg-emerald text-white hover:bg-emerald/90 h-8 text-xs font-semibold"
                               onClick={() => updateStatus(d.id, 'verified')}
                             >
-                              Verify
+                              গৃহীত
                             </Button>
                           )}
 
@@ -459,7 +459,7 @@ const DonationManager = () => {
                               className="border-destructive/30 text-destructive hover:bg-destructive/10 h-8 text-xs"
                               onClick={() => updateStatus(d.id, 'rejected')}
                             >
-                              Reject
+                              বাতিল
                             </Button>
                           )}
 

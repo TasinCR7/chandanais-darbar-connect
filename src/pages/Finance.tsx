@@ -921,15 +921,15 @@ const Finance = () => {
   if (loading) return null;
 
   const TABS = [
-    { key: 'summary', label: 'Summary', icon: LayoutGrid },
-    { key: 'personal', label: 'Personal View', icon: UserSearch },
-    { key: 'dues', label: 'Dues', icon: AlertOctagon },
-    { key: 'transparency', label: 'Transparency', icon: PieIcon },
-    { key: 'ranking', label: 'Ranking', icon: Trophy },
+    { key: 'summary', label: 'সারসংক্ষেপ', icon: LayoutGrid },
+    { key: 'personal', label: 'ব্যক্তিগত হিসাব', icon: UserSearch },
+    { key: 'dues', label: 'বকেয়া (Dues)', icon: AlertOctagon },
+    { key: 'transparency', label: 'স্বচ্ছতা', icon: PieIcon },
+    { key: 'ranking', label: 'র‍্যাঙ্কিং', icon: Trophy },
     ...(isStaff ? [
-      { key: 'admin', label: 'Admin', icon: Settings },
-      { key: 'settings', label: 'Settings', icon: Settings },
-      { key: 'audit', label: 'Audit Logs', icon: Database }
+      { key: 'admin', label: 'অ্যাডমিন', icon: Settings },
+      { key: 'settings', label: 'সেটিংস', icon: Settings },
+      { key: 'audit', label: 'অডিট লগ', icon: Database }
     ] : []),
   ] as const;
 
@@ -972,8 +972,8 @@ const Finance = () => {
               
               <div className="space-y-3">
                 <h1 className="font-heading text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter text-white">
-                  Fund Collection & <span className="relative inline-block">
-                    <span className="gold-text-shimmer">Management</span>
+                  অর্থ সংগ্রহ ও <span className="relative inline-block">
+                    <span className="gold-text-shimmer">ব্যবস্থাপনা</span>
                     <motion.span 
                       initial={{ width: 0 }}
                       animate={{ width: "100%" }}
@@ -989,7 +989,7 @@ const Finance = () => {
                     ))}
                   </div>
                   <p className="font-bangla text-lg md:text-xl text-white/60 font-light tracking-[0.2em] uppercase">
-                    Committee <span className="text-gold/80 font-bold">Fund Management</span>
+                    চন্দনাইশ দরবার শরীফ <span className="text-gold/80 font-bold">কমিটি ফান্ড</span>
                   </p>
                 </div>
               </div>
@@ -1071,16 +1071,16 @@ const Finance = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative">
-                <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Total Income" value={`৳ ${toBanglaNumber(totalIncome.toFixed(0))}`} />
+                <StatCard icon={<TrendingUp className="h-5 w-5" />} label="মোট আয়" value={`৳ ${toBanglaNumber(totalIncome.toFixed(0))}`} />
                 {pendingPayments.length > 0 && (
                   <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-500 text-white text-[10px] flex items-center justify-center animate-pulse border-2 border-background">
                     {toBanglaNumber(pendingPayments.length)}
                   </div>
                 )}
               </div>
-              <StatCard icon={<TrendingDown className="h-5 w-5" />} label="Total Expense" value={`৳ ${toBanglaNumber(totalExpense.toFixed(0))}`} tone="danger" />
-              <StatCard icon={<Wallet className="h-5 w-5" />} label="Net Balance" value={`৳ ${toBanglaNumber(balance.toFixed(0))}`} tone={balance >= 0 ? 'gold' : 'danger'} />
-              <StatCard icon={<Users className="h-5 w-5" />} label="Active Members" value={toBanglaNumber(activeMembers)} />
+              <StatCard icon={<TrendingDown className="h-5 w-5" />} label="মোট খরচ" value={`৳ ${toBanglaNumber(totalExpense.toFixed(0))}`} tone="danger" />
+              <StatCard icon={<Wallet className="h-5 w-5" />} label="ব্যালেন্স" value={`৳ ${toBanglaNumber(balance.toFixed(0))}`} tone={balance >= 0 ? 'gold' : 'danger'} />
+              <StatCard icon={<Users className="h-5 w-5" />} label="সক্রিয় সদস্য" value={toBanglaNumber(activeMembers)} />
             </div>
 
             {/* Target Alert */}
@@ -1098,7 +1098,7 @@ const Finance = () => {
 
             <div className="grid md:grid-cols-3 gap-6">
               <div className="md:col-span-2 card-gold rounded-2xl p-4 sm:p-6">
-                <h3 className="font-display text-lg gold-text mb-4">6-Month Cash Flow</h3>
+                <h3 className="font-display text-lg gold-text mb-4">গত ৬ মাসের আয়-ব্যয়</h3>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chart}>
@@ -1117,21 +1117,21 @@ const Finance = () => {
               <div className="space-y-6">
                 <div className="card-gold rounded-2xl p-4 sm:p-6 flex flex-col">
                   <h3 className="font-display text-lg gold-text mb-6 flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5" /> Daily Summary
+                    <CalendarDays className="h-5 w-5" /> আজকের সারাংশ
                   </h3>
                   <div className="flex-1 space-y-6">
                     <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground font-bangla">Today's Income</p>
+                      <p className="text-xs text-muted-foreground font-bangla">আজকের আয়</p>
                       <p className="text-2xl font-display text-emerald-600">৳ {toBanglaNumber(todayIncome.toFixed(0))}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground font-bangla">Today's Expense</p>
+                      <p className="text-xs text-muted-foreground font-bangla">আজকের খরচ</p>
                       <p className="text-2xl font-display text-rose-600">৳ {toBanglaNumber(todayExpense.toFixed(0))}</p>
                     </div>
                     <div className="pt-4 border-t border-border/40">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-xs text-muted-foreground font-bangla">Net Cash Flow</p>
+                          <p className="text-xs text-muted-foreground font-bangla">নেট ক্যাশ ফ্লো</p>
                           <p className={`text-xl font-display mt-1 ${todayIncome - todayExpense >= 0 ? 'text-primary' : 'text-rose-600'}`}>
                             ৳ {toBanglaNumber((todayIncome - todayExpense).toFixed(0))}
                           </p>

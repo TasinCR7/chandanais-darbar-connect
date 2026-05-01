@@ -30,7 +30,7 @@ function addPdfHeader(
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setTextColor(...PDF_COLORS.headerText);
   doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', 14, 18);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
   // Subtitle (left)
   doc.setFontSize(10);
   doc.setTextColor(...PDF_COLORS.accent);
@@ -460,7 +460,7 @@ export async function downloadReceiptPDF(
   
   drawOrgHeader(
     doc,
-    'PAYMENT RECEIPT',
+    'PAYMENT RECEIPT (পেমেন্ট রসিদ)',
     `Official Digitally Verified Receipt`
   );
 
@@ -481,21 +481,21 @@ export async function downloadReceiptPDF(
   autoTable(doc, {
     startY: 50,
     body: [
-      ['Receipt No', payment.id?.slice(0, 12).toUpperCase() ?? '-'],
-      ['Member ID', member.member_code],
-      ['Full Name', member.full_name],
-      ['Phone', member.phone || '-'],
-      ['Area', member.area || '-'],
-      ['Month', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`],
-      ['Expected', formatBDT(expected)],
-      ['Paid Amount', formatBDT(payment.amount)],
-      ['Due Amount', formatBDT(due)],
-      ['Status', status],
-      ['Payment Date', payment.payment_date],
-      ['Method', methodLabel(payment.method)],
-      ['Reference', payment.transaction_ref || '-'],
-      ['Approved By', 'Admin / System Verified'],
-      ['Generated At', new Date().toLocaleString()],
+      ['Receipt No (রশিদ নং)', payment.id?.slice(0, 12).toUpperCase() ?? '-'],
+      ['Member ID (মেম্বার আইডি)', member.member_code],
+      ['Full Name (নাম)', member.full_name],
+      ['Phone (মোবাইল)', member.phone || '-'],
+      ['Area (এলাকা)', member.area || '-'],
+      ['Month (মাসের নাম)', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`],
+      ['Expected (নির্ধারিত চাঁদা)', formatBDT(expected)],
+      ['Paid Amount (পরিশোধিত)', formatBDT(payment.amount)],
+      ['Due Amount (বকেয়া)', formatBDT(due)],
+      ['Status (স্ট্যাটাস)', status],
+      ['Payment Date (তারিখ)', payment.payment_date],
+      ['Method (মাধ্যম)', methodLabel(payment.method)],
+      ['Reference (রেফারেন্স)', payment.transaction_ref || '-'],
+      ['Approved By (অ্যাপ্রুভাল)', 'Admin / System Verified'],
+      ['Generated At (প্রস্তুত সময়)', new Date().toLocaleString()],
     ],
     theme: 'striped',
     styles: { font: BANGLA_FONT_NAME, fontSize: 10, cellPadding: 5, lineColor: [220, 220, 220], lineWidth: 0.1 },
@@ -544,7 +544,7 @@ export async function downloadConsolidatedReceiptPDF(
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(11);
-  doc.text('MEMBER DETAILS', 14, 52);
+  doc.text('MEMBER DETAILS (সদস্যের তথ্য)', 14, 52);
   
   doc.setFontSize(10);
   doc.setFont(BANGLA_FONT_NAME, 'normal');
@@ -557,7 +557,7 @@ export async function downloadConsolidatedReceiptPDF(
   const totalDue = Math.max(0, totalExpected - totalAmount);
 
   doc.text(`Monthly Rate: ${formatBDT(expectedPerMonth)}`, pageWidth / 2, 58);
-  doc.text(`Total Due: ${formatBDT(totalDue)}`, pageWidth / 2, 64);
+  doc.text(`Total Due (বকেয়া): ${formatBDT(totalDue)}`, pageWidth / 2, 64);
   
   doc.text(`Approved By: Admin / Verified`, pageWidth - 45, 58, { align: 'right' });
   doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 64, { align: 'right' });
@@ -626,11 +626,11 @@ function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(16);
-  doc.text('Chandanaish Darbar Sharif', 14, 15);
+  doc.text('চন্দনাইশ দরবার শরীফ', 14, 15);
   doc.setFontSize(9);
   doc.setTextColor(180, 142, 73);
-  doc.text('Silsila-e-Tariqaye Maizbhandaria', 14, 21);
-  doc.text('Chandanaish, Chattogram | 01622-721996', 14, 27);
+  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 21);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 27);
 
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setTextColor(255, 255, 255);
@@ -2188,418 +2188,4 @@ export async function downloadAreaPaymentsPDF(
 
   stampFooters(doc, `Area Payment Records — Generated ${new Date().toLocaleDateString()}`);
   doc.save(`Area-Payments-${year}${month ? '-' + month : ''}.pdf`);
-}
-
-
-/* ===========================================================
-   CONTRIBUTION STATEMENT PDF — Clean Professional A4 Portrait
-   A complete, print-friendly member contribution statement
-   with no QR code. Fully English, BDT currency.
-   =========================================================== */
-
-export async function downloadContributionStatementPDF(
-  member: MemberLite,
-  payments: PaymentLite[],
-  options: {
-    year?: number;
-    reportType?: 'monthly' | 'yearly';
-    month?: number;
-    authorizedBy?: string;
-    authorizedPosition?: string;
-    contactNumber?: string;
-  } = {},
-) {
-  const targetYear = options.year ?? new Date().getFullYear();
-  const reportType = options.reportType ?? 'yearly';
-  const targetMonth = options.month ?? new Date().getMonth() + 1;
-
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  await ensureBanglaFont(doc);
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  const contentWidth = pageWidth - margin * 2;
-
-  // ============================
-  // 1. HEADER — Organization
-  // ============================
-  doc.setFillColor(24, 24, 27);
-  doc.rect(0, 0, pageWidth, 42, 'F');
-
-  // Gold accent bar
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 42, pageWidth, 1.5, 'F');
-
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.text('Chandanaish Darbar Sharif', margin, 14);
-
-  doc.setFontSize(9);
-  doc.setTextColor(180, 142, 73);
-  doc.text('Committee Fund Management System', margin, 20);
-  doc.text('Chandanaish, Chattogram, Bangladesh', margin, 25);
-
-  // Report title (right-aligned)
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(13);
-  doc.text('CONTRIBUTION STATEMENT', pageWidth - margin, 14, { align: 'right' });
-
-  doc.setFontSize(9);
-  doc.setTextColor(180, 142, 73);
-  const periodLabel = reportType === 'monthly'
-    ? `${MONTHS_EN[targetMonth - 1]} ${targetYear}`
-    : `January — December ${targetYear}`;
-  doc.text(`Report Type: ${reportType === 'monthly' ? 'Monthly' : 'Yearly'}`, pageWidth - margin, 22, { align: 'right' });
-  doc.text(`Period: ${periodLabel}`, pageWidth - margin, 27, { align: 'right' });
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}`, pageWidth - margin, 32, { align: 'right' });
-  doc.text(`Area: ${member.area || 'N/A'}`, pageWidth - margin, 37, { align: 'right' });
-
-  // ============================
-  // 2. MEMBER INFORMATION
-  // ============================
-  let cursorY = 50;
-
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(margin, cursorY, contentWidth, 26, 'FD');
-
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.setFontSize(10);
-  doc.text('MEMBER INFORMATION', margin + 4, cursorY + 6);
-
-  doc.setDrawColor(203, 213, 225);
-  doc.line(margin + 4, cursorY + 8, margin + contentWidth - 4, cursorY + 8);
-
-  doc.setFontSize(9);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-
-  const infoCol1X = margin + 4;
-  const infoCol2X = margin + contentWidth / 2 + 4;
-  const infoRow1Y = cursorY + 14;
-  const infoRow2Y = cursorY + 20;
-
-  doc.setTextColor(100, 116, 139);
-  doc.text('Full Name:', infoCol1X, infoRow1Y);
-  doc.text('Member ID:', infoCol2X, infoRow1Y);
-  doc.text('Phone Number:', infoCol1X, infoRow2Y);
-  doc.text('Joined:', infoCol2X, infoRow2Y);
-
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(member.full_name, infoCol1X + 25, infoRow1Y);
-  doc.text(member.member_code, infoCol2X + 25, infoRow1Y);
-  doc.text(member.phone || 'N/A', infoCol1X + 32, infoRow2Y);
-  doc.text(formatDateNice(member.joined_date), infoCol2X + 16, infoRow2Y);
-
-  cursorY += 32;
-
-  // ============================
-  // 3. CONTRIBUTION DETAILS TABLE
-  // ============================
-  const expected = Number(member.monthly_rate) || 0;
-
-  // Build rows based on report type
-  let tableRows: (string | number)[][] = [];
-  let totalExpected = 0;
-  let totalPaid = 0;
-  let paidMonths = 0;
-  let dueMonths = 0;
-  let partialMonths = 0;
-  const monthStatusList: { month: string; status: string }[] = [];
-
-  if (reportType === 'monthly') {
-    // Single month
-    const monthPays = payments.filter(
-      (p) => p.for_year === targetYear && p.for_month === targetMonth && (p.status === 'approved' || !p.status)
-    );
-    totalExpected = expected;
-    const paid = monthPays.reduce((s, p) => s + Number(p.amount), 0);
-    totalPaid = paid;
-    const status = paid >= expected ? 'Paid' : paid > 0 ? 'Partial' : 'Due';
-    if (status === 'Paid') paidMonths = 1;
-    else if (status === 'Partial') partialMonths = 1;
-    else dueMonths = 1;
-
-    monthPays.forEach((p) => {
-      tableRows.push([
-        formatDateNice(p.payment_date),
-        `${MONTHS_EN[p.for_month - 1]} ${p.for_year}`,
-        formatBDT(p.amount),
-        methodLabel(p.method),
-        p.transaction_ref || '—',
-      ]);
-    });
-
-    if (monthPays.length === 0) {
-      tableRows.push(['—', `${MONTHS_EN[targetMonth - 1]} ${targetYear}`, 'BDT 0', '—', '—']);
-    }
-
-    monthStatusList.push({ month: `${MONTHS_EN[targetMonth - 1]} ${targetYear}`, status });
-
-  } else {
-    // Yearly — all 12 months
-    for (let mo = 1; mo <= 12; mo++) {
-      const monthPays = payments.filter(
-        (p) => p.for_year === targetYear && p.for_month === mo && (p.status === 'approved' || !p.status)
-      );
-      const paid = monthPays.reduce((s, p) => s + Number(p.amount), 0);
-
-      // Only count months after join date
-      const joinDate = new Date(member.joined_date);
-      const joinKey = joinDate.getFullYear() * 12 + joinDate.getMonth();
-      const moKey = targetYear * 12 + (mo - 1);
-      if (moKey < joinKey) {
-        monthStatusList.push({ month: MONTHS_EN[mo - 1], status: 'N/A' });
-        continue;
-      }
-
-      totalExpected += expected;
-      totalPaid += paid;
-      const status = paid >= expected ? 'Paid' : paid > 0 ? 'Partial' : 'Due';
-      if (status === 'Paid') paidMonths++;
-      else if (status === 'Partial') partialMonths++;
-      else dueMonths++;
-
-      monthStatusList.push({ month: MONTHS_EN[mo - 1], status });
-
-      if (monthPays.length > 0) {
-        monthPays.forEach((p) => {
-          tableRows.push([
-            formatDateNice(p.payment_date),
-            `${MONTHS_EN[p.for_month - 1]}`,
-            formatBDT(p.amount),
-            methodLabel(p.method),
-            p.transaction_ref || '—',
-          ]);
-        });
-      }
-    }
-  }
-
-  const totalDue = Math.max(0, totalExpected - totalPaid);
-
-  // Section header
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.setFontSize(10);
-  doc.text('CONTRIBUTION DETAILS', margin + 4, cursorY + 5);
-  cursorY += 8;
-
-  autoTable(doc, {
-    startY: cursorY,
-    head: [['Date', 'Month', 'Amount (BDT)', 'Payment Method', 'Receipt / Ref No.']],
-    body: tableRows.length > 0 ? tableRows : [['—', '—', '—', '—', '—']],
-    headStyles: {
-      fillColor: [24, 24, 27],
-      textColor: [255, 255, 255],
-      fontSize: 9,
-      font: BANGLA_FONT_NAME,
-      fontStyle: 'bold',
-      cellPadding: 4,
-    },
-    bodyStyles: {
-      fontSize: 9,
-      font: BANGLA_FONT_NAME,
-      cellPadding: 3.5,
-      textColor: [30, 41, 59],
-    },
-    alternateRowStyles: {
-      fillColor: [248, 250, 252],
-    },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      2: { halign: 'right', fontStyle: 'bold' },
-      3: { halign: 'center' },
-      4: { halign: 'center', fontSize: 8 },
-    },
-    margin: { left: margin, right: margin },
-    tableLineColor: [226, 232, 240],
-    tableLineWidth: 0.2,
-  });
-
-  cursorY = (doc as any).lastAutoTable.finalY + 6;
-
-  // ============================
-  // 4. FINANCIAL SUMMARY
-  // ============================
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.setFontSize(10);
-  doc.text('FINANCIAL SUMMARY', margin + 4, cursorY + 5);
-  cursorY += 8;
-
-  const summaryData = [
-    ['Total Expected Contribution', formatBDT(totalExpected)],
-    ['Total Paid Amount', formatBDT(totalPaid)],
-    ['Total Due Amount', formatBDT(totalDue)],
-    ['Paid Months', `${paidMonths}`],
-    ['Partial Months', `${partialMonths}`],
-    ['Due Months', `${dueMonths}`],
-  ];
-
-  autoTable(doc, {
-    startY: cursorY,
-    body: summaryData,
-    theme: 'plain',
-    styles: {
-      font: BANGLA_FONT_NAME,
-      fontSize: 9.5,
-      cellPadding: { top: 3, bottom: 3, left: 5, right: 5 },
-    },
-    columnStyles: {
-      0: {
-        fontStyle: 'bold',
-        cellWidth: contentWidth * 0.55,
-        textColor: [71, 85, 105],
-      },
-      1: {
-        halign: 'right',
-        fontStyle: 'bold',
-        textColor: [15, 23, 42],
-      },
-    },
-    margin: { left: margin, right: margin },
-    didParseCell: (data) => {
-      if (data.section === 'body') {
-        const label = String(data.row.raw?.[0] ?? '');
-        if (label.includes('Paid Amount')) {
-          data.cell.styles.textColor = [22, 117, 61];
-        } else if (label.includes('Due Amount') && totalDue > 0) {
-          data.cell.styles.textColor = [180, 24, 24];
-        }
-      }
-      // Alternate row fill
-      if (data.section === 'body' && data.row.index % 2 === 0) {
-        data.cell.styles.fillColor = [248, 250, 252];
-      }
-    },
-  });
-
-  cursorY = (doc as any).lastAutoTable.finalY + 6;
-
-  // ============================
-  // 5. MONTHLY STATUS GRID
-  // ============================
-
-  // Check if we have enough space, otherwise add a new page
-  if (cursorY > pageHeight - 80) {
-    doc.addPage();
-    cursorY = 20;
-  }
-
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.setFontSize(10);
-  doc.text('MONTHLY STATUS', margin + 4, cursorY + 5);
-  cursorY += 8;
-
-  const statusRows = monthStatusList.map((ms) => [ms.month, ms.status]);
-
-  autoTable(doc, {
-    startY: cursorY,
-    head: [['Month', 'Status']],
-    body: statusRows,
-    headStyles: {
-      fillColor: [24, 24, 27],
-      textColor: [255, 255, 255],
-      fontSize: 9,
-      font: BANGLA_FONT_NAME,
-      fontStyle: 'bold',
-      cellPadding: 3.5,
-    },
-    bodyStyles: {
-      fontSize: 9,
-      font: BANGLA_FONT_NAME,
-      cellPadding: 3,
-      textColor: [30, 41, 59],
-    },
-    columnStyles: {
-      0: { cellWidth: contentWidth * 0.55 },
-      1: { halign: 'center', fontStyle: 'bold' },
-    },
-    margin: { left: margin, right: margin },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 1) {
-        const val = String(data.cell.raw);
-        if (val === 'Paid') {
-          data.cell.styles.textColor = [22, 117, 61];
-          data.cell.styles.fillColor = [231, 245, 236];
-        } else if (val === 'Partial') {
-          data.cell.styles.textColor = [160, 104, 0];
-          data.cell.styles.fillColor = [253, 243, 214];
-        } else if (val === 'Due') {
-          data.cell.styles.textColor = [180, 24, 24];
-          data.cell.styles.fillColor = [253, 226, 226];
-        } else {
-          data.cell.styles.textColor = [148, 163, 184];
-        }
-      }
-    },
-  });
-
-  cursorY = (doc as any).lastAutoTable.finalY + 8;
-
-  // ============================
-  // 6. FOOTER — Verification
-  // ============================
-
-  // Check if we have enough space
-  if (cursorY > pageHeight - 45) {
-    doc.addPage();
-    cursorY = 20;
-  }
-
-  // Separator line
-  doc.setDrawColor(180, 142, 73);
-  doc.setLineWidth(0.5);
-  doc.line(margin, cursorY, pageWidth - margin, cursorY);
-  cursorY += 6;
-
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.setFontSize(9);
-  doc.text('VERIFICATION', margin + 4, cursorY);
-  cursorY += 7;
-
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.setFontSize(8.5);
-
-  const authName = options.authorizedBy || 'Committee Administrator';
-  const authPosition = options.authorizedPosition || 'Fund Management Committee';
-  const contactNum = options.contactNumber || '01622-721996';
-
-  doc.text(`Authorized By: ${authName}`, margin + 4, cursorY);
-  doc.text(`Position: ${authPosition}`, margin + 4, cursorY + 5);
-  cursorY += 14;
-
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text(
-    'This is a system-generated statement and does not require a physical signature.',
-    margin + 4,
-    cursorY,
-  );
-  cursorY += 5;
-  doc.text(`For queries, contact: ${contactNum}`, margin + 4, cursorY);
-
-  // ============================
-  // Page numbers on every page
-  // ============================
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7.5);
-    doc.setTextColor(148, 163, 184);
-    doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 6, { align: 'right' });
-    doc.text('Chandanaish Darbar Sharif — Contribution Statement', margin, pageHeight - 6);
-  }
-
-  // Save
-  const fileMonth = reportType === 'monthly' ? `-${String(targetMonth).padStart(2, '0')}` : '';
-  doc.save(`Contribution-Statement-${member.member_code}-${targetYear}${fileMonth}.pdf`);
 }
