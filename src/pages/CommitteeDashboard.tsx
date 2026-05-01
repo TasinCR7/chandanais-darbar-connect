@@ -13,7 +13,7 @@ import { Download, Share2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { registerBengaliFont } from "@/fonts/bengaliFont";
-import { formatMonthBn } from "@/utils/dateHelpers";
+import { formatMonthEn } from "@/utils/dateHelpers";
 
 interface TopicRecord { 
   id: string; 
@@ -228,46 +228,46 @@ export default function CommitteeDashboard() {
       
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(22);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 22, { align: "center" });
+      doc.setFont("Helvetica", "bold");
+      doc.text("Chandanaish Darbar Sharif", W / 2, 22, { align: "center" });
       
       doc.setTextColor(150, 160, 175);
       doc.setFontSize(9);
-      doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | info@chandanaishdarbar.org", W / 2, 30, { align: "center" });
+      doc.text("Chandanaish, Chattogram, Bangladesh | info@chandanaishdarbar.org", W / 2, 30, { align: "center" });
       
       doc.setFillColor(0, 212, 200);
       doc.roundedRect(W / 2 - 35, 36, 70, 8, 4, 4, "F");
       doc.setTextColor(10, 37, 64);
       doc.setFontSize(11);
-      doc.text("অফিসিয়াল পেমেন্ট রসিদ", W / 2, 42, { align: "center" });
+      doc.text("OFFICIAL PAYMENT RECEIPT", W / 2, 42, { align: "center" });
 
       // Receipt meta
       const rid = c.id.slice(0, 8).toUpperCase();
       doc.setTextColor(10, 37, 64);
       doc.setFontSize(10);
-      doc.text("ইনভয়েস নম্বর:", 20, 65);
+      doc.text("Invoice No:", 20, 65);
       doc.text("#" + rid, 20, 71);
       
-      doc.text("ইস্যু তারিখ:", W - 20, 65, { align: "right" });
-      doc.text(new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 71, { align: "right" });
+      doc.text("Issue Date:", W - 20, 65, { align: "right" });
+      doc.text(new Date(c.created_at).toLocaleDateString("en-US"), W - 20, 71, { align: "right" });
 
       // Main table
       const rows = [
-        ["দাতার নাম", c.name || "-"],
-        ["এলাকা/অবস্থান", c.area || "N/A"],
-        ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
-        ["টাকার পরিমাণ", c.amount.toLocaleString("bn-BD") + " BDT"],
-        ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
-        ["ট্রানজেকশন আইডি", c.transaction_id || "N/A"],
+        ["Member Name", c.name || "-"],
+        ["Area/Location", c.area || "N/A"],
+        ["Collection Month", formatMonthEn(c.target_month)],
+        ["Amount", c.amount.toLocaleString("en-US") + " BDT"],
+        ["Payment Method", c.payment_method || "Cash"],
+        ["Transaction ID", c.transaction_id || "N/A"],
       ];
       autoTable(doc, {
         startY: 85,
         body: rows,
         theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 235, 241], lineWidth: 0.1 },
+        styles: { font: "Helvetica", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 235, 241], lineWidth: 0.1 },
         columnStyles: {
           0: { cellWidth: 50, textColor: [100, 110, 125], fillColor: [248, 250, 252] },
-          1: { textColor: [10, 37, 64], fontStyle: "normal" },
+          1: { textColor: [10, 37, 64], fontStyle: "bold" },
         },
         margin: { left: 20, right: 20 }
       });
@@ -282,11 +282,11 @@ export default function CommitteeDashboard() {
       
       doc.setTextColor(10, 37, 64);
       doc.setFontSize(12);
-      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 15);
+      doc.text("Total Paid Amount:", 30, curY + 15);
       
       doc.setTextColor(0, 160, 150);
       doc.setFontSize(20);
-      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 16, { align: "right" });
+      doc.text(c.amount.toLocaleString("en-US") + " /-", W - 30, curY + 16, { align: "right" });
       
       curY += 45;
 
@@ -295,10 +295,10 @@ export default function CommitteeDashboard() {
       doc.setFontSize(10);
       doc.setDrawColor(200, 210, 220);
       doc.line(25, curY, 85, curY);
-      doc.text("সদস্যের স্বাক্ষর", 55, curY + 6, { align: "center" });
+      doc.text("Member's Signature", 55, curY + 6, { align: "center" });
       
       doc.line(W - 85, curY, W - 25, curY);
-      doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
+      doc.text("Authorized Signature & Seal", W - 55, curY + 6, { align: "center" });
 
       // Paid Stamp
       doc.setTextColor(230, 245, 245);
@@ -311,8 +311,8 @@ export default function CommitteeDashboard() {
       doc.line(15, H - 20, W - 15, H - 20);
       doc.setFontSize(8);
       doc.setTextColor(150, 160, 175);
-      doc.text("অফিসিয়াল ডকুমেন্ট • চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেম", 15, H - 14);
-      doc.text("জেনারেট করা হয়েছে: " + new Date().toLocaleString("bn-BD"), W - 15, H - 14, { align: "right" });
+      doc.text("Official Document • Chandanaish Darbar Sharif Finance System", 15, H - 14);
+      doc.text("Generated on: " + new Date().toLocaleString("en-US"), W - 15, H - 14, { align: "right" });
 
       doc.save(`Invoice_${c.target_month}.pdf`);
     } catch (e) {

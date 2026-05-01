@@ -21,24 +21,24 @@ interface InvoiceProps {
 }
 
 const SHAHJADAS = [
-  { id: 'boro', name: 'বড় শাহজাদা' },
-  { id: 'mej', name: 'মেজ শাহজাদা' },
-  { id: 'sej', name: 'সেজ শাহজাদা' },
-  { id: 'choto', name: 'ছোট শাহজাদা' },
+  { id: 'boro', name: 'Boro Shahjada' },
+  { id: 'mej', name: 'Mej Shahjada' },
+  { id: 'sej', name: 'Sej Shahjada' },
+  { id: 'choto', name: 'Choto Shahjada' },
 ];
 
 export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceProps>(({ donation }, ref) => {
   const getCategoryLabel = (category: string, recipientId?: string | null) => {
-    if (category === 'mosque') return 'মসজিদ ফান্ড / দরবার ফান্ড';
-    if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
+    if (category === 'mosque') return 'Mosque Fund / Darbar Fund';
+    if (category === 'combined_shahjadas') return 'Combined Shahjadas';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {
-        boro: 'বড় শাহজাদা',
-        mej: 'মেজ শাহজাদা',
-        sej: 'সেজ শাহজাদা',
-        choto: 'ছোট শাহজাদা',
+        boro: 'Boro Shahjada',
+        mej: 'Mej Shahjada',
+        sej: 'Sej Shahjada',
+        choto: 'Choto Shahjada',
       };
-      return map[recipientId || ''] || 'নির্দিষ্ট শাহজাদা';
+      return map[recipientId || ''] || 'Specific Shahjada';
     }
     return category;
   };
@@ -83,12 +83,12 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case 'verified':
-        return { text: '✔ গৃহীত (Verified)', bg: '#dcfce7', textCol: '#166534', border: '#86efac', containerBg: '#f0fdf4' };
+        return { text: '✔ Verified', bg: '#dcfce7', textCol: '#166534', border: '#86efac', containerBg: '#f0fdf4' };
       case 'rejected':
-        return { text: '✖ বাতিল (Rejected)', bg: '#fee2e2', textCol: '#991b1b', border: '#fca5a5', containerBg: '#fef2f2' };
+        return { text: '✖ Rejected', bg: '#fee2e2', textCol: '#991b1b', border: '#fca5a5', containerBg: '#fef2f2' };
       case 'pending':
       default:
-        return { text: '⏳ অপেক্ষমান (Pending)', bg: '#ffedd5', textCol: '#9a3412', border: '#fb923c', containerBg: '#fff7ed' };
+        return { text: '⏳ Pending', bg: '#ffedd5', textCol: '#9a3412', border: '#fb923c', containerBg: '#fff7ed' };
     }
   };
 
@@ -128,7 +128,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
             zIndex: 0,
           }}
         >
-          চন্দনাইশ দরবার শরীফ
+          Chandanaish Darbar Sharif
         </div>
 
         {/* ── Outer Border Frame ── */}
@@ -195,16 +195,16 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
 
             {/* Organization Name */}
             <div style={{ fontSize: '30px', fontWeight: '900', color: '#065f46', letterSpacing: '1px', marginBottom: '4px' }}>
-              চন্দনাইশ দরবার শরীফ
+              Chandanaish Darbar Sharif
             </div>
             <div style={{ fontSize: '14px', color: '#b45309', fontWeight: 'bold', marginBottom: '4px' }}>
-              সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
+              Silsila-e-Tariqaye Maizbhandaria
             </div>
             <div style={{ fontSize: '13px', color: '#6b7280', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '4px' }}>
-              Chandanais Darbar Sharif
+              Official Financial Document
             </div>
             <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-              চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ &nbsp;|&nbsp; হটলাইন: ০১৬২২-৭২১৯৯৬
+              Chandanaish, Chattogram, Bangladesh &nbsp;|&nbsp; Hotline: 01622-721996
             </div>
 
             {/* Decorative divider */}
@@ -230,7 +230,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 marginTop: '6px',
               }}
             >
-              হাদিয়া ও নজরানা রশিদ &nbsp;/&nbsp; DONATION RECEIPT
+              DONATION RECEIPT
             </div>
           </div>
 
@@ -254,8 +254,8 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 padding: '14px 18px',
               }}
             >
-              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>রশিদ নম্বর / Invoice No.</div>
-              <div style={{ fontSize: '20px', fontWeight: '900', color: '#065f46', fontFamily: 'monospace' }}>#{toBanglaNumber(invoiceNo.replace(/\D/g, ''))}{invoiceNo.replace(/[0-9]/g, '')}</div>
+              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Invoice No.</div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#065f46', fontFamily: 'monospace' }}>#{invoiceNo}</div>
             </div>
 
             {/* Middle: Date */}
@@ -269,9 +269,9 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>তারিখ / Date</div>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#92400e' }}>{toBanglaNumber(invoiceDate)}</div>
-              <div style={{ fontSize: '12px', color: '#b45309' }}>{toBanglaNumber(invoiceTime)}</div>
+              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Date / Time</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#92400e' }}>{invoiceDate}</div>
+              <div style={{ fontSize: '12px', color: '#b45309' }}>{invoiceTime}</div>
             </div>
 
             {/* Right: Status */}
@@ -285,7 +285,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 textAlign: 'right',
               }}
             >
-              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>স্ট্যাটাস / Status</div>
+              <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Status</div>
               <div
                 style={{
                   display: 'inline-block',
@@ -328,19 +328,19 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 gap: '8px',
               }}
             >
-              <span style={{ fontSize: '16px' }}>👤</span> দাতার তথ্য / Donor Information
+              <span style={{ fontSize: '16px' }}>👤</span> Donor Information
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
               <div>
-                <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>নাম / Name</div>
+                <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Name</div>
                 <div style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>{donation.donor_name}</div>
               </div>
               <div>
-                <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>মোবাইল / Phone</div>
-                <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', fontFamily: 'monospace' }}>{toBanglaNumber(donation.donor_phone)}</div>
+                <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Phone</div>
+                <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', fontFamily: 'monospace' }}>{donation.donor_phone}</div>
               </div>
               <div>
-                <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>যাচাই কোড / Verify Code</div>
+                <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Verify Code</div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#065f46', fontFamily: 'monospace' }}>{verificationCode}</div>
               </div>
             </div>
@@ -362,10 +362,10 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   color: '#ffffff',
                 }}
               >
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', letterSpacing: '0.5px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>বিবরণ (খাত)</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', letterSpacing: '0.5px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>পেমেন্ট মাধ্যম</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', letterSpacing: '0.5px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>ট্রানজেকশন আইডি</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '700', letterSpacing: '0.5px' }}>পরিমাণ (৳)</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', letterSpacing: '0.5px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>Description (Category)</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', letterSpacing: '0.5px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>Method</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', letterSpacing: '0.5px', borderRight: '1px solid rgba(255,255,255,0.15)' }}>Transaction ID</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '700', letterSpacing: '0.5px' }}>Amount (৳)</th>
               </tr>
             </thead>
             <tbody>
@@ -391,7 +391,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   {donation.transaction_id || '-'}
                 </td>
                 <td style={{ padding: '16px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontSize: '20px', fontWeight: '900', color: '#065f46' }}>
-                  {toBanglaNumber(donation.amount.toLocaleString('en-US'))} ৳
+                  {donation.amount.toLocaleString('en-US')} ৳
                 </td>
               </tr>
             </tbody>
@@ -411,8 +411,8 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   borderRadius: '6px',
                 }}
               >
-                <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '1px' }}>সর্বমোট / TOTAL</span>
-                <span style={{ fontSize: '26px', fontWeight: '900' }}>{toBanglaNumber(donation.amount.toLocaleString('en-US'))} ৳</span>
+                <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '1px' }}>TOTAL</span>
+                <span style={{ fontSize: '26px', fontWeight: '900' }}>{donation.amount.toLocaleString('en-US')} ৳</span>
               </div>
             </div>
           </div>
@@ -429,7 +429,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
               }}
             >
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#92400e', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px' }}>⚖️</span> বণ্টনের বিবরণ / Distribution Breakdown
+                <span style={{ fontSize: '14px' }}>⚖️</span> Distribution Breakdown
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
                 {SHAHJADAS.map((s) => (
@@ -444,7 +444,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                     }}
                   >
                     <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>{s.name}</div>
-                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#b45309' }}>{toBanglaNumber(perPerson.toFixed(2))} ৳</div>
+                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#b45309' }}>{perPerson.toFixed(2)} ৳</div>
                   </div>
                 ))}
               </div>
@@ -464,8 +464,8 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
             {/* Authorized Signature */}
             <div style={{ textAlign: 'center' }}>
               <div style={{ height: '50px', borderBottom: '1px dashed #9ca3af', marginBottom: '8px' }} />
-              <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>অনুমোদনকারীর স্বাক্ষর</div>
-              <div style={{ fontSize: '10px', color: '#9ca3af' }}>Authorized Signature</div>
+              <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Authorized Signature</div>
+              <div style={{ fontSize: '10px', color: '#9ca3af' }}>Official Custodian</div>
             </div>
 
             {/* Official Seal */}
@@ -492,7 +492,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 {qrCodeUrl ? (
                   <img src={qrCodeUrl} alt="QR Code" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <>অফিসিয়াল<br />সিলমোহর<br />Official Seal</>
+                  <>Official<br />Seal</>
                 )}
               </div>
             </div>
@@ -500,8 +500,8 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
             {/* Receiver */}
             <div style={{ textAlign: 'center' }}>
               <div style={{ height: '50px', borderBottom: '1px dashed #9ca3af', marginBottom: '8px' }} />
-              <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>গ্রাহকের স্বাক্ষর</div>
-              <div style={{ fontSize: '10px', color: '#9ca3af' }}>Receiver's Signature</div>
+              <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Receiver's Signature</div>
+              <div style={{ fontSize: '10px', color: '#9ca3af' }}>Donor Copy</div>
             </div>
           </div>
 
@@ -520,10 +520,10 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
               إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ
             </div>
             <div style={{ fontSize: '13px', color: '#047857', fontStyle: 'italic' }}>
-              "নিশ্চয়ই আল্লাহ্ অনুগ্রহকারীদের ভালোবাসেন।" — সূরা আল-বাকারাহ: ১৯৫
+              "Indeed, Allah loves the doers of good." — Surah Al-Baqarah: 195
             </div>
             <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-              আল্লাহ তায়ালা আপনার নেক মাকসুদ কবুল করুন। আমীন।
+              May Allah accept your noble contribution. Ameen.
             </div>
           </div>
 
@@ -541,15 +541,15 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
             }}
           >
             <div>
-              <div style={{ fontWeight: '700', fontSize: '12px', marginBottom: '2px' }}>চন্দনাইশ দরবার শরীফ</div>
+              <div style={{ fontWeight: '700', fontSize: '12px', marginBottom: '2px' }}>Chandanaish Darbar Sharif</div>
               <div style={{ opacity: 0.75 }}>chandanais-darbar-connect.vercel.app</div>
             </div>
             <div style={{ textAlign: 'center', opacity: 0.7 }}>
-              এটি একটি কম্পিউটার জেনারেটেড রশিদ।<br />
-              This is a computer-generated receipt.
+              This is a computer-generated receipt.<br />
+              Valid without manual signature.
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: '700', fontSize: '12px', marginBottom: '2px' }}>যাচাই কোড</div>
+              <div style={{ fontWeight: '700', fontSize: '12px', marginBottom: '2px' }}>Verify Code</div>
               <div style={{ fontFamily: 'monospace', opacity: 0.85 }}>{verificationCode}</div>
             </div>
           </div>
