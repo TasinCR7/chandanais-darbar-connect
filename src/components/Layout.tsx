@@ -187,7 +187,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gold p-2"
+              onPointerDown={() => setMenuOpen(!menuOpen)}
+              className="text-gold p-2 active:scale-95 transition-transform"
               aria-label="মেনু"
             >
               {menuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -218,7 +219,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <div className="p-4 flex justify-end border-b border-gold/10">
                 <button
                   onClick={() => setMenuOpen(false)}
-                  className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors"
+                  onPointerDown={() => setMenuOpen(false)}
+                  className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90"
                 >
                   <X size={28} />
                 </button>
@@ -236,7 +238,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         to={link.path}
                         onClick={() => setMenuOpen(false)}
-                        className={`text-sm font-medium py-2.5 block transition-colors ${
+                        onPointerDown={() => setMenuOpen(false)}
+                        className={`text-sm font-medium py-2.5 block transition-colors active:translate-x-1 duration-200 ${
                           location.pathname === link.path
                             ? "text-gold"
                             : "text-muted-foreground hover:text-gold"
