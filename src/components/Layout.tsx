@@ -17,6 +17,9 @@ const routeImports: Record<string, () => Promise<unknown>> = {
   "/contact": () => import("../pages/Contact"),
   "/committee-login": () => import("../pages/CommitteeLogin"),
   "/admin": () => import("../pages/Admin"),
+  "/finance": () => import("../pages/Finance"),
+  "/transparency": () => import("../pages/Transparency"),
+  "/member-portal": () => import("../pages/MemberPortal"),
 };
 import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +28,7 @@ import DeveloperTeam from "./DeveloperTeam";
 import Chatbot from "./Chatbot";
 import { useAuth } from "@/hooks/useAuth";
 import { Lock } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const navLinks = [
   { path: "/", label: "হোম" },
@@ -46,46 +50,53 @@ const navLinks = [
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrollingNotices, setScrollingNotices] = useState<string[]>([]);
-  const [appSettings, setAppSettings] = useState<Record<string, string>>({});
   const location = useLocation();
   const { isStaff, user } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // 1. Fetch App Settings (Title, Maintenance, etc)
-      const { data: sData } = await supabase.from('app_settings').select('key, value');
-      const sObj: Record<string, string> = {};
-      if (sData) {
-        sData.forEach((row: any) => { sObj[row.key] = row.value; });
-        setAppSettings(sObj);
+  const { data: appSettings = {} } = useQuery({
+    queryKey: ['app_settings'],
+    queryFn: async () => {
+      const { data } = await supabase.from('app_settings').select('key, value');
+      const obj: Record<string, string> = {};
+      if (data) {
+        data.forEach((row: any) => { obj[row.key] = row.value; });
       }
-
-      // 2. Fetch Active Scrolling Notices from 'notices' table
-      const { data: nData } = await ((supabase as any)
+      return obj;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+  
+  const { data: scrollingNotices = [] } = useQuery({
+    queryKey: ['scrolling_notices'],
+    queryFn: async () => {
+      const { data } = await ((supabase as any)
         .from('notices')
         .select('title')
         .eq('type', 'scrolling')
         .eq('is_active', true)
         .order('created_at', { ascending: false }));
-
-      if (nData && nData.length > 0) {
-        setScrollingNotices(nData.map(n => n.title));
-      } else if (sObj.global_notice_message) {
-        // Fallback to old global notice if no specific scrolling notices exist
-        setScrollingNotices([sObj.global_notice_message]);
+      
+      if (data && data.length > 0) {
+        return data.map((n: any) => n.title);
+      } else if (appSettings.global_notice_message) {
+        return [appSettings.global_notice_message];
       }
-    };
-    fetchData();
+      return [];
+    },
+    enabled: !!appSettings,
+    staleTime: 5 * 60 * 1000,
+  });
 
-    // 3. Real-time Subscription for App Settings
+  useEffect(() => {
+    // Real-time Subscription for App Settings
     const channel = supabase
       .channel('app_settings_changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'app_settings' },
         () => {
-          fetchData(); // Re-fetch all settings when any change occurs
+          queryClient.invalidateQueries({ queryKey: ['app_settings'] });
         }
       )
       .subscribe();
@@ -131,7 +142,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 key={link.path}
                 to={link.path}
                 onMouseEnter={() => {
-                  // Prefetch the component for the route
+                  const route = link.path;
+                  if (route !== location.pathname && routeImports[route]) {
+                    routeImports[route]();
+                  }
+                }}
+                onPointerDown={() => {
                   const route = link.path;
                   if (route !== location.pathname && routeImports[route]) {
                     routeImports[route]();
@@ -220,6 +236,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         to={link.path}
                         onClick={() => setMenuOpen(false)}
+                        onPointerEnter={() => {
+                          const route = link.path;
+                          if (route !== location.pathname && routeImports[route]) {
+                            routeImports[route]();
+                          }
+                        }}
+                        onPointerDown={() => {
+                          const route = link.path;
+                          if (route !== location.pathname && routeImports[route]) {
+                            routeImports[route]();
+                          }
+                        }}
                         className={`text-base font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group ${
                           location.pathname === link.path
                             ? "text-gold bg-gold/10 shadow-sm"

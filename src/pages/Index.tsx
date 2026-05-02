@@ -44,11 +44,12 @@ const Index = () => {
         canonical="/"
       />
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          role="img"
-          aria-label="চন্দনাইশ দরবার শরীফ হিরো ইমেজ"
-          style={{ backgroundImage: `url(${heroImage})` }}
+        <img 
+          src={heroImage}
+          alt="চন্দনাইশ দরবার শরীফ হিরো ইমেজ"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          fetchPriority="high"
+          loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background" />
 
