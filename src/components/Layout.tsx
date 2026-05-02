@@ -50,6 +50,7 @@ const navLinks = [
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
   const { isStaff, user } = useAuth();
   const queryClient = useQueryClient();
@@ -126,14 +127,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Sticky Navigation */}
       <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2" aria-label="হোম পেজ">
-            {appSettings.site_logo_url && (
-              <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
-            )}
-            <span className="text-gold font-heading font-bold text-sm md:text-lg leading-tight truncate">
-              {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
-            </span>
-          </Link>
+          <div className="flex items-center gap-2 md:gap-3 min-w-0 mr-2">
+            <Link to="/" className="flex items-center gap-2 md:gap-3" aria-label="হোম পেজ">
+              {appSettings.site_logo_url && (
+                <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
+              )}
+              <span className="text-gold font-heading font-bold text-sm md:text-lg leading-tight truncate">
+                {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
+              </span>
+            </Link>
+          </div>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-6">
@@ -240,17 +243,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + i * 0.05 }}
                     >
-                      <Link
-                        to={link.path}
-                        onClick={() => setMenuOpen(false)}
-                        className={`text-sm font-medium py-3 px-4 block transition-colors active:bg-gold/10 rounded-lg ${
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setMenuOpen(false);
+                          navigate(link.path);
+                        }}
+                        className={`w-full text-left text-sm font-medium py-3 px-4 block transition-colors active:bg-gold/10 rounded-lg ${
                           location.pathname === link.path
-                            ? "text-gold"
+                            ? "text-gold bg-gold/5"
                             : "text-muted-foreground hover:text-gold"
                         }`}
                       >
                         {link.label}
-                      </Link>
+                      </button>
                     </motion.div>
                   ))}
                 </div>
