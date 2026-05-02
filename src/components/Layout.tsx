@@ -179,16 +179,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* Mobile Actions */}
           <div className="flex items-center gap-1 lg:hidden">
             <Link
+              to="/hadia"
+              className="bg-gold-gradient text-primary-foreground px-3 py-1.5 rounded-md text-[10px] font-bold shadow-lg shadow-gold/10 mr-1"
+            >
+              হাদিয়া
+            </Link>
+            <Link
               to="/admin"
               className="text-muted-foreground hover:text-gold transition-colors p-2"
               aria-label="এডমিন"
             >
-              <Settings size={20} />
+              <Settings size={18} />
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               onPointerDown={() => setMenuOpen(!menuOpen)}
-              className="text-gold p-2 active:scale-95 transition-transform"
+              className="text-gold p-2 active:scale-90 transition-transform"
               aria-label="মেনু"
             >
               {menuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -197,8 +203,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
       </header>
-      
-      {/* Mobile Nav */}
+      </header>
       <AnimatePresence mode="wait">
         {menuOpen && (
           <>
@@ -213,8 +218,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-[320px] z-[80] bg-background/95 backdrop-blur-xl border-l border-gold/20 lg:hidden shadow-2xl flex flex-col"
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background/98 backdrop-blur-2xl border-l border-gold/20 lg:hidden shadow-2xl flex flex-col h-[100dvh]"
             >
               <div className="p-4 flex justify-end border-b border-gold/10">
                 <button

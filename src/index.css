@@ -70,6 +70,7 @@
     position: relative;
     transform: translate3d(0,0,0); /* Trigger GPU */
     touch-action: manipulation; /* Remove 300ms delay */
+    overscroll-behavior-y: contain;
   }
 
   body::before {
