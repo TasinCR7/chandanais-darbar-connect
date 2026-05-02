@@ -203,7 +203,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
       </header>
-      </header>
       <AnimatePresence mode="wait">
         {menuOpen && (
           <>
