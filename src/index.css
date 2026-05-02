@@ -65,10 +65,11 @@
   body {
     @apply bg-background text-foreground font-bengali overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizeSpeed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
+    content-visibility: auto;
   }
 
   body::before {
@@ -135,6 +136,12 @@
   .content-visibility-auto {
     content-visibility: auto;
     contain-intrinsic-size: 1px 500px;
+    will-change: transform, opacity;
+  }
+  
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 1000px;
   }
 
   /* Finance bundle utility classes */

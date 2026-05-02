@@ -55,13 +55,14 @@ const AppContent = () => {
   return (
     <Layout>
       <RouteProgressBar />
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15, ease: "linear" }}
+          transition={{ duration: 0.1, ease: "linear" }}
+          style={{ willChange: "opacity" }}
         >
           <Suspense fallback={<PremiumLoader />}>
             <Routes location={location} key={location.pathname}>
@@ -78,7 +79,7 @@ const AppContent = () => {
               <Route path="/notices" element={<Notices />} />
               <Route path="/committee" element={<Committee />} />
               <Route path="/committee-login" element={<CommitteeLogin />} />
-              <Route path="/committee-dashboard" element={<ProtectedRoute allowedRoles={['admin', 'editor', 'moderator', 'treasurer']}><CommitteeDashboard /></ProtectedRoute>} />
+              <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/book" element={<BookReader />} />
               <Route path="/finance" element={<Finance />} />
