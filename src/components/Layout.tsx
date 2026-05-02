@@ -252,14 +252,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gold/10 space-y-4">
+              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
                 <Link
                   to="/hadia"
                   onClick={() => setMenuOpen(false)}
-                  className="bg-gold-gradient text-primary-foreground px-4 py-2.5 rounded-md text-sm font-bold text-center block"
+                  onPointerDown={() => setMenuOpen(false)}
+                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform"
                 >
                   হাদিয়া দিন
                 </Link>
+                <div className="flex flex-col gap-2 pt-2">
+                  <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
+                  <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
+                    <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
+                  </a>
+                </div>
               </div>
             </motion.nav>
           </>
