@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Phone, ArrowRight, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
@@ -24,22 +25,20 @@ const CommitteeLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone.trim()) {
-      toast({ title: "সতর্কতা", description: "দয়া করে আপনার ফোন নম্বর লিখুন।", variant: "destructive" });
+    if (!isValidPhoneNumber(phone)) {
+      toast({ title: "ভুল নম্বর", description: "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।", variant: "destructive" });
       return;
     }
 
     setLoading(true);
     try {
-      let cleanPhone = phone.trim().replace(/\D/g, ""); // Remove everything except digits
-      if (cleanPhone.startsWith("880")) cleanPhone = cleanPhone.substring(2); // Normalize 8801... to 01...
-      if (!cleanPhone.startsWith("0")) cleanPhone = "0" + cleanPhone; // Ensure starts with 0
-
+      const cleanPhone = normalizePhoneNumber(phone);
+      
       const searchVariants = [
-        cleanPhone,                // 017...
-        "+88" + cleanPhone,        // +88017...
-        "88" + cleanPhone,         // 88017...
-        cleanPhone.substring(1)    // 17... (without leading zero)
+        cleanPhone,
+        `+88${cleanPhone}`,
+        `88${cleanPhone}`,
+        cleanPhone.startsWith("0") ? cleanPhone.substring(1) : cleanPhone
       ];
 
       // Find the committee member by phone using multiple variants

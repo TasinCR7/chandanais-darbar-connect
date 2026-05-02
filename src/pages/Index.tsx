@@ -43,7 +43,7 @@ const Index = () => {
         keywords="চন্দনাইশ দরবার শরীফ, Chandanaish Darbar Sharif, ওরশ শরীফ ২০২৬, মাইজভান্ডারী তরিকা, গাউছে জামান আবদুল লতিফ শাহ, আধ্যাত্মিক কেন্দ্র চট্টগ্রাম, চন্দনাইশ, চট্টগ্রাম দরবার, সুফিবাদ বাংলাদেশ, ইসলামি মাহফিল"
         canonical="/"
       />
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden gpu-smooth">
         <img 
           src={heroImage}
           alt="চন্দনাইশ দরবার শরীফ হিরো ইমেজ"
@@ -113,7 +113,7 @@ const Index = () => {
 
       {/* Detailed Notices Section */}
       {detailedNotices.length > 0 && (
-        <section className="py-12 bg-background relative overflow-hidden">
+        <section className="py-12 bg-background relative overflow-hidden gpu-smooth">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           <div className="container mx-auto px-4">
             <div className="flex flex-col gap-6">

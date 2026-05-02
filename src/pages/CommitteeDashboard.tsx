@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, LogOut, MessageSquare, ThumbsUp, ThumbsDown, Vote, Send, Trash2, Megaphone } from "lucide-react";
+import { ShieldCheck, LogOut, MessageSquare, ThumbsUp, ThumbsDown, Vote, Send, Trash2, Megaphone, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -432,19 +432,19 @@ export default function CommitteeDashboard() {
             <table className="w-full text-left text-sm">
               <thead className="bg-gold/10 text-gold uppercase text-[10px] font-bold tracking-widest">
                 <tr>
-                  <th className="p-4">তারিখ</th>
-                  <th className="p-4">মাস</th>
-                  <th className="p-4">পরিমাণ</th>
-                  <th className="p-4 text-center">রসিদ</th>
+                  <th className="p-2 md:p-4">তারিখ</th>
+                  <th className="p-2 md:p-4">মাস</th>
+                  <th className="p-2 md:p-4">পরিমাণ</th>
+                  <th className="p-2 md:p-4 text-center">রসিদ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gold/10">
                 {contributions.length > 0 ? contributions.map((c) => (
                   <tr key={c.id} className="hover:bg-gold/5">
-                    <td className="p-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString("bn-BD")}</td>
-                    <td className="p-4 font-bold">{formatMonthBn(c.target_month)}</td>
-                    <td className="p-4 font-black text-emerald-500">৳{c.amount.toLocaleString("bn-BD")}</td>
-                    <td className="p-4 text-center flex justify-center gap-2">
+                    <td className="p-2 md:p-4 text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("bn-BD")}</td>
+                    <td className="p-2 md:p-4 font-bold whitespace-nowrap">{formatMonthBn(c.target_month)}</td>
+                    <td className="p-2 md:p-4 font-black text-emerald-500">৳{c.amount.toLocaleString("bn-BD")}</td>
+                    <td className="p-2 md:p-4 text-center flex justify-center gap-2">
                       <button onClick={() => generateReceiptPdf(c)} className="p-2 bg-gold/10 text-gold rounded-full hover:bg-gold hover:text-primary-foreground transition-colors">
                         <Download size={14} />
                       </button>

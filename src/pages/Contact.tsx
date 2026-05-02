@@ -12,14 +12,14 @@ const contactInfo = [
   {
     icon: Phone,
     label: "ফোন",
-    value: "017***********",
-    href: "tel:+88017***********",
+    value: "০১৬২২-৭২১৯৯৬",
+    href: "tel:+8801622721996",
   },
   {
     icon: Mail,
     label: "ইমেইল",
-    value: "contact@chandanaishdarbar.com",
-    href: "mailto:contact@chandanaishdarbar.com",
+    value: "info@chandanaishdarbar.com",
+    href: "mailto:info@chandanaishdarbar.com",
   },
 ];
 
@@ -62,6 +62,7 @@ const Contact = () => {
                   {info.href ? (
                     <a
                       href={info.href}
+                      aria-label={`${info.label}: ${info.value}`}
                       className="text-foreground text-sm hover:text-gold transition-colors duration-300"
                     >
                       {info.value}

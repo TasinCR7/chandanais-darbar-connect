@@ -10,6 +10,7 @@ import jsPDF from "jspdf";
 import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { sendTelegramNotification } from "@/utils/telegram";
+import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
 
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
@@ -40,7 +41,8 @@ const Hadia = () => {
 
   // Auto-calculate visibility based on inputs
   const canCalculate = Boolean(amount && amount > 0 && donationType && (donationType !== "specific_shahjada" || specificShahjada));
-  const canDonate = canCalculate && donorName.trim() && donorPhone.trim() && paymentMethod && transactionId.trim();
+  const isPhoneValid = isValidPhoneNumber(donorPhone);
+  const canDonate = canCalculate && donorName.trim() && isPhoneValid && paymentMethod && transactionId.trim();
 
   const handleDonate = async () => {
     if (!canDonate) return;
@@ -50,8 +52,8 @@ const Hadia = () => {
       const { data, error } = await supabase
         .from('donations')
         .insert({
-          donor_name: donorName,
-          donor_phone: donorPhone,
+          donor_name: donorName.trim(),
+          donor_phone: normalizePhoneNumber(donorPhone),
           amount: Number(amount),
           donation_category: donationType,
           recipient_id: donationType === 'specific_shahjada' ? specificShahjada : null,

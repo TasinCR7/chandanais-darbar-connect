@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -65,11 +64,11 @@
   body {
     @apply bg-background text-foreground font-bengali overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
-    text-rendering: optimizeSpeed;
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    content-visibility: auto;
+    transform: translate3d(0,0,0); /* Trigger GPU */
   }
 
   body::before {
@@ -80,7 +79,12 @@
     pointer-events: none;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading;
   }
 }
@@ -108,7 +112,7 @@
   }
 
   .islamic-pattern {
-    background-image: 
+    background-image:
       radial-gradient(circle at 25% 25%, hsl(var(--gold) / 0.03) 0%, transparent 50%),
       radial-gradient(circle at 75% 75%, hsl(var(--gold) / 0.03) 0%, transparent 50%);
   }
@@ -138,10 +142,12 @@
     contain-intrinsic-size: 1px 500px;
     will-change: transform, opacity;
   }
-  
-  section {
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 1000px;
+
+  /* Smooth GPU-accelerated transitions */
+  .gpu-smooth {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
   }
 
   /* Finance bundle utility classes */
@@ -162,8 +168,13 @@
   }
 
   @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
   }
 
   .animate-marquee-slow {
