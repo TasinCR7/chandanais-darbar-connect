@@ -236,46 +236,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         to={link.path}
                         onClick={() => setMenuOpen(false)}
-                        onPointerEnter={() => {
-                          const route = link.path;
-                          if (route !== location.pathname && routeImports[route]) {
-                            routeImports[route]();
-                          }
-                        }}
-                        onPointerDown={() => {
-                          const route = link.path;
-                          if (route !== location.pathname && routeImports[route]) {
-                            routeImports[route]();
-                          }
-                        }}
-                        className={`text-base font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-between group ${
+                        className={`text-sm font-medium py-2.5 block transition-colors ${
                           location.pathname === link.path
-                            ? "text-gold bg-gold/10 shadow-sm"
-                            : "text-muted-foreground hover:text-gold hover:bg-white/5"
+                            ? "text-gold"
+                            : "text-muted-foreground hover:text-gold"
                         }`}
                       >
                         {link.label}
-                        {location.pathname === link.path && <div className="w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_rgba(212,175,55,1)]" />}
                       </Link>
                     </motion.div>
                   ))}
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
+              <div className="p-6 border-t border-gold/10 space-y-4">
                 <Link
                   to="/hadia"
                   onClick={() => setMenuOpen(false)}
-                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform"
+                  className="bg-gold-gradient text-primary-foreground px-4 py-2.5 rounded-md text-sm font-bold text-center block"
                 >
                   হাদিয়া দিন
                 </Link>
-                <div className="flex flex-col gap-2 pt-2">
-                  <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
-                  <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
-                    <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
-                  </a>
-                </div>
               </div>
             </motion.nav>
           </>
