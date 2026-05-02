@@ -218,7 +218,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background/98 backdrop-blur-2xl border-l border-gold/20 lg:hidden shadow-2xl flex flex-col h-[100dvh]"
+              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 lg:hidden shadow-2xl flex flex-col h-[100dvh] overflow-hidden"
             >
               <div className="p-4 flex justify-end border-b border-gold/10">
                 <button
@@ -242,8 +243,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         to={link.path}
                         onClick={() => setMenuOpen(false)}
-                        onPointerDown={() => setMenuOpen(false)}
-                        className={`text-sm font-medium py-2.5 block transition-colors active:translate-x-1 duration-200 ${
+                        className={`text-sm font-medium py-3 px-4 block transition-colors active:bg-gold/10 rounded-lg ${
                           location.pathname === link.path
                             ? "text-gold"
                             : "text-muted-foreground hover:text-gold"
