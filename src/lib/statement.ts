@@ -35,7 +35,7 @@ function drawWatermark(doc: jsPDF) {
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(40);
   doc.setTextColor(180, 142, 73);
-  const text = 'চন্দনাইশ দরবার শরীফ';
+  const text = 'Chandanaish Darbar Sharif';
   for (let y = 60; y < ph; y += 90) {
     for (let x = -30; x < pw + 30; x += 180) {
       doc.text(text, x, y, { angle: 35 });
@@ -69,10 +69,10 @@ function drawOrgSeal(doc: jsPDF, cx: number, cy: number, radius = 12) {
   doc.circle(cx, cy, radius - 2);
   // Center text
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(6);
+  doc.setFontSize(7);
   doc.setTextColor(...PDF_COLORS.accent);
-  doc.text('দরবার', cx, cy - 1.5, { align: 'center' });
-  doc.text('শরীফ', cx, cy + 2.5, { align: 'center' });
+  doc.text('DARBAR', cx, cy - 1.5, { align: 'center' });
+  doc.text('SHARIF', cx, cy + 2.5, { align: 'center' });
   // Outer ring text hint
   doc.setFontSize(4);
   doc.text('OFFICIAL SEAL', cx, cy + radius + 3, { align: 'center' });
@@ -150,7 +150,7 @@ function drawVerificationStamp(doc: jsPDF, y: number) {
   doc.setFont(BANGLA_FONT_NAME, 'normal');
   doc.setFontSize(7);
   doc.setTextColor(130, 130, 130);
-  doc.text('Authorized Signature / অনুমোদনকারীর স্বাক্ষর', 14, y + stampH);
+  doc.text('Authorized Signature', 14, y + stampH);
 }
 
 function addPdfHeader(
@@ -166,8 +166,8 @@ function addPdfHeader(
   // Main organization name (left)
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setTextColor(...PDF_COLORS.headerText);
-  doc.setFontSize(18);
-  doc.text('চন্দনাইশ দরবার শরীফ', 14, 18);
+  doc.setFontSize(16);
+  doc.text('Chandanaish Darbar Sharif', 14, 18);
   // Subtitle (left)
   doc.setFontSize(10);
   doc.setTextColor(...PDF_COLORS.accent);
@@ -957,18 +957,18 @@ function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(17);
-  doc.text('চন্দনাইশ দরবার শরীফ', 14, 15);
+  doc.text('Chandanaish Darbar Sharif', 14, 15);
 
   // Organization name — English (secondary)
   doc.setFontSize(8);
   doc.setTextColor(200, 200, 200);
-  doc.text('CHANDANAISH DARBAR SHARIF', 14, 20);
+  doc.text('OFFICIAL RECEIPT', 14, 20);
 
   // Tagline / Silsila
   doc.setFontSize(8);
   doc.setTextColor(...PDF_COLORS.accent);
-  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 26);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 31);
+  doc.text('Silsila-E-Tariqa-e-Maizbhandaria', 14, 26);
+  doc.text('Chandanaish, Chattogram | 01622-721996', 14, 31);
 
   // Document title (bottom of header)
   doc.setFont(BANGLA_FONT_NAME, 'bold');
