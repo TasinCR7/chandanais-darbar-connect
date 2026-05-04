@@ -140,7 +140,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sticky Navigation */}
       <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
+        <div className="w-full max-w-[1920px] mx-auto px-4 xl:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-2 md:gap-3 min-w-0 mr-2">
             <Link to="/" className="flex items-center gap-2 md:gap-3" aria-label="হোম পেজ">
               {appSettings.site_logo_url && (
@@ -170,7 +170,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     routeImports[route]();
                   }
                 }}
-                className={`whitespace-nowrap text-[11px] 2xl:text-xs font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
+                className={`whitespace-nowrap text-[13px] 2xl:text-[14px] font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
                   ? "text-gold"
                   : "text-muted-foreground"
                   }`}
