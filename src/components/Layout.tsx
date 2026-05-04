@@ -153,7 +153,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-3">
+          <nav className="hidden xl:flex items-center gap-2 xl:gap-3 2xl:gap-4 overflow-x-auto no-scrollbar">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -170,7 +170,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     routeImports[route]();
                   }
                 }}
-                className={`text-sm font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
+                className={`whitespace-nowrap text-[11px] 2xl:text-xs font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
                   ? "text-gold"
                   : "text-muted-foreground"
                   }`}
