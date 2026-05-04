@@ -21,7 +21,7 @@ const routeImports: Record<string, () => Promise<unknown>> = {
   "/transparency": () => import("../pages/Transparency"),
   "/member-portal": () => import("../pages/MemberPortal"),
 };
-import { Menu, X, Phone, Bell, Settings, MapPin, ChevronDown } from "lucide-react";
+import { Menu, X, Phone, Bell, Settings, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import DeveloperTeam from "./DeveloperTeam";
@@ -30,13 +30,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { Lock } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-const allNavLinks = [
-  { path: "/", label: "হোম" },
+const navLinks = [
   { path: "/about", label: "দরবার পরিচিতি" },
   { path: "/pir", label: "পীর ও শাহজাদা" },
   { path: "/rules", label: "নিয়ম-নীতি" },
   { path: "/events", label: "ওরশ ও অনুষ্ঠান" },
-  { path: "/hadia", label: "হাদিয়া ও নজরানা" },
+  { path: "/hadia", label: "ছাফিয়া ও নজরানা" },
   { path: "/gallery", label: "গ্যালারি" },
   { path: "/notices", label: "নোটিশ" },
   { path: "/committee", label: "কমিটি" },
@@ -50,7 +49,6 @@ const allNavLinks = [
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { isStaff, user } = useAuth();
@@ -123,9 +121,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  const mainLinks = allNavLinks.slice(0, 8);
-  const moreLinks = allNavLinks.slice(8);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Skip to Content for Accessibility */}
@@ -145,21 +140,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sticky Navigation */}
       <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
-        <div className="container mx-auto px-4 flex items-center justify-between h-16 gap-4">
-          <div className="flex items-center gap-2 md:gap-3 min-w-0 shrink-0">
+        <div className="container mx-auto px-4 flex items-center justify-between h-16">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0 mr-2">
             <Link to="/" className="flex items-center gap-2 md:gap-3" aria-label="হোম পেজ">
               {appSettings.site_logo_url && (
                 <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
               )}
-              <span className="text-gold font-heading font-bold text-sm md:text-base lg:text-lg leading-tight truncate max-w-[120px] md:max-w-none">
+              <span className="text-gold font-heading font-bold text-sm md:text-lg leading-tight truncate">
                 {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
               </span>
             </Link>
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-4 lg:gap-5">
-            {mainLinks.map((link) => (
+          <nav className="hidden xl:flex items-center gap-3">
+            {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -183,42 +178,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 {link.label}
               </Link>
             ))}
-
-            {/* More Dropdown */}
-            <div className="relative group">
-              <button 
-                onMouseEnter={() => setMoreMenuOpen(true)}
-                onMouseLeave={() => setMoreMenuOpen(false)}
-                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-gold transition-colors py-2"
-              >
-                অধিক <ChevronDown size={14} className={`transition-transform duration-300 ${moreMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              <div 
-                onMouseEnter={() => setMoreMenuOpen(true)}
-                onMouseLeave={() => setMoreMenuOpen(false)}
-                className={`absolute right-0 top-full pt-2 w-56 transition-all duration-300 z-50 ${moreMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2'}`}
-              >
-                <div className="bg-background/95 backdrop-blur-xl border border-gold/20 rounded-xl shadow-2xl overflow-hidden py-2">
-                  {moreLinks.map((link) => (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      className={`block px-5 py-2.5 text-sm font-medium transition-colors hover:bg-gold/10 ${location.pathname === link.path ? "text-gold bg-gold/5" : "text-muted-foreground hover:text-gold"}`}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <Link
-              to="/hadia"
-              className="bg-gold-gradient text-primary-foreground px-4 py-2 rounded-md text-sm font-semibold gold-glow-hover transition-all duration-300 shrink-0"
-            >
-              হাদিয়া দিন
-            </Link>
             <Link
               to="/admin"
               className="text-muted-foreground hover:text-gold transition-colors duration-300 p-2"
@@ -283,7 +242,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               <div className="flex-1 overflow-y-auto py-6 px-6">
                 <div className="flex flex-col gap-1">
-                  {allNavLinks.map((link, i) => (
+                  {navLinks.map((link, i) => (
                     <motion.div
                       key={link.path}
                       initial={{ opacity: 0, x: 20 }}
@@ -424,7 +383,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div>
               <h4 className="text-gold font-heading font-semibold mb-4">দ্রুত লিংক</h4>
               <div className="flex flex-col gap-2">
-                {allNavLinks.slice(0, 4).map((link) => (
+                {navLinks.slice(0, 4).map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
