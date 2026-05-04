@@ -595,127 +595,173 @@ export async function downloadReceiptPDF(
   member: MemberLite,
   payment: PaymentLite & { id?: string },
 ) {
-  const doc = new jsPDF();
-  await ensureBanglaFont(doc);
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-
-  // Draw page border first
-  drawPageBorder(doc);
-
-  drawOrgHeader(
-    doc,
-    'OFFICIAL PAYMENT RECEIPT',
-    `Receipt for ${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`
-  );
-
-  // Generate QR Code (positioned in header area)
-  const qrData = `Receipt: ${payment.id || 'N/A'}\nMember: ${member.member_code}\nAmount: BDT ${payment.amount}\nDate: ${payment.payment_date}\nVerified: true`;
-  try {
-    const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
-    doc.addImage(qrDataUrl, 'PNG', pageWidth - 40, 8, 28, 28);
-  } catch (e) {
-    console.warn("QR generation failed", e);
-  }
-
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = 210; // A4 width in mm
+  
   // Financial calculations
   const expected = Number(member.monthly_rate) || 0;
   const paidAmt = Number(payment.amount);
   const due = Math.max(0, expected - paidAmt);
   const status = paidAmt >= expected ? 'PAID' : paidAmt > 0 ? 'PARTIAL' : 'DUE';
-  const statusColors = status === 'PAID'
-    ? { bg: PDF_COLORS.successFill, text: PDF_COLORS.successText, border: PDF_COLORS.successBorder }
-    : status === 'PARTIAL'
-    ? { bg: PDF_COLORS.partialFill, text: PDF_COLORS.partialText, border: PDF_COLORS.partialBorder }
-    : { bg: PDF_COLORS.dueFill, text: PDF_COLORS.dueText, border: PDF_COLORS.dueBorder };
-
-  // ===== AMOUNT HIGHLIGHT BANNER =====
-  const bannerY = 60;
-  doc.setFillColor(...PDF_COLORS.sectionBg);
-  doc.setDrawColor(...PDF_COLORS.borderLight);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(14, bannerY, pageWidth - 28, 30, 3, 3, 'FD');
-
-  // Amount (large, prominent)
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(22);
-  doc.setTextColor(...PDF_COLORS.accent);
-  doc.text(formatBDT(paidAmt), 22, bannerY + 15);
-
-  // Status badge
-  const badgeX = 120;
   const statusLabel = status === 'PAID' ? 'PAID IN FULL' : status === 'PARTIAL' ? 'PARTIAL PAYMENT' : 'UNPAID';
-  doc.setFillColor(...statusColors.bg);
-  doc.setDrawColor(...statusColors.border);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(badgeX, bannerY + 5, 60, 12, 2, 2, 'FD');
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...statusColors.text);
-  doc.text(statusLabel, badgeX + 30, bannerY + 12.5, { align: 'center' });
+  const statusColor = status === 'PAID' ? '#166534' : status === 'PARTIAL' ? '#854d0e' : '#991b1b';
+  const statusBg = status === 'PAID' ? '#f0fdf4' : status === 'PARTIAL' ? '#fefce8' : '#fef2f2';
+  
+  const receiptNo = payment.id?.slice(0, 12).toUpperCase() ?? `RCT-${Date.now().toString(36).slice(-6).toUpperCase()}`;
 
-  // Month label
-  doc.setFontSize(8);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(100, 100, 100);
-  doc.text(`For: ${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`, 22, bannerY + 23);
-  doc.text(`Date: ${payment.payment_date}`, 80, bannerY + 23);
-  doc.text(`Method: ${methodLabel(payment.method)}`, badgeX, bannerY + 23);
+  // Generate QR Code as Data URL
+  const qrData = `Receipt: ${payment.id || 'N/A'}\nMember: ${member.member_code}\nAmount: BDT ${payment.amount}\nDate: ${payment.payment_date}\nVerified: true`;
+  let qrCodeUrl = '';
+  try {
+    qrCodeUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 120 });
+  } catch (e) {
+    console.warn("QR generation failed", e);
+  }
 
-  // ===== MEMBER INFO TABLE =====
-  const infoY = bannerY + 38;
-  drawSectionDivider(doc, infoY, 'MEMBER DETAILS');
+  // Create HTML template for the receipt
+  const html = `
+    <div id="receipt-container" style="
+      width: 794px; 
+      padding: 40px; 
+      font-family: 'Noto Sans Bengali', sans-serif; 
+      color: #1a1a1a; 
+      background: white; 
+      position: relative;
+      border: 1px solid #e2e8f0;
+    ">
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap');
+        .label { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .value { color: #1e293b; font-size: 15px; font-weight: 700; }
+        .data-row { display: flex; border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
+        .data-col { flex: 1; }
+      </style>
 
-  autoTable(doc, {
-    startY: infoY + 6,
-    body: [
-      ['Receipt No', payment.id?.slice(0, 12).toUpperCase() ?? `RCT-${Date.now().toString(36).slice(-6).toUpperCase()}`],
-      ['Member ID', member.member_code],
-      ['Full Name', member.full_name],
-      ['Phone', member.phone || '-'],
-      ['Area', member.area || '-'],
-      ['Monthly Rate', formatBDT(expected)],
-      ['Paid Amount', formatBDT(paidAmt)],
-      ['Due Amount', due > 0 ? formatBDT(due) : 'NIL'],
-      ['Payment Method', methodLabel(payment.method)],
-      ['Reference', payment.transaction_ref || '-'],
-      ['Generated At', new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })],
-    ],
-    theme: 'plain',
-    styles: {
-      font: BANGLA_FONT_NAME, fontSize: 9,
-      cellPadding: { top: 3, bottom: 3, left: 6, right: 6 },
-      lineColor: [235, 235, 235], lineWidth: 0.1,
+      <!-- Header with Border Decor -->
+      <div style="position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; border: 1px solid #B48E49; pointer-events: none; opacity: 0.2;"></div>
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; position: relative; z-index: 10;">
+        <div>
+          <h1 style="color: #B48E49; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.02em;">চন্দনাইশ দরবার শরীফ</h1>
+          <p style="color: #64748b; margin: 5px 0 0 0; font-size: 13px; font-weight: 500;">CHANDANAISH DARBAR SHARIF — OFFICIAL RECEIPT</p>
+          <p style="color: #94a3b8; margin: 2px 0 0 0; font-size: 11px;">চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | ডিজিটাল পেমেন্ট রসিদ</p>
+        </div>
+        <img src="${qrCodeUrl}" style="width: 100px; height: 100px; border: 1px solid #f1f5f9; padding: 5px;" />
+      </div>
+
+      <div style="height: 4px; background: linear-gradient(to right, #B48E49, #dfbd7d, #B48E49); margin-bottom: 30px; border-radius: 2px;"></div>
+
+      <!-- Amount Banner -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; position: relative; z-index: 10;">
+        <div>
+          <p class="label" style="margin-bottom: 5px;">পরিশোধিত টাকার পরিমাণ / Paid Amount</p>
+          <p style="font-size: 32px; font-weight: 900; color: #B48E49; margin: 0;">${formatBDT(paidAmt)}</p>
+        </div>
+        <div style="background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 8px 20px; border-radius: 99px; font-weight: 700; font-size: 14px;">
+          ${statusLabel}
+        </div>
+      </div>
+
+      <!-- Details Section -->
+      <div style="margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">
+        <h3 style="margin: 0; font-size: 16px; color: #B48E49; letter-spacing: 0.1em;">MEMBER & TRANSACTION DETAILS</h3>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; position: relative; z-index: 10;">
+        <div style="background: #fff; border: 1px solid #f1f5f9; padding: 15px; border-radius: 8px;">
+          <div style="margin-bottom: 15px;">
+            <p class="label">রসিদ নম্বর / Receipt No</p>
+            <p class="value" style="font-family: monospace;">${receiptNo}</p>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <p class="label">সদস্যের নাম / Full Name</p>
+            <p class="value">${member.full_name}</p>
+          </div>
+          <div>
+            <p class="label">মোবাইল / Phone</p>
+            <p class="value">${member.phone || '-'}</p>
+          </div>
+        </div>
+        
+        <div style="background: #fff; border: 1px solid #f1f5f9; padding: 15px; border-radius: 8px;">
+          <div style="margin-bottom: 15px;">
+            <p class="label">সদস্য আইডি / Member ID</p>
+            <p class="value">${member.member_code}</p>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <p class="label">এলাকা / Area</p>
+            <p class="value">${member.area || '-'}</p>
+          </div>
+          <div>
+            <p class="label">মাসের নাম / Payment For</p>
+            <p class="value">${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 60px;">
+        <div class="data-row">
+          <div class="data-col"><p class="label">নির্ধারিত চাঁদা / Monthly Rate</p></div>
+          <div class="data-col" style="text-align: right;"><p class="value">${formatBDT(expected)}</p></div>
+        </div>
+        <div class="data-row">
+          <div class="data-col"><p class="label">পরিশোধিত / Paid Amount</p></div>
+          <div class="data-col" style="text-align: right;"><p class="value" style="color: #166534;">${formatBDT(paidAmt)}</p></div>
+        </div>
+        <div class="data-row" style="border: none;">
+          <div class="data-col"><p class="label">বকেয়া / Due Amount</p></div>
+          <div class="data-col" style="text-align: right;"><p class="value" style="color: ${due > 0 ? '#991b1b' : '#166534'};">${due > 0 ? formatBDT(due) : 'NIL'}</p></div>
+        </div>
+      </div>
+
+      <!-- Verification Info -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div style="text-align: center;">
+          <div style="width: 150px; border-bottom: 1px solid #cbd5e1; margin-bottom: 8px;"></div>
+          <p style="font-size: 11px; color: #94a3b8; margin: 0;">Authorized Signature</p>
+        </div>
+        
+        <div style="text-align: center; opacity: 0.8;">
+          <div style="width: 80px; height: 80px; border: 2px dashed #B48E49; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px;">
+            <div style="text-align: center; font-size: 8px; color: #B48E49; font-weight: bold;">
+              OFFICIAL<br/>SEAL
+            </div>
+          </div>
+          <p style="font-size: 10px; color: #B48E49; font-weight: bold; margin: 0;">VERIFIED</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+        <p style="font-size: 10px; color: #94a3b8; margin: 0;">
+          This is a computer-generated receipt. No manual signature is required.
+        </p>
+        <p style="font-size: 9px; color: #cbd5e1; margin: 5px 0 0 0;">
+          Generated At: ${new Date().toLocaleString()}
+        </p>
+      </div>
+    </div>
+  `;
+
+  // Use jspdf's html method to render the PDF
+  // We create a temporary hidden div
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  container.style.top = '-9999px';
+  document.body.appendChild(container);
+
+  await doc.html(container, {
+    callback: function (doc) {
+      document.body.removeChild(container);
+      doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
     },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 65, fillColor: [248, 246, 240], textColor: [80, 70, 50] },
-      1: { textColor: [30, 30, 30] },
-    },
-    margin: { left: 14, right: 14 },
-    tableLineColor: [220, 215, 200],
-    tableLineWidth: 0.2,
+    x: 0,
+    y: 0,
+    width: pageWidth,
+    windowWidth: 794 // 794px is exactly 210mm at 96dpi
   });
-
-  const finalY = (doc as any).lastAutoTable.finalY + 12;
-
-  // ===== VERIFICATION STAMP + ORG SEAL =====
-  drawVerificationStamp(doc, finalY);
-  drawOrgSeal(doc, pageWidth - 35, finalY + 14, 10);
-
-  // Watermark
-  drawWatermark(doc);
-
-  // Simple footer
-  doc.setFillColor(248, 248, 248);
-  doc.rect(0, pageHeight - 16, pageWidth, 16, 'F');
-  doc.setFillColor(...PDF_COLORS.accent);
-  doc.rect(0, pageHeight - 16, pageWidth, 0.3, 'F');
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setFontSize(6);
-  doc.setTextColor(150, 150, 150);
-  doc.text('This is a computer-generated receipt. No manual signature is required. | Chandanaish Darbar Sharif', pageWidth / 2, pageHeight - 8, { align: 'center' });
-
-  doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
 }
 
 /**
