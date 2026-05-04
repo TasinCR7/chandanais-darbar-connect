@@ -298,6 +298,42 @@ export type Database = {
         }
         Relationships: []
       }
+      committee_contributions: {
+        Row: {
+          amount: number
+          area: string | null
+          created_at: string
+          id: string
+          name: string
+          note: string | null
+          payment_method: string | null
+          target_month: string
+          transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          area?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          note?: string | null
+          payment_method?: string | null
+          target_month: string
+          transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          area?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          note?: string | null
+          payment_method?: string | null
+          target_month?: string
+          transaction_id?: string | null
+        }
+        Relationships: []
+      }
       finances: {
         Row: {
           amount: number

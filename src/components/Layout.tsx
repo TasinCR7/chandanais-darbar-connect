@@ -67,7 +67,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     },
     staleTime: 10 * 60 * 1000,
   });
-  
+
   const { data: scrollingNotices = [] } = useQuery({
     queryKey: ['scrolling_notices'],
     queryFn: async () => {
@@ -77,7 +77,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .eq('type', 'scrolling')
         .eq('is_active', true)
         .order('created_at', { ascending: false }));
-      
+
       if (data && data.length > 0) {
         return data.map((n: any) => n.title);
       } else if (appSettings.global_notice_message) {
@@ -106,6 +106,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,8 +172,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   }
                 }}
                 className={`text-sm font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
-                    ? "text-gold"
-                    : "text-muted-foreground"
+                  ? "text-gold"
+                  : "text-muted-foreground"
                   }`}
               >
                 {link.label}
@@ -196,7 +211,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              onPointerDown={() => setMenuOpen(!menuOpen)}
               className="text-gold p-2 active:scale-90 transition-transform"
               aria-label="মেনু"
             >
@@ -227,13 +241,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <div className="p-4 flex justify-end border-b border-gold/10">
                 <button
                   onClick={() => setMenuOpen(false)}
-                  onPointerDown={() => setMenuOpen(false)}
                   className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90"
                 >
                   <X size={28} />
                 </button>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto py-6 px-6">
                 <div className="flex flex-col gap-1">
                   {navLinks.map((link, i) => (
@@ -243,21 +256,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + i * 0.05 }}
                     >
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setMenuOpen(false);
-                          navigate(link.path);
-                        }}
-                        className={`w-full text-left text-sm font-medium py-3 px-4 block transition-colors active:bg-gold/10 rounded-lg ${
-                          location.pathname === link.path
-                            ? "text-gold bg-gold/5"
+                      <Link
+                        to={link.path}
+                        className={`w-full text-left text-sm font-medium py-3 px-4 block transition-all active:bg-gold/10 active:scale-[0.98] rounded-lg ${location.pathname === link.path
+                            ? "text-gold bg-gold/5 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
                             : "text-muted-foreground hover:text-gold"
-                        }`}
+                          }`}
                       >
                         {link.label}
-                      </button>
+                      </Link>
                     </motion.div>
                   ))}
                 </div>
@@ -266,9 +273,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
                 <Link
                   to="/hadia"
-                  onClick={() => setMenuOpen(false)}
-                  onPointerDown={() => setMenuOpen(false)}
-                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform"
+                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-all relative z-50 mb-safe"
                 >
                   হাদিয়া দিন
                 </Link>
@@ -362,8 +367,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content */}
       <main id="main-content" className={
-        scrollingNotices.length > 0 
-          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[132px]" : "pt-[108px]") 
+        scrollingNotices.length > 0
+          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[132px]" : "pt-[108px]")
           : (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[88px]" : "pt-16")
       }>{children}</main>
 
