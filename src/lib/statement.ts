@@ -3,18 +3,155 @@ import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
 
-// ---------- PDF Styling Helpers ----------
+// ---------- PDF Advanced Styling Helpers ----------
 const PDF_COLORS = {
-  headerBg: [30, 30, 30] as [number, number, number],
+  headerBg: [18, 18, 18] as [number, number, number],
+  headerBgLight: [35, 35, 35] as [number, number, number],
   headerText: [255, 255, 255] as [number, number, number],
   accent: [180, 142, 73] as [number, number, number],
-  successFill: [231, 245, 236] as [number, number, number],
-  successText: [22, 117, 61] as [number, number, number],
-  partialFill: [253, 243, 214] as [number, number, number],
-  partialText: [160, 104, 0] as [number, number, number],
-  dueFill: [253, 226, 226] as [number, number, number],
-  dueText: [180, 24, 24] as [number, number, number],
+  accentLight: [212, 175, 95] as [number, number, number],
+  accentDark: [140, 110, 55] as [number, number, number],
+  successFill: [220, 252, 231] as [number, number, number],
+  successText: [22, 101, 52] as [number, number, number],
+  successBorder: [74, 222, 128] as [number, number, number],
+  partialFill: [254, 249, 195] as [number, number, number],
+  partialText: [133, 77, 14] as [number, number, number],
+  partialBorder: [250, 204, 21] as [number, number, number],
+  dueFill: [254, 226, 226] as [number, number, number],
+  dueText: [153, 27, 27] as [number, number, number],
+  dueBorder: [248, 113, 113] as [number, number, number],
+  footerBg: [245, 245, 245] as [number, number, number],
+  mutedText: [120, 120, 120] as [number, number, number],
+  sectionBg: [250, 248, 243] as [number, number, number],
+  borderLight: [230, 230, 230] as [number, number, number],
 };
+
+/** Draw subtle diagonal watermark pattern across entire page */
+function drawWatermark(doc: jsPDF) {
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  doc.saveGraphicsState();
+  doc.setGState(new (doc as any).GState({ opacity: 0.025 }));
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(40);
+  doc.setTextColor(180, 142, 73);
+  const text = 'চন্দনাইশ দরবার শরীফ';
+  for (let y = 60; y < ph; y += 90) {
+    for (let x = -30; x < pw + 30; x += 180) {
+      doc.text(text, x, y, { angle: 35 });
+    }
+  }
+  doc.restoreGraphicsState();
+}
+
+/** Draw decorative gold border frame on page edges */
+function drawPageBorder(doc: jsPDF) {
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  doc.setDrawColor(...PDF_COLORS.accent);
+  doc.setLineWidth(0.3);
+  // Outer frame with small inset
+  doc.rect(4, 4, pw - 8, ph - 8);
+  // Inner subtle frame
+  doc.setDrawColor(...PDF_COLORS.borderLight);
+  doc.setLineWidth(0.15);
+  doc.rect(6, 6, pw - 12, ph - 12);
+}
+
+/** Draw an organizational seal circle at given position */
+function drawOrgSeal(doc: jsPDF, cx: number, cy: number, radius = 12) {
+  // Outer ring
+  doc.setDrawColor(...PDF_COLORS.accent);
+  doc.setLineWidth(0.8);
+  doc.circle(cx, cy, radius);
+  // Inner ring
+  doc.setLineWidth(0.3);
+  doc.circle(cx, cy, radius - 2);
+  // Center text
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(6);
+  doc.setTextColor(...PDF_COLORS.accent);
+  doc.text('দরবার', cx, cy - 1.5, { align: 'center' });
+  doc.text('শরীফ', cx, cy + 2.5, { align: 'center' });
+  // Outer ring text hint
+  doc.setFontSize(4);
+  doc.text('OFFICIAL SEAL', cx, cy + radius + 3, { align: 'center' });
+}
+
+/** Draw a compact horizontal progress bar */
+function drawProgressBar(
+  doc: jsPDF, x: number, y: number, w: number, h: number,
+  pct: number, label?: string,
+) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  // Background track
+  doc.setFillColor(235, 235, 235);
+  doc.roundedRect(x, y, w, h, h / 2, h / 2, 'F');
+  // Filled portion
+  if (clamped > 0) {
+    const fillW = (w * clamped) / 100;
+    const fillColor: [number, number, number] =
+      clamped >= 80 ? [34, 197, 94] : clamped >= 50 ? [250, 204, 21] : [239, 68, 68];
+    doc.setFillColor(...fillColor);
+    doc.roundedRect(x, y, Math.max(h, fillW), h, h / 2, h / 2, 'F');
+  }
+  // Label
+  if (label) {
+    doc.setFontSize(6);
+    doc.setTextColor(80, 80, 80);
+    doc.text(label, x + w + 2, y + h - 0.5);
+  }
+}
+
+/** Draw a section divider with label */
+function drawSectionDivider(doc: jsPDF, y: number, label: string) {
+  const pw = doc.internal.pageSize.getWidth();
+  // Gold gradient stripe
+  doc.setFillColor(...PDF_COLORS.accent);
+  doc.rect(14, y, pw - 28, 0.5, 'F');
+  // Label chip
+  const labelWidth = doc.getTextWidth(label) + 12;
+  doc.setFillColor(255, 255, 255);
+  doc.rect(pw / 2 - labelWidth / 2, y - 3, labelWidth, 6, 'F');
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_COLORS.accent);
+  doc.text(label, pw / 2, y + 1.5, { align: 'center' });
+}
+
+/** Draw verification stamp block */
+function drawVerificationStamp(doc: jsPDF, y: number) {
+  const pw = doc.internal.pageSize.getWidth();
+  const stampW = 65;
+  const stampH = 28;
+  const sx = pw - 14 - stampW;
+
+  // Stamp border (dashed feel via double rect)
+  doc.setDrawColor(...PDF_COLORS.successText);
+  doc.setLineWidth(0.6);
+  doc.rect(sx, y, stampW, stampH);
+  doc.setLineWidth(0.2);
+  doc.rect(sx + 1.5, y + 1.5, stampW - 3, stampH - 3);
+
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...PDF_COLORS.successText);
+  doc.text('VERIFIED', sx + stampW / 2, y + 9, { align: 'center' });
+  doc.setFontSize(6);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Digitally Generated & Verified', sx + stampW / 2, y + 14, { align: 'center' });
+  doc.text(`Timestamp: ${new Date().toISOString().slice(0, 19)}`, sx + stampW / 2, y + 18, { align: 'center' });
+  doc.text('Chandanaish Darbar Sharif', sx + stampW / 2, y + 22, { align: 'center' });
+
+  // Authorized signature line (left side)
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.line(14, y + stampH - 5, sx - 10, y + stampH - 5);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(130, 130, 130);
+  doc.text('Authorized Signature / অনুমোদনকারীর স্বাক্ষর', 14, y + stampH);
+}
 
 function addPdfHeader(
   doc: jsPDF,
@@ -173,6 +310,8 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
+  drawPageBorder(doc);
+
   drawOrgHeader(
     doc,
     'ANNUAL ACCOUNT STATEMENT',
@@ -328,6 +467,8 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
+  drawPageBorder(doc);
+
   drawOrgHeader(
     doc,
     'MEMBER ACCOUNT STATEMENT',
@@ -457,66 +598,122 @@ export async function downloadReceiptPDF(
   const doc = new jsPDF();
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
-  
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Draw page border first
+  drawPageBorder(doc);
+
   drawOrgHeader(
     doc,
-    'PAYMENT RECEIPT (পেমেন্ট রসিদ)',
-    `Official Digitally Verified Receipt`
+    'OFFICIAL PAYMENT RECEIPT',
+    `Receipt for ${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`
   );
 
-  // Generate QR Code
-  const qrData = `Receipt: ${payment.id || 'N/A'}\nMember: ${member.member_code}\nAmount: BDT ${payment.amount}\nDate: ${payment.payment_date}`;
+  // Generate QR Code (positioned in header area)
+  const qrData = `Receipt: ${payment.id || 'N/A'}\nMember: ${member.member_code}\nAmount: BDT ${payment.amount}\nDate: ${payment.payment_date}\nVerified: true`;
   try {
-    const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 80 });
-    doc.addImage(qrDataUrl, 'PNG', pageWidth - 38, 10, 25, 25);
+    const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
+    doc.addImage(qrDataUrl, 'PNG', pageWidth - 40, 8, 28, 28);
   } catch (e) {
     console.warn("QR generation failed", e);
   }
 
   // Financial calculations
   const expected = Number(member.monthly_rate) || 0;
-  const due = Math.max(0, expected - Number(payment.amount));
-  const status = payment.amount >= expected ? 'PAID' : payment.amount > 0 ? 'PARTIAL' : 'DUE';
+  const paidAmt = Number(payment.amount);
+  const due = Math.max(0, expected - paidAmt);
+  const status = paidAmt >= expected ? 'PAID' : paidAmt > 0 ? 'PARTIAL' : 'DUE';
+  const statusColors = status === 'PAID'
+    ? { bg: PDF_COLORS.successFill, text: PDF_COLORS.successText, border: PDF_COLORS.successBorder }
+    : status === 'PARTIAL'
+    ? { bg: PDF_COLORS.partialFill, text: PDF_COLORS.partialText, border: PDF_COLORS.partialBorder }
+    : { bg: PDF_COLORS.dueFill, text: PDF_COLORS.dueText, border: PDF_COLORS.dueBorder };
+
+  // ===== AMOUNT HIGHLIGHT BANNER =====
+  const bannerY = 60;
+  doc.setFillColor(...PDF_COLORS.sectionBg);
+  doc.setDrawColor(...PDF_COLORS.borderLight);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(14, bannerY, pageWidth - 28, 30, 3, 3, 'FD');
+
+  // Amount (large, prominent)
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(...PDF_COLORS.accent);
+  doc.text(formatBDT(paidAmt), 22, bannerY + 15);
+
+  // Status badge
+  const badgeX = 120;
+  const statusLabel = status === 'PAID' ? 'PAID IN FULL' : status === 'PARTIAL' ? 'PARTIAL PAYMENT' : 'UNPAID';
+  doc.setFillColor(...statusColors.bg);
+  doc.setDrawColor(...statusColors.border);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(badgeX, bannerY + 5, 60, 12, 2, 2, 'FD');
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...statusColors.text);
+  doc.text(statusLabel, badgeX + 30, bannerY + 12.5, { align: 'center' });
+
+  // Month label
+  doc.setFontSize(8);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text(`For: ${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`, 22, bannerY + 23);
+  doc.text(`Date: ${payment.payment_date}`, 80, bannerY + 23);
+  doc.text(`Method: ${methodLabel(payment.method)}`, badgeX, bannerY + 23);
+
+  // ===== MEMBER INFO TABLE =====
+  const infoY = bannerY + 38;
+  drawSectionDivider(doc, infoY, 'MEMBER DETAILS');
 
   autoTable(doc, {
-    startY: 50,
+    startY: infoY + 6,
     body: [
-      ['Receipt No (রশিদ নং)', payment.id?.slice(0, 12).toUpperCase() ?? '-'],
-      ['Member ID (মেম্বার আইডি)', member.member_code],
-      ['Full Name (নাম)', member.full_name],
-      ['Phone (মোবাইল)', member.phone || '-'],
-      ['Area (এলাকা)', member.area || '-'],
-      ['Month (মাসের নাম)', `${MONTHS_EN[payment.for_month - 1]} ${payment.for_year}`],
-      ['Expected (নির্ধারিত চাঁদা)', formatBDT(expected)],
-      ['Paid Amount (পরিশোধিত)', formatBDT(payment.amount)],
-      ['Due Amount (বকেয়া)', formatBDT(due)],
-      ['Status (স্ট্যাটাস)', status],
-      ['Payment Date (তারিখ)', payment.payment_date],
-      ['Method (মাধ্যম)', methodLabel(payment.method)],
-      ['Reference (রেফারেন্স)', payment.transaction_ref || '-'],
-      ['Approved By (অ্যাপ্রুভাল)', 'Admin / System Verified'],
-      ['Generated At (প্রস্তুত সময়)', new Date().toLocaleString()],
+      ['Receipt No', payment.id?.slice(0, 12).toUpperCase() ?? `RCT-${Date.now().toString(36).slice(-6).toUpperCase()}`],
+      ['Member ID', member.member_code],
+      ['Full Name', member.full_name],
+      ['Phone', member.phone || '-'],
+      ['Area', member.area || '-'],
+      ['Monthly Rate', formatBDT(expected)],
+      ['Paid Amount', formatBDT(paidAmt)],
+      ['Due Amount', due > 0 ? formatBDT(due) : 'NIL'],
+      ['Payment Method', methodLabel(payment.method)],
+      ['Reference', payment.transaction_ref || '-'],
+      ['Generated At', new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })],
     ],
-    theme: 'striped',
-    styles: { font: BANGLA_FONT_NAME, fontSize: 10, cellPadding: 5, lineColor: [220, 220, 220], lineWidth: 0.1 },
-    columnStyles: { 
-      0: { fontStyle: 'bold', cellWidth: 70, fillColor: [248, 250, 252], textColor: [51, 65, 85] },
-      1: { textColor: [15, 23, 42] }
+    theme: 'plain',
+    styles: {
+      font: BANGLA_FONT_NAME, fontSize: 9,
+      cellPadding: { top: 3, bottom: 3, left: 6, right: 6 },
+      lineColor: [235, 235, 235], lineWidth: 0.1,
     },
-    margin: { left: 14, right: 45 }, // Leave space for QR code
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 65, fillColor: [248, 246, 240], textColor: [80, 70, 50] },
+      1: { textColor: [30, 30, 30] },
+    },
+    margin: { left: 14, right: 14 },
+    tableLineColor: [220, 215, 200],
+    tableLineWidth: 0.2,
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-  
-  doc.setDrawColor(180, 142, 73);
-  doc.setLineWidth(0.5);
-  doc.line(14, finalY, pageWidth - 14, finalY);
+  const finalY = (doc as any).lastAutoTable.finalY + 12;
 
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  // ===== VERIFICATION STAMP + ORG SEAL =====
+  drawVerificationStamp(doc, finalY);
+  drawOrgSeal(doc, pageWidth - 35, finalY + 14, 10);
+
+  // Watermark
+  drawWatermark(doc);
+
+  // Simple footer
+  doc.setFillColor(248, 248, 248);
+  doc.rect(0, pageHeight - 16, pageWidth, 16, 'F');
+  doc.setFillColor(...PDF_COLORS.accent);
+  doc.rect(0, pageHeight - 16, pageWidth, 0.3, 'F');
   doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text('Authorized Signature: _____________________', 14, finalY + 15);
-  doc.text('Chandanaish Darbar Sharif — Digital Receipt', 14, finalY + 22);
+  doc.setFontSize(6);
+  doc.setTextColor(150, 150, 150);
+  doc.text('This is a computer-generated receipt. No manual signature is required. | Chandanaish Darbar Sharif', pageWidth / 2, pageHeight - 8, { align: 'center' });
 
   doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
 }
@@ -534,72 +731,139 @@ export async function downloadConsolidatedReceiptPDF(
   const doc = new jsPDF();
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
-  
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Page border
+  drawPageBorder(doc);
+
   drawOrgHeader(
     doc,
     'CONSOLIDATED PAYMENT RECEIPT',
-    `Official Bulk Collection Statement`
+    `Bulk Collection Statement - ${payments.length} Months`
   );
 
-  doc.setTextColor(0, 0, 0);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(11);
-  doc.text('MEMBER DETAILS (সদস্যের তথ্য)', 14, 52);
-  
-  doc.setFontSize(10);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(`Name: ${member.full_name} (${member.member_code})`, 14, 58);
-  doc.text(`Area: ${member.area || '-'} | Phone: ${member.phone || '-'}`, 14, 64);
-  
+  // QR Code for Consolidated
+  const qrDataC = `Bulk Receipt: ${payments.length} Months\nMember: ${member.member_code}\nTotal: BDT ${payments.reduce((s, p) => s + Number(p.amount), 0)}\nGenerated: ${new Date().toLocaleDateString()}`;
+  try {
+    const qrDataUrlC = await QRCode.toDataURL(qrDataC, { margin: 1, width: 100 });
+    doc.addImage(qrDataUrlC, 'PNG', pageWidth - 40, 8, 28, 28);
+  } catch (e) {
+    console.warn("QR generation failed", e);
+  }
+
   const expectedPerMonth = Number(member.monthly_rate) || 0;
   const totalExpected = expectedPerMonth * payments.length;
   const totalAmount = payments.reduce((s, p) => s + Number(p.amount), 0);
   const totalDue = Math.max(0, totalExpected - totalAmount);
 
-  doc.text(`Monthly Rate: ${formatBDT(expectedPerMonth)}`, pageWidth / 2, 58);
-  doc.text(`Total Due (বকেয়া): ${formatBDT(totalDue)}`, pageWidth / 2, 64);
-  
-  doc.text(`Approved By: Admin / Verified`, pageWidth - 45, 58, { align: 'right' });
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 14, 64, { align: 'right' });
+  // ===== SUMMARY BANNER (Premium 3-column) =====
+  const sumY = 60;
+  const colW = (pageWidth - 28) / 3;
 
-  // QR Code for Consolidated
-  const qrDataC = `Bulk Receipt: ${payments.length} Months\nMember: ${member.member_code}\nTotal: BDT ${totalAmount}\nGenerated: ${new Date().toLocaleDateString()}`;
-  try {
-    const qrDataUrlC = await QRCode.toDataURL(qrDataC, { margin: 1, width: 25 });
-    doc.addImage(qrDataUrlC, 'PNG', pageWidth - 40, 48, 25, 25);
-  } catch (e) {
-    console.warn("QR generation failed", e);
-  }
+  // Total Paid box
+  doc.setFillColor(...PDF_COLORS.successFill);
+  doc.setDrawColor(...PDF_COLORS.successBorder);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(14, sumY, colW - 2, 24, 2, 2, 'FD');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL PAID', 18, sumY + 8);
+  doc.setFontSize(13);
+  doc.setTextColor(...PDF_COLORS.successText);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.text(formatBDT(totalAmount), 18, sumY + 17);
+
+  // Expected box
+  const ex = 14 + colW;
+  doc.setFillColor(...PDF_COLORS.sectionBg);
+  doc.setDrawColor(...PDF_COLORS.borderLight);
+  doc.roundedRect(ex, sumY, colW - 2, 24, 2, 2, 'FD');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('TOTAL EXPECTED', ex + 4, sumY + 8);
+  doc.setFontSize(13);
+  doc.setTextColor(80, 80, 80);
+  doc.text(formatBDT(totalExpected), ex + 4, sumY + 17);
+
+  // Due box
+  const dueX = 14 + colW * 2;
+  const dueColor = totalDue > 0 ? PDF_COLORS.dueFill : PDF_COLORS.successFill;
+  const dueBorder = totalDue > 0 ? PDF_COLORS.dueBorder : PDF_COLORS.successBorder;
+  const dueTextC = totalDue > 0 ? PDF_COLORS.dueText : PDF_COLORS.successText;
+  doc.setFillColor(...dueColor);
+  doc.setDrawColor(...dueBorder);
+  doc.roundedRect(dueX, sumY, colW - 2, 24, 2, 2, 'FD');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.text('OUTSTANDING', dueX + 4, sumY + 8);
+  doc.setFontSize(13);
+  doc.setTextColor(...dueTextC);
+  doc.text(totalDue > 0 ? formatBDT(totalDue) : 'CLEARED', dueX + 4, sumY + 17);
+
+  // Member info line
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Member: ${member.full_name} (${member.member_code}) | Area: ${member.area || '-'} | Phone: ${member.phone || '-'} | Rate: ${formatBDT(expectedPerMonth)}/month`, 14, sumY + 30);
+
+  // ===== PAYMENT TABLE =====
+  drawSectionDivider(doc, sumY + 36, 'PAYMENT BREAKDOWN');
 
   autoTable(doc, {
-    startY: 75,
-    head: [['Month', 'Expected', 'Paid', 'Due', 'Date', 'Method', 'Reference']],
-    body: payments.map(p => {
+    startY: sumY + 42,
+    head: [['#', 'Month', 'Expected', 'Paid', 'Due', 'Date', 'Method', 'Reference']],
+    body: payments.map((p, idx) => {
       const pExpected = expectedPerMonth;
       const pPaid = Number(p.amount);
       const pDue = Math.max(0, pExpected - pPaid);
+      const pStatus = pPaid >= pExpected ? 'PAID' : pPaid > 0 ? 'PARTIAL' : 'DUE';
       return [
+        String(idx + 1),
         `${MONTHS_EN[p.for_month - 1]} ${p.for_year}`,
         formatBDT(pExpected),
         formatBDT(pPaid),
-        formatBDT(pDue),
+        pDue > 0 ? formatBDT(pDue) : '-',
         p.payment_date,
         methodLabel(p.method),
         p.transaction_ref || '-'
       ];
     }),
-    headStyles: { fillColor: [40, 40, 40], font: BANGLA_FONT_NAME, textColor: 255 },
-    bodyStyles: { font: BANGLA_FONT_NAME },
-    columnStyles: { 2: { fontStyle: 'bold' } },
-    foot: [['GRAND TOTAL', formatBDT(totalExpected), formatBDT(totalAmount), formatBDT(totalDue), '', '', '']],
-    footStyles: { fillColor: [240, 240, 240], textColor: [22, 117, 61], fontStyle: 'bold', font: BANGLA_FONT_NAME },
+    headStyles: { fillColor: [30, 30, 30], font: BANGLA_FONT_NAME, textColor: 255, fontSize: 8 },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center', textColor: [...PDF_COLORS.accent] },
+      2: { halign: 'right' },
+      3: { halign: 'right', fontStyle: 'bold' },
+      4: { halign: 'right' },
+    },
+    alternateRowStyles: { fillColor: [252, 250, 245] },
+    foot: [['', 'GRAND TOTAL', formatBDT(totalExpected), formatBDT(totalAmount), totalDue > 0 ? formatBDT(totalDue) : 'CLEAR', '', '', '']],
+    footStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: 'bold', font: BANGLA_FONT_NAME },
+    margin: { left: 14, right: 14 },
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 15;
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Authorized Signature: _____________________', 14, finalY + 10);
-  doc.text('Digital Receipt — Chandanaish Darbar Sharif', 14, finalY + 20);
+  const finalY = (doc as any).lastAutoTable.finalY + 12;
+
+  // Verification stamp + Org seal
+  drawVerificationStamp(doc, finalY);
+  drawOrgSeal(doc, pageWidth - 35, finalY + 14, 10);
+
+  // Achievement progress bar
+  const pct = totalExpected > 0 ? (totalAmount / totalExpected) * 100 : 100;
+  drawProgressBar(doc, 14, finalY + 35, 100, 4, pct, `${Math.round(pct)}% Achievement`);
+
+  // Watermark
+  drawWatermark(doc);
+
+  // Footer
+  doc.setFillColor(248, 248, 248);
+  doc.rect(0, pageHeight - 16, pageWidth, 16, 'F');
+  doc.setFillColor(...PDF_COLORS.accent);
+  doc.rect(0, pageHeight - 16, pageWidth, 0.3, 'F');
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(6);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Consolidated Receipt - Computer Generated & Verified | Chandanaish Darbar Sharif', pageWidth / 2, pageHeight - 8, { align: 'center' });
 
   doc.save(`receipt-bulk-${member.member_code}-${payments.length}-months.pdf`);
 }
@@ -618,31 +882,72 @@ const COL_DUE_TEXT: [number, number, number] = [180, 24, 24];
 
 function drawOrgHeader(doc: jsPDF, title: string, subtitle: string) {
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setFillColor(20, 20, 20);
-  doc.rect(0, 0, pageWidth, 45, 'F');
-  doc.setFillColor(180, 142, 73);
-  doc.rect(0, 45, pageWidth, 2, 'F');
 
+  // Multi-layer header background (gradient effect via stacked rects)
+  doc.setFillColor(12, 12, 12);
+  doc.rect(0, 0, pageWidth, 52, 'F');
+  // Subtle lighter strip at bottom of header
+  doc.setFillColor(25, 25, 25);
+  doc.rect(0, 42, pageWidth, 10, 'F');
+
+  // Gold accent stripe (thicker with subtle glow effect)
+  doc.setFillColor(...PDF_COLORS.accent);
+  doc.rect(0, 52, pageWidth, 2.5, 'F');
+  // Secondary thin gold line
+  doc.setFillColor(...PDF_COLORS.accentDark);
+  doc.rect(0, 54.5, pageWidth, 0.5, 'F');
+
+  // Decorative corner elements on header
+  doc.setDrawColor(...PDF_COLORS.accent);
+  doc.setLineWidth(0.5);
+  // Top-left corner bracket
+  doc.line(8, 4, 8, 12);
+  doc.line(8, 4, 20, 4);
+  // Top-right corner bracket
+  doc.line(pageWidth - 8, 4, pageWidth - 8, 12);
+  doc.line(pageWidth - 8, 4, pageWidth - 20, 4);
+
+  // Organization name — Bengali (primary)
   doc.setTextColor(255, 255, 255);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(17);
   doc.text('চন্দনাইশ দরবার শরীফ', 14, 15);
-  doc.setFontSize(9);
-  doc.setTextColor(180, 142, 73);
-  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 21);
-  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 27);
 
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  // Organization name — English (secondary)
+  doc.setFontSize(8);
+  doc.setTextColor(200, 200, 200);
+  doc.text('CHANDANAISH DARBAR SHARIF', 14, 20);
+
+  // Tagline / Silsila
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_COLORS.accent);
+  doc.text('সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া', 14, 26);
+  doc.text('চন্দনাইশ, চট্টগ্রাম | ০১৬২২-৭২১৯৯৬', 14, 31);
+
+  // Document title (bottom of header)
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.text(title, 14, 37);
-  doc.setFontSize(9);
-  doc.text(subtitle, pageWidth - 14, 37, { align: 'right' });
-  
+  doc.setFontSize(11);
+  doc.text(title, 14, 40);
+
+  // Subtitle right-aligned
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_COLORS.accentLight);
+  doc.text(subtitle, pageWidth - 14, 40, { align: 'right' });
+
+  // Date & Document ID (top-right)
+  doc.setFontSize(7);
+  doc.setTextColor(180, 180, 180);
   doc.text(
-    `Date: ${new Date().toLocaleDateString('en-US')}`,
+    `Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
     pageWidth - 14, 12, { align: 'right' },
   );
+  // Document ID (short unique hash)
+  const docId = `DOC-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+  doc.setFontSize(6);
+  doc.setTextColor(140, 140, 140);
+  doc.text(`Ref: ${docId}`, pageWidth - 14, 16, { align: 'right' });
 }
 
 function drawStatusLegend(doc: jsPDF, yPos: number) {
@@ -1011,10 +1316,45 @@ function stampFooters(doc: jsPDF, label: string) {
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text(`Page ${i} / ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
-    doc.text(label, 14, pageHeight - 8);
+
+    // Subtle footer background strip
+    doc.setFillColor(248, 248, 248);
+    doc.rect(0, pageHeight - 18, pageWidth, 18, 'F');
+    // Gold top border of footer
+    doc.setFillColor(...PDF_COLORS.accent);
+    doc.rect(0, pageHeight - 18, pageWidth, 0.4, 'F');
+
+    // Left: organization name + label
+    doc.setFont(BANGLA_FONT_NAME, 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(130, 130, 130);
+    doc.text(`Chandanaish Darbar Sharif | ${label}`, 14, pageHeight - 11);
+
+    // Center: confidentiality notice
+    doc.setFontSize(5.5);
+    doc.setTextColor(165, 165, 165);
+    doc.text(
+      'This document is computer-generated and verified. No manual signature is required.',
+      pageWidth / 2, pageHeight - 6, { align: 'center' },
+    );
+
+    // Right: page number
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 11, { align: 'right' });
+
+    // Decorative bottom corners
+    doc.setDrawColor(...PDF_COLORS.accent);
+    doc.setLineWidth(0.3);
+    // Bottom-left corner bracket
+    doc.line(8, pageHeight - 4, 8, pageHeight - 10);
+    doc.line(8, pageHeight - 4, 20, pageHeight - 4);
+    // Bottom-right corner bracket
+    doc.line(pageWidth - 8, pageHeight - 4, pageWidth - 8, pageHeight - 10);
+    doc.line(pageWidth - 8, pageHeight - 4, pageWidth - 20, pageHeight - 4);
+
+    // Draw watermark on every page
+    drawWatermark(doc);
   }
 }
 
@@ -1726,6 +2066,8 @@ export async function downloadAreaRankingPDF(
   const pageWidth = doc.internal.pageSize.getWidth();
   const monthLabel = month ? `${MONTHS_EN[month - 1]} ${year}` : `${year}`;
 
+  drawPageBorder(doc);
+
   drawOrgHeader(
     doc,
     `Area Collection Ranking — ${monthLabel}`,
@@ -1812,6 +2154,26 @@ export async function downloadAreaRankingPDF(
     footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
   });
 
+  // ===== VISUAL PROGRESS BARS FOR EACH AREA =====
+  const barStartY = ((doc as any).lastAutoTable?.finalY ?? sumY + 80) + 10;
+  if (barStartY < doc.internal.pageSize.getHeight() - 60 && summaries.length > 0) {
+    drawSectionDivider(doc, barStartY, 'ACHIEVEMENT OVERVIEW');
+    let barY = barStartY + 8;
+    const barW = pageWidth - 70;
+    summaries.slice(0, 10).forEach((a, i) => {
+      const pct = a.expected > 0 ? (a.paid / a.expected) * 100 : 0;
+      doc.setFont(BANGLA_FONT_NAME, 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`#${i + 1} ${a.area}`, 14, barY + 3);
+      drawProgressBar(doc, 55, barY, barW, 3.5, pct, `${Math.round(pct)}%`);
+      barY += 7;
+    });
+  }
+
+  // Org seal
+  drawOrgSeal(doc, pageWidth - 25, doc.internal.pageSize.getHeight() - 35, 10);
+
   stampFooters(doc, `Area Ranking Report — ${monthLabel}`);
   doc.save(safeFilename('', `area-ranking-${year}${month ? '-' + month : ''}`));
 }
@@ -1828,6 +2190,8 @@ export async function downloadOrganizationStatementPDF(
   const doc = new jsPDF();
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  drawPageBorder(doc);
   
   const period = month ? `${MONTHS_EN[month-1]} ${year}` : `Full Year ${year}`;
 

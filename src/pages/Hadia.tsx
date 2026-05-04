@@ -312,10 +312,10 @@ const Hadia = () => {
                       <div className="space-y-5">
                         <div>
                           <label className="block text-foreground capitalize mb-3 font-medium text-sm">খাত নির্বাচন করুন</label>
-                          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <button
                               onClick={() => setDonationType("mosque_fund")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                              className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-300 active:scale-95 ${
                                 donationType === "mosque_fund" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
@@ -326,7 +326,7 @@ const Hadia = () => {
                             </button>
                             <button
                               onClick={() => setDonationType("darbar_fund")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                              className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-300 active:scale-95 ${
                                 donationType === "darbar_fund" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
@@ -337,7 +337,7 @@ const Hadia = () => {
                             </button>
                             <button
                               onClick={() => setDonationType("combined_shahjadas")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                              className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-300 active:scale-95 ${
                                 donationType === "combined_shahjadas" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
@@ -348,7 +348,7 @@ const Hadia = () => {
                             </button>
                             <button
                               onClick={() => setDonationType("specific_shahjada")}
-                              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                              className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-300 active:scale-95 ${
                                 donationType === "specific_shahjada" ? "border-gold bg-gold/15 text-gold shadow-lg shadow-gold/10 ring-1 ring-gold/20" : "border-gold/20 hover:border-gold/50 text-foreground bg-background/30"
                               }`}
                             >
@@ -428,7 +428,7 @@ const Hadia = () => {
                               <button
                                 key={method.id}
                                 onClick={() => setPaymentMethod(method.id as PaymentMethod)}
-                                className={`flex items-center justify-center p-3 rounded-xl border transition-all duration-300 relative overflow-hidden group ${
+                                className={`flex items-center justify-center p-3 rounded-xl border transition-all duration-300 relative overflow-hidden group active:scale-95 ${
                                   paymentMethod === method.id 
                                     ? `border-white/20 text-white font-bold bg-gradient-to-br ${method.color} shadow-lg scale-[1.02]` 
                                     : "border-gold/20 text-foreground hover:border-gold/50 bg-background/40"
@@ -469,7 +469,7 @@ const Hadia = () => {
                     <button
                       onClick={handleDonate}
                       disabled={!canDonate || isSubmitting}
-                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-light text-deep-green text-lg font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none uppercase tracking-wider flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-gradient-to-r from-gold to-gold-light text-deep-green text-lg font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none uppercase tracking-wider flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
                         <span className="animate-pulse">প্রক্রিয়াধীন...</span>
