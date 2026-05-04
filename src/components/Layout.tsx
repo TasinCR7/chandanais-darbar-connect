@@ -31,6 +31,7 @@ import { Lock } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const navLinks = [
+  { path: "/", label: "হোম" },
   { path: "/about", label: "দরবার পরিচিতি" },
   { path: "/pir", label: "পীর ও শাহজাদা" },
   { path: "/rules", label: "নিয়ম-নীতি" },
