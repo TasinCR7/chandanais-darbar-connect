@@ -36,7 +36,7 @@ const navLinks = [
   { path: "/pir", label: "পীর ও শাহজাদা" },
   { path: "/rules", label: "নিয়ম-নীতি" },
   { path: "/events", label: "ওরশ ও অনুষ্ঠান" },
-  { path: "/hadia", label: "হাদিয়া  ও নজরানা" },
+  { path: "/hadia", label: "হাদিয়া ও নজরানা" },
   { path: "/gallery", label: "গ্যালারি" },
   { path: "/notices", label: "নোটিশ" },
   { path: "/committee", label: "কমিটি" },
