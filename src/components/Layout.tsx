@@ -36,7 +36,7 @@ const navLinks = [
   { path: "/pir", label: "পীর ও শাহজাদা" },
   { path: "/rules", label: "নিয়ম-নীতি" },
   { path: "/events", label: "ওরশ ও অনুষ্ঠান" },
-  { path: "/hadia", label: "ছাফিয়া ও নজরানা" },
+  { path: "/hadia", label: "হাদিয়া  ও নজরানা" },
   { path: "/gallery", label: "গ্যালারি" },
   { path: "/notices", label: "নোটিশ" },
   { path: "/committee", label: "কমিটি" },
@@ -253,8 +253,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         to={link.path}
                         className={`w-full text-left text-sm font-medium py-3 px-4 block transition-all active:bg-gold/10 active:scale-[0.98] rounded-lg ${location.pathname === link.path
-                            ? "text-gold bg-gold/5 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
-                            : "text-muted-foreground hover:text-gold"
+                          ? "text-gold bg-gold/5 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
+                          : "text-muted-foreground hover:text-gold"
                           }`}
                       >
                         {link.label}
