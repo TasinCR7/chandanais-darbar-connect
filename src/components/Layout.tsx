@@ -171,7 +171,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     routeImports[route]();
                   }
                 }}
-                className={`whitespace-nowrap text-xs 2xl:text-sm font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
+                className={`whitespace-nowrap text-[11px] 2xl:text-xs font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
                   ? "text-gold"
                   : "text-muted-foreground"
                   }`}
