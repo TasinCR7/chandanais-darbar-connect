@@ -8,6 +8,7 @@ import UrsCountdown from "@/components/UrsCountdown";
 import SEO from "@/components/SEO";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 import { Bell, Info } from "lucide-react";
 
 const upcomingEvents = [
@@ -21,17 +22,17 @@ const upcomingEvents = [
 ];
 
 const Index = () => {
-  const [detailedNotices, setDetailedNotices] = useState<any[]>([]);
+  const [detailedNotices, setDetailedNotices] = useState<Tables<"notices">[]>([]);
 
   useEffect(() => {
     const fetchDetailedNotices = async () => {
-      const { data } = await ((supabase as any)
+      const { data } = await supabase
         .from('notices')
-        .select('id, title, message, created_at')
+        .select('id, title, message, created_at, is_active, type')
         .eq('type', 'detailed')
         .eq('is_active', true)
-        .order('created_at', { ascending: false }));
-      if (data) setDetailedNotices(data);
+        .order('created_at', { ascending: false });
+      if (data) setDetailedNotices(data as Tables<"notices">[]);
     };
     fetchDetailedNotices();
   }, []);

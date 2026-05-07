@@ -29,7 +29,8 @@ const SHAHJADAS = [
 
 export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceProps>(({ donation }, ref) => {
   const getCategoryLabel = (category: string, recipientId?: string | null) => {
-    if (category === 'mosque') return 'মসজিদ ফান্ড / দরবার ফান্ড';
+    if (category === 'mosque_fund') return 'মসজিদ ফান্ড';
+    if (category === 'darbar_fund') return 'দরবার ফান্ড';
     if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {

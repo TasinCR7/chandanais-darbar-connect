@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { compressImage } from "@/utils/imageCompression";
+import { Tables } from "@/integrations/supabase/types";
 
 
 // Lazy-loaded admin sub-modules
@@ -16,6 +17,7 @@ const CommitteeManager = lazy(() => import("@/components/admin/CommitteeManager"
 const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"));
 const DonationManager = lazy(() => import("@/components/admin/DonationManager"));
 const CommitteeBroadcast = lazy(() => import("@/components/admin/CommitteeBroadcast"));
+const SettingsManager = lazy(() => import("@/components/admin/SettingsManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -25,12 +27,9 @@ const Admin = () => {
   const isMasterSessionRef = useRef(false);
 
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [notices, setNotices] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [submissions, setSubmissions] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [gallery, setGallery] = useState<any[]>([]);
+  const [notices, setNotices] = useState<Tables<"notices">[]>([]);
+  const [submissions, setSubmissions] = useState<Tables<"submissions">[]>([]);
+  const [gallery, setGallery] = useState<Tables<"gallery">[]>([]);
   const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
   const [galleryCaption, setGalleryCaption] = useState("");
   const [loading, setLoading] = useState(false);
@@ -228,10 +227,10 @@ const Admin = () => {
   }, [isAdmin]);
 
   // Operations
-  const addNotice = async (_type: 'scrolling' | 'detailed', title: string, message?: string) => {
+  const addNotice = async (type: 'scrolling' | 'detailed', title: string, message?: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.from("notices").insert([{ title, message, is_active: true }]);
+      const { error } = await supabase.from("notices").insert([{ title, message, type, is_active: true }]);
       if (!error) {
         toast({ title: "সফল", description: "নোটিশটি যোগ করা হয়েছে।" });
         fetchNotices();
@@ -367,6 +366,7 @@ const Admin = () => {
               <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
               <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
               <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">সেটিংস</TabsTrigger>
               <TabsTrigger value="broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold text-premium-gold shadow-lg shadow-gold/10 ml-2">বার্তা পাঠান 📢</TabsTrigger>
             </TabsList>
           </div>
@@ -374,7 +374,7 @@ const Admin = () => {
           <TabsContent value="notices">
             <Suspense fallback={<PremiumLoader />}>
               <NoticeManager 
-                notices={notices} 
+                notices={notices as any} 
                 loading={loading} 
                 onAddNotice={addNotice} 
                 onToggleActive={toggleNotice} 
@@ -431,6 +431,12 @@ const Admin = () => {
           <TabsContent value="broadcast">
             <Suspense fallback={<PremiumLoader />}>
               <CommitteeBroadcast />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Suspense fallback={<PremiumLoader />}>
+              <SettingsManager />
             </Suspense>
           </TabsContent>
         </Tabs>

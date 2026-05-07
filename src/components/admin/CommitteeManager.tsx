@@ -93,8 +93,8 @@ const CommitteeManager = () => {
       setImageFile(null);
       fetchMembers();
      
-    } catch (err: unknown) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "ত্রুটি", description: err.message || "একটি সমস্যা হয়েছে", variant: "destructive" });
     } finally {
       setLoading(false);
       setUploading(false);
@@ -108,8 +108,16 @@ const CommitteeManager = () => {
 
   const deleteMember = async (id: string, imageUrl: string | null) => {
     if (imageUrl) {
-      const path = imageUrl.split("/storage/v1/object/public/gallery/")[1];
-      if (path) await supabase.storage.from("gallery").remove([path]);
+      try {
+        // More robust path extraction: get everything after 'gallery/'
+        const parts = imageUrl.split("/gallery/");
+        if (parts.length > 1) {
+          const path = parts[1];
+          await supabase.storage.from("gallery").remove([path]);
+        }
+      } catch (err) {
+        console.error("Storage delete error:", err);
+      }
     }
     await supabase.from("committee_members").delete().eq("id", id);
     toast({ title: "মুছে ফেলা হয়েছে" });

@@ -11,6 +11,7 @@ import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { sendTelegramNotification } from "@/utils/telegram";
 import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
+import { fetchSettings } from "@/lib/api";
 
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
@@ -37,7 +38,20 @@ const Hadia = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [completedDonation, setCompletedDonation] = useState<InvoiceData | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [appSettings, setAppSettings] = useState<Record<string, string>>({});
   const invoiceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await fetchSettings();
+        setAppSettings(settings);
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
+    loadSettings();
+  }, []);
 
   // Auto-calculate visibility based on inputs
   const canCalculate = Boolean(amount && amount > 0 && donationType && (donationType !== "specific_shahjada" || specificShahjada));
@@ -451,7 +465,9 @@ const Hadia = () => {
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                             <div className="bg-background/40 p-4 rounded-lg border border-gold/10 mb-4 text-sm text-muted-foreground">
                               অনুগ্রহ করে নিচের নাম্বারে <span className="text-gold font-bold">{amount} ৳</span> Send Money করে Transaction ID টি নিচের বক্সে দিন।
-                              <div className="mt-2 font-mono text-lg text-emerald-light font-bold track-wider">+88017***********</div>
+                              <div className="mt-2 font-mono text-lg text-emerald-light font-bold tracking-wider">
+                                {appSettings.hadia_payment_number || "+88017***********"}
+                              </div>
                             </div>
                             <label className="block text-foreground mb-2 font-medium text-sm">Transaction ID (ট্রানজেকশন আইডি)</label>
                             <input
@@ -518,7 +534,7 @@ const Hadia = () => {
                   </div>
                   
                   <a
-                    href="https://wa.me/88017***********"
+                    href={`https://wa.me/${appSettings.hadia_whatsapp_number || "8801700000000"}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 bg-emerald/20 hover:bg-emerald/30 text-emerald-light border border-emerald/50 rounded-lg p-4 transition-all duration-300 relative overflow-hidden group mt-4"

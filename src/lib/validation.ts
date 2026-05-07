@@ -51,7 +51,7 @@ const MOJIBAKE_RX = /[ÃÂâÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ
 // Devanagari, Latin (basic + extended-A), Bengali block (\u0980–\u09FF),
 // digits, common punctuation. Anything else (e.g. emoji, Tibetan, Burmese)
 // becomes a black box in the PDF.
-const SAFE_CHAR_RX = /^[\u0000-\u017F\u0980-\u09FF\u200C\u200D\s\u2000-\u206F\u2010-\u201F\u2030-\u2060\u20A0-\u20CF\u2122\u00A0-\u00FF]*$/;
+const SAFE_CHAR_RX = /^[\u0020-\u017F\u0980-\u09FF\u200C\u200D\s\u2000-\u206F\u2010-\u201F\u2030-\u2060\u20A0-\u20CF\u2122\u00A0-\u00FF]*$/;
 
 function hasUnsafeGlyphs(text: string): { unsafe: string; index: number } | null {
   if (!text || SAFE_CHAR_RX.test(text)) return null;

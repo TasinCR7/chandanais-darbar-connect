@@ -437,7 +437,7 @@ export type Database = {
           is_active: boolean
           message: string | null
           title: string
-          updated_at: string
+          type: string
         }
         Insert: {
           created_at?: string
@@ -445,7 +445,7 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           title: string
-          updated_at?: string
+          type?: string
         }
         Update: {
           created_at?: string
@@ -453,12 +453,13 @@ export type Database = {
           is_active?: boolean
           message?: string | null
           title?: string
-          updated_at?: string
+          type?: string
         }
         Relationships: []
       }
       submissions: {
         Row: {
+          address: string | null
           created_at: string
           details: string
           id: string
@@ -471,6 +472,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
           details: string
           id?: string
@@ -483,6 +485,7 @@ export type Database = {
           type: string
         }
         Update: {
+          address?: string | null
           created_at?: string
           details?: string
           id?: string

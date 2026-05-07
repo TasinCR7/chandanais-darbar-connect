@@ -71,15 +71,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { data: scrollingNotices = [] } = useQuery({
     queryKey: ['scrolling_notices'],
     queryFn: async () => {
-      const { data } = await ((supabase as any)
+      const { data } = await supabase
         .from('notices')
         .select('title')
         .eq('type', 'scrolling')
         .eq('is_active', true)
-        .order('created_at', { ascending: false }));
+        .order('created_at', { ascending: false });
 
       if (data && data.length > 0) {
-        return data.map((n: any) => n.title);
+        return data.map(n => n.title);
       } else if (appSettings.global_notice_message) {
         return [appSettings.global_notice_message];
       }
