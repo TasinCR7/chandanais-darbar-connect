@@ -7,9 +7,9 @@ export const sendTelegramNotification = async (message: string) => {
   try {
     console.log("Initiating Telegram notification...");
     
-    // Get credentials from Vite environment
-    const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
-    const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS;
+    // Get credentials from Vite environment or use hardcoded fallbacks
+    const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
+    const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "7484314831,-1003880816949";
 
     if (!botToken || botToken === "undefined" || botToken.trim() === "") {
       console.error("❌ Telegram Error: VITE_TELEGRAM_BOT_TOKEN is missing or empty in .env file");
