@@ -192,23 +192,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-1 xl:hidden">
             <Link
               to="/hadia"
-              className="bg-gold-gradient text-primary-foreground px-3 py-1.5 rounded-md text-[10px] font-bold shadow-lg shadow-gold/10 mr-1"
+              className="bg-gold-gradient text-primary-foreground px-3 rounded-md text-[11px] font-bold shadow-lg shadow-gold/10 mr-1 min-h-[38px] flex items-center justify-center"
             >
               হাদিয়া
             </Link>
             <Link
               to="/admin"
-              className="text-muted-foreground hover:text-gold transition-colors p-2"
+              className="text-muted-foreground hover:text-gold transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="এডমিন"
             >
-              <Settings size={18} />
+              <Settings size={22} />
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gold p-2 active:scale-90 transition-transform"
+              className="text-gold p-2 active:scale-90 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="মেনু"
             >
-              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+              {menuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
@@ -221,7 +221,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm xl:hidden"
+              className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm xl:hidden touch-none"
               onClick={() => setMenuOpen(false)}
             />
             <motion.nav
@@ -241,7 +241,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto py-6 px-6">
+              <div className="flex-1 overflow-y-auto overscroll-contain py-6 px-6">
                 <div className="flex flex-col gap-1">
                   {navLinks.map((link, i) => (
                     <motion.div

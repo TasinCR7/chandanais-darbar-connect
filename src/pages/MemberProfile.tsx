@@ -59,7 +59,8 @@ const MemberProfile = () => {
       await downloadAnnualStatementPDF(member, payments, year);
       toast({ title: 'PDF ডাউনলোড হয়েছে' });
     } catch (e: unknown) {
-      toast({ title: 'PDF তৈরি ব্যর্থ', description: e?.message ?? '', variant: 'destructive' });
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      toast({ title: 'PDF তৈরি ব্যর্থ', description: errorMessage, variant: 'destructive' });
     }
   };
 

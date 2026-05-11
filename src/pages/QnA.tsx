@@ -2,10 +2,11 @@ import { useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import QnAFormCard from "@/components/QnAFormCard";
-import { HelpCircle, AlertTriangle } from "lucide-react";
+import { HelpCircle, AlertTriangle, FileQuestion, MessageSquareWarning } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendTelegramNotification } from "@/utils/telegram";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const questionSubjects = [
   "নামাজ সংক্রান্ত",
@@ -90,13 +91,10 @@ ${trimmedDetails}
 অনুগ্রহ করে প্যানেল থেকে ব্যবস্থা নিন।
     `;
     
-    // Send Telegram Notification
-    try {
-      await sendTelegramNotification(textMessage);
-      console.log("Telegram notification sent successfully from QnA page");
-    } catch (err) {
-      console.error("Failed to send Telegram notification from QnA page:", err);
-    }
+    // Send Telegram Notification in background to avoid blocking the UI
+    sendTelegramNotification(textMessage)
+      .then(() => console.log("Telegram notification sent successfully from QnA page"))
+      .catch((err) => console.error("Failed to send Telegram notification from QnA page:", err));
 
 
     setForm({ ...initialForm });
@@ -132,37 +130,53 @@ ${trimmedDetails}
             subtitle="শরিয়তের বিষয়ে প্রশ্ন করুন অথবা অভিযোগ জানান।"
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
-            <QnAFormCard
-              icon={HelpCircle}
-              title="প্রশ্ন-উত্তর / ফতোয়া"
-              subtitle="📖 শরিয়তের কোনো বিষয়ে সঠিক উত্তরের জন্য দরবার শরীফের আলেম সাহেবের সাথে যোগাযোগ করুন।"
-              subjects={questionSubjects}
-              form={qForm}
-              setForm={setQForm}
-              submitting={qSubmitting}
-              onSubmit={() => handleSubmit("question", qForm, setQForm, setQSubmitting, setQSuccess)}
-              buttonLabel="প্রশ্ন পাঠান"
-              buttonIcon="📩"
-              accentClass="bg-gold/10 text-gold"
-              showSuccess={qSuccess}
-              onCloseSuccess={() => setQSuccess(false)}
-            />
-            <QnAFormCard
-              icon={AlertTriangle}
-              title="অভিযোগ"
-              subtitle="⚠️ দরবার শরীফ সংক্রান্ত কোনো অভিযোগ বা মতামত থাকলে জানান।"
-              subjects={complaintSubjects}
-              form={cForm}
-              setForm={setCForm}
-              submitting={cSubmitting}
-              onSubmit={() => handleSubmit("complaint", cForm, setCForm, setCSubmitting, setCSuccess)}
-              buttonLabel="অভিযোগ পাঠান"
-              buttonIcon="📝"
-              accentClass="bg-destructive/10 text-destructive"
-              showSuccess={cSuccess}
-              onCloseSuccess={() => setCSuccess(false)}
-            />
+          <div className="max-w-4xl mx-auto">
+            <Tabs defaultValue="question" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto">
+                <TabsTrigger value="question" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm md:text-base flex items-center justify-center gap-2">
+                  <FileQuestion className="w-4 h-4 md:w-5 md:h-5" /> প্রশ্ন / ফতোয়া
+                </TabsTrigger>
+                <TabsTrigger value="complaint" className="data-[state=active]:bg-destructive data-[state=active]:text-white py-3 rounded-lg font-bold text-sm md:text-base flex items-center justify-center gap-2">
+                  <MessageSquareWarning className="w-4 h-4 md:w-5 md:h-5" /> অভিযোগ
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="question" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <QnAFormCard
+                  icon={HelpCircle}
+                  title="প্রশ্ন-উত্তর / ফতোয়া"
+                  subtitle="📖 শরিয়তের কোনো বিষয়ে সঠিক উত্তরের জন্য দরবার শরীফের আলেম সাহেবের সাথে যোগাযোগ করুন।"
+                  subjects={questionSubjects}
+                  form={qForm}
+                  setForm={setQForm}
+                  submitting={qSubmitting}
+                  onSubmit={() => handleSubmit("question", qForm, setQForm, setQSubmitting, setQSuccess)}
+                  buttonLabel="প্রশ্ন পাঠান"
+                  buttonIcon="📩"
+                  accentClass="bg-gold/10 text-gold"
+                  showSuccess={qSuccess}
+                  onCloseSuccess={() => setQSuccess(false)}
+                />
+              </TabsContent>
+              
+              <TabsContent value="complaint" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <QnAFormCard
+                  icon={AlertTriangle}
+                  title="অভিযোগ"
+                  subtitle="⚠️ দরবার শরীফ সংক্রান্ত কোনো অভিযোগ বা মতামত থাকলে জানান।"
+                  subjects={complaintSubjects}
+                  form={cForm}
+                  setForm={setCForm}
+                  submitting={cSubmitting}
+                  onSubmit={() => handleSubmit("complaint", cForm, setCForm, setCSubmitting, setCSuccess)}
+                  buttonLabel="অভিযোগ পাঠান"
+                  buttonIcon="📝"
+                  accentClass="bg-destructive/10 text-destructive"
+                  showSuccess={cSuccess}
+                  onCloseSuccess={() => setCSuccess(false)}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>

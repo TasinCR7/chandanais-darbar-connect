@@ -92,13 +92,10 @@ ${trimmedDetails}
 পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
     `;
     
-    // Send Telegram Notification
-    try {
-      await sendTelegramNotification(textMessage);
-      console.log("Telegram notification sent successfully from Doa page");
-    } catch (err) {
-      console.error("Failed to send Telegram notification from Doa page:", err);
-    }
+    // Send Telegram Notification in background to avoid blocking the UI
+    sendTelegramNotification(textMessage)
+      .then(() => console.log("Telegram notification sent successfully from Doa page"))
+      .catch((err) => console.error("Failed to send Telegram notification from Doa page:", err));
 
 
     toast({

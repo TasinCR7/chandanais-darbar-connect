@@ -102,11 +102,9 @@ const Hadia = () => {
 অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
       `;
       
-      try {
-        await sendTelegramNotification(textMessage);
-      } catch (err) {
+      sendTelegramNotification(textMessage).catch(err => {
         console.error("Telegram notification error:", err);
-      }
+      });
       
     } catch (error) {
       console.error("Donation error:", error);

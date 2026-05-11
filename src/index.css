@@ -145,6 +145,17 @@
     will-change: transform, opacity;
   }
 
+  /* Mobile Safe Area Utilities */
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 16px);
+  }
+
   /* Smooth GPU-accelerated transitions */
   .gpu-smooth {
     transform: translateZ(0);
