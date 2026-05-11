@@ -1,70 +1,85 @@
 /**
  * Telegram Notification Utility
  * Supports sending messages to multiple chat IDs simultaneously.
- * Uses environment variables VITE_TELEGRAM_BOT_TOKEN and VITE_TELEGRAM_CHAT_ID (or VITE_TELEGRAM_CHAT_IDS).
  */
 
 export const sendTelegramNotification = async (message: string) => {
-  // Load from environment variables (Secrets are managed in Supabase/Vite .env)
-  const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
-  const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+  try {
+    console.log("Initiating Telegram notification...");
+    
+    // Get credentials from Vite environment
+    const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+    const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS;
 
-  if (!botToken || botToken === "undefined") {
-    console.error("Telegram API Error: VITE_TELEGRAM_BOT_TOKEN is missing or invalid in environment.");
-    return;
-  }
+    if (!botToken || botToken === "undefined" || botToken.trim() === "") {
+      console.error("❌ Telegram Error: VITE_TELEGRAM_BOT_TOKEN is missing or empty in .env file");
+      return false;
+    }
 
-  
-  if (!chatIdsString || chatIdsString === "undefined") {
-    console.error("Telegram API Error: VITE_TELEGRAM_CHAT_ID is missing or invalid in environment.");
-    return;
-  }
+    if (!chatIdsString || chatIdsString === "undefined" || chatIdsString.trim() === "") {
+      console.error("❌ Telegram Error: VITE_TELEGRAM_CHAT_ID is missing or empty in .env file");
+      return false;
+    }
 
+    const chatIds = chatIdsString.split(",").map((id: string) => id.trim()).filter((id: string) => id.length > 0);
+    
+    if (chatIds.length === 0) {
+      console.error("❌ Telegram Error: No valid Chat IDs found after parsing.");
+      return false;
+    }
 
-  const chatIds = chatIdsString.split(",").map(id => id.trim()).filter(id => id.length > 0);
-  if (chatIds.length === 0) {
-    console.error("No valid Telegram Chat IDs found in VITE_TELEGRAM_CHAT_ID.");
-    return;
-  }
-  console.log("Broadcasting to Telegram Chat IDs:", chatIds);
+    console.log(`Sending message to ${chatIds.length} Telegram chats:`, chatIds);
 
+    // Send to all chats concurrently
+    const sendPromises = chatIds.map(async (chatId: string) => {
+      try {
+        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        // Attempt 1: Try with Markdown parse_mode
+        let response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: "Markdown",
+          }),
+        });
 
-  const sendPromises = chatIds.map(chatId => 
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: "Markdown", // Changed from HTML to Markdown to match message formatting
-      }),
-    })
-    .then(async (res) => {
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error(`Telegram API Error for ${chatId}:`, errorData);
-        // Fallback: Try sending without Markdown if it fails
-        if (errorData.description?.includes("can't parse entities")) {
-           console.log("Retrying without Markdown parsing...");
-           return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-             method: "POST",
-             headers: { "Content-Type": "application/json" },
-             body: JSON.stringify({
-               chat_id: chatId,
-               text: message,
-             }),
-           });
+        // Attempt 2: If Markdown fails (HTTP 400 Bad Request due to parsing), fallback to plain text immediately
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.warn(`⚠️ Markdown parsing failed for ${chatId}. Retrying with plain text. Error:`, errorData);
+          
+          response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: message, // No parse_mode sent
+            }),
+          });
+          
+          if (!response.ok) {
+            const fallbackError = await response.json();
+            console.error(`❌ Plain text fallback also failed for ${chatId}:`, fallbackError);
+            return false;
+          }
         }
-      } else {
-        console.log(`Telegram message sent successfully to ${chatId}`);
-      }
-      return res;
-    })
-    .catch(err => {
-      console.error(`Telegram fetch error to ${chatId}:`, err);
-      return null;
-    })
-  );
 
-  return Promise.all(sendPromises);
+        console.log(`✅ Successfully sent to Telegram Chat ID: ${chatId}`);
+        return true;
+      } catch (err) {
+        console.error(`❌ Network or fetch error for Telegram Chat ID ${chatId}:`, err);
+        return false;
+      }
+    });
+
+    const results = await Promise.all(sendPromises);
+    return results.some(res => res === true); // Return true if at least one succeeded
+
+  } catch (error) {
+    console.error("❌ Unexpected error in sendTelegramNotification:", error);
+    return false;
+  }
 };
