@@ -69,6 +69,9 @@ export default defineConfig(({ mode }) => {
               if (id.includes('jspdf') || id.includes('html2canvas')) {
                 return 'pdf';
               }
+              if (id.includes('recharts')) {
+                return 'recharts';
+              }
               if (id.includes('date-fns') || id.includes('zod') || id.includes('clsx') || id.includes('tailwind-merge')) {
                 return 'utils-core';
               }

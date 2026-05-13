@@ -407,7 +407,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   href="https://maps.app.goo.gl/pWk7MFAWh51PiMeX6"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground text-sm hover:text-gold transition-colors inline-flex"
+                  className="flex items-center gap-2 text-muted-foreground text-sm hover:text-gold transition-colors"
                 >
                   <MapPin size={14} className="text-gold" />
                   <span>ম্যাপে দেখুন</span>

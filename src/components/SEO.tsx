@@ -126,6 +126,7 @@ const SEO = ({ title, description, canonical, keywords, type = "website", faq, e
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="bn_BD" />
       <meta property="og:image" content={ogImage} />
 
       {/* Twitter */}

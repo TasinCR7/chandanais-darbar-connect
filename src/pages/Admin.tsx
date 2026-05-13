@@ -5,7 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { compressImage } from "@/utils/imageCompression";
-import { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 
 
 // Lazy-loaded admin sub-modules
