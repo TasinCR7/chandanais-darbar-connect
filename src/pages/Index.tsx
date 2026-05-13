@@ -189,7 +189,7 @@ const Index = () => {
               <div className="mt-8">
                 <Link
                   to="/book"
-                  className="inline-flex items-center gap-2 text-gold hover:text-gold-light font-bold transition-all transition-colors group"
+                  className="inline-flex items-center gap-2 text-gold hover:text-gold-light font-bold transition-all group"
                 >
                   <BookOpen size={20} className="group-hover:scale-110 transition-transform" />
                   গাউছেজামানের পূর্ণাঙ্গ জীবনী বই পড়ুন

@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import DeveloperTeam from "./DeveloperTeam";
 import Chatbot from "./Chatbot";
+import VisitorCounter from "./VisitorCounter";
 import { useAuth } from "@/hooks/useAuth";
 import { Lock } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -415,13 +416,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="section-divider mt-8 mb-4" />
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-muted-foreground text-xs text-center sm:text-left">
               © {new Date().getFullYear()} চন্দনাইশ দরবার শরীফ। সর্বস্বত্ব সংরক্ষিত।
             </p>
-            <Link to="/admin" className="text-muted-foreground/50 text-xs hover:text-gold transition-colors duration-300">
-              এডমিন লগইন
-            </Link>
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              <VisitorCounter />
+              <Link to="/admin" className="text-muted-foreground/50 text-xs hover:text-gold transition-colors duration-300">
+                এডমিন লগইন
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

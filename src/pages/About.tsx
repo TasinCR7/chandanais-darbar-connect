@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { BookOpen, GraduationCap, Users, Star, Heart, MapPin, Calendar, ArrowRight } from "lucide-react";
-import DevTeam from "@/components/DevTeam";
 
 const biographySections = [
   {
