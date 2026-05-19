@@ -253,6 +253,7 @@ export interface PaymentLite {
 export interface OrgPaymentRow extends PaymentLite {
   id: string;
   member_id: string;
+  status?: string;
   members?: MemberLite | null;
 }
 
@@ -752,16 +753,22 @@ export async function downloadReceiptPDF(
   container.style.top = '-9999px';
   document.body.appendChild(container);
 
-  await doc.html(container, {
-    callback: function (doc) {
+  try {
+    await doc.html(container, {
+      callback: function (doc) {
+        doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
+      },
+      x: 0,
+      y: 0,
+      width: pageWidth,
+      windowWidth: 794 // 794px is exactly 210mm at 96dpi
+    });
+  } finally {
+    // Always clean up the temporary DOM element, even if rendering fails
+    if (container.parentNode) {
       document.body.removeChild(container);
-      doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
-    },
-    x: 0,
-    y: 0,
-    width: pageWidth,
-    windowWidth: 794 // 794px is exactly 210mm at 96dpi
-  });
+    }
+  }
 }
 
 /**
@@ -1034,10 +1041,9 @@ function drawStatusLegend(doc: jsPDF, yPos: number) {
   doc.text('= Unpaid', 184, yPos + 7.5);
 }
 
-export interface OrgPaymentRow extends PaymentLite {
-  member_id: string;
-  status?: string;
-}
+// OrgPaymentRow is already exported above (line ~253).
+// Re-export kept for backward compat if needed:
+// export type { OrgPaymentRow };
 
 /** Build a Map keyed by member.id → MemberLite for robust payment-to-member resolution. */
 function buildMemberIndex(members: MemberLite[]): Map<string, MemberLite> {
@@ -1281,7 +1287,7 @@ async function renderOrgMonthlyReport(
 
       const expected = Number(m.monthly_rate);
       const memberPays = payments.filter(
-        (p) => p.member_id === m.id && p.for_year === year && p.for_month === month,
+        (p) => p.member_id === m.id && p.for_year === year && p.for_month === month && (p.status === 'approved' || !p.status),
       );
       const paid = memberPays.reduce((s, p) => s + Number(p.amount), 0);
       const due = Math.max(0, expected - paid);
@@ -1481,7 +1487,7 @@ export async function downloadOrgAnnualReportPDF(
       for (let mo = 1; mo <= 12; mo++) {
         if (mo < startMonth || mo > endMonth) { grid.push('·'); continue; }
         const monthPays = payments.filter(
-          (p) => p.member_id === m.id && p.for_year === year && p.for_month === mo,
+          (p) => p.member_id === m.id && p.for_year === year && p.for_month === mo && (p.status === 'approved' || !p.status),
         );
         const monthPaid = monthPays.reduce((s, p) => s + Number(p.amount), 0);
         expected += rate;
@@ -1528,11 +1534,11 @@ export async function downloadOrgAnnualReportPDF(
     startY: sumY + 32,
     head: [['Code', 'Name', 'Phone', 'Expected', 'Paid', 'Due', 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec']],
     body: rows,
-    headStyles: { fillColor: [30, 30, 30], textColor: 255, fontSize: 9 },
-    bodyStyles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [30, 30, 30], textColor: 255, fontSize: 9, font: BANGLA_FONT_NAME },
+    bodyStyles: { fontSize: 8, cellPadding: 2, font: BANGLA_FONT_NAME },
     columnStyles: {
       3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' },
-      6: { font: 'courier', fontSize: 8 },
+      6: { font: BANGLA_FONT_NAME, fontSize: 8 },
     },
     margin: { top: 14, left: 14, right: 14, bottom: 14 },
     showHead: 'everyPage',
@@ -1606,7 +1612,7 @@ export function downloadOrgMonthlyReportCSV(
       if (join.getFullYear() * 12 + join.getMonth() > targetKey) return;
       const expected = Number(m.monthly_rate);
       const memberPays = payments.filter(
-        (p) => p.member_id === m.id && p.for_year === year && p.for_month === month,
+        (p) => p.member_id === m.id && p.for_year === year && p.for_month === month && (p.status === 'approved' || !p.status),
       );
       const paid = memberPays.reduce((s, p) => s + Number(p.amount), 0);
       const due = Math.max(0, expected - paid);
@@ -1717,13 +1723,13 @@ export function computeAreaSummaries(
       if (monthFilter < startMonth) continue;
       expected = rate;
       paid = payments
-        .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === monthFilter)
+        .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === monthFilter && (p.status === 'approved' || !p.status))
         .reduce((s, p) => s + Number(p.amount), 0);
     } else {
       const months = Math.max(0, endMonth - startMonth + 1);
       expected = rate * months;
       paid = payments
-        .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month >= startMonth && p.for_month <= endMonth)
+        .filter((p) => p.member_id === m.id && p.for_year === year && p.for_month >= startMonth && p.for_month <= endMonth && (p.status === 'approved' || !p.status))
         .reduce((s, p) => s + Number(p.amount), 0);
     }
 
@@ -1890,11 +1896,11 @@ export async function downloadAreaReportPDF(
       if (options.month) {
         if (options.month < startMonth) continue;
         expected = rate;
-        paid = payments.filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === options.month)
+        paid = payments.filter((p) => p.member_id === m.id && p.for_year === year && p.for_month === options.month && (p.status === 'approved' || !p.status))
           .reduce((s, p) => s + Number(p.amount), 0);
       } else {
         expected = rate * Math.max(0, endMonth - startMonth + 1);
-        paid = payments.filter((p) => p.member_id === m.id && p.for_year === year && p.for_month >= startMonth && p.for_month <= endMonth)
+        paid = payments.filter((p) => p.member_id === m.id && p.for_year === year && p.for_month >= startMonth && p.for_month <= endMonth && (p.status === 'approved' || !p.status))
           .reduce((s, p) => s + Number(p.amount), 0);
       }
       const status = paid >= expected ? 'PAID' : paid > 0 ? 'PARTIAL' : 'DUE';
@@ -2510,10 +2516,14 @@ export async function downloadOrganizationStatementPDF(
       },
       didParseCell: (data) => {
         if (data.section === 'body' && data.column.index === 3) {
-          const raw = data.cell.raw as string;
-          if (raw.startsWith('BDT -') || raw.startsWith('BDT -')) {
+          const raw = String(data.cell.raw ?? '');
+          if (raw === '-') return; // skip placeholder cells
+          // Extract numeric value: strip 'BDT', commas, spaces
+          const cleaned = raw.replace(/BDT/gi, '').replace(/,/g, '').trim();
+          const numericVal = Number(cleaned);
+          if (!isNaN(numericVal) && numericVal < 0) {
             data.cell.styles.textColor = [180, 24, 24];
-          } else if (raw !== '-') {
+          } else if (!isNaN(numericVal)) {
             data.cell.styles.textColor = [22, 122, 50];
           }
         }

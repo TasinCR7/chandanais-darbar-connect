@@ -300,8 +300,8 @@ export default function CommitteeDashboard() {
       doc.line(W - 85, curY, W - 25, curY);
       doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
 
-      // Paid Stamp
-      doc.setTextColor(230, 245, 245);
+      // Paid Stamp — subtle green watermark
+      doc.setTextColor(180, 230, 200);
       doc.setFontSize(60);
       doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
 
