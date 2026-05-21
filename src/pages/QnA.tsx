@@ -432,23 +432,103 @@ ${trimmedDetails}
 
                   {!searchResult && searchAttempted && !searchLoading && (
                     <motion.div
-                      initial={{ opacity: 0, y: 15 }}
+                      initial={{ opacity: 0, y: 25 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-6 p-6 md:p-8 rounded-xl border border-gold/30 bg-gold/5 backdrop-blur-md text-center space-y-4"
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                      className="mt-8 p-6 md:p-10 rounded-2xl border border-gold/25 bg-card/40 backdrop-blur-xl text-center space-y-6 relative overflow-hidden shadow-[0_0_35px_rgba(212,175,55,0.06)] card-gold"
                     >
-                      <div className="mx-auto w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center text-gold mb-2">
-                        <Clock className="w-6 h-6 animate-pulse" />
+                      {/* Decorative gradient radial blurs */}
+                      <div className="absolute -top-32 -left-32 w-64 h-64 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                      {/* Header Badge */}
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-gold text-xs font-semibold tracking-wide uppercase">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                        আবেদন স্ট্যাটাস: পর্যালোচনাধীন
                       </div>
-                      <h4 className="text-gold font-bold text-base md:text-lg">আপনার প্রশ্ন বা অভিযোগটি প্রক্রিয়াধীন রয়েছে</h4>
-                      <p className="text-foreground/90 text-xs md:text-sm leading-relaxed max-w-lg mx-auto">
-                        আপনার প্রেরিত তথ্যটি আমাদের সিস্টেমে সফলভাবে সংরক্ষিত হয়েছে। চন্দনাইশ দরবার শরীফের সম্মানিত আলেম বা দায়িত্বশীল কর্তৃপক্ষ এটি গুরুত্ব সহকারে পর্যালোচনা করছেন এবং শীঘ্রই আপনাকে উত্তর প্রদান করা হবে।
-                      </p>
-                      <div className="bg-gold/5 border border-gold/10 rounded-lg p-3 max-w-md mx-auto">
-                        <p className="text-gold/90 font-medium text-xs md:text-sm">
+
+                      {/* Icon with glowing and spinning rings */}
+                      <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
+                        <div 
+                          className="absolute inset-0 rounded-full bg-gold/10 opacity-60" 
+                          style={{ animation: 'ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite' }}
+                        />
+                        <div 
+                          className="absolute inset-1 rounded-full border border-dashed border-gold/30" 
+                          style={{ animation: 'spin 10s linear infinite' }}
+                        />
+                        <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/45 flex items-center justify-center text-gold shadow-md">
+                          <Clock className="w-6 h-6 animate-pulse" />
+                        </div>
+                      </div>
+
+                      {/* Text details */}
+                      <div className="space-y-2">
+                        <h4 className="text-gold font-heading font-bold text-lg md:text-xl tracking-wide">
+                          আপনার প্রশ্ন বা অভিযোগটি প্রক্রিয়াধীন রয়েছে
+                        </h4>
+                        <p className="text-foreground/90 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">
+                          চন্দনাইশ দরবার শরীফের সম্মানিত আলেম বা দায়িত্বশীল কর্তৃপক্ষ এটি অত্যন্ত গুরুত্বের সাথে পর্যালোচনা করছেন। খুব শীঘ্রই আপনার জিজ্ঞাসার শরীয়তসম্মত সমাধান বা উত্তর এখানে প্রকাশ করা হবে।
+                        </p>
+                      </div>
+
+                      {/* Beautiful Visual Progress Tracker */}
+                      <div className="max-w-md mx-auto py-6 px-4 relative">
+                        <div className="relative flex items-center justify-between">
+                          {/* Progress Line */}
+                          <div className="absolute left-0 right-0 top-4 -translate-y-1/2 h-[3px] bg-white/10 rounded-full z-0">
+                            {/* Animated glowing bar */}
+                            <div className="w-[50%] h-full bg-gradient-to-r from-emerald-500 via-gold to-gold/70 rounded-full relative">
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-[0_0_10px_#fff]" />
+                            </div>
+                          </div>
+
+                          {/* Step 1: Submitted */}
+                          <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-8 h-8 rounded-full bg-emerald-950/80 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-xs shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                              ✓
+                            </div>
+                            <span className="text-[10px] md:text-xs font-bold text-emerald-400 mt-2.5">
+                              ১. জমা হয়েছে
+                            </span>
+                            <span className="text-[9px] text-muted-foreground mt-0.5">সফলভাবে প্রাপ্ত</span>
+                          </div>
+
+                          {/* Step 2: Under Review */}
+                          <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-8 h-8 rounded-full bg-gold/20 border-2 border-gold flex items-center justify-center text-gold font-bold text-xs shadow-[0_0_15px_rgba(212,175,55,0.4)] relative">
+                              <span className="absolute inset-0 rounded-full border border-gold/60 animate-ping opacity-60" />
+                              ২
+                            </div>
+                            <span className="text-[10px] md:text-xs font-bold text-gold mt-2.5">
+                              ২. পর্যালোচনা
+                            </span>
+                            <span className="text-[9px] text-gold/80 mt-0.5 animate-pulse">প্রক্রিয়াধীন আছে</span>
+                          </div>
+
+                          {/* Step 3: Replied */}
+                          <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-8 h-8 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-muted-foreground font-bold text-xs">
+                              ৩
+                            </div>
+                            <span className="text-[10px] md:text-xs font-semibold text-muted-foreground mt-2.5">
+                              ৩. উত্তর প্রদান
+                            </span>
+                            <span className="text-[9px] text-muted-foreground mt-0.5">অপেক্ষমাণ</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Highlighted Banner */}
+                      <div className="bg-gradient-to-r from-gold/5 via-gold/10 to-gold/5 border border-gold/15 rounded-xl p-4 max-w-lg mx-auto shadow-inner">
+                        <p className="text-gold/90 font-medium text-xs md:text-sm leading-relaxed">
                           ✨ আপনার প্রতিটি জিজ্ঞাসা ও মতামত আমাদের কাছে অত্যন্ত মূল্যবান ও গুরুত্বপূর্ণ!
                         </p>
                       </div>
-                      <p className="text-muted-foreground text-[10px] md:text-[11px] italic">
+
+                      {/* Disclaimer */}
+                      <p className="text-muted-foreground text-[10px] md:text-xs italic pt-1">
                         * যদি আপনি কোনো তথ্য খুঁজে না পান, তবে ট্র্যাকিং নম্বরটি সঠিক কিনা অনুগ্রহ করে পুনরায় নিশ্চিত হয়ে নিন।
                       </p>
                     </motion.div>
