@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,10 @@ interface SuccessOverlayProps {
   title: string;
   message: string;
   onClose: () => void;
+  extraContent?: ReactNode;
 }
 
-const SuccessOverlay = ({ show, title, message, onClose }: SuccessOverlayProps) => (
+const SuccessOverlay = ({ show, title, message, onClose, extraContent }: SuccessOverlayProps) => (
   <AnimatePresence>
     {show && (
       <motion.div
@@ -23,7 +25,7 @@ const SuccessOverlay = ({ show, title, message, onClose }: SuccessOverlayProps) 
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.5, opacity: 0 }}
           transition={{ type: "spring", damping: 15, stiffness: 200 }}
-          className="text-center p-8"
+          className="text-center p-8 max-w-sm mx-auto"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -44,10 +46,22 @@ const SuccessOverlay = ({ show, title, message, onClose }: SuccessOverlayProps) 
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-muted-foreground mb-6"
+            className="text-muted-foreground mb-4 text-sm"
           >
             {message}
           </motion.p>
+          
+          {extraContent && (
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.35 }}
+              className="mb-6 text-sm"
+            >
+              {extraContent}
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

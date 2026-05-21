@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ interface QnAFormCardProps {
   accentClass: string;
   showSuccess: boolean;
   onCloseSuccess: () => void;
+  successExtraContent?: ReactNode;
 }
 
 const QnAFormCard = ({
@@ -43,6 +45,7 @@ const QnAFormCard = ({
   accentClass,
   showSuccess,
   onCloseSuccess,
+  successExtraContent,
 }: QnAFormCardProps) => {
   const isQuestion = title === "প্রশ্ন-উত্তর / ফতোয়া";
 
@@ -58,6 +61,7 @@ const QnAFormCard = ({
         title={isQuestion ? "প্রশ্ন পাঠানো হয়েছে! ✅" : "অভিযোগ পাঠানো হয়েছে! ✅"}
         message="আপনার বার্তা সফলভাবে জমা হয়েছে। ইনশাআল্লাহ শীঘ্রই উত্তর দেওয়া হবে।"
         onClose={onCloseSuccess}
+        extraContent={successExtraContent}
       />
       <div className="flex items-center justify-between px-5 py-4 border-b border-gold/10 bg-card">
         <div className="flex items-center gap-3">
