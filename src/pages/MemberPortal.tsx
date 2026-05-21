@@ -33,14 +33,12 @@ const MemberPortal = () => {
     
     setLoading(true);
     try {
-      let query = supabase.from("members").select("*").eq("phone", phone);
-      
-      // If code is also provided, use it for extra precision
-      if (authQuery.code.trim()) {
-        query = query.eq("member_code", authQuery.code.trim().toUpperCase());
-      }
-
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await supabase
+        .rpc('search_member', { 
+          p_phone: phone, 
+          p_code: authQuery.code.trim() ? authQuery.code.trim().toUpperCase() : null 
+        })
+        .maybeSingle();
         
       if (error) throw error;
       if (!data) {
@@ -51,10 +49,7 @@ const MemberPortal = () => {
 
       setMember(data);
       const { data: pData } = await supabase
-        .from("payments")
-        .select("*")
-        .eq("member_id", data.id)
-        .order("payment_date", { ascending: false });
+        .rpc('get_member_payments', { p_member_id: data.id });
       
       setPayments(pData || []);
       setIsLoggedIn(true);
@@ -108,16 +103,15 @@ const MemberPortal = () => {
 
     setPaymentBusy(true);
     try {
-      const { error } = await supabase.from("payments").insert({
-        member_id: member.id,
-        amount,
-        for_month: month,
-        for_year: new Date().getFullYear(),
-        method,
-        transaction_ref: ref,
-        status: 'pending',
-        note: 'সদস্য নিজে এন্ট্রি করেছেন (Online)'
-      } as any);
+      const { error } = await supabase.rpc('submit_member_payment', {
+        p_member_id: member.id,
+        p_amount: amount,
+        p_for_month: month,
+        p_for_year: new Date().getFullYear(),
+        p_method: method,
+        p_transaction_ref: ref,
+        p_note: 'সদস্য নিজে এন্ট্রি করেছেন (Online)'
+      });
 
       if (error) throw error;
       toast({ title: "পেমেন্ট জমা হয়েছে", description: "অ্যাডমিন অনুমোদনের পর এটি আপনার স্টেটমেন্টে যোগ হবে।" });

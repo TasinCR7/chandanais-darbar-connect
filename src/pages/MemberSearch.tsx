@@ -87,18 +87,12 @@ const MemberSearch = () => {
     setBusy(true);
     setSearched(true);
     const { data: m } = await supabase
-      .from('members')
-      .select('*')
-      .ilike('member_code', code.trim())
+      .rpc('search_member', { p_code: code.trim() })
       .maybeSingle();
     setMember(m as Member | null);
     if (m) {
       const { data: p } = await supabase
-        .from('payments')
-        .select('id, amount, for_year, for_month, payment_date, method, transaction_ref')
-        .eq('member_id', m.id)
-        .order('for_year', { ascending: false })
-        .order('for_month', { ascending: false });
+        .rpc('get_member_payments', { p_member_id: m.id });
       setPayments((p as Payment[]) ?? []);
     } else {
       setPayments([]);

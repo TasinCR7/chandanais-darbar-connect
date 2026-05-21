@@ -53,10 +53,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isStaff, user } = useAuth();
+  const { isStaff, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: appSettings = {} } = useQuery({
+  const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
     queryFn: async () => {
       const { data } = await supabase.from('app_settings').select('key, value');
@@ -66,7 +66,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
       return obj;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5000,
+    refetchInterval: 15000,
   });
 
   const { data: scrollingNotices = [] } = useQuery({
@@ -87,7 +88,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       return [];
     },
     enabled: !!appSettings,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30000,
+    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -122,6 +124,88 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+
+  const isPublicRoute = !location.pathname.startsWith('/admin') && location.pathname !== '/committee-login';
+
+  // If loading settings or auth on a public route, show a premium loader
+  if (isPublicRoute && (authLoading || settingsLoading)) {
+    return (
+      <div className="fixed inset-0 z-[110] bg-[#0a0a0a] flex flex-col items-center justify-center space-y-4">
+        <motion.div
+          animate={{ 
+            scale: [1, 1.1, 1],
+            rotate: [0, 180, 360],
+            opacity: [0.5, 1, 0.5]
+          }}
+          transition={{ 
+            duration: 3, 
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="w-16 h-16 rounded-full border-2 border-gold/30 border-t-gold flex items-center justify-center p-2"
+        >
+          <div className="w-full h-full rounded-full border border-gold/20 flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
+          </div>
+        </motion.div>
+        <p className="text-gold font-heading animate-pulse tracking-widest text-sm uppercase">লোড হচ্ছে...</p>
+      </div>
+    );
+  }
+
+  // If maintenance mode is active on a public route, block access with a full screen maintenance screen
+  const isMaintenanceMode = String(appSettings.maintenance_mode) === 'true' && !isStaff && isPublicRoute;
+
+  if (isMaintenanceMode) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex items-center justify-center p-6 text-center overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
+
+        <div className="max-w-md w-full space-y-8 relative z-10 animate-in fade-in zoom-in duration-700">
+          <div className="relative mx-auto w-24 h-24 mb-8">
+            <div className="absolute inset-0 bg-gold/20 blur-2xl rounded-full animate-ping" />
+            <div className="relative bg-gold-gradient p-6 rounded-3xl shadow-2xl flex items-center justify-center border border-white/10">
+              <Settings className="h-10 w-10 text-primary-foreground animate-[spin_2s_linear_infinite]" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-4xl font-heading font-bold gold-text leading-tight">
+              ওয়েবসাইট আপডেট চলছে
+            </h1>
+            <div className="h-1 w-20 bg-gold-gradient mx-auto rounded-full" />
+            <p className="text-lg text-muted-foreground font-bangla leading-relaxed">
+              {appSettings.maintenance_text || "আমরা সাইটটির উন্নয়নে কাজ করছি। খুব শীঘ্রই আমরা ফিরে আসছি। সাময়িক অসুবিধার জন্য আমরা আন্তরিকভাবে দুঃখিত।"}
+            </p>
+          </div>
+
+          <div className="pt-8 grid grid-cols-1 gap-4">
+            <div className="p-6 rounded-2xl bg-white/5 border border-gold/10 backdrop-blur-sm">
+              <p className="text-xs text-gold uppercase tracking-widest mb-2">জরুরি প্রয়োজনে</p>
+              <p className="text-xl font-bold text-white">০১৬২২-৭২১৯৯৬</p>
+            </div>
+
+            <Link
+              to="/committee-login"
+              onClick={() => window.location.href = '/committee-login'}
+              className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-4 cursor-pointer relative z-20"
+            >
+              <Lock className="h-3 w-3" /> কমিটি লগইন (অফিসিয়াল)
+            </Link>
+          </div>
+        </div>
+
+        {/* Stylized Footer */}
+        <div className="absolute bottom-8 left-0 right-0">
+          <p className="text-[10px] text-muted-foreground/40 font-heading tracking-widest uppercase">
+            Chandanaish Dorbar Sharif — Financial System
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -310,55 +394,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       )}
 
-      {/* Advanced Maintenance Overlay for Public Users */}
-      {String(appSettings.maintenance_mode) === 'true' && !isStaff && location.pathname !== '/committee-login' && !location.pathname.startsWith('/admin') && (
-        <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex items-center justify-center p-6 text-center overflow-hidden">
-          {/* Animated Background Elements */}
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full animate-pulse" />
-
-          <div className="max-w-md w-full space-y-8 relative z-10 animate-in fade-in zoom-in duration-700">
-            <div className="relative mx-auto w-24 h-24 mb-8">
-              <div className="absolute inset-0 bg-gold/20 blur-2xl rounded-full animate-ping" />
-              <div className="relative bg-gold-gradient p-6 rounded-3xl shadow-2xl flex items-center justify-center border border-white/10">
-                <Settings className="h-10 w-10 text-primary-foreground animate-[spin_2s_linear_infinite]" />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h1 className="text-4xl font-heading font-bold gold-text leading-tight">
-                ওয়েবসাইট আপডেট চলছে
-              </h1>
-              <div className="h-1 w-20 bg-gold-gradient mx-auto rounded-full" />
-              <p className="text-lg text-muted-foreground font-bangla leading-relaxed">
-                {appSettings.maintenance_text || "আমরা সাইটটির উন্নয়নে কাজ করছি। খুব শীঘ্রই আমরা ফিরে আসছি। সাময়িক অসুবিধার জন্য আমরা আন্তরিকভাবে দুঃখিত।"}
-              </p>
-            </div>
-
-            <div className="pt-8 grid grid-cols-1 gap-4">
-              <div className="p-6 rounded-2xl bg-white/5 border border-gold/10 backdrop-blur-sm">
-                <p className="text-xs text-gold uppercase tracking-widest mb-2">জরুরি প্রয়োজনে</p>
-                <p className="text-xl font-bold text-white">০১৬২২-৭২১৯৯৬</p>
-              </div>
-
-              <Link
-                to="/committee-login"
-                onClick={() => window.location.href = '/committee-login'}
-                className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-4 cursor-pointer relative z-20"
-              >
-                <Lock className="h-3 w-3" /> কমিটি লগইন (অফিসিয়াল)
-              </Link>
-            </div>
-          </div>
-
-          {/* Stylized Footer */}
-          <div className="absolute bottom-8 left-0 right-0">
-            <p className="text-[10px] text-muted-foreground/40 font-heading tracking-widest uppercase">
-              Chandanaish Dorbar Sharif — Financial System
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <main id="main-content" className={

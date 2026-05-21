@@ -17,45 +17,47 @@ const Transparency = () => {
   const { isStaff, loading } = useAuth();
   useEffect(() => {
     (async () => {
-      const [paysRes, expRes, memRes] = await Promise.all([
-        supabase.from('payments').select('amount, for_year, for_month, payment_date, method, members(full_name, member_code)').order('payment_date', { ascending: false }),
-        supabase.from('expenses').select('*').order('expense_date', { ascending: false }),
-        supabase.from('members').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      const [statsRes, chartRes, paysRes, expRes] = await Promise.all([
+        supabase.rpc('get_transparency_stats'),
+        supabase.rpc('get_transparency_chart'),
+        supabase.rpc('get_recent_payments'),
+        supabase.rpc('get_recent_expenses')
       ]);
 
-      const pays = paysRes.data ?? [];
-      const exps = expRes.data ?? [];
-
-      setIncome(pays.reduce((s: number, p: Payment) => s + Number(p.amount), 0));
-      setExpense(exps.reduce((s: number, e: Expense) => s + Number(e.amount), 0));
-      setMemberCount(memRes.count ?? 0);
-      setRecentPayments(pays.slice(0, 8));
-      setRecentExpenses(exps.slice(0, 8));
-
-      // Last 6 months chart
-      const now = new Date();
-      const buckets: Record<string, { income: number; expense: number }> = {};
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const k = `${d.getFullYear()}-${d.getMonth() + 1}`;
-        buckets[k] = { income: 0, expense: 0 };
+      if (statsRes.data && statsRes.data.length > 0) {
+        const stats = statsRes.data[0];
+        setIncome(Number(stats.total_income));
+        setExpense(Number(stats.total_expense));
+        setMemberCount(Number(stats.active_members));
       }
-      pays.forEach((p: Payment) => {
-        const d = new Date(p.payment_date);
-        const k = `${d.getFullYear()}-${d.getMonth() + 1}`;
-        if (buckets[k]) buckets[k].income += Number(p.amount);
-      });
-      exps.forEach((e: Expense) => {
-        const d = new Date(e.expense_date);
-        const k = `${d.getFullYear()}-${d.getMonth() + 1}`;
-        if (buckets[k]) buckets[k].expense += Number(e.amount);
-      });
-      setChart(
-        Object.entries(buckets).map(([k, v]) => {
-          const [, m] = k.split('-');
-          return { label: monthName(Number(m)).slice(0, 3), income: v.income, expense: v.expense };
-        }),
-      );
+
+      if (chartRes.data) {
+        setChart(
+          chartRes.data.map((row: any) => {
+            const [, m] = row.month_key.split('-');
+            return {
+              label: monthName(Number(m)).slice(0, 3),
+              income: Number(row.income),
+              expense: Number(row.expense)
+            };
+          })
+        );
+      }
+
+      if (paysRes.data) {
+        const mapped = paysRes.data.map((p: any) => ({
+          ...p,
+          members: {
+            full_name: p.member_name,
+            member_code: p.member_code
+          }
+        }));
+        setRecentPayments(mapped);
+      }
+
+      if (expRes.data) {
+        setRecentExpenses(expRes.data);
+      }
     })();
   }, []);
 

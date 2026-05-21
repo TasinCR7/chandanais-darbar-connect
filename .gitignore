@@ -23,3 +23,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Scratch and temp files
+scratch/
+test-*.js
+bundle_code.cjs
+Chandanish_Dorbar_Source_Code.zip
+Chandanish_Dorbar_All_Source_Code.txt
