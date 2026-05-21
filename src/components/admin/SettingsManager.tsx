@@ -158,8 +158,8 @@ const SettingsManager = () => {
             <label className="block text-sm font-medium text-foreground mb-2">ব্যানার টেক্সট (উপরে লাল ব্যানার)</label>
             <input
               type="text"
-              value={settings.maintenance_text || ""}
-              onChange={(e) => handleChange("maintenance_text", e.target.value)}
+              value={settings.global_notice_text || ""}
+              onChange={(e) => handleChange("global_notice_text", e.target.value)}
               className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
             />
           </div>

@@ -2725,8 +2725,8 @@ const Finance = () => {
                     <Textarea defaultValue={settings.global_notice_message} onBlur={(e) => saveSetting('global_notice_message', e.target.value)} />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">মেইনটেইনেন্স টেক্সট (লাল বার)</Label>
-                    <Input defaultValue={settings.maintenance_text} onBlur={(e) => saveSetting('maintenance_text', e.target.value)} />
+                    <Label className="text-xs text-muted-foreground">লাল বার নোটিশ টেক্সট</Label>
+                    <Input defaultValue={settings.global_notice_text} onBlur={(e) => saveSetting('global_notice_text', e.target.value)} />
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-gold/10">
                     <div>
@@ -2743,6 +2743,10 @@ const Finance = () => {
                       <p className="text-[10px] text-muted-foreground">চালু থাকলে সাধারণ ভিজিটর ঢুকতে পারবে না</p>
                     </div>
                     <Switch checked={settings.maintenance_mode === 'true'} onCheckedChange={(v) => saveSetting('maintenance_mode', String(v))} />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">মেইনটেন্যান্স মোড বার্তা (স্ক্রিনে যা দেখাবে)</Label>
+                    <Textarea defaultValue={settings.maintenance_text} onBlur={(e) => saveSetting('maintenance_text', e.target.value)} />
                   </div>
                 </div>
               </div>

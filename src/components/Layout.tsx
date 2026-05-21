@@ -134,14 +134,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </a>
 
       {/* Maintenance Banner */}
-      {String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text && (
+      {String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-rose-600 text-white text-[10px] md:text-xs font-bold py-1 px-4 text-center shadow-md animate-pulse">
-          {appSettings.maintenance_text}
+          {appSettings.global_notice_text}
         </div>
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
+      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
         <div className="container mx-auto px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-2 md:gap-3 min-w-0 mr-2">
             <Link to="/" className="flex items-center gap-2 md:gap-3" aria-label="হোম পেজ">
@@ -286,7 +286,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Premium Scrolling Marquee */}
       {scrollingNotices.length > 0 && (
-        <div className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? 'top-[88px]' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
+        <div className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-[88px]' : 'top-16'} left-0 right-0 z-40 bg-background/40 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
           <div className="bg-gold-gradient text-primary-foreground px-3 md:px-5 h-full flex items-center gap-1 md:gap-2 z-10 shadow-xl font-heading font-black text-[10px] md:text-xs uppercase tracking-wider">
             <Bell className="h-3 w-3 md:h-3.5 md:w-3.5 animate-bounce" /> নোটিশ
           </div>
@@ -363,8 +363,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Main Content */}
       <main id="main-content" className={
         scrollingNotices.length > 0
-          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[132px]" : "pt-[108px]")
-          : (String(appSettings.show_maintenance_banner) === 'true' && appSettings.maintenance_text ? "pt-[88px]" : "pt-16")
+          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? "pt-[132px]" : "pt-[108px]")
+          : (String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? "pt-[88px]" : "pt-16")
       }>{children}</main>
 
       <div className="border-t border-gold/20" />
