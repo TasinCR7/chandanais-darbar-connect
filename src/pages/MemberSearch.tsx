@@ -242,7 +242,7 @@ const MemberSearch = () => {
             <label className="font-bangla text-sm text-muted-foreground mb-2 block">
               সদস্য কোড দিন (যেমন: M-001 / CDS-001)
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -253,7 +253,7 @@ const MemberSearch = () => {
               <Button
                 type="submit"
                 disabled={busy}
-                className="bg-gradient-gold text-primary-foreground font-bangla shrink-0"
+                className="bg-gradient-gold text-primary-foreground font-bangla shrink-0 w-full sm:w-auto"
               >
                 <Search className="h-4 w-4 mr-1" /> {busy ? 'খুঁজছি...' : 'খুঁজুন'}
               </Button>

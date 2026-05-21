@@ -358,7 +358,7 @@ const Hadia = () => {
                               <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "mosque_fund" ? "bg-gold/20" : "bg-black/20"}`}>
                                 <Home size={22} />
                               </div>
-                              <span className="text-sm font-bold text-center">মসজিদ ফান্ড</span>
+                              <span className="text-xs sm:text-sm font-bold text-center leading-tight">মসজিদ ফান্ড</span>
                             </button>
                             <button
                               onClick={() => setDonationType("darbar_fund")}
@@ -369,7 +369,7 @@ const Hadia = () => {
                               <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "darbar_fund" ? "bg-gold/20" : "bg-black/20"}`}>
                                 <HeartHandshake size={22} />
                               </div>
-                              <span className="text-sm font-bold text-center">দরবার ফান্ড</span>
+                              <span className="text-xs sm:text-sm font-bold text-center leading-tight">দরবার ফান্ড</span>
                             </button>
                             <button
                               onClick={() => setDonationType("combined_shahjadas")}
@@ -380,7 +380,7 @@ const Hadia = () => {
                               <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "combined_shahjadas" ? "bg-gold/20" : "bg-black/20"}`}>
                                 <Users size={22} />
                               </div>
-                              <span className="text-sm font-bold text-center">সম্মিলিত শাহজাদাগণ</span>
+                              <span className="text-xs sm:text-sm font-bold text-center leading-tight">সম্মিলিত শাহজাদাগণ</span>
                             </button>
                             <button
                               onClick={() => setDonationType("specific_shahjada")}
@@ -391,7 +391,7 @@ const Hadia = () => {
                               <div className={`p-2 rounded-lg mb-2 transition-colors ${donationType === "specific_shahjada" ? "bg-gold/20" : "bg-black/20"}`}>
                                 <User size={22} />
                               </div>
-                              <span className="text-sm font-bold text-center text-xs">নির্দিষ্ট শাহজাদা</span>
+                              <span className="text-xs sm:text-sm font-bold text-center leading-tight">নির্দিষ্ট শাহজাদা</span>
                             </button>
                           </div>
                         </div>

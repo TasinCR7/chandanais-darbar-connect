@@ -382,7 +382,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  const isPublicRoute = !location.pathname.startsWith('/admin') && location.pathname !== '/committee-login';
+  const isPublicRoute = 
+    !location.pathname.startsWith('/admin') && 
+    !location.pathname.startsWith('/committee-login') && 
+    !location.pathname.startsWith('/committee-dashboard');
 
   // If loading settings or auth on a public route, show a premium loader
   if (isPublicRoute && (authLoading || settingsLoading)) {
@@ -410,8 +413,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // Committee members log in via phone verification stored in localStorage
+  const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
+  const isBypassed = isStaff || isCommitteeMember;
+
   // If maintenance mode is active on a public route, block access with a full screen maintenance screen
-  const isMaintenanceMode = String(appSettings.maintenance_mode) === 'true' && !isStaff && isPublicRoute;
+  const isMaintenanceMode = String(appSettings.maintenance_mode) === 'true' && !isBypassed && isPublicRoute;
 
   if (isMaintenanceMode) {
     return (
@@ -448,21 +455,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              <Link
-                to="/committee-login"
-                onClick={() => window.location.href = '/committee-login'}
+              <a
+                href="/committee-login"
                 className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center gap-1.5 cursor-pointer relative z-20"
               >
                 <Lock className="h-3.5 w-3.5" /> কমিটি লগইন (অফিসিয়াল)
-              </Link>
+              </a>
               <span className="hidden sm:inline text-muted-foreground/20">|</span>
-              <Link
-                to="/admin"
-                onClick={() => window.location.href = '/admin'}
+              <a
+                href="/admin"
                 className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center gap-1.5 cursor-pointer relative z-20"
               >
                 <Lock className="h-3.5 w-3.5" /> এডমিন লগইন
-              </Link>
+              </a>
             </div>
           </div>
         </div>
