@@ -276,6 +276,25 @@ const Admin = () => {
     }
   };
 
+  const updateSubmissionDetails = async (
+    id: string,
+    updates: {
+      name: string;
+      phone: string | null;
+      subject: string;
+      details: string;
+      address?: string | null;
+    }
+  ) => {
+    const { error } = await supabase.from("submissions").update(updates).eq("id", id);
+    if (!error) {
+      toast({ title: "সফল", description: "আবেদনটি সফলভাবে সংশোধন করা হয়েছে।" });
+      fetchSubmissions();
+    } else {
+      toast({ title: "ত্রুটি", description: "সংশোধন করতে সমস্যা হয়েছে।", variant: "destructive" });
+    }
+  };
+
   const uploadGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const rawFile = e.target.files[0];
@@ -400,6 +419,7 @@ const Admin = () => {
                 onMarkRead={markSubmissionRead} 
                 onDelete={deleteSubmission} 
                 onReply={submitReply} 
+                onUpdateSubmission={updateSubmissionDetails}
               />
             </Suspense>
           </TabsContent>
