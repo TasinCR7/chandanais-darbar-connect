@@ -63,7 +63,7 @@ const QnAFormCard = ({
         onClose={onCloseSuccess}
         extraContent={successExtraContent}
       />
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gold/10 bg-card">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-gold/10 bg-card">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accentClass}`}>
             <Icon className="w-5 h-5" />
@@ -72,7 +72,7 @@ const QnAFormCard = ({
         </div>
       </div>
 
-      <div className="p-5 md:p-6">
+      <div className="p-4 sm:p-6">
         <div className="border-l-4 border-gold bg-gold/5 rounded-r-lg p-3 mb-6">
           <p className="text-muted-foreground text-sm">{subtitle}</p>
         </div>
@@ -132,7 +132,7 @@ const QnAFormCard = ({
           <Button
             type="submit"
             disabled={submitting}
-            className="bg-gold-gradient text-primary-foreground font-semibold px-6 py-2.5 rounded-lg gold-glow-hover transition-all duration-300"
+            className="w-full sm:w-auto bg-gold-gradient text-primary-foreground font-semibold px-6 py-2.5 rounded-lg gold-glow-hover transition-all duration-300"
           >
             {buttonIcon} {submitting ? "পাঠানো হচ্ছে..." : buttonLabel}
           </Button>

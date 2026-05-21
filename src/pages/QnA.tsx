@@ -174,7 +174,7 @@ ${trimmedDetails}
   };
 
   const trackingInfo = lastTrackingId ? (
-    <div className="bg-gold/10 border border-gold/30 rounded-lg p-4 my-4 text-center">
+    <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 sm:p-4 my-4 text-center">
       <p className="text-xs text-muted-foreground mb-1.5">আপনার ট্র্যাকিং নাম্বার (পরবর্তীতে চেক করার জন্য এটি সংরক্ষণ করুন):</p>
       <div className="flex items-center justify-center gap-2">
         <span className="font-mono font-bold text-lg text-gold select-all tracking-wider">{lastTrackingId}</span>
@@ -213,7 +213,7 @@ ${trimmedDetails}
         canonical="/qna"
         faq={faqData}
       />
-      <div className="py-20 islamic-pattern">
+      <div className="py-10 md:py-20 islamic-pattern">
         <div className="container mx-auto px-4">
           <SectionTitle
             arabic="الأسئلة والشكاوى"
@@ -223,24 +223,24 @@ ${trimmedDetails}
 
           <div className="max-w-4xl mx-auto">
             <Tabs defaultValue="question" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto gap-1 sm:gap-0">
                 <TabsTrigger
                   value="question"
-                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-xs md:text-base flex items-center justify-center gap-2"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <FileQuestion className="w-4 h-4 md:w-5 md:h-5" /> প্রশ্ন / ফতোয়া
+                  <FileQuestion className="w-4 h-4 sm:w-5 sm:h-5" /> প্রশ্ন / ফতোয়া
                 </TabsTrigger>
                 <TabsTrigger
                   value="complaint"
-                  className="data-[state=active]:bg-destructive data-[state=active]:text-white py-3 rounded-lg font-bold text-xs md:text-base flex items-center justify-center gap-2"
+                  className="data-[state=active]:bg-destructive data-[state=active]:text-white py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <MessageSquareWarning className="w-4 h-4 md:w-5 md:h-5" /> অভিযোগ
+                  <MessageSquareWarning className="w-4 h-4 sm:w-5 sm:h-5" /> অভিযোগ
                 </TabsTrigger>
                 <TabsTrigger
                   value="track"
-                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-xs md:text-base flex items-center justify-center gap-2"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <Search className="w-4 h-4 md:w-5 md:h-5" /> খোঁজ করুন 🔍
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" /> খোঁজ করুন 🔍
                 </TabsTrigger>
               </TabsList>
 
@@ -308,17 +308,17 @@ ${trimmedDetails}
                   <form onSubmit={handleSearch} className="space-y-4">
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">ট্র্যাকিং নম্বর</label>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Input
                           placeholder="যেমন: E4D58852"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="border-gold/20 focus:border-gold font-mono uppercase tracking-wider"
+                          className="border-gold/20 focus:border-gold font-mono uppercase tracking-wider w-full"
                         />
                         <Button
                           type="submit"
                           disabled={searchLoading}
-                          className="bg-gold-gradient text-primary-foreground font-semibold px-6 gold-glow-hover transition-all duration-300 shrink-0"
+                          className="w-full sm:w-auto bg-gold-gradient text-primary-foreground font-semibold px-6 py-2.5 rounded-lg gold-glow-hover transition-all duration-300 shrink-0"
                         >
                           {searchLoading ? "খোঁজা হচ্ছে..." : "অনুসন্ধান"}
                         </Button>
@@ -389,7 +389,7 @@ ${trimmedDetails}
                           <p className="text-[10px] text-muted-foreground mb-4 text-center uppercase tracking-widest font-bold">অগ্রগতি ট্র্যাকার</p>
                           <div className="relative flex items-center justify-between">
                             {/* Progress Line */}
-                            <div className="absolute left-0 right-0 top-4 -translate-y-1/2 h-[3px] bg-white/10 rounded-full z-0">
+                            <div className="absolute left-6 right-6 top-4 -translate-y-1/2 h-[3px] bg-white/10 rounded-full z-0">
                               <div 
                                 className="h-full bg-gradient-to-r from-emerald-500 via-gold to-emerald-500 rounded-full relative transition-all duration-500" 
                                 style={{ width: searchResult.reply ? "100%" : "50%" }}
@@ -399,7 +399,7 @@ ${trimmedDetails}
                             </div>
 
                             {/* Step 1: Submitted */}
-                            <div className="relative z-10 flex flex-col items-center">
+                            <div className="relative z-10 flex flex-col items-center max-w-[80px] xs:max-w-[100px] sm:max-w-none text-center">
                               <div className="w-8 h-8 rounded-full bg-emerald-950/80 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-xs shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                                 ✓
                               </div>
@@ -410,7 +410,7 @@ ${trimmedDetails}
                             </div>
 
                             {/* Step 2: Under Review */}
-                            <div className="relative z-10 flex flex-col items-center">
+                            <div className="relative z-10 flex flex-col items-center max-w-[80px] xs:max-w-[100px] sm:max-w-none text-center">
                               {searchResult.reply ? (
                                 <div className="w-8 h-8 rounded-full bg-emerald-950/80 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-xs shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                                   ✓
@@ -430,7 +430,7 @@ ${trimmedDetails}
                             </div>
 
                             {/* Step 3: Replied */}
-                            <div className="relative z-10 flex flex-col items-center">
+                            <div className="relative z-10 flex flex-col items-center max-w-[80px] xs:max-w-[100px] sm:max-w-none text-center">
                               {searchResult.reply ? (
                                 <div className="w-8 h-8 rounded-full bg-emerald-950/80 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-xs shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                                   ✓

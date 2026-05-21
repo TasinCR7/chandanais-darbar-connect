@@ -18,14 +18,14 @@ const SuccessOverlay = ({ show, title, message, onClose, extraContent }: Success
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 z-10 flex items-center justify-center bg-card/95 backdrop-blur-sm rounded-lg"
+        className="absolute inset-0 z-10 overflow-y-auto bg-card/95 backdrop-blur-sm rounded-lg flex flex-col items-center justify-start p-4"
       >
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.5, opacity: 0 }}
           transition={{ type: "spring", damping: 15, stiffness: 200 }}
-          className="text-center p-8 max-w-sm mx-auto"
+          className="text-center p-4 sm:p-8 max-w-sm mx-auto my-auto"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -69,7 +69,7 @@ const SuccessOverlay = ({ show, title, message, onClose, extraContent }: Success
           >
             <Button
               onClick={onClose}
-              className="bg-gold-gradient text-primary-foreground font-semibold px-6 gold-glow-hover"
+              className="w-full sm:w-auto bg-gold-gradient text-primary-foreground font-semibold px-6 gold-glow-hover"
             >
               ঠিক আছে ✅
             </Button>
