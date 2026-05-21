@@ -9,11 +9,15 @@ import {
   Send, 
   Filter,
   CheckCircle2,
-  Clock
+  Clock,
+  Copy,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+
 
 interface Submission {
   id: string;
@@ -92,6 +96,14 @@ const SubmissionList = ({
 }) => {
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const { toast } = useToast();
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      description: "ট্র্যাকিং নাম্বার কপি করা হয়েছে!",
+    });
+  };
 
   if (items.length === 0) {
     return (
@@ -141,7 +153,18 @@ const SubmissionList = ({
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs font-medium text-gold/60 italic">
+                <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs font-medium text-gold/60 italic mt-1.5">
+                   <div className="flex items-center gap-1 bg-gold/10 border border-gold/20 px-2.5 py-1 rounded-xl text-[11px] font-mono text-gold font-bold not-italic">
+                     <span className="text-[10px] text-gold/70 font-sans font-bold uppercase tracking-tighter mr-0.5">Tracking:</span>
+                     {s.id.replace(/-/g, "").substring(0, 8).toUpperCase()}
+                     <button
+                       onClick={() => copyToClipboard(s.id.replace(/-/g, "").substring(0, 8).toUpperCase())}
+                       className="ml-1.5 p-0.5 hover:bg-gold/25 rounded transition-colors text-gold/80 hover:text-gold"
+                       title="কপি করুন"
+                     >
+                       <Copy size={12} />
+                     </button>
+                   </div>
                    <p className="flex items-center gap-1.5 truncate">
                      <span className="text-gold opacity-50 font-bold uppercase tracking-tighter">Subject:</span> {s.subject}
                    </p>
@@ -156,6 +179,7 @@ const SubmissionList = ({
                    </p>
                 </div>
               </div>
+
 
               <div className="flex gap-2">
                 {!s.is_read && (

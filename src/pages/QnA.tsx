@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import QnAFormCard from "@/components/QnAFormCard";
@@ -53,6 +53,36 @@ const QnA = () => {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchAttempted, setSearchAttempted] = useState(false);
+
+  // All submissions list states
+  const [allSubmissions, setAllSubmissions] = useState<any[]>([]);
+  const [allLoading, setAllLoading] = useState(false);
+  const [listFilter, setListFilter] = useState<"all" | "question" | "complaint">("all");
+  const [listSearch, setListSearch] = useState("");
+
+  const fetchAllSubmissions = async () => {
+    setAllLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("get_submission_by_tracking", {
+        p_tracking: "",
+      });
+      if (error) {
+        console.error("Error fetching all submissions:", error);
+      } else if (data) {
+        // Filter out "doa" submissions
+        const filtered = data.filter((s: any) => s.type === "question" || s.type === "complaint");
+        setAllSubmissions(filtered);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAllLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllSubmissions();
+  }, []);
 
   const handleSubmit = async (
     type: "question" | "complaint",
@@ -131,6 +161,7 @@ ${trimmedDetails}
     setForm({ ...initialForm });
     setSubmitting(false);
     setSuccess(true);
+    fetchAllSubmissions();
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -172,6 +203,29 @@ ${trimmedDetails}
       setSearchLoading(false);
     }
   };
+
+  // Filter submissions by type and search query
+  const filteredSubmissions = allSubmissions.filter((s: any) => {
+    // 1. Filter by type
+    if (listFilter !== "all" && s.type !== listFilter) return false;
+
+    // 2. Filter by search query
+    if (listSearch.trim()) {
+      const cleanSearch = listSearch.toLowerCase();
+      const tracking = s.id.replace(/-/g, "").substring(0, 8).toLowerCase();
+      const name = s.name.toLowerCase();
+      const subject = s.subject.toLowerCase();
+      const details = s.details.toLowerCase();
+      return (
+        tracking.includes(cleanSearch) ||
+        name.includes(cleanSearch) ||
+        subject.includes(cleanSearch) ||
+        details.includes(cleanSearch)
+      );
+    }
+
+    return true;
+  });
 
   const trackingInfo = lastTrackingId ? (
     <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 sm:p-4 my-4 text-center">
@@ -223,7 +277,7 @@ ${trimmedDetails}
 
           <div className="max-w-4xl mx-auto">
             <Tabs defaultValue="question" className="w-full">
-              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto gap-1 sm:gap-0">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto gap-1">
                 <TabsTrigger
                   value="question"
                   className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
@@ -241,6 +295,12 @@ ${trimmedDetails}
                   className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
                 >
                   <Search className="w-4 h-4 sm:w-5 sm:h-5" /> খোঁজ করুন 🔍
+                </TabsTrigger>
+                <TabsTrigger
+                  value="list"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" /> প্রশ্ন ও অভিযোগ 📋
                 </TabsTrigger>
               </TabsList>
 
@@ -601,6 +661,191 @@ ${trimmedDetails}
                         </ul>
                       </div>
                     </motion.div>
+                  )}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="list" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="bg-card border border-gold/20 rounded-lg p-6 relative overflow-hidden"
+                >
+                  {/* Title Header */}
+                  <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gold/10">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gold/10 text-gold">
+                      <MessageSquare className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-bold text-foreground text-lg">প্রশ্ন ও অভিযোগের তালিকা</h3>
+                      <p className="text-muted-foreground text-xs mt-0.5">সবাই কর্তৃক প্রেরিত প্রশ্ন ও অভিযোগসমূহ এবং উত্তর এখানে দেখতে পাবেন।</p>
+                    </div>
+                  </div>
+
+                  {/* Search and Filters */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    {/* Filters */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant={listFilter === "all" ? "default" : "outline"}
+                        onClick={() => setListFilter("all")}
+                        className={listFilter === "all" ? "bg-gold-gradient text-primary-foreground font-semibold px-4 py-2 rounded-lg" : "border-gold/20 text-gold/80 hover:text-gold px-4 py-2 rounded-lg"}
+                        size="sm"
+                      >
+                        সব
+                      </Button>
+                      <Button
+                        variant={listFilter === "question" ? "default" : "outline"}
+                        onClick={() => setListFilter("question")}
+                        className={listFilter === "question" ? "bg-gold-gradient text-primary-foreground font-semibold px-4 py-2 rounded-lg" : "border-gold/20 text-gold/80 hover:text-gold px-4 py-2 rounded-lg"}
+                        size="sm"
+                      >
+                        প্রশ্নসমূহ
+                      </Button>
+                      <Button
+                        variant={listFilter === "complaint" ? "default" : "outline"}
+                        onClick={() => setListFilter("complaint")}
+                        className={listFilter === "complaint" ? "bg-destructive text-white font-semibold px-4 py-2 rounded-lg" : "border-destructive/20 text-destructive/80 hover:text-destructive px-4 py-2 rounded-lg"}
+                        size="sm"
+                      >
+                        অভিযোগসমূহ
+                      </Button>
+                    </div>
+
+                    {/* Local Search Input */}
+                    <div className="relative w-full md:max-w-xs">
+                      <Input
+                        placeholder="নাম, বিষয় বা ট্র্যাকিং দিয়ে খুঁজুন..."
+                        value={listSearch}
+                        onChange={(e) => setListSearch(e.target.value)}
+                        className="border-gold/20 focus:border-gold font-medium w-full pr-10 pl-4 py-2 bg-background/50"
+                      />
+                      {listSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setListSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                          title="মুছে ফেলুন"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* List View */}
+                  {allLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                      ডাটা লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...
+                    </div>
+                  ) : filteredSubmissions.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground border border-dashed border-gold/15 rounded-xl bg-gold/5 italic">
+                      কোনো প্রশ্ন বা অভিযোগ খুঁজে পাওয়া যায়নি।
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                      {filteredSubmissions.map((item: any) => {
+                        const trackingNo = item.id.replace(/-/g, "").substring(0, 8).toUpperCase();
+                        return (
+                          <div
+                            key={item.id}
+                            className="bg-card/40 border border-gold/15 rounded-xl p-4 sm:p-5 hover:border-gold/30 transition-all duration-300 shadow-sm space-y-4 text-left"
+                          >
+                            {/* Card Header: Tracking ID, Type Badge, and Date */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-gold/10">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs text-muted-foreground">ট্র্যাকিং নম্বর:</span>
+                                <span className="font-mono text-sm font-bold text-gold tracking-wider select-all">
+                                  {trackingNo}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(trackingNo);
+                                    toast({ description: "ট্র্যাকিং নাম্বার কপি করা হয়েছে!" });
+                                  }}
+                                  className="p-1 hover:bg-gold/20 rounded text-gold transition-all"
+                                  title="কপি করুন"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                    item.type === "question"
+                                      ? "bg-gold/10 text-gold border border-gold/20"
+                                      : "bg-destructive/10 text-destructive border border-destructive/20"
+                                  }`}
+                                >
+                                  {item.type === "question" ? "প্রশ্ন / ফতোয়া" : "অভিযোগ"}
+                                </span>
+                                <span
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                    item.reply
+                                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                      : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                  }`}
+                                >
+                                  {item.reply ? "উত্তর দেওয়া হয়েছে" : "পর্যালোচনাধীন"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Question Meta: Submitter Name, Date */}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                              <div>
+                                <span className="text-gold/60 font-semibold">আবেদনকারী:</span>{" "}
+                                <span className="text-foreground font-bold">{item.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5 text-gold/40" />
+                                {new Date(item.created_at).toLocaleDateString("bn-BD", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Subject and Details */}
+                            <div className="space-y-1.5">
+                              <p className="text-xs text-muted-foreground">
+                                <span className="text-gold/60 font-semibold">বিষয়:</span>{" "}
+                                <span className="text-cream font-bold">{item.subject}</span>
+                              </p>
+                              <div className="bg-black/30 border border-gold/5 p-3 rounded-lg text-sm text-foreground whitespace-pre-wrap leading-relaxed italic text-left">
+                                {item.details}
+                              </div>
+                            </div>
+
+                            {/* Reply if exists */}
+                            {item.reply ? (
+                              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 sm:p-4 mt-2 text-left">
+                                <p className="text-xs font-bold text-emerald-400 flex items-center gap-1 mb-1.5">
+                                  <MessageSquare className="w-3.5 h-3.5" /> উত্তর / সমাধান:
+                                </p>
+                                <p className="text-sm text-cream whitespace-pre-wrap leading-relaxed font-medium">
+                                  {item.reply}
+                                </p>
+                                {item.replied_at && (
+                                  <p className="text-[9px] text-muted-foreground text-right mt-2">
+                                    উত্তর প্রদানের সময়:{" "}
+                                    {new Date(item.replied_at).toLocaleDateString("bn-BD")}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-[11px] text-muted-foreground italic flex items-center gap-1 pt-1">
+                                <Clock className="w-3.5 h-3.5 text-gold/40" /> কর্তৃপক্ষ পর্যালোচনা করছেন, অনুগ্রহ করে অপেক্ষা করুন।
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </motion.div>
               </TabsContent>

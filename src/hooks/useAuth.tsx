@@ -38,11 +38,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session: sess } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: sess } }) => {
       setSession(sess);
       setUser(sess?.user ?? null);
-      if (sess?.user) fetchRoles(sess.user.id);
-      setLoading(false);
+      try {
+        if (sess?.user) {
+          await fetchRoles(sess.user.id);
+        }
+      } catch (err) {
+        console.error("Error fetching roles on auth init:", err);
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => sub.subscription.unsubscribe();
