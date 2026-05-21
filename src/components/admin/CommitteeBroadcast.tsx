@@ -82,7 +82,7 @@ const CommitteeBroadcast = () => {
   const [smsLogs, setSmsLogs] = useState<{name: string, status: 'success' | 'error'}[]>([]);
   const { toast } = useToast();
 
-  const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || import.meta.env.VITE_SMS_API_KEY || "");
+  const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || import.meta.env.VITE_SMS_API_KEY || "80vYfyavkUELVQY8U4z78yUkBljg7Si6ljG56pyR");
   const [senderId, setSenderId] = useState(localStorage.getItem("sms_sender_id") || "");
   const [contentId, setContentId] = useState(localStorage.getItem("sms_content_id") || "");
 
