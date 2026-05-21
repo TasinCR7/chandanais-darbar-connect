@@ -430,7 +430,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="space-y-3">
             <h1 className="text-3xl font-heading font-bold gold-text leading-tight">
-              ওয়েবসাইট আপডেট চলছে
+              ওয়েবসাইট মেইনটেনেন্স চলছে
             </h1>
             <div className="h-0.5 w-16 bg-gold-gradient mx-auto rounded-full" />
             <p className="text-sm text-muted-foreground font-bangla leading-relaxed max-w-sm mx-auto">
@@ -447,13 +447,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <p className="text-lg font-bold text-white">০১৬২২-৭২১৯৯৬</p>
             </div>
 
-            <Link
-              to="/committee-login"
-              onClick={() => window.location.href = '/committee-login'}
-              className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-2 pt-2 cursor-pointer relative z-20"
-            >
-              <Lock className="h-3 w-3" /> কমিটি লগইন (অফিসিয়াল)
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <Link
+                to="/committee-login"
+                onClick={() => window.location.href = '/committee-login'}
+                className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center gap-1.5 cursor-pointer relative z-20"
+              >
+                <Lock className="h-3.5 w-3.5" /> কমিটি লগইন (অফিসিয়াল)
+              </Link>
+              <span className="hidden sm:inline text-muted-foreground/20">|</span>
+              <Link
+                to="/admin"
+                onClick={() => window.location.href = '/admin'}
+                className="text-xs text-muted-foreground hover:text-gold transition-colors flex items-center gap-1.5 cursor-pointer relative z-20"
+              >
+                <Lock className="h-3.5 w-3.5" /> এডমিন লগইন
+              </Link>
+            </div>
           </div>
         </div>
 
