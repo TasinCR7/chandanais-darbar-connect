@@ -226,4 +226,27 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--gold) / 0.2) transparent;
   }
+
+  /* === Low-End Mobile Performance Optimizations === */
+  @media (max-width: 768px) {
+    /* Reduce heavy backdrop-filters which cause UI lag on budget phones */
+    .glass-card, .glass-morphism, .card-gold, 
+    .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
+      backdrop-filter: blur(2px) !important;
+      -webkit-backdrop-filter: blur(2px) !important;
+      background-color: rgba(10, 10, 10, 0.85) !important; /* Fallback for readability */
+    }
+    
+    /* Minimize expensive box-shadow rendering */
+    .gold-glow, .gold-glow-hover:hover, 
+    .shadow-gold, .premium-shadow, .shadow-2xl {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    /* Force Hardware Acceleration for animations */
+    .animate-marquee, .animate-marquee-slow, .animate-marquee-fast {
+      will-change: transform;
+      transform: translateZ(0);
+    }
+  }
 }
