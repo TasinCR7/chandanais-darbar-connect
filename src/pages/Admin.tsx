@@ -385,7 +385,7 @@ const Admin = () => {
             <TabsList className="bg-card/40 backdrop-blur-md border border-gold/20 w-max min-w-full flex h-auto p-1.5 rounded-2xl shadow-xl">
               <TabsTrigger value="notices" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">নোটিশ</TabsTrigger>
               <TabsTrigger value="donations" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold">হাদিয়া ও নজরানা</TabsTrigger>
-              <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">আবেদনপত্র</TabsTrigger>
+              <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">প্রশ্ন ও অভিযোগ</TabsTrigger>
               <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
               <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
               <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
