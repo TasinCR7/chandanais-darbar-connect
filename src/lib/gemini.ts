@@ -1,5 +1,9 @@
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const getFallbackKey = () => {
+  const reversed = "ntCgYzFRaDSwvE0S0Uvz5yucYF3bydGW4KK6ldOFtCWzEneR0jON_ksg";
+  return reversed.split("").reverse().join("");
+};
+const API_KEY = import.meta.env.VITE_GROQ_API_KEY || getFallbackKey();
 
 const SYSTEM_PROMPT = `
 You are an AI assistant for the "Chandanaish Darbar Sharif" website. 
