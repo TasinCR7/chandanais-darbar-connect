@@ -432,12 +432,25 @@ ${trimmedDetails}
 
                   {!searchResult && searchAttempted && !searchLoading && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="mt-6 p-8 rounded-xl border border-destructive/20 bg-destructive/5 text-center"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 p-6 md:p-8 rounded-xl border border-gold/30 bg-gold/5 backdrop-blur-md text-center space-y-4"
                     >
-                      <p className="text-destructive font-semibold mb-1">কোনো তথ্য পাওয়া যায়নি ❌</p>
-                      <p className="text-muted-foreground text-xs">আপনার দেওয়া ট্র্যাকিং নম্বরটি সঠিক কিনা অনুগ্রহ করে পুনরায় পরীক্ষা করুন।</p>
+                      <div className="mx-auto w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center text-gold mb-2">
+                        <Clock className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <h4 className="text-gold font-bold text-base md:text-lg">আপনার প্রশ্ন বা অভিযোগটি প্রক্রিয়াধীন রয়েছে</h4>
+                      <p className="text-foreground/90 text-xs md:text-sm leading-relaxed max-w-lg mx-auto">
+                        আপনার প্রেরিত তথ্যটি আমাদের সিস্টেমে সফলভাবে সংরক্ষিত হয়েছে। চন্দনাইশ দরবার শরীফের সম্মানিত আলেম বা দায়িত্বশীল কর্তৃপক্ষ এটি গুরুত্ব সহকারে পর্যালোচনা করছেন এবং শীঘ্রই আপনাকে উত্তর প্রদান করা হবে।
+                      </p>
+                      <div className="bg-gold/5 border border-gold/10 rounded-lg p-3 max-w-md mx-auto">
+                        <p className="text-gold/90 font-medium text-xs md:text-sm">
+                          ✨ আপনার প্রতিটি জিজ্ঞাসা ও মতামত আমাদের কাছে অত্যন্ত মূল্যবান ও গুরুত্বপূর্ণ!
+                        </p>
+                      </div>
+                      <p className="text-muted-foreground text-[10px] md:text-[11px] italic">
+                        * যদি আপনি কোনো তথ্য খুঁজে না পান, তবে ট্র্যাকিং নম্বরটি সঠিক কিনা অনুগ্রহ করে পুনরায় নিশ্চিত হয়ে নিন।
+                      </p>
                     </motion.div>
                   )}
                 </motion.div>
