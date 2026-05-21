@@ -123,34 +123,38 @@ const Admin = () => {
   const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
     
-    // Master Bypass Logic for designated Admin users
-    const cleanId = identifier.replace(/\D/g, "");
-    const masterNums = ["01622721996", "01714338533"]; // Designated master numbers
-    const isMasterPhone = masterNums.some(num => cleanId.endsWith(num));
-    const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com"].includes(identifier.toLowerCase());
-    
-    // Only allow master bypass with a specific secure key or via standard auth
-    const masterPassEnv = import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "Admin2026@Darbar";
-    const isMasterPass = pass.trim() === masterPassEnv; 
-    
-    if ((isMasterPhone || isMasterEmail) && isMasterPass) {
-      isMasterSessionRef.current = true;
-      setIsAdmin(true);
-      setUser({ 
-        id: "master-admin", 
-        email: identifier.includes("@") ? identifier : "admin@chandanaishdarbar.com",
-        phone: isMasterPhone ? (identifier.startsWith("+") ? identifier : `+88${identifier}`) : ""
-      } as any);
-      setLoginLoading(false);
-      toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে।" });
-      return;
-    }
-
     try {
       const credentials = method === "email" 
         ? { email: identifier, password: pass }
         : { phone: identifier, password: pass };
-      const { error } = await supabase.auth.signInWithPassword(credentials);
+      const { data, error } = await supabase.auth.signInWithPassword(credentials);
+      
+      if (!error && data?.user) {
+        toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "লগইন সফল হয়েছে।" });
+        return;
+      }
+
+      // Master Bypass Logic for designated Admin users (Fallback if Supabase auth fails)
+      const cleanId = identifier.replace(/\D/g, "");
+      const masterNums = ["01622721996", "01714338533"]; // Designated master numbers
+      const isMasterPhone = masterNums.some(num => cleanId.endsWith(num));
+      const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com"].includes(identifier.toLowerCase());
+      
+      const masterPassEnv = import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "Admin2026@Darbar";
+      const isMasterPass = pass.trim() === masterPassEnv; 
+      
+      if ((isMasterPhone || isMasterEmail) && isMasterPass) {
+        isMasterSessionRef.current = true;
+        setIsAdmin(true);
+        setUser({ 
+          id: "master-admin", 
+          email: identifier.includes("@") ? identifier : "admin@chandanaishdarbar.com",
+          phone: isMasterPhone ? (identifier.startsWith("+") ? identifier : `+88${identifier}`) : ""
+        } as any);
+        toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে (অফলাইন মোড)।" });
+        return;
+      }
+
       if (error) {
         toast({ title: "লগইন ব্যর্থ", description: error.message, variant: "destructive" });
       }
