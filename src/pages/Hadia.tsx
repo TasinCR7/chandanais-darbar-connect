@@ -24,6 +24,16 @@ const SHAHJADAS = [
   { id: "choto", name: "ছোট শাহজাদা" },
 ];
 
+const generateUUID = () => {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 const Hadia = () => {
   const [donationType, setDonationType] = useState<DonationType>("");
   const [specificShahjada, setSpecificShahjada] = useState<SpecificShahjada>("");
@@ -62,10 +72,13 @@ const Hadia = () => {
     if (!canDonate) return;
     setIsSubmitting(true);
     
+    const donationId = generateUUID();
+    
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('donations')
         .insert({
+          id: donationId,
           donor_name: donorName.trim(),
           donor_phone: normalizePhoneNumber(donorPhone),
           amount: Number(amount),
@@ -73,13 +86,24 @@ const Hadia = () => {
           recipient_id: donationType === 'specific_shahjada' ? specificShahjada : null,
           payment_method: paymentMethod,
           transaction_id: transactionId,
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
       
-      setCompletedDonation(data as InvoiceData);
+      const completedData: InvoiceData = {
+        id: donationId,
+        donor_name: donorName.trim(),
+        donor_phone: normalizePhoneNumber(donorPhone),
+        amount: Number(amount),
+        donation_category: donationType,
+        recipient_id: donationType === 'specific_shahjada' ? specificShahjada : null,
+        payment_method: paymentMethod,
+        transaction_id: transactionId,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+      
+      setCompletedDonation(completedData);
       setIsSuccess(true);
       toast.success("আপনার হাদিয়া সফলভাবে গৃহীত হয়েছে!");
       
