@@ -26,3 +26,29 @@ BEGIN
      OR REPLACE(s.id::text, '-', '') LIKE p_tracking || '%';
 END;
 $$;
+
+-- Create an RPC function to securely insert a submission and return its generated UUID (bypassing the need for SELECT permission for public users)
+CREATE OR REPLACE FUNCTION public.insert_submission(
+    p_type text,
+    p_name text,
+    p_phone text,
+    p_subject text,
+    p_details text,
+    p_address text DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_id uuid;
+BEGIN
+    INSERT INTO public.submissions (type, name, phone, subject, details, address)
+    VALUES (p_type, p_name, p_phone, p_subject, p_details, p_address)
+    RETURNING id INTO v_id;
+    
+    RETURN v_id;
+END;
+$$;
+

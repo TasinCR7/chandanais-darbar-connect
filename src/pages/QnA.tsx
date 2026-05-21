@@ -84,17 +84,13 @@ const QnA = () => {
 
     setSubmitting(true);
 
-    const { data, error } = await supabase
-      .from("submissions")
-      .insert({
-        type,
-        name: trimmedName,
-        phone: form.phone.trim() || null,
-        subject: form.subject,
-        details: trimmedDetails,
-      })
-      .select("id")
-      .single();
+    const { data, error } = await supabase.rpc("insert_submission", {
+      p_type: type,
+      p_name: trimmedName,
+      p_phone: form.phone.trim() || null,
+      p_subject: form.subject,
+      p_details: trimmedDetails,
+    });
 
     if (error) {
       toast({
@@ -106,7 +102,7 @@ const QnA = () => {
       return;
     }
 
-    const trackingNumber = data?.id ? data.id.replace(/-/g, "").substring(0, 8).toUpperCase() : "";
+    const trackingNumber = data ? data.replace(/-/g, "").substring(0, 8).toUpperCase() : "";
     setLastTrackingId(trackingNumber);
 
     // Send Telegram Notification
