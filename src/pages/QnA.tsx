@@ -2,7 +2,7 @@ import { useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import QnAFormCard from "@/components/QnAFormCard";
-import { HelpCircle, AlertTriangle, FileQuestion, MessageSquareWarning, Search, Copy, Calendar, MessageSquare, ShieldCheck, Clock } from "lucide-react";
+import { HelpCircle, AlertTriangle, FileQuestion, MessageSquareWarning, Search, Copy, Calendar, MessageSquare, ShieldCheck, Clock, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendTelegramNotification } from "@/utils/telegram";
@@ -135,7 +135,7 @@ ${trimmedDetails}
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanQuery = searchQuery.trim().replace(/-/g, "").toLowerCase();
+    const cleanQuery = searchQuery.trim().replace(/[-\s]/g, "").toLowerCase();
     if (!cleanQuery) {
       toast({
         title: "ট্র্যাকিং নম্বর দিন",
@@ -309,12 +309,28 @@ ${trimmedDetails}
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">ট্র্যাকিং নম্বর</label>
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <Input
-                          placeholder="যেমন: E4D58852"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="border-gold/20 focus:border-gold font-mono uppercase tracking-wider w-full"
-                        />
+                        <div className="relative w-full">
+                          <Input
+                            placeholder="যেমন: E4D58852"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="border-gold/20 focus:border-gold font-mono uppercase tracking-wider w-full pr-10"
+                          />
+                          {searchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearchQuery("");
+                                setSearchResult(null);
+                                setSearchAttempted(false);
+                              }}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                              title="মুছে ফেলুন"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                         <Button
                           type="submit"
                           disabled={searchLoading}
@@ -330,29 +346,44 @@ ${trimmedDetails}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-8 p-5 md:p-6 rounded-xl border border-gold/30 bg-card/65 backdrop-blur-md relative overflow-hidden"
+                      className="mt-8 p-4 sm:p-6 rounded-xl border border-gold/30 bg-card/65 backdrop-blur-md relative overflow-hidden"
                     >
-                      <div className="absolute top-4 right-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            searchResult.type === "question"
-                              ? "bg-gold/10 text-gold border border-gold/20"
-                              : "bg-destructive/10 text-destructive border border-destructive/20"
-                          }`}
-                        >
-                          {searchResult.type === "question" ? "প্রশ্ন / ফতোয়া" : "অভিযোগ"}
-                        </span>
-                      </div>
-
-                      <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gold/10">
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wider">ট্র্যাকিং নম্বর</p>
-                          <p className="font-mono text-sm font-bold text-gold mt-0.5">
-                            {searchResult.id.replace(/-/g, "").substring(0, 8).toUpperCase()}
-                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="font-mono text-base font-bold text-gold tracking-wider">
+                              {searchResult.id.replace(/-/g, "").substring(0, 8).toUpperCase()}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cleanId = searchResult.id.replace(/-/g, "").substring(0, 8).toUpperCase();
+                                navigator.clipboard.writeText(cleanId);
+                                toast({ description: "ট্র্যাকিং নাম্বার কপি করা হয়েছে!" });
+                              }}
+                              className="p-1.5 hover:bg-gold/20 rounded text-gold transition-colors"
+                              title="কপি করুন"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
+                        <div className="self-start sm:self-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              searchResult.type === "question"
+                                ? "bg-gold/10 text-gold border border-gold/20"
+                                : "bg-destructive/10 text-destructive border border-destructive/20"
+                            }`}
+                          >
+                            {searchResult.type === "question" ? "প্রশ্ন / ফতোয়া" : "অভিযোগ"}
+                          </span>
+                        </div>
+                      </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gold/10 pt-4">
+                      <div className="space-y-4 mt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <p className="text-xs text-muted-foreground">জমা দেওয়ার তারিখ</p>
                             <div className="flex items-center gap-1.5 mt-1 text-sm font-medium">
@@ -382,6 +413,25 @@ ${trimmedDetails}
                               )}
                             </div>
                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gold/10 pt-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">আবেদনকারী</p>
+                            <p className="font-semibold text-foreground mt-0.5">{searchResult.name}</p>
+                          </div>
+                          {searchResult.phone && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">মোবাইল নম্বর</p>
+                              <p className="font-semibold text-foreground mt-0.5">
+                                {searchResult.phone.replace(/[-\s]/g, "").length >= 10
+                                  ? searchResult.phone.replace(/[-\s]/g, "").substring(0, 5) +
+                                    "-XXXX-" +
+                                    searchResult.phone.replace(/[-\s]/g, "").substring(searchResult.phone.replace(/[-\s]/g, "").length - 3)
+                                  : searchResult.phone}
+                              </p>
+                            </div>
+                          )}
                         </div>
 
                         {/* Beautiful Visual Progress Tracker inside the found result */}
@@ -464,11 +514,24 @@ ${trimmedDetails}
                           </p>
                         </div>
 
-                        {searchResult.reply ? (
+                         {searchResult.reply ? (
                           <div className="border-t border-emerald-500/20 pt-4 mt-2">
-                            <p className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                              <MessageSquare className="w-4 h-4" /> উত্তর / সমাধান
-                            </p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                                <MessageSquare className="w-4 h-4" /> উত্তর / সমাধান
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(searchResult.reply);
+                                  toast({ description: "উত্তর কপি করা হয়েছে!" });
+                                }}
+                                className="p-1 hover:bg-emerald-500/20 rounded text-emerald-500 transition-colors flex items-center gap-1 text-[10px] font-bold"
+                                title="উত্তর কপি করুন"
+                              >
+                                <Copy className="w-3 h-3" /> কপি করুন
+                              </button>
+                            </div>
                             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 mt-2 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                               {searchResult.reply}
                               {searchResult.replied_at && (
