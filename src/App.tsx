@@ -15,6 +15,9 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RouteProgressBar from "./components/RouteProgressBar";
 
+import MaintenanceGuard from "./components/MaintenanceGuard";
+const Maintenance = lazy(() => import("./pages/Maintenance"));
+
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const Pir = lazy(() => import("./pages/Pir"));
@@ -64,8 +67,10 @@ const AppContent = () => {
           transition={{ duration: 0.15, ease: "linear" }}
         >
           <Suspense fallback={<PremiumLoader />}>
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Index />} />
+            <MaintenanceGuard>
+              <Routes location={location} key={location.pathname}>
+                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/pir" element={<Pir />} />
               <Route path="/rules" element={<Rules />} />
@@ -87,7 +92,8 @@ const AppContent = () => {
               <Route path="/transparency" element={<TransparencyNew />} />
               <Route path="/member-portal" element={<MemberPortal />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+            </MaintenanceGuard>
           </Suspense>
         </motion.div>
       </AnimatePresence>
