@@ -35,7 +35,7 @@ const BookReader = () => {
       <>
         <SEO
           title="জীবনী বই পড়ুন - চন্দনাইশ দরবার শরীফ"
-          description="গাউছেজামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ চন্দনাইশী মাইজভান্ডারী (ক:) এর পূর্ণাঙ্গ জীবনী বই পড়ুন।"
+          description="গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ চন্দনাইশী মাইজভান্ডারী (ক:) এর পূর্ণাঙ্গ জীবনী বই পড়ুন।"
           canonical="/book"
         />
         <div className="min-h-screen flex flex-col bg-background">
@@ -65,7 +65,7 @@ const BookReader = () => {
             <div className="text-center space-y-2">
               <h2 className="text-xl font-heading font-bold text-foreground">জীবনী বই</h2>
               <p className="text-muted-foreground text-sm max-w-xs">
-                গাউছেজামানের পূর্ণাঙ্গ জীবনী বই পড়তে নিচের বাটনে ক্লিক করুন।
+                গাউছে জামানের পূর্ণাঙ্গ জীবনী বই পড়তে নিচের বাটনে ক্লিক করুন।
               </p>
             </div>
 
@@ -97,7 +97,7 @@ const BookReader = () => {
     <>
       <SEO
         title="জীবনী বই পড়ুন - চন্দনাইশ দরবার শরীফ"
-        description="গাউছেজামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ চন্দনাইশী মাইজভান্ডারী (ক:) এর পূর্ণাঙ্গ জীবনী বই পড়ুন।"
+        description="গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ চন্দনাইশী মাইজভান্ডারী (ক:) এর পূর্ণাঙ্গ জীবনী বই পড়ুন।"
         canonical="/book"
       />
       <div className="min-h-screen flex flex-col bg-background">

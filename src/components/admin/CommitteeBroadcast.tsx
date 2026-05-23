@@ -249,8 +249,6 @@ const CommitteeBroadcast = () => {
     const encodedMessage = encodeURIComponent(message.trim());
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
     
-    console.log("Opening WhatsApp for:", phone);
-    
     // Improved window opening logic
     const newWindow = window.open(url, "_blank", "noopener,noreferrer");
     

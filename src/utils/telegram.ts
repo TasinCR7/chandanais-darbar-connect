@@ -5,8 +5,6 @@
 
 export const sendTelegramNotification = async (message: string) => {
   try {
-    console.log("Initiating Telegram notification...");
-    
     // Get credentials from Vite environment or use hardcoded fallbacks
     const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
     const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "7484314831,-1003880816949";
@@ -27,8 +25,6 @@ export const sendTelegramNotification = async (message: string) => {
       console.error("❌ Telegram Error: No valid Chat IDs found after parsing.");
       return false;
     }
-
-    console.log(`Sending message to ${chatIds.length} Telegram chats:`, chatIds);
 
     // Send to all chats concurrently
     const sendPromises = chatIds.map(async (chatId: string) => {
@@ -67,7 +63,6 @@ export const sendTelegramNotification = async (message: string) => {
           }
         }
 
-        console.log(`✅ Successfully sent to Telegram Chat ID: ${chatId}`);
         return true;
       } catch (err) {
         console.error(`❌ Network or fetch error for Telegram Chat ID ${chatId}:`, err);

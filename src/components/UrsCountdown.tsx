@@ -10,7 +10,7 @@ interface UrsEvent {
 }
 
 const ursEvents: UrsEvent[] = [
-  { title: "মেজ শাহজাদার ওরশ", arabicTitle: "عُرْسِ شَاهزَادَه أَوْسَط", bengaliDate: "জৈষ্ঠ ১১", gregorianDate: "2026-05-25" },
+  { title: "মেজ শাহজাদার ওরশ", arabicTitle: "عُرْسِ شَاهزَادَه أَوْسَط", bengaliDate: "জ্যৈষ্ঠ ১১", gregorianDate: "2026-05-25" },
   { title: "বড় শাহজাদার ওরশ", arabicTitle: "عُرْسِ شَاهزَادَه أَكْبَر", bengaliDate: "শ্রাবণ ১৪", gregorianDate: "2026-07-29" },
   { title: "বাবাজান কেবলা চন্দনাইশী পবিত্র জন্মদিন", arabicTitle: "مِيلَاد بَابَاجَان قِبْلَه", bengaliDate: "আশ্বিন ২২", gregorianDate: "2026-10-07" },
   { title: "বাবাজান কেবলা চন্দনাইশী সহধর্মিণীর ওরশ", arabicTitle: "عُرْسِ زَوْجَة بَابَاجَان قِبْلَه", bengaliDate: "পৌষ ৩০", gregorianDate: "2027-01-14" },
@@ -71,12 +71,12 @@ const TimeBox = ({ value, label }: { value: number; label: string }) => (
     animate={{ scale: 1, opacity: 1 }}
     transition={{ duration: 0.5 }}
   >
-    <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-[72px] h-[72px] sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden">
+    <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-14 h-14 xs:w-[72px] xs:h-[72px] sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden">
       <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-gold/50 rounded-tl-xl" />
       <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-gold/50 rounded-tr-xl" />
       <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-gold/50 rounded-bl-xl" />
       <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-gold/50 rounded-br-xl" />
-      <span className="text-3xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]">
+      <span className="text-xl xs:text-3xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]">
         {toBengaliNum(value)}
       </span>
     </div>
@@ -139,9 +139,9 @@ const UrsCountdown = () => {
           📅 {nextUrs.bengaliDate} • {new Date(nextUrs.gregorianDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
 
-        <div className="flex justify-center gap-3 sm:gap-5">
+        <div className="flex justify-center gap-2 xs:gap-3 sm:gap-5">
           <TimeBox value={timeLeft.days} label="দিন" />
-          <div className="flex items-center text-gold/40 text-2xl font-bold pt-[-20px]">:</div>
+          <div className="flex items-center text-gold/40 text-2xl font-bold">:</div>
           <TimeBox value={timeLeft.hours} label="ঘন্টা" />
           <div className="flex items-center text-gold/40 text-2xl font-bold">:</div>
           <TimeBox value={timeLeft.minutes} label="মিনিট" />

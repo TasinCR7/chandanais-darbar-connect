@@ -47,7 +47,7 @@ const timelineEvents: TimelineEvent[] = [
     title: "মেজ শাহজাদার ওরশ",
     arabicTitle: "عُرْسِ شَاهزَادَه أَوْسَط",
     bengaliDate: "১১",
-    bengaliMonth: "জৈষ্ঠ",
+    bengaliMonth: "জ্যৈষ্ঠ",
     englishDate: "25 May",
     isPast: false,
   },

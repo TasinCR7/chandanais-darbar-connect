@@ -132,6 +132,7 @@ const Finance = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadAll(); }, []);
 
   // Aggregates - ONLY approved and pending payments count towards income

@@ -8,7 +8,7 @@ import UrsCountdown from "@/components/UrsCountdown";
 import SEO from "@/components/SEO";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 import { Bell, Info } from "lucide-react";
 
 const upcomingEvents = [
@@ -16,7 +16,7 @@ const upcomingEvents = [
   { title: "গাউছে জামান মাইজভান্ডারী ওরশ", date: "মাঘ ২২", calendarType: "bengali" as const },
   { title: "বার্ষিক ওরশ", date: "ফাল্গুন ১৬", calendarType: "bengali" as const },
   { title: "পীর বাবা ভান্ডারীর ওরশ", date: "চৈত্র ১", calendarType: "bengali" as const },
-  { title: "মেজ শাহজাদার ওরশ", date: "জৈষ্ঠ ১১", calendarType: "bengali" as const },
+  { title: "মেজ শাহজাদার ওরশ", date: "জ্যৈষ্ঠ ১১", calendarType: "bengali" as const },
   { title: "বড় শাহজাদার ওরশ", date: "শ্রাবণ ১৪", calendarType: "bengali" as const },
   { title: "বাবাজান কেবলা চন্দনাইশী পবিত্র জন্মদিন", date: "আশ্বিন ২২", calendarType: "bengali" as const },
 ];
@@ -70,7 +70,7 @@ const Index = () => {
               সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
             </h2>
             <p className="text-cream text-base md:text-2xl font-medium leading-relaxed px-4 max-w-3xl mx-auto mb-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-              গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র দরবার
+              গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র দরবার
             </p>
           </motion.div>
 
@@ -178,7 +178,7 @@ const Index = () => {
             <div className="bg-card border border-gold/20 rounded-lg p-8 md:p-12">
               <Star size={24} className="text-gold mx-auto mb-4" />
               <p className="text-foreground leading-relaxed mb-6">
-                গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
+                গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
                 ছিলেন মাইজভান্ডারী সিলসিলার একজন মহান আউলিয়া। তাঁর প্রতিষ্ঠিত এই দরবার শরীফ 
                 আজও ভক্তদের আধ্যাত্মিক পথপ্রদর্শনের কেন্দ্রবিন্দু হিসেবে কাজ করে যাচ্ছে।
               </p>
@@ -192,7 +192,7 @@ const Index = () => {
                   className="inline-flex items-center gap-2 text-gold hover:text-gold-light font-bold transition-all group"
                 >
                   <BookOpen size={20} className="group-hover:scale-110 transition-transform" />
-                  গাউছেজামানের পূর্ণাঙ্গ জীবনী বই পড়ুন
+                  গাউছে জামানের পূর্ণাঙ্গ জীবনী বই পড়ুন
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>

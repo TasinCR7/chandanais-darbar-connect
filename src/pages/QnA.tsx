@@ -127,7 +127,6 @@ ${trimmedDetails}
 
     // Send Telegram Notification in background to avoid blocking the UI
     sendTelegramNotification(textMessage)
-      .then(() => console.log("Telegram notification sent successfully from QnA page"))
       .catch((err) => console.error("Failed to send Telegram notification from QnA page:", err));
 
     setForm({ ...initialForm });
@@ -228,24 +227,24 @@ ${trimmedDetails}
 
           <div className="max-w-4xl mx-auto">
             <Tabs defaultValue="question" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto gap-1">
+              <TabsList className="grid w-full grid-cols-3 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto gap-0.5 xs:gap-1">
                 <TabsTrigger
                   value="question"
-                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-2 sm:py-3 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2"
                 >
-                  <FileQuestion className="w-4 h-4 sm:w-5 sm:h-5" /> প্রশ্ন / ফতোয়া
+                  <FileQuestion className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> প্রশ্ন / ফতোয়া
                 </TabsTrigger>
                 <TabsTrigger
                   value="complaint"
-                  className="data-[state=active]:bg-destructive data-[state=active]:text-white py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="data-[state=active]:bg-destructive data-[state=active]:text-white py-2 sm:py-3 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2"
                 >
-                  <MessageSquareWarning className="w-4 h-4 sm:w-5 sm:h-5" /> অভিযোগ
+                  <MessageSquareWarning className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> অভিযোগ
                 </TabsTrigger>
                 <TabsTrigger
                   value="track"
-                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-3 rounded-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-2 sm:py-3 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2"
                 >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5" /> খোঁজ করুন 🔍
+                  <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> খোঁজ করুন
                 </TabsTrigger>
 
               </TabsList>

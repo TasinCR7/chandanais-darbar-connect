@@ -10,6 +10,7 @@ import { HandHeart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendTelegramNotification } from "@/utils/telegram";
+import SuccessOverlay from "@/components/SuccessOverlay";
 
 const doaSubjects = [
   "রোগমুক্তি / সুস্থতা",
@@ -32,6 +33,7 @@ const Doa = () => {
     details: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +96,6 @@ ${trimmedDetails}
     
     // Send Telegram Notification in background to avoid blocking the UI
     sendTelegramNotification(textMessage)
-      .then(() => console.log("Telegram notification sent successfully from Doa page"))
       .catch((err) => console.error("Failed to send Telegram notification from Doa page:", err));
 
 
@@ -105,6 +106,7 @@ ${trimmedDetails}
 
     setFormData({ name: "", phone: "", subject: "", address: "", details: "" });
     setIsSubmitting(false);
+    setShowSuccess(true);
   };
 
   return (
@@ -130,7 +132,13 @@ ${trimmedDetails}
           transition={{ duration: 0.8 }}
           className="max-w-3xl mx-auto"
         >
-          <div className="bg-card border border-gold/20 rounded-lg p-6 md:p-10">
+          <div className="relative bg-card border border-gold/20 rounded-lg p-6 md:p-10 overflow-hidden">
+            <SuccessOverlay
+              show={showSuccess}
+              title="আপনার দোয়া আবেদন পাঠানো হয়েছে"
+              message="ইনশাআল্লাহ পীর সাহেব হুজুর বা তাঁর প্রতিনিধি আপনার জন্য খাস দোয়া করবেন।"
+              onClose={() => setShowSuccess(false)}
+            />
             {/* Info banner */}
             <div className="border-l-4 border-gold bg-gold/5 rounded-r-lg p-4 mb-8">
               <p className="text-foreground font-semibold text-sm">অনলাইনে দোয়া আবেদন করুন</p>

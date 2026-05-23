@@ -28,7 +28,7 @@ const Pir = () => {
             <div className="space-y-4 text-foreground leading-relaxed">
               <p>
                 শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী মাইজভান্ডারী (মাদ্দাঃ) 
-                হলেন গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
+                হলেন গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) 
                 এর সুযোগ্য উত্তরসূরি।
               </p>
               <p>
@@ -80,7 +80,7 @@ const Pir = () => {
             <div className="flex flex-col items-center">
               {/* Root */}
               <div className="bg-gold/20 border-2 border-gold text-gold font-heading font-bold text-center px-6 py-4 rounded-xl shadow-lg text-sm md:text-base max-w-xs">
-                গৌছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (ক:)
+                গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (ক:)
               </div>
 
               {/* Vertical connector */}
@@ -88,10 +88,10 @@ const Pir = () => {
 
               {/* Horizontal bar */}
               <div className="relative w-full max-w-2xl">
-                <div className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-gold/50 md:left-[20%] md:right-[20%]" />
+                <div className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-gold/50 md:left-[20%] md:right-[20%] hidden sm:block" />
 
                 {/* Branches */}
-                <div className="grid grid-cols-2 gap-4 md:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-4 md:gap-8">
                   {/* পুত্র শাখা */}
                   <div className="flex flex-col items-center">
                     <div className="w-0.5 h-8 bg-gold/50" />

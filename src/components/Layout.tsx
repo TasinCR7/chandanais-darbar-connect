@@ -365,7 +365,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     if (menuOpen) {
@@ -556,13 +556,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             >
               হাদিয়া
             </Link>
-            <Link
-              to="/admin"
-              className="text-muted-foreground hover:text-gold transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="এডমিন"
-            >
-              <Settings size={22} />
-            </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-gold p-2 active:scale-90 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -636,6 +629,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
                     <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
                   </a>
+                </div>
+                <div className="flex flex-col gap-2 pt-2 border-t border-gold/10">
+                  <Link
+                    to="/admin"
+                    className="text-muted-foreground hover:text-gold transition-colors flex items-center gap-2 text-xs font-semibold"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Settings size={14} className="text-gold" /> এডমিন প্যানেল
+                  </Link>
                 </div>
               </div>
             </motion.nav>
