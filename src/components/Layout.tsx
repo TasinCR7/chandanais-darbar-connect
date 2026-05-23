@@ -228,6 +228,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* Mobile Actions */}
           <div className="flex items-center gap-1 xl:hidden">
             <Link
+              to="/admin"
+              className="text-muted-foreground hover:text-gold p-2 active:scale-90 transition-transform flex items-center justify-center"
+              aria-label="এডমিন"
+            >
+              <Settings size={20} />
+            </Link>
+            <Link
               to="/hadia"
               className="bg-gold-gradient text-primary-foreground px-3 rounded-md text-[11px] font-bold shadow-lg shadow-gold/10 mr-1 min-h-[38px] flex items-center justify-center"
             >
