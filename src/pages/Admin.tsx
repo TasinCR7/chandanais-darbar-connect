@@ -71,6 +71,20 @@ const Admin = () => {
     };
 
     const initializeAuth = async () => {
+      const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
+      if (isMasterAdmin) {
+        isMasterSessionRef.current = true;
+        setIsAdmin(true);
+        setUser({ 
+          id: "master-admin", 
+          email: "admin@chandanaishdarbar.com"
+        } as any);
+        if (isMounted) {
+          setVerifying(false);
+          clearTimeout(safetyTimer);
+        }
+        return;
+      }
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
@@ -144,6 +158,7 @@ const Admin = () => {
       const isMasterPass = pass.trim() === masterPassEnv; 
       
       if ((isMasterPhone || isMasterEmail) && isMasterPass) {
+        localStorage.setItem("master_admin_auth", "true");
         isMasterSessionRef.current = true;
         setIsAdmin(true);
         setUser({ 
@@ -167,6 +182,7 @@ const Admin = () => {
 
   const handleLogout = async () => {
     try {
+      localStorage.removeItem("master_admin_auth");
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Logout error:", err);
