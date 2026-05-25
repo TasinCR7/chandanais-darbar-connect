@@ -29,6 +29,7 @@ import Chatbot from "./Chatbot";
 import VisitorCounter from "./VisitorCounter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchSettings } from "@/lib/api";
 
 const navLinks = [
   { path: "/", label: "হোম" },
@@ -59,17 +60,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
-    queryFn: async () => {
-      const { data } = await supabase.from('app_settings').select('key, value');
-      const obj: Record<string, string> = {};
-      if (data) {
-        data.forEach((row: any) => { obj[row.key] = row.value; });
-      }
-      return obj;
-    },
+    queryFn: fetchSettings,
     staleTime: 5000,
     refetchInterval: 15000,
   });
+
+  const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
+  const isBypassed = isStaff || isCommitteeMember;
 
   const { data: scrollingNotices = [] } = useQuery({
     queryKey: ['scrolling_notices'],
@@ -426,6 +423,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </footer>
       <Chatbot />
+      {/* Admin Maintenance Mode Active Banner */}
+      {isBypassed && String(appSettings.maintenance_mode) === 'true' && (
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-500 text-black text-[11px] md:text-xs font-bold py-2 px-4 text-center shadow-lg border-t border-amber-600 animate-pulse flex items-center justify-center gap-2">
+          <span>⚠️ মেইনটেন্যান্স মোড চালু আছে (সাধারণ ভিজিটরদের জন্য সাইটটি বর্তমানে লক করা)</span>
+        </div>
+      )}
     </div>
   );
 };
