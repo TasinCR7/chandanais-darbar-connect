@@ -12,7 +12,7 @@ import PremiumLoader from "@/components/PremiumLoader";
 import { Download, Share2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { registerBengaliFont } from "@/fonts/bengaliFont";
+import fontBase64, { registerBengaliFont } from "@/fonts/bengaliFont";
 import { formatMonthBn } from "@/utils/dateHelpers";
 
 interface TopicRecord { 
@@ -207,114 +207,142 @@ export default function CommitteeDashboard() {
     }
   }
 
-  const generateReceiptPdf = (c: Contribution) => {
+  const generateReceiptPdf = async (c: Contribution) => {
     try {
-      const doc = new jsPDF();
-      registerBengaliFont(doc);
+      const doc = new jsPDF('p', 'mm', 'a4');
       const W = 210;
-      const H = 297;
-      
-      // Page Background - White
-      doc.setFillColor(255, 255, 255);
-      doc.rect(0, 0, W, H, "F");
-
-      // Header Navy Blue Block
-      doc.setFillColor(10, 37, 64);
-      doc.rect(0, 0, W, 45, "F");
-      
-      // Teal Accent line
-      doc.setFillColor(0, 212, 200);
-      doc.rect(0, 45, W, 2, "F");
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.setFont("NotoSansBengali", "normal");
-      doc.text("চন্দনাইশ দরবার শরীফ", W / 2, 22, { align: "center" });
-      
-      doc.setTextColor(150, 160, 175);
-      doc.setFontSize(9);
-      doc.text("চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | info@chandanaishdarbar.org", W / 2, 30, { align: "center" });
-      
-      doc.setFillColor(0, 212, 200);
-      doc.roundedRect(W / 2 - 35, 36, 70, 8, 4, 4, "F");
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(11);
-      doc.text("অফিসিয়াল পেমেন্ট রসিদ", W / 2, 42, { align: "center" });
-
-      // Receipt meta
       const rid = c.id.slice(0, 8).toUpperCase();
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(10);
-      doc.text("ইনভয়েস নম্বর:", 20, 65);
-      doc.text("#" + rid, 20, 71);
       
-      doc.text("ইস্যু তারিখ:", W - 20, 65, { align: "right" });
-      doc.text(new Date(c.created_at).toLocaleDateString("bn-BD"), W - 20, 71, { align: "right" });
+      // Create HTML template for the receipt with base64 font embedded
+      const html = `
+        <div id="receipt-container" style="
+          width: 794px; 
+          padding: 40px; 
+          font-family: 'Noto Sans Bengali', sans-serif; 
+          color: #1a1a1a; 
+          background: white; 
+          position: relative;
+          border: 1px solid #e2e8f0;
+          box-sizing: border-box;
+        ">
+          <style>
+            @font-face {
+              font-family: 'Noto Sans Bengali';
+              src: url('data:font/ttf;base64,${fontBase64}') format('truetype');
+              font-weight: normal;
+              font-style: normal;
+            }
+            .label { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+            .value { color: #1e293b; font-size: 15px; font-weight: 700; }
+            .data-row { display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 0; }
+            .data-col { flex: 1; }
+          </style>
+          
+          <!-- Border decor -->
+          <div style="position: absolute; inset: 15px; border: 1px solid #00d2c0; pointer-events: none; opacity: 0.2;"></div>
 
-      // Main table
-      const rows = [
-        ["দাতার নাম", c.name || "-"],
-        ["এলাকা/অবস্থান", c.area || "N/A"],
-        ["সংগ্রহের মাস", formatMonthBn(c.target_month)],
-        ["টাকার পরিমাণ", c.amount.toLocaleString("bn-BD") + " BDT"],
-        ["পেমেন্ট মাধ্যম", c.payment_method || "ক্যাশ"],
-        ["ট্রানজেকশন আইডি", c.transaction_id || "N/A"],
-      ];
-      autoTable(doc, {
-        startY: 85,
-        body: rows,
-        theme: "grid",
-        styles: { font: "NotoSansBengali", fontStyle: "normal", fontSize: 11, cellPadding: 8, lineColor: [230, 235, 241], lineWidth: 0.1 },
-        columnStyles: {
-          0: { cellWidth: 50, textColor: [100, 110, 125], fillColor: [248, 250, 252] },
-          1: { textColor: [10, 37, 64], fontStyle: "normal" },
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; position: relative; z-index: 10;">
+            <div>
+              <h1 style="color: #0a2540; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -0.02em; font-family: 'Noto Sans Bengali';">চন্দনাইশ দরবার শরীফ</h1>
+              <p style="color: #00bfa5; margin: 5px 0 0 0; font-size: 13px; font-weight: bold; letter-spacing: 0.05em;">CHANDANAISH DARBAR SHARIF — OFFICIAL PAYMENT RECEIPT</p>
+              <p style="color: #94a3b8; margin: 2px 0 0 0; font-size: 11px;">চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | info@chandanaishdarbar.org</p>
+            </div>
+            <div style="border: 2px solid #00bfa5; padding: 6px 12px; border-radius: 4px; color: #0a2540; font-weight: bold; text-align: center;">
+              <div style="font-size: 10px; color: #64748b;">ইনভয়েস নম্বর</div>
+              <div style="font-size: 16px; font-family: monospace;">#${rid}</div>
+            </div>
+          </div>
+
+          <!-- Main Receipt Box -->
+          <div style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fafafa;">
+            <div style="background: #0a2540; color: white; padding: 12px 20px; font-size: 15px; font-weight: bold; font-family: 'Noto Sans Bengali';">
+              অফিসিয়াল পেমেন্ট রসিদ / Payment Receipt Details
+            </div>
+            <div style="padding: 20px;">
+              <div class="data-row">
+                <div class="data-col"><span class="label">দাতার নাম / Donor Name</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${c.name || "-"}</span></div>
+              </div>
+              <div class="data-row">
+                <div class="data-col"><span class="label">এলাকা/অবস্থান / Location</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${c.area || "N/A"}</span></div>
+              </div>
+              <div class="data-row">
+                <div class="data-col"><span class="label">সংগ্রহের মাস / Contribution Month</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${formatMonthBn(c.target_month)}</span></div>
+              </div>
+              <div class="data-row">
+                <div class="data-col"><span class="label">পেমেন্ট মাধ্যম / Method</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value" style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; font-size: 13px;">${c.payment_method || "ক্যাশ"}</span></div>
+              </div>
+              <div class="data-row">
+                <div class="data-col"><span class="label">ট্রানজেকশন আইডি / Transaction ID</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value" style="font-family: monospace;">${c.transaction_id || "N/A"}</span></div>
+              </div>
+              <div class="data-row" style="border-bottom: none;">
+                <div class="data-col"><span class="label">ইস্যু তারিখ / Issue Date</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${new Date(c.created_at).toLocaleDateString("bn-BD")}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paid Amount highlighted box -->
+          <div style="background: #f0fdfa; border: 1px solid #5eead4; border-radius: 8px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <span style="font-size: 15px; color: #0a2540; font-weight: bold; font-family: 'Noto Sans Bengali';">মোট পরিশোধিত টাকা / Total Paid Amount</span>
+            <span style="font-size: 26px; color: #0f766e; font-weight: 900; font-family: 'Noto Sans Bengali';">${c.amount.toLocaleString("bn-BD")} ৳</span>
+          </div>
+
+          <!-- Signatures -->
+          <div style="display: flex; justify-content: space-between; margin-top: 60px; padding: 0 20px;">
+            <div style="text-align: center; width: 180px;">
+              <div style="border-bottom: 1px dashed #cbd5e1; margin-bottom: 8px; height: 30px;"></div>
+              <p style="font-size: 12px; color: #64748b; margin: 0; font-family: 'Noto Sans Bengali';">সদস্যের স্বাক্ষর</p>
+              <p style="font-size: 10px; color: #94a3b8; margin: 0;">Member's Signature</p>
+            </div>
+            <div style="text-align: center; width: 180px;">
+              <div style="border-bottom: 1px dashed #cbd5e1; margin-bottom: 8px; height: 30px;"></div>
+              <p style="font-size: 12px; color: #64748b; margin: 0; font-family: 'Noto Sans Bengali';">কর্তৃপক্ষের স্বাক্ষর ও সিল</p>
+              <p style="font-size: 10px; color: #94a3b8; margin: 0;">Authorized Signature & Seal</p>
+            </div>
+          </div>
+
+          <!-- Watermark background PAID -->
+          <div style="position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 120px; font-weight: 900; color: rgba(15, 118, 110, 0.05); pointer-events: none; user-select: none;">
+            PAID
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top: 60px; text-align: center; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+            <p style="font-size: 10px; color: #94a3b8; margin: 0; font-family: 'Noto Sans Bengali';">
+              এটি চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেমের একটি অফিসিয়াল ডকুমেন্ট। কোনো স্বাক্ষরের প্রয়োজন নেই।
+            </p>
+            <p style="font-size: 9px; color: #cbd5e1; margin: 5px 0 0 0;">
+              Generated At: ${new Date().toLocaleString("bn-BD")}
+            </p>
+          </div>
+        </div>
+      `;
+
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      document.body.appendChild(container);
+
+      await doc.html(container, {
+        callback: function (doc) {
+          doc.save(`Invoice_${c.target_month}.pdf`);
         },
-        margin: { left: 20, right: 20 }
+        x: 0,
+        y: 0,
+        width: W,
+        windowWidth: 794
       });
 
-      let curY = (doc as any).lastAutoTable.finalY + 15;
-
-      // Highlighted amount box
-      doc.setDrawColor(0, 212, 200);
-      doc.setLineWidth(0.5);
-      doc.setFillColor(240, 253, 250);
-      doc.roundedRect(20, curY, W - 40, 24, 3, 3, "FD");
-      
-      doc.setTextColor(10, 37, 64);
-      doc.setFontSize(12);
-      doc.text("মোট পরিশোধিত টাকা:", 30, curY + 15);
-      
-      doc.setTextColor(0, 160, 150);
-      doc.setFontSize(20);
-      doc.text(c.amount.toLocaleString("bn-BD") + " /-", W - 30, curY + 16, { align: "right" });
-      
-      curY += 45;
-
-      // Signatures
-      doc.setTextColor(100, 110, 125);
-      doc.setFontSize(10);
-      doc.setDrawColor(200, 210, 220);
-      doc.line(25, curY, 85, curY);
-      doc.text("সদস্যের স্বাক্ষর", 55, curY + 6, { align: "center" });
-      
-      doc.line(W - 85, curY, W - 25, curY);
-      doc.text("কর্তৃপক্ষের স্বাক্ষর ও সিল", W - 55, curY + 6, { align: "center" });
-
-      // Paid Stamp — subtle green watermark
-      doc.setTextColor(180, 230, 200);
-      doc.setFontSize(60);
-      doc.text("PAID", W / 2, 180, { align: "center", angle: 30 });
-
-      // Footer
-      doc.setDrawColor(230, 235, 241);
-      doc.setLineWidth(0.5);
-      doc.line(15, H - 20, W - 15, H - 20);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 160, 175);
-      doc.text("অফিসিয়াল ডকুমেন্ট • চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেম", 15, H - 14);
-      doc.text("জেনারেট করা হয়েছে: " + new Date().toLocaleString("bn-BD"), W - 15, H - 14, { align: "right" });
-
-      doc.save(`Invoice_${c.target_month}.pdf`);
+      if (container.parentNode) {
+        document.body.removeChild(container);
+      }
     } catch (e) {
       toast({ title: "ত্রুটি", description: "পিডিএফ তৈরি করা সম্ভব হয়নি।", variant: "destructive" });
     }

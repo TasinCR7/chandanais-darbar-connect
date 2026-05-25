@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
+import fontBase64 from '@/fonts/bengaliFont';
 
 // ---------- PDF Advanced Styling Helpers ----------
 const PDF_COLORS = {
@@ -306,34 +307,11 @@ export function calculateDues(member: MemberLite, payments: PaymentLite[]) {
  */
 export async function downloadAnnualStatementPDF(member: MemberLite, payments: PaymentLite[], year?: number) {
   const targetYear = year ?? new Date().getFullYear();
-  const doc = new jsPDF();
-  await ensureBanglaFont(doc);
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-
-  drawPageBorder(doc);
-
-  drawOrgHeader(
-    doc,
-    'ANNUAL ACCOUNT STATEMENT',
-    `Statement Year: ${targetYear}`
-  );
-
-  // QR for Annual
-  const qrDataAn = `Member: ${member.member_code}\nYear: ${targetYear}\nName: ${member.full_name}`;
-  try {
-    const qrDataUrlAn = await QRCode.toDataURL(qrDataAn, { margin: 1, width: 80 });
-    doc.addImage(qrDataUrlAn, 'PNG', pageWidth - 38, 10, 25, 25);
-  } catch (e) { console.warn(e); }
-
-  const yPos = 68;
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(9);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(`This document is an official statement of account for the specified member. All records are verified against the central database.`, 14, yPos - 8);
-
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = 210; // A4 width in mm
+  
   // ===== Build year rows =====
-  const expected = Number(member.monthly_rate);
+  const expected = Number(member.monthly_rate) || 0;
   const rows = MONTHS_EN.map((mn, idx) => {
     const monthNum = idx + 1;
     const monthPays = payments.filter((p) => p.for_year === targetYear && p.for_month === monthNum && (p.status === 'approved' || !p.status));
@@ -348,115 +326,234 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   const totalExpectedThisYear = expected * 12;
   const balanceThisYear = totalExpectedThisYear - totalPaidThisYear;
 
-  // Strip helper numeric column from rows for rendering
-  const renderRows = rows.map((r) => r.slice(0, 6));
-
-  // ===== SUMMARY BANNER =====
-  const summaryY = yPos + 16;
-  doc.setFillColor(248, 244, 235);
-  doc.rect(14, summaryY, pageWidth - 28, 22, 'F');
-  doc.setFontSize(10);
-  doc.setTextColor(80, 80, 80);
-  doc.text(`Year Expected: ${formatBDT(totalExpectedThisYear)}`, 18, summaryY + 8);
-  doc.setTextColor(22, 122, 50);
-  doc.text(`Total Paid: ${formatBDT(totalPaidThisYear)}`, 80, summaryY + 8);
-  if (balanceThisYear > 0) {
-    doc.setTextColor(200, 30, 30);
-    doc.text(`Due: ${formatBDT(balanceThisYear)}`, 145, summaryY + 8);
-  } else {
-    doc.setTextColor(22, 122, 50);
-    doc.text(`Status: CLEARED`, 145, summaryY + 8);
+  // QR for Annual
+  const qrDataAn = `Member: ${member.member_code}\nYear: ${targetYear}\nName: ${member.full_name}`;
+  let qrCodeUrl = '';
+  try {
+    qrCodeUrl = await QRCode.toDataURL(qrDataAn, { margin: 1, width: 100 });
+  } catch (e) {
+    console.warn(e);
   }
-  doc.setTextColor(80, 80, 80);
-  doc.text(`Cleared: ${rows.filter(r => r[3] === 'PAID').length} / 12`, 18, summaryY + 17);
-  doc.text(`Partial: ${rows.filter(r => r[3] === 'PARTIAL').length}`, 80, summaryY + 17);
-  doc.text(`Due: ${rows.filter(r => r[3] === 'DUE').length}`, 145, summaryY + 17);
 
-  // ===== STATUS LEGEND =====
-  const legendY = summaryY + 26;
-  doc.setDrawColor(210, 210, 210);
-  doc.setLineWidth(0.2);
-  doc.rect(14, legendY, pageWidth - 28, 12);
-
-  doc.setFontSize(9);
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setTextColor(80, 80, 80);
-  doc.text('Legend:', 18, legendY + 7.5);
-
-  // PAID swatch
-  doc.setFillColor(231, 245, 236);
-  doc.rect(38, legendY + 3, 6, 6, 'F');
-  doc.setTextColor(22, 117, 61);
-  doc.text('PAID', 46, legendY + 7.5);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(80, 80, 80);
-  doc.text('= Full month paid', 60, legendY + 7.5);
-
-  // PARTIAL swatch
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFillColor(253, 243, 214);
-  doc.rect(108, legendY + 3, 6, 6, 'F');
-  doc.setTextColor(160, 104, 0);
-  doc.text('PARTIAL', 116, legendY + 7.5);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(80, 80, 80);
-  doc.text('= Some amount paid', 134, legendY + 7.5);
-
-  // DUE swatch
-  doc.setFont(BANGLA_FONT_NAME, 'bold');
-  doc.setFillColor(253, 226, 226);
-  doc.rect(165, legendY + 3, 6, 6, 'F');
-  doc.setTextColor(180, 24, 24);
-  doc.text('DUE', 173, legendY + 7.5);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.setTextColor(80, 80, 80);
-  doc.text('= Unpaid', 184, legendY + 7.5);
-
-  autoTable(doc, {
-    startY: legendY + 16,
-    head: [['Month', 'Expected', 'Paid', 'Status', 'Date', 'Reference']],
-    body: renderRows,
-    headStyles: { fillColor: [30, 30, 30], textColor: 255, fontSize: 10, font: BANGLA_FONT_NAME },
-    bodyStyles: { fontSize: 9, font: BANGLA_FONT_NAME },
-    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
-    didParseCell: (data) => {
-      if (data.section === 'body' && data.column.index === 3) {
-        const v = data.cell.raw as string;
-        if (v === 'PAID') {
-          data.cell.styles.textColor = [22, 117, 61];
-          data.cell.styles.fillColor = [231, 245, 236];
-        } else if (v === 'DUE') {
-          data.cell.styles.textColor = [180, 24, 24];
-          data.cell.styles.fillColor = [253, 226, 226];
-        } else {
-          data.cell.styles.textColor = [160, 104, 0];
-          data.cell.styles.fillColor = [253, 243, 214];
+  // Create HTML template for the annual statement with base64 font embedded
+  const html = `
+    <div id="statement-container" style="
+      width: 794px; 
+      min-height: 1120px;
+      padding: 40px; 
+      font-family: 'Noto Sans Bengali', sans-serif; 
+      color: #1a1a1a; 
+      background: white; 
+      position: relative;
+      border: 1px solid #e2e8f0;
+      box-sizing: border-box;
+    ">
+      <style>
+        @font-face {
+          font-family: 'Noto Sans Bengali';
+          src: url('data:font/ttf;base64,${fontBase64}') format('truetype');
+          font-weight: normal;
+          font-style: normal;
         }
-        data.cell.styles.fontStyle = 'bold';
-      }
-    },
-    foot: [[
-      'TOTAL (SUMMARY)',
-      formatBDT(totalExpectedThisYear),
-      formatBDT(totalPaidThisYear),
-      totalPaidThisYear >= totalExpectedThisYear ? 'CLEARED' : `DUE ${formatBDT(totalExpectedThisYear - totalPaidThisYear)}`,
-      '', ''
-    ]],
-    footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold', font: BANGLA_FONT_NAME },
-  });
+        .label { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .value { color: #1e293b; font-size: 14px; font-weight: 700; }
+        .data-row { display: flex; border-bottom: 1px solid #f1f5f9; padding: 8px 0; }
+        .data-col { flex: 1; }
+        
+        .status-badge {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 99px;
+          font-weight: bold;
+          font-size: 11px;
+          text-align: center;
+        }
+        .status-paid { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-partial { background: #fffde7; color: #f57f17; border: 1px solid #fff9c4; }
+        .status-due { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+      </style>
+      
+      <!-- Border decor -->
+      <div style="position: absolute; inset: 15px; border: 1px solid #B48E49; pointer-events: none; opacity: 0.2;"></div>
 
-  // ===== Footer =====
-  doc.setFontSize(8);
-  doc.setTextColor(120, 120, 120);
-  doc.setFont(BANGLA_FONT_NAME, 'normal');
-  doc.text(
-    `Member: ${member.member_code} | Verified Digital Statement`,
-    14,
-    pageHeight - 10,
-  );
-  doc.text('Chandanaish Darbar Sharif — Official Statement', pageWidth - 14, pageHeight - 10, { align: 'right' });
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; position: relative; z-index: 10;">
+        <div>
+          <h1 style="color: #B48E49; margin: 0; font-size: 26px; font-weight: 900; font-family: 'Noto Sans Bengali';">চন্দনাইশ দরবার শরীফ</h1>
+          <p style="color: #64748b; margin: 3px 0 0 0; font-size: 12px; font-weight: bold; letter-spacing: 0.05em;">CHANDANAISH DARBAR SHARIF — ANNUAL STATEMENT</p>
+          <p style="color: #94a3b8; margin: 2px 0 0 0; font-size: 11px;">চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | Silsila-e-Tariqaye Maizbhandaria</p>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: #64748b;">বিবরণী বছর / Year</div>
+            <div style="font-size: 18px; font-weight: bold; color: #B48E49;">${toBanglaNumber(targetYear)}</div>
+          </div>
+          ${qrCodeUrl ? `<img src="${qrCodeUrl}" style="width: 70px; height: 70px; border: 1px solid #f1f5f9; padding: 2px;" />` : ''}
+        </div>
+      </div>
 
-  doc.save(`statement-${member.member_code}-${targetYear}.pdf`);
+      <!-- Section Title -->
+      <div style="background: #0a2540; color: white; padding: 10px 20px; font-size: 14px; font-weight: bold; border-radius: 4px; margin-bottom: 20px; font-family: 'Noto Sans Bengali';">
+        বার্ষিক সদস্য চাঁদা ও পেমেন্ট বিবরণী / Annual Contribution Statement
+      </div>
+
+      <!-- Member Details Box -->
+      <div style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+        <div>
+          <div class="label">সদস্যের নাম / Name</div>
+          <div class="value">${member.full_name}</div>
+        </div>
+        <div>
+          <div class="label">সদস্য আইডি / Member ID</div>
+          <div class="value" style="font-family: monospace; color: #B48E49;">${member.member_code}</div>
+        </div>
+        <div>
+          <div class="label">মোবাইল নম্বর / Phone</div>
+          <div class="value" style="font-family: monospace;">${toBanglaNumber(member.phone || "-")}</div>
+        </div>
+        <div>
+          <div class="label">এলাকা / Area</div>
+          <div class="value">${member.area || "-"}</div>
+        </div>
+        <div>
+          <div class="label">মাসিক হার / Rate</div>
+          <div class="value">${toBanglaNumber(member.monthly_rate || 0)} ৳ / মাস</div>
+        </div>
+        <div>
+          <div class="label">যোগদানের তারিখ / Join Date</div>
+          <div class="value">${toBanglaNumber(member.joined_date || "-")}</div>
+        </div>
+      </div>
+
+      <!-- Summary Banner -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="label">প্রত্যাশিত মোট চাঁদা / Expected</div>
+          <div style="font-size: 18px; font-weight: bold; color: #475569; margin-top: 4px;">${toBanglaNumber(totalExpectedThisYear)} ৳</div>
+        </div>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="label" style="color: #166534;">মোট পরিশোধিত / Paid</div>
+          <div style="font-size: 18px; font-weight: bold; color: #166534; margin-top: 4px;">${toBanglaNumber(totalPaidThisYear)} ৳</div>
+        </div>
+        <div style="background: ${balanceThisYear > 0 ? '#fef2f2' : '#f0fdf4'}; border: 1px solid ${balanceThisYear > 0 ? '#fca5a5' : '#bbf7d0'}; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="label" style="color: ${balanceThisYear > 0 ? '#991b1b' : '#166534'};">${balanceThisYear > 0 ? 'বকেয়া পরিমাণ / Due' : 'স্ট্যাটাস / Status'}</div>
+          <div style="font-size: 18px; font-weight: bold; color: ${balanceThisYear > 0 ? '#991b1b' : '#166534'}; margin-top: 4px;">
+            ${balanceThisYear > 0 ? `${toBanglaNumber(balanceThisYear)} ৳` : 'CLEARED'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 15px; font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <span style="font-weight: bold; font-family: 'Noto Sans Bengali';">নির্দেশিকা:</span>
+        <span style="display: flex; align-items: center; gap: 4px;"><span class="status-badge status-paid" style="padding: 1px 6px; font-size: 9px;">PAID</span> সম্পূর্ণ পরিশোধিত</span>
+        <span style="display: flex; align-items: center; gap: 4px;"><span class="status-badge status-partial" style="padding: 1px 6px; font-size: 9px;">PARTIAL</span> আংশিক পরিশোধিত</span>
+        <span style="display: flex; align-items: center; gap: 4px;"><span class="status-badge status-due" style="padding: 1px 6px; font-size: 9px;">DUE</span> বকেয়া</span>
+      </div>
+
+      <!-- Table -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0a2540; color: white; border-bottom: 2px solid #B48E49;">
+            <th style="padding: 8px 10px; text-align: left;">মাস / Month</th>
+            <th style="padding: 8px 10px; text-align: right;">ধার্যকৃত / Expected</th>
+            <th style="padding: 8px 10px; text-align: right;">পরিশোধিত / Paid</th>
+            <th style="padding: 8px 10px; text-align: center;">অবস্থা / Status</th>
+            <th style="padding: 8px 10px; text-align: center;">তারিখ / Date</th>
+            <th style="padding: 8px 10px; text-align: left;">মন্তব্য / Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row, idx) => {
+            const monthBn = BANGLA_MONTHS[idx];
+            const expVal = row[1] as string;
+            const paidVal = row[2] as string;
+            const status = row[3] as string;
+            const dateVal = row[4] as string;
+            const refVal = row[5] as string;
+            const badgeClass = status === 'PAID' ? 'status-paid' : status === 'PARTIAL' ? 'status-partial' : 'status-due';
+            
+            return `
+              <tr style="border-bottom: 1px solid #f1f5f9; background: ${idx % 2 === 0 ? '#ffffff' : '#fafafa'};">
+                <td style="padding: 8px 10px; font-weight: bold; font-family: 'Noto Sans Bengali';">${monthBn} (${row[0]})</td>
+                <td style="padding: 8px 10px; text-align: right;">${toBanglaNumber(expVal.replace('BDT ', ''))} ৳</td>
+                <td style="padding: 8px 10px; text-align: right; font-weight: bold;">${toBanglaNumber(paidVal.replace('BDT ', ''))} ৳</td>
+                <td style="padding: 8px 10px; text-align: center;"><span class="status-badge ${badgeClass}">${status}</span></td>
+                <td style="padding: 8px 10px; text-align: center; font-family: monospace;">${toBanglaNumber(dateVal)}</td>
+                <td style="padding: 8px 10px; color: #64748b;">${refVal}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+        <tfoot>
+          <tr style="background: #f8fafc; font-weight: bold; border-top: 2px solid #e2e8f0; font-family: 'Noto Sans Bengali';">
+            <td style="padding: 10px;">মোট বিবরণী (SUMMARY)</td>
+            <td style="padding: 10px; text-align: right;">${toBanglaNumber(totalExpectedThisYear)} ৳</td>
+            <td style="padding: 10px; text-align: right; color: #166534;">${toBanglaNumber(totalPaidThisYear)} ৳</td>
+            <td style="padding: 10px; text-align: center; color: ${balanceThisYear > 0 ? '#c62828' : '#2e7d32'};">
+              ${balanceThisYear > 0 ? `বকেয়া ${toBanglaNumber(balanceThisYear)} ৳` : 'CLEARED'}
+            </td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Signatures & Verification Block -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding: 0 10px;">
+        <div style="text-align: center; width: 220px;">
+          <div style="border-bottom: 1px dashed #cbd5e1; margin-bottom: 8px; height: 35px;"></div>
+          <p style="font-size: 11px; color: #64748b; margin: 0; font-family: 'Noto Sans Bengali';">কর্তৃপক্ষের স্বাক্ষর</p>
+          <p style="font-size: 9px; color: #94a3b8; margin: 0;">Authorized Signature</p>
+        </div>
+        
+        <div style="text-align: center; border: 2px dashed #2e7d32; border-radius: 6px; padding: 8px 15px; background: #e8f5e9; color: #2e7d32; font-family: 'Noto Sans Bengali'; width: 220px;">
+          <div style="font-size: 13px; font-weight: bold; margin-bottom: 2px;">ডিজিটাল যাচাইকৃত</div>
+          <div style="font-size: 9px; color: #558b2f;">DIGITALLY VERIFIED</div>
+          <div style="font-size: 8px; color: #64748b; margin-top: 4px; font-family: monospace;">Time: ${new Date().toISOString().slice(0, 19).replace('T', ' ')}</div>
+        </div>
+      </div>
+
+      <!-- Watermark background -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 80px; font-weight: 900; color: rgba(180, 142, 73, 0.03); letter-spacing: 5px; white-space: nowrap; pointer-events: none; user-select: none; z-index: 0;">
+        CHANDANAISH DARBAR
+      </div>
+
+      <!-- Footer -->
+      <div style="position: absolute; bottom: 35px; left: 40px; right: 40px; text-align: center; padding-top: 15px; border-top: 1px solid #f1f5f9; font-size: 10px; color: #94a3b8; font-family: 'Noto Sans Bengali';">
+        <p style="margin: 0;">
+          এটি চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেমের একটি অফিসিয়াল জেনারেটেড বার্ষিক হিসাব বিবরণী।
+        </p>
+        <p style="font-size: 8px; color: #cbd5e1; margin: 3px 0 0 0; font-family: monospace;">
+          ID: CD-STAT-${member.member_code}-${targetYear} | Generated: ${new Date().toLocaleString()}
+        </p>
+      </div>
+    </div>
+  `;
+
+  // Use jspdf's html method to render the PDF
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  container.style.top = '-9999px';
+  document.body.appendChild(container);
+
+  try {
+    await doc.html(container, {
+      callback: function (doc) {
+        doc.save(`statement-${member.member_code}-${targetYear}.pdf`);
+      },
+      x: 0,
+      y: 0,
+      width: pageWidth,
+      windowWidth: 794
+    });
+  } finally {
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
+  }
 }
 
 /**
@@ -631,7 +728,12 @@ export async function downloadReceiptPDF(
       border: 1px solid #e2e8f0;
     ">
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap');
+        @font-face {
+          font-family: 'Noto Sans Bengali';
+          src: url('data:font/ttf;base64,${fontBase64}') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+        }
         .label { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
         .value { color: #1e293b; font-size: 15px; font-weight: 700; }
         .data-row { display: flex; border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
