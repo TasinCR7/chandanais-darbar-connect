@@ -15,14 +15,14 @@ const teamMembers: TeamMember[] = [
     name: "Tasin",
     role: "Lead Developer",
     roleBn: "লিড ডেভেলপার",
-    image: "/assets/team/tasin.png",
+    image: "/assets/team/tasin.webp",
     color: "from-primary to-gold-dark",
   },
   {
     name: "Lemon",
     role: "Frontend Developer",
     roleBn: "ফ্রন্টএন্ড ডেভেলপার",
-    image: "/assets/team/lemon.jpg",
+    image: "/assets/team/lemon.webp",
     color: "from-emerald to-emerald-light",
   },
 ];

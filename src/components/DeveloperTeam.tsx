@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
-import tasinAvatar from "@/assets/tasin-avatar.png";
-import lemonAvatar from "@/assets/lemon-avatar.jpg";
+import tasinAvatar from "@/assets/tasin-avatar.webp";
+import lemonAvatar from "@/assets/lemon-avatar.webp";
 
 const teamMembers = [
   {

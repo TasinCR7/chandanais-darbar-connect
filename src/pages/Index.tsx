@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, BookOpen } from "lucide-react";
-import heroImage from "@/assets/hero-darbar.png";
+import heroImage from "@/assets/hero-darbar.webp";
 import SectionTitle from "@/components/SectionTitle";
 import EventCard from "@/components/EventCard";
 import UrsCountdown from "@/components/UrsCountdown";
