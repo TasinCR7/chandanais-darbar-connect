@@ -58,8 +58,8 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
       <div 
         id="report-container"
         ref={ref} 
-        className="bg-white text-black font-sans relative" 
-        style={{ width: '800px', padding: '50px', margin: '0', minHeight: '1100px' }}
+        className="bg-white text-black relative" 
+        style={{ width: '800px', padding: '50px', margin: '0', minHeight: '1100px', fontFamily: "'Noto Sans Bengali', sans-serif" }}
       >
         {/* Subtle Watermark Logo/Seal Placeholder */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">

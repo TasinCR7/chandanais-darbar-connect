@@ -10,6 +10,14 @@ import { HeartHandshake, Home, Users, CheckCircle, Clock, Download, Trash2, XCir
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+// Lazy load font for PDF generation
+let _fontBase64Cache: string | null = null;
+async function getFontBase64(): Promise<string> {
+  if (_fontBase64Cache) return _fontBase64Cache;
+  const mod = await import("@/fonts/bengaliFont");
+  _fontBase64Cache = mod.default;
+  return _fontBase64Cache;
+}
 import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { DonationReportTemplate } from "@/components/admin/DonationReportTemplate";
@@ -33,54 +41,123 @@ const DonationManager = () => {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadInvoice = async (donation: Donation) => {
-    setSelectedInvoice(donation);
     setDownloadingId(donation.id);
     
-    // Allow React to render the component off-screen
-    setTimeout(async () => {
-      if (!invoiceRef.current) {
-        setDownloadingId(null);
-        return;
-      }
-      try {
-        const canvas = await html2canvas(invoiceRef.current, {
-          scale: 3,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-        });
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({
-          orientation: "portrait",
-          unit: "mm",
-          format: "a4",
-        });
-        const pageW = pdf.internal.pageSize.getWidth();
-        const pageH = pdf.internal.pageSize.getHeight();
-        const imgH = (canvas.height * pageW) / canvas.width;
-        let heightLeft = imgH;
-        let position = 0;
-        pdf.addImage(imgData, 'PNG', 0, position, pageW, imgH, undefined, 'FAST');
-        heightLeft -= pageH;
-        while (heightLeft > 0) {
-          position = heightLeft - imgH;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, pageW, imgH, undefined, 'FAST');
-          heightLeft -= pageH;
+    try {
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const fontBase64 = await getFontBase64();
+      
+      const d = donation;
+      const invoiceNo = d.id?.substring(0, 8).toUpperCase() || 'N/A';
+      const verificationCode = d.id
+        ? `CD-${d.id.substring(0, 4).toUpperCase()}-${d.id.substring(4, 8).toUpperCase()}`
+        : 'N/A';
+      const invoiceDate = d.created_at
+        ? new Date(d.created_at).toLocaleDateString('bn-BD')
+        : new Date().toLocaleDateString('bn-BD');
+      const invoiceTime = d.created_at
+        ? new Date(d.created_at).toLocaleTimeString('bn-BD')
+        : new Date().toLocaleTimeString('bn-BD');
+      const isVerified = d.status === 'verified';
+      
+      const getCategoryLabel = (cat: string, rid?: string | null) => {
+        if (cat === 'mosque_fund') return 'মসজিদ ফান্ড';
+        if (cat === 'darbar_fund') return 'দরবার ফান্ড';
+        if (cat === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
+        if (cat === 'specific_shahjada') {
+          const map: Record<string, string> = { boro: 'বড় শাহজাদা', mej: 'মেজ শাহজাদা', sej: 'সেজ শাহজাদা', choto: 'ছোট শাহজাদা' };
+          return map[rid || ''] || 'নির্দিষ্ট শাহজাদা';
         }
-        const invoiceId = donation.id.substring(0, 6).toUpperCase();
-        const dateStr = new Date().toISOString().slice(0, 10);
-        pdf.save(`Rashid-${donation.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
-        toast({ title: "রশিদ ডাউনলোড সম্পন্ন হয়েছে" });
-      } catch (error) {
-        console.error(error);
-        toast({ title: "ইনভয়েস তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
+        return cat;
+      };
+      
+      const payMethodMap: Record<string, string> = { bkash: 'bKash', nagad: 'Nagad', rocket: 'Rocket', card: 'Card / Bank' };
+      const payMethodLabel = payMethodMap[d.payment_method] || d.payment_method;
+      
+      let qrImgHtml = '';
+      try {
+        const QRCode = (await import('qrcode')).default;
+        const qrText = `DONATION:${verificationCode}|AMOUNT:${d.amount}`;
+        const qrUrl = await QRCode.toDataURL(qrText, { width: 120, margin: 1, color: { dark: '#065f46', light: '#ffffff' } });
+        qrImgHtml = `<img src="${qrUrl}" style="width:86px;height:86px;" />`;
+      } catch (e) { console.warn('QR failed', e); }
+
+      const statusText = isVerified ? '✔ গৃহীত' : d.status === 'rejected' ? '✖ বাতিল' : '⏳ অপেক্ষমান';
+      const statusBg = isVerified ? '#dcfce7' : d.status === 'rejected' ? '#fee2e2' : '#ffedd5';
+      const statusColor = isVerified ? '#166534' : d.status === 'rejected' ? '#991b1b' : '#9a3412';
+      
+      const html = `
+        <div style="width:794px;min-height:1123px;background:#fff;font-family:'Noto Sans Bengali',sans-serif;color:#1a1a1a;position:relative;overflow:hidden;padding:0;margin:0;box-sizing:border-box;">
+          <style>@font-face{font-family:'Noto Sans Bengali';src:url('data:font/ttf;base64,${fontBase64}') format('truetype');font-weight:normal;font-style:normal;}</style>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:90px;font-weight:900;color:rgba(6,95,70,0.04);letter-spacing:8px;white-space:nowrap;pointer-events:none;z-index:0;">চন্দনাইশ দরবার শরীফ</div>
+          <div style="position:absolute;inset:12px;border:2px solid #065f46;border-radius:4px;pointer-events:none;z-index:1;"></div>
+          <div style="position:relative;z-index:3;padding:40px 48px;">
+            <div style="text-align:center;margin-bottom:28px;">
+              <div style="font-size:28px;color:#065f46;margin-bottom:6px;letter-spacing:2px;">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+              <div style="height:1px;width:100%;background:linear-gradient(to right,transparent,#065f46,transparent);margin:10px 0;"></div>
+              <div style="font-size:30px;font-weight:900;color:#065f46;letter-spacing:1px;margin-bottom:4px;font-family:'Noto Sans Bengali';">চন্দনাইশ দরবার শরীফ</div>
+              <div style="font-size:14px;color:#b45309;font-weight:bold;margin-bottom:4px;">সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া</div>
+              <div style="font-size:13px;color:#6b7280;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">Chandanais Darbar Sharif</div>
+              <div style="font-size:12px;color:#9ca3af;">চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ | হটলাইন: ০১৬২২-৭২১৯৯৬</div>
+              <div style="height:1px;width:100%;background:linear-gradient(to right,transparent,#065f46,transparent);margin:10px 0;"></div>
+              <div style="background:linear-gradient(135deg,#065f46 0%,#047857 50%,#065f46 100%);color:#fff;padding:10px 32px;border-radius:4px;display:inline-block;font-size:18px;font-weight:700;letter-spacing:2px;margin-top:6px;">হাদিয়া ও নজরানা রশিদ / DONATION RECEIPT</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:24px;"><tr>
+              <td style="width:33%;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:14px 18px;"><div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">রশিদ নম্বর</div><div style="font-size:20px;font-weight:900;color:#065f46;font-family:monospace;">#${invoiceNo}</div></td>
+              <td style="width:33%;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:14px 18px;text-align:center;"><div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">তারিখ</div><div style="font-size:16px;font-weight:700;color:#92400e;">${invoiceDate}</div><div style="font-size:12px;color:#b45309;">${invoiceTime}</div></td>
+              <td style="width:33%;background:${isVerified ? '#f0fdf4' : '#fff7ed'};border:1px solid ${isVerified ? '#86efac' : '#fdba74'};border-radius:6px;padding:14px 18px;text-align:right;"><div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">স্ট্যাটাস</div><div style="display:inline-block;padding:4px 14px;border-radius:99px;font-size:13px;font-weight:700;background:${statusBg};color:${statusColor};">${statusText}</div></td>
+            </tr></table>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #d1fae5;">দাতার তথ্য / Donor Information</div>
+              <table style="width:100%;border-collapse:collapse;"><tr>
+                <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">নাম</div><div style="font-size:16px;font-weight:700;color:#111827;">${d.donor_name}</div></td>
+                <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">মোবাইল</div><div style="font-size:15px;font-weight:600;color:#111827;font-family:monospace;">${d.donor_phone}</div></td>
+                <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">যাচাই কোড</div><div style="font-size:13px;font-weight:700;color:#065f46;font-family:monospace;">${verificationCode}</div></td>
+              </tr></table>
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">
+              <thead><tr style="background:linear-gradient(135deg,#065f46,#047857);color:#fff;"><th style="padding:12px 16px;text-align:left;font-weight:700;">বিবরণ (খাত)</th><th style="padding:12px 16px;text-align:left;font-weight:700;">পেমেন্ট মাধ্যম</th><th style="padding:12px 16px;text-align:left;font-weight:700;">ট্রানজেকশন আইডি</th><th style="padding:12px 16px;text-align:right;font-weight:700;">পরিমাণ (৳)</th></tr></thead>
+              <tbody><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;"><td style="padding:16px;font-size:15px;font-weight:600;color:#065f46;">${getCategoryLabel(d.donation_category, d.recipient_id)}</td><td style="padding:16px;"><span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px;">${payMethodLabel}</span></td><td style="padding:16px;font-family:monospace;font-size:13px;color:#374151;letter-spacing:1px;">${d.transaction_id || '-'}</td><td style="padding:16px;text-align:right;font-size:20px;font-weight:900;color:#065f46;">${d.amount.toLocaleString('en-US')} ৳</td></tr></tbody>
+            </table>
+            <div style="text-align:right;margin-bottom:20px;"><div style="display:inline-block;background:linear-gradient(135deg,#065f46,#047857);color:#fff;padding:14px 20px;border-radius:6px;width:340px;"><table style="width:100%;border-collapse:collapse;"><tr><td style="font-size:15px;font-weight:700;letter-spacing:1px;color:white;">সর্বমোট / TOTAL</td><td style="font-size:26px;font-weight:900;text-align:right;color:white;">${d.amount.toLocaleString('en-US')} ৳</td></tr></table></div></div>
+            <table style="width:100%;border-collapse:collapse;margin-top:32px;margin-bottom:28px;"><tr>
+              <td style="text-align:center;width:33%;"><div style="height:50px;border-bottom:1px dashed #9ca3af;margin-bottom:8px;"></div><div style="font-size:11px;color:#6b7280;">অনুমোদনকারীর স্বাক্ষর</div></td>
+              <td style="text-align:center;width:33%;vertical-align:bottom;">${qrImgHtml || '<div style="font-size:10px;color:#065f46;">অফিসিয়াল সিলমোহর</div>'}</td>
+              <td style="text-align:center;width:33%;"><div style="height:50px;border-bottom:1px dashed #9ca3af;margin-bottom:8px;"></div><div style="font-size:11px;color:#6b7280;">গ্রাহকের স্বাক্ষর</div></td>
+            </tr></table>
+            <div style="text-align:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 24px;margin-bottom:20px;"><div style="font-size:20px;color:#065f46;margin-bottom:6px;">إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ</div><div style="font-size:13px;color:#047857;font-style:italic;">"নিশ্চয়ই আল্লাহ্ অনুগ্রহকারীদের ভালোবাসেন।" — সূরা আল-বাকারাহ: ১৯৫</div></div>
+            <div style="background:#065f46;color:#fff;border-radius:6px;padding:12px 24px;font-size:11px;"><table style="width:100%;border-collapse:collapse;"><tr><td style="color:white;"><div style="font-weight:700;font-size:12px;margin-bottom:2px;color:white;">চন্দনাইশ দরবার শরীফ</div></td><td style="text-align:center;opacity:0.7;color:white;">কম্পিউটার জেনারেটেড রশিদ</td><td style="text-align:right;color:white;"><div style="font-family:monospace;color:white;">${verificationCode}</div></td></tr></table></div>
+          </div>
+        </div>
+      `;
+      
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      document.body.appendChild(container);
+      
+      try {
+        await doc.html(container, {
+          callback: function (doc) {
+            const invoiceId = donation.id.substring(0, 6).toUpperCase();
+            const dateStr = new Date().toISOString().slice(0, 10);
+            doc.save(`Rashid-${donation.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
+          },
+          x: 0, y: 0, width: 210, windowWidth: 794
+        });
       } finally {
-        setDownloadingId(null);
-        setSelectedInvoice(null);
+        if (container.parentNode) document.body.removeChild(container);
       }
-    }, 400);
+      
+      toast({ title: "রশিদ ডাউনলোড সম্পন্ন হয়েছে" });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "ইনভয়েস তৈরিতে সমস্যা হয়েছে", variant: "destructive" });
+    } finally {
+      setDownloadingId(null);
+    }
   };
   const handleDownloadReport = async () => {
     const verifiedDonations = donations.filter(d => d.status === 'verified');

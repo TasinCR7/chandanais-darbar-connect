@@ -12,7 +12,14 @@ import PremiumLoader from "@/components/PremiumLoader";
 import { Download, Share2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import fontBase64, { registerBengaliFont } from "@/fonts/bengaliFont";
+// Lazy load font to avoid 267KB in main bundle
+let _fontBase64Cache: string | null = null;
+async function getFontBase64(): Promise<string> {
+  if (_fontBase64Cache) return _fontBase64Cache;
+  const mod = await import("@/fonts/bengaliFont");
+  _fontBase64Cache = mod.default;
+  return _fontBase64Cache;
+}
 import { formatMonthBn } from "@/utils/dateHelpers";
 
 interface TopicRecord { 
@@ -213,6 +220,9 @@ export default function CommitteeDashboard() {
       const W = 210;
       const rid = c.id.slice(0, 8).toUpperCase();
       
+      // Lazy load the font for HTML embedding
+      const fontBase64 = await getFontBase64();
+
       // Create HTML template for the receipt with base64 font embedded
       const html = `
         <div id="receipt-container" style="

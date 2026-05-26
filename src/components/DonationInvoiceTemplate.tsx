@@ -103,7 +103,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
           width: '794px',
           minHeight: '1123px',
           backgroundColor: '#ffffff',
-          fontFamily: "'Segoe UI', 'Arial Unicode MS', sans-serif",
+          fontFamily: "'Noto Sans Bengali', 'Segoe UI', 'Arial Unicode MS', sans-serif",
           color: '#1a1a1a',
           position: 'relative',
           overflow: 'hidden',

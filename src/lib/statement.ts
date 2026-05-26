@@ -2,7 +2,14 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
-import fontBase64 from '@/fonts/bengaliFont';
+// Lazy load the font base64 to avoid 267KB being in the main bundle
+let _fontBase64Cache: string | null = null;
+async function getFontBase64(): Promise<string> {
+  if (_fontBase64Cache) return _fontBase64Cache;
+  const mod = await import('@/fonts/bengaliFont');
+  _fontBase64Cache = mod.default;
+  return _fontBase64Cache;
+}
 
 // ---------- PDF Advanced Styling Helpers ----------
 const PDF_COLORS = {
@@ -334,6 +341,9 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   } catch (e) {
     console.warn(e);
   }
+
+  // Lazy load the font for HTML embedding
+  const fontBase64 = await getFontBase64();
 
   // Create HTML template for the annual statement with base64 font embedded
   const html = `
@@ -715,6 +725,9 @@ export async function downloadReceiptPDF(
   } catch (e) {
     console.warn("QR generation failed", e);
   }
+
+  // Lazy load the font for HTML embedding
+  const fontBase64 = await getFontBase64();
 
   // Create HTML template for the receipt
   const html = `
