@@ -15,7 +15,26 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
   
   const { data: settings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
-    queryFn: fetchSettings,
+    queryFn: async () => {
+      const s = await fetchSettings();
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('app_settings_cache', JSON.stringify(s));
+      }
+      return s;
+    },
+    initialData: () => {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('app_settings_cache');
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            return undefined;
+          }
+        }
+      }
+      return undefined;
+    },
     staleTime: 5000,
   });
 

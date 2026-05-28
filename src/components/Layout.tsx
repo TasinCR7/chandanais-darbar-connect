@@ -60,7 +60,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
-    queryFn: fetchSettings,
+    queryFn: async () => {
+      const settings = await fetchSettings();
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('app_settings_cache', JSON.stringify(settings));
+      }
+      return settings;
+    },
+    initialData: () => {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('app_settings_cache');
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            return undefined;
+          }
+        }
+      }
+      return undefined;
+    },
     staleTime: 5000,
     refetchInterval: 15000,
   });
@@ -128,31 +147,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     !location.pathname.startsWith('/committee-login') && 
     !location.pathname.startsWith('/committee-dashboard');
 
-  // If loading settings or auth on a public route, show a premium loader
-  if (isPublicRoute && (authLoading || settingsLoading)) {
-    return (
-      <div className="fixed inset-0 z-[110] bg-[#0a0a0a] flex flex-col items-center justify-center space-y-4">
-        <motion.div
-          animate={{ 
-            scale: [1, 1.1, 1],
-            rotate: [0, 180, 360],
-            opacity: [0.5, 1, 0.5]
-          }}
-          transition={{ 
-            duration: 3, 
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="w-16 h-16 rounded-full border-2 border-gold/30 border-t-gold flex items-center justify-center p-2"
-        >
-          <div className="w-full h-full rounded-full border border-gold/20 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
-          </div>
-        </motion.div>
-        <p className="text-gold font-heading animate-pulse tracking-widest text-sm uppercase">লোড হচ্ছে...</p>
-      </div>
-    );
-  }
+  // Removed blocking loader on public routes to load website instantly without waiting for Supabase/auth network queries.
 
 
 
