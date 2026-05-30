@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
@@ -23,6 +23,13 @@ const BookReader = () => {
     } else {
       document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
+  }, []);
+
+  // Sync fullscreen state with browser's native fullscreen events (e.g. Escape key)
+  useEffect(() => {
+    const handleChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
   }, []);
 
   const openInNewTab = () => {
@@ -194,6 +201,7 @@ const BookReader = () => {
                   type="application/pdf"
                   className="w-full rounded-lg border border-border bg-card shadow-lg"
                   style={{ height: "calc(100vh - 60px)", minHeight: "600px" }}
+                  onError={() => setPdfError(true)}
                 >
                   {/* Fallback if object tag doesn't work */}
                   <div className="flex flex-col items-center justify-center p-10 gap-4 text-center">

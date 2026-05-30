@@ -462,7 +462,7 @@ const Finance = () => {
   const approvePayment = async (id: string) => {
     setBusy(true);
     try {
-      const { error } = await supabase.from('payments').update({ status: 'approved', recorded_by: user.id } as any).eq('id', id);
+      const { error } = await supabase.from('payments').update({ status: 'approved', recorded_by: user?.id } as any).eq('id', id);
       if (error) throw error;
       toast({ title: 'পেমেন্ট অনুমোদিত হয়েছে' });
       await loadAll();
@@ -667,7 +667,7 @@ const Finance = () => {
         method,
         transaction_ref,
         payment_date,
-        recorded_by: user.id,
+        recorded_by: user?.id,
       }));
 
       const { error } = await supabase.from('payments').insert(inserts as any);
@@ -714,7 +714,7 @@ const Finance = () => {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from('expenses').insert({ ...parsed.data, recorded_by: user.id } as any);
+    const { error } = await supabase.from('expenses').insert({ ...parsed.data, recorded_by: user?.id } as any);
     setBusy(false);
     if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
     toast({ title: 'খরচ রেকর্ড হয়েছে ✓' });

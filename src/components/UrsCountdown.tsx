@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { motion } from "framer-motion";
 import { Moon, Star } from "lucide-react";
 
@@ -27,9 +27,10 @@ function getNextUrs(): UrsEvent & { targetDate: Date } {
       return { ...event, targetDate: target };
     }
   }
+  // All events have passed — recycle event list for next year
   const first = ursEvents[0];
-  const nextYear = now.getFullYear() + 1;
-  const target = new Date(`${nextYear}-04-14T00:00:00`);
+  const nextYearDate = first.gregorianDate.replace(/^\d{4}/, String(now.getFullYear() + 1));
+  const target = new Date(nextYearDate + "T00:00:00");
   return { ...first, targetDate: target };
 }
 
@@ -47,7 +48,10 @@ function getNextMonthlyUrs(): Date {
       return target;
     }
   }
-  return new Date(monthlyUrsDates[0]); // fallback to first next year
+  // All dates passed — use first date of next year cycle
+  const firstDate = monthlyUrsDates[0];
+  const nextYearDate = firstDate.replace(/^\d{4}/, String(now.getFullYear() + 1));
+  return new Date(nextYearDate + "T00:00:00");
 }
 
 function calcTimeLeft(target: Date) {
@@ -64,7 +68,7 @@ function calcTimeLeft(target: Date) {
 const toBengaliNum = (n: number): string =>
   String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
 
-const TimeBox = ({ value, label }: { value: number; label: string }) => (
+const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
   <motion.div
     className="flex flex-col items-center"
     initial={{ scale: 0.8, opacity: 0 }}
@@ -82,9 +86,9 @@ const TimeBox = ({ value, label }: { value: number; label: string }) => (
     </div>
     <span className="text-gold-light/80 text-xs sm:text-sm mt-2 font-bengali">{label}</span>
   </motion.div>
-);
+));
 
-const SmallTimeBox = ({ value, label }: { value: number; label: string }) => (
+const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center">
     <div className="relative bg-emerald border border-gold/20 rounded-lg w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden shadow-inner">
       <span className="text-xl sm:text-2xl font-heading font-bold text-gold drop-shadow-sm">
@@ -93,7 +97,7 @@ const SmallTimeBox = ({ value, label }: { value: number; label: string }) => (
     </div>
     <span className="text-gold-light/60 text-[10px] sm:text-xs mt-1.5 font-bengali">{label}</span>
   </div>
-);
+));
 
 const UrsCountdown = () => {
   const [nextUrs] = useState(getNextUrs);

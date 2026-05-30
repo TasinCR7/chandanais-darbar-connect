@@ -1,9 +1,5 @@
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const getFallbackKey = () => {
-  const reversed = "ntCgYzFRaDSwvE0S0Uvz5yucYF3bydGW4KK6ldOFtCWzEneR0jON_ksg";
-  return reversed.split("").reverse().join("");
-};
-const API_KEY = import.meta.env.VITE_GROQ_API_KEY || getFallbackKey();
+const API_KEY = import.meta.env.VITE_GROQ_API_KEY || "";
 
 const SYSTEM_PROMPT = `
 You are an AI assistant for the "Chandanaish Darbar Sharif" website. 
@@ -17,7 +13,7 @@ Silsila: Maizbhandaria.
 // Keeping the function name as getGeminiResponse to maintain compatibility with Chatbot.tsx imports
 export async function getGeminiResponse(userMessage: string, chatHistory: { role: string; content: string }[]) {
   if (!API_KEY) {
-    return "দুঃখিত, বর্তমানে এআই চ্যাটবটটি সচল নেই।";
+    return "দুঃখিত, বর্তমানে এআই চ্যাটবটটি সচল নেই। অনুগ্রহ করে পরে আবার চেষ্টা করুন।";
   }
 
   // Map existing chat history to OpenAI/Groq format (user / assistant)
@@ -38,7 +34,7 @@ export async function getGeminiResponse(userMessage: string, chatHistory: { role
         "Authorization": `Bearer ${API_KEY}`
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant", // Updated active model
+        model: "llama-3.1-8b-instant",
         messages: messages,
         temperature: 0.7,
         max_tokens: 800,
@@ -54,6 +50,6 @@ export async function getGeminiResponse(userMessage: string, chatHistory: { role
     return "দুঃখিত, আমি আপনার প্রশ্নের উত্তর দিতে পারছি না।";
   } catch (error) {
     console.error("Fetch Error:", error);
-    return "নেটওয়ার্ক সমস্যার কারণে আমি উত্তর দিতে পারছি না।";
+    return "নেটওয়ার্ক সমস্যার কারণে আমি উত্তর দিতে পারছি না।";
   }
 }

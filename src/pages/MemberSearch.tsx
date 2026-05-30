@@ -119,7 +119,7 @@ const MemberSearch = () => {
       await downloadAnnualStatementPDF(member, payments, year);
       toast({ title: 'PDF ডাউনলোড শুরু হয়েছে', description: `বছর: ${year} • সদস্য: ${member.member_code}` });
     } catch (err: unknown) {
-      toast({ title: 'ত্রুটি', description: err.message, variant: 'destructive' });
+      toast({ title: 'ত্রুটি', description: err instanceof Error ? err.message : 'অজানা ত্রুটি', variant: 'destructive' });
     }
   };
 

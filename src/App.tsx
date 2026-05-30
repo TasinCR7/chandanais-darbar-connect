@@ -58,13 +58,13 @@ const AppContent = () => {
   return (
     <Layout>
       <RouteProgressBar />
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout">
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15, ease: "linear" }}
+          transition={{ duration: 0.1, ease: "linear" }}
         >
           <Suspense fallback={<PremiumLoader />}>
             <MaintenanceGuard>

@@ -24,9 +24,10 @@ const routeImports: Record<string, () => Promise<unknown>> = {
 import { Menu, X, Phone, Bell, Settings, MapPin, Lock, RotateCcw, Volume2, VolumeX, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import DeveloperTeam from "./DeveloperTeam";
-import Chatbot from "./Chatbot";
-import VisitorCounter from "./VisitorCounter";
+import { lazy, Suspense } from "react";
+const DeveloperTeam = lazy(() => import("./DeveloperTeam"));
+const Chatbot = lazy(() => import("./Chatbot"));
+const VisitorCounter = lazy(() => import("./VisitorCounter"));
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
@@ -80,8 +81,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
       return undefined;
     },
-    staleTime: 5000,
-    refetchInterval: 15000,
+    staleTime: 60000,
   });
 
   const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
@@ -105,8 +105,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       return [];
     },
     enabled: !!appSettings,
-    staleTime: 30000,
-    refetchInterval: 30000,
+    staleTime: 60000,
+    refetchInterval: 60000,
   });
 
   useEffect(() => {
@@ -356,7 +356,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }>{children}</main>
 
       <div className="border-t border-gold/20" />
-      <DeveloperTeam />
+      <Suspense fallback={null}><DeveloperTeam /></Suspense>
 
       {/* Footer */}
       <footer className="border-t border-gold/20 bg-card islamic-pattern content-visibility-auto">
@@ -409,7 +409,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               © {new Date().getFullYear()} চন্দনাইশ দরবার শরীফ। সর্বস্বত্ব সংরক্ষিত।
             </p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
-              <VisitorCounter />
+              <Suspense fallback={null}><VisitorCounter /></Suspense>
               <Link to="/admin" className="text-muted-foreground/50 text-xs hover:text-gold transition-colors duration-300">
                 এডমিন লগইন
               </Link>
@@ -417,7 +417,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </footer>
-      <Chatbot />
+      <Suspense fallback={null}><Chatbot /></Suspense>
       {/* Admin Maintenance Mode Active Banner */}
       {isBypassed && String(appSettings.maintenance_mode) === 'true' && (
         <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-500 text-black text-[11px] md:text-xs font-bold py-2 px-4 text-center shadow-lg border-t border-amber-600 animate-pulse flex items-center justify-center gap-2">

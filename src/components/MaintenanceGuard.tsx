@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+
 
 interface MaintenanceGuardProps {
   children: React.ReactNode;
@@ -39,23 +39,6 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
   });
 
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'app_settings' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['app_settings'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
 
   // Committee members log in via phone verification stored in localStorage
   const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");

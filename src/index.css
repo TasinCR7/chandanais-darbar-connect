@@ -142,7 +142,6 @@
   .content-visibility-auto {
     content-visibility: auto;
     contain-intrinsic-size: 1px 500px;
-    will-change: transform, opacity;
   }
 
   /* Mobile Safe Area Utilities */
