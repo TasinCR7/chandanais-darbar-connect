@@ -59,28 +59,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    supabase.auth.getSession().then(async ({ data: { session: sess } }) => {
-      setSession(sess);
-      try {
-        if (sess?.user) {
-          setUser(sess.user);
-          await fetchRoles(sess.user.id);
-        } else {
-          const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
-          if (isMasterAdmin) {
-            setUser({
-              id: "master-admin",
-              email: "admin@chandanaishdarbar.com"
-            } as any);
-            setRoles(['admin']);
+    supabase.auth.getSession()
+      .then(async ({ data: { session: sess } }) => {
+        setSession(sess);
+        try {
+          if (sess?.user) {
+            setUser(sess.user);
+            await fetchRoles(sess.user.id);
+          } else {
+            const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
+            if (isMasterAdmin) {
+              setUser({
+                id: "master-admin",
+                email: "admin@chandanaishdarbar.com"
+              } as any);
+              setRoles(['admin']);
+            }
           }
+        } catch (err) {
+          console.error("Error fetching roles on auth init:", err);
         }
-      } catch (err) {
-        console.error("Error fetching roles on auth init:", err);
-      } finally {
+      })
+      .catch((err) => {
+        console.error("Error getting session on auth init:", err);
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    });
+      });
 
     return () => sub.subscription.unsubscribe();
   }, []);
