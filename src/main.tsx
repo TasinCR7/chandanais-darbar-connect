@@ -1,3 +1,5 @@
+import { createRoot } from "react-dom/client";
+import App from "./App";
 import {
   installGlobalErrorGuards,
   isIgnorableExtensionError,
@@ -5,9 +7,6 @@ import {
 import "./index.css";
 
 installGlobalErrorGuards();
-
-const BOOTSTRAP_RETRY_LIMIT = 3;
-const BOOTSTRAP_RETRY_DELAY_MS = 150;
 
 const renderBootstrapFallback = () => {
   const root = document.getElementById("root");
@@ -27,16 +26,10 @@ const renderBootstrapFallback = () => {
   ].join("");
 };
 
-const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-
-const bootstrap = async (attempt = 1): Promise<void> => {
-  try {
-    const [{ createRoot }, { default: App }] = await Promise.all([
-      import("react-dom/client"),
-      import("./App.tsx"),
-    ]);
-
-    createRoot(document.getElementById("root")!, {
+try {
+  const rootElement = document.getElementById("root");
+  if (rootElement) {
+    createRoot(rootElement, {
       onRecoverableError: (error) => {
         if (isIgnorableExtensionError(error)) {
           console.warn("Ignored recoverable external browser extension error:", error);
@@ -46,16 +39,9 @@ const bootstrap = async (attempt = 1): Promise<void> => {
         console.error("Recoverable React rendering error:", error);
       },
     }).render(<App />);
-  } catch (error) {
-    if (isIgnorableExtensionError(error) && attempt < BOOTSTRAP_RETRY_LIMIT) {
-      console.warn(`Ignored bootstrap extension error on attempt ${attempt}; retrying...`, error);
-      await wait(BOOTSTRAP_RETRY_DELAY_MS * attempt);
-      return bootstrap(attempt + 1);
-    }
-
-    console.error("Application bootstrap failed:", error);
-    renderBootstrapFallback();
   }
-};
+} catch (error) {
+  console.error("Application bootstrap failed:", error);
+  renderBootstrapFallback();
+}
 
-void bootstrap();
