@@ -2314,15 +2314,51 @@ const Finance = () => {
                       const m = memberStats.find(ms => ms.id === selectedMemberId);
                       if (!m) return null;
                       return (
-                        <div className="grid grid-cols-2 gap-6 font-bangla">
-                          <div className="space-y-1">
-                            <p className="text-[10px] text-gold/60 uppercase font-bold tracking-wider">বর্তমান বকেয়া</p>
-                            <p className="text-2xl font-black text-rose-500">৳ {toBanglaNumber(m.dues.toFixed(0))}</p>
+                        <div className="space-y-3 font-bangla">
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-gold/60 uppercase font-bold tracking-wider">বর্তমান বকেয়া</p>
+                              <p className="text-2xl font-black text-rose-500">৳ {toBanglaNumber(m.dues.toFixed(0))}</p>
+                            </div>
+                            <div className="text-right space-y-1">
+                              <p className="text-[10px] text-gold/60 uppercase font-bold tracking-wider">বকেয়া মাস</p>
+                              <p className="text-2xl font-black text-amber-500">{toBanglaNumber(m.dueMonths)} মাস</p>
+                            </div>
                           </div>
-                          <div className="text-right space-y-1">
-                            <p className="text-[10px] text-gold/60 uppercase font-bold tracking-wider">বকেয়া মাস</p>
-                            <p className="text-2xl font-black text-amber-500">{toBanglaNumber(m.dueMonths)} মাস</p>
-                          </div>
+                          {m.dues > 0 && (
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full text-xs bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 mt-2 font-bangla"
+                              onClick={() => {
+                                const dueRows = m.rows.filter(r => r.year === reportYear && r.status !== 'paid');
+                                if (dueRows.length > 0) {
+                                  setSelectedMonths(dueRows.map(r => r.month));
+                                  const input = document.querySelector('input[name="amount"]') as HTMLInputElement;
+                                  if (input) {
+                                    input.value = String(m.monthly_rate);
+                                  }
+                                  toast({ title: 'বকেয়া মাস এবং মাসিক হার স্বয়ংক্রিয়ভাবে সিলেক্ট করা হয়েছে ✓' });
+                                } else {
+                                  // If no dues in this reportYear, look for any other years or select all due months overall
+                                  const allDueRows = m.rows.filter(r => r.status !== 'paid');
+                                  if (allDueRows.length > 0) {
+                                    setSelectedMonths(allDueRows.filter(r => r.year === reportYear || r.year === new Date().getFullYear()).map(r => r.month));
+                                    const input = document.querySelector('input[name="amount"]') as HTMLInputElement;
+                                    if (input) {
+                                      input.value = String(m.monthly_rate);
+                                    }
+                                    toast({ title: 'বকেয়া মাস এবং মাসিক হার স্বয়ংক্রিয়ভাবে সিলেক্ট করা হয়েছে ✓' });
+                                  } else {
+                                    toast({ title: 'কোনো বকেয়া মাস নেই', description: 'এই সদস্যের সব চাঁদা পরিশোধিত আছে।' });
+                                  }
+                                }
+                              }}
+                            >
+                              বকেয়া মাস ও পরিমাণ স্বয়ংক্রিয় সিলেক্ট করুন ⚡
+                            </Button>
+                          )}
                         </div>
                       );
                     })()}
@@ -2419,7 +2455,26 @@ const Finance = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[11px] text-muted-foreground font-bangla">মাসসমূহ নির্বাচন করুন (Multi-month)</Label>
+                  <div className="flex justify-between items-center">
+                    <Label className="text-[11px] text-muted-foreground font-bangla">মাসসমূহ নির্বাচন করুন (Multi-month)</Label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])}
+                        className="text-[10px] text-gold hover:underline font-bangla"
+                      >
+                        সব মাস
+                      </button>
+                      <span className="text-[10px] text-muted-foreground">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonths([])}
+                        className="text-[10px] text-gold hover:underline font-bangla"
+                      >
+                        সব মুছুন
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-primary/10 bg-background/40">
                     {BANGLA_MONTHS.map((mn, i) => {
                       const mNum = i + 1;
