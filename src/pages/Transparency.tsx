@@ -34,9 +34,9 @@ const Transparency = () => {
       if (chartRes.data) {
         setChart(
           chartRes.data.map((row: any) => {
-            const [, m] = row.month_key.split('-');
+            const [, m] = (row.month_key || '').split('-');
             return {
-              label: monthName(Number(m)).slice(0, 3),
+              label: monthName(Number(m || 0)).slice(0, 3),
               income: Number(row.income),
               expense: Number(row.expense)
             };

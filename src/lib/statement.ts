@@ -2600,7 +2600,7 @@ export async function downloadOrganizationStatementPDF(
     for (let mo = 1; mo <= 12; mo++) monthlyMap.set(mo, { income: 0, expense: 0, count: 0 });
 
     txs.forEach(t => {
-      const moNum = parseInt(t.monthKey.split('-')[1] || '0', 10);
+      const moNum = parseInt((t.monthKey || '').split('-')[1] || '0', 10);
       if (moNum >= 1 && moNum <= 12) {
         const cur = monthlyMap.get(moNum)!;
         cur.income += t.credit;
