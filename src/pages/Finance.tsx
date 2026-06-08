@@ -97,6 +97,7 @@ const Finance = () => {
   const [duesSearch, setDuesSearch] = useState('');
   const [areaScope, setAreaScope] = useState<'year' | 'month'>('year');
   const [memberSearchOpen, setMemberSearchOpen] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [quickMemberOpen, setQuickMemberOpen] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState<number[]>([new Date().getMonth() + 1]);
@@ -2066,10 +2067,8 @@ const Finance = () => {
                     <Input 
                       placeholder="সদস্য খুঁজুন..." 
                       className="pl-9 h-9 w-48 text-xs font-bangla"
-                      onChange={(e) => {
-                        const q = e.target.value.toLowerCase();
-                        // Local filtering via state would be better, but for now we can just use a local ref or simple query
-                      }}
+                      value={memberSearchQuery}
+                      onChange={(e) => setMemberSearchQuery(e.target.value)}
                     />
                   </div>
                   <Button onClick={() => setQuickMemberOpen(true)} size="sm" className="h-9 bg-primary text-primary-foreground font-bangla">
@@ -2090,8 +2089,17 @@ const Finance = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {members.slice().sort((a, b) => (a.member_code || '').localeCompare(b.member_code || '')).map((m) => (
-                      <tr key={m.id} className="border-t border-border/40 hover:bg-primary/5 transition-colors">
+                    {members
+                      .filter(m => 
+                        m.full_name.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+                        (m.member_code || '').toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+                        (m.phone || '').includes(memberSearchQuery) ||
+                        (m.area || '').toLowerCase().includes(memberSearchQuery.toLowerCase())
+                      )
+                      .slice()
+                      .sort((a, b) => (a.member_code || '').localeCompare(b.member_code || ''))
+                      .map((m) => (
+                        <tr key={m.id} className="border-t border-border/40 hover:bg-primary/5 transition-colors">
                         <td className="py-2 px-3 font-mono text-primary">{m.member_code}</td>
                         <td className="px-3 font-semibold">{m.full_name}</td>
                         <td className="px-3 text-muted-foreground">{m.phone || '-'}</td>
