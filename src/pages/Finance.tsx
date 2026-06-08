@@ -105,7 +105,24 @@ const Finance = () => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [viewingMember, setViewingMember] = useState<Member | null>(null);
+  const [targetFormYear, setTargetFormYear] = useState<number>(new Date().getFullYear());
+  const [targetFormMonth, setTargetFormMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [targetFormAmount, setTargetFormAmount] = useState<string>("");
+  const [targetFormNote, setTargetFormNote] = useState<string>("");
   const ORG_NAME_SLUG = 'chandanaish-darbar';
+
+  useEffect(() => {
+    setTargetFormYear(reportYear);
+    setTargetFormMonth(String(reportMonth));
+    const currentTarget = targets.find(t => t.for_year === reportYear && t.for_month === reportMonth);
+    if (currentTarget) {
+      setTargetFormAmount(String(currentTarget.target_amount));
+      setTargetFormNote(currentTarget.note || "");
+    } else {
+      setTargetFormAmount("");
+      setTargetFormNote("");
+    }
+  }, [reportYear, reportMonth, targets]);
 
   const loadAll = async () => {
     setBusy(true);
@@ -610,6 +627,7 @@ const Finance = () => {
         phone: fd.phone as string,
         area: fd.area as string,
         monthly_rate: Number(fd.monthly_rate),
+        joined_date: fd.joined_date as string,
       } as any).eq('id', editingMember.id);
       if (error) throw error;
       toast({ title: 'সদস্য আপডেট হয়েছে' });
@@ -2245,17 +2263,69 @@ const Finance = () => {
                 </div>
               </div>
               <form onSubmit={saveMonthlyTarget} className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-end mb-4">
-                <div className="col-span-1"><label className="font-bangla text-xs text-muted-foreground">বছর</label><Input name="for_year" type="number" defaultValue={reportYear} required className="h-9" /></div>
+                <div className="col-span-1"><label className="font-bangla text-xs text-muted-foreground">বছর</label><Input name="for_year" type="number" value={targetFormYear} onChange={(e) => setTargetFormYear(Number(e.target.value))} required className="h-9" /></div>
                 <div className="col-span-1"><label className="font-bangla text-xs text-muted-foreground">মাস</label>
-                  <Select name="for_month" defaultValue={String(reportMonth)} required>
+                  <Select name="for_month" value={targetFormMonth} onValueChange={setTargetFormMonth} required>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>{BANGLA_MONTHS.map((mn, i) => (<SelectItem key={i} value={String(i + 1)}>{mn}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-2 sm:col-span-1"><label className="font-bangla text-xs text-muted-foreground">লক্ষ্যমাত্রা (৳)</label><Input name="target_amount" type="number" min="0" required className="h-9" /></div>
-                <div className="col-span-2 sm:col-span-1"><label className="font-bangla text-xs text-muted-foreground">নোট</label><Input name="note" className="h-9" /></div>
+                <div className="col-span-2 sm:col-span-1"><label className="font-bangla text-xs text-muted-foreground">লক্ষ্যমাত্রা (৳)</label><Input name="target_amount" type="number" min="0" value={targetFormAmount} onChange={(e) => setTargetFormAmount(e.target.value)} required className="h-9" /></div>
+                <div className="col-span-2 sm:col-span-1"><label className="font-bangla text-xs text-muted-foreground">নোট</label><Input name="note" value={targetFormNote} onChange={(e) => setTargetFormNote(e.target.value)} className="h-9" /></div>
                 <Button disabled={busy} className="bg-gradient-gold text-primary-foreground font-bangla h-9 col-span-2 sm:col-span-1"><Save className="h-4 w-4 mr-1" /> সেভ</Button>
               </form>
+
+              {/* Monthly Targets Grid for Selected Year */}
+              <div className="mt-6 pt-6 border-t border-primary/10">
+                <h4 className="font-bangla text-sm font-semibold gold-text mb-3">
+                  📅 {toBanglaNumber(targetFormYear)} সালের সকল মাসের লক্ষ্যমাত্রা
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 font-bangla">
+                  {BANGLA_MONTHS.map((mn, idx) => {
+                    const mNum = idx + 1;
+                    const tgt = targets.find(t => t.for_year === targetFormYear && t.for_month === mNum);
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-xl border text-center transition-all ${
+                          tgt 
+                            ? 'bg-gold/5 border-gold/30 hover:border-gold/60' 
+                            : 'bg-background/40 border-primary/10 hover:border-primary/30'
+                        }`}
+                      >
+                        <p className="text-xs text-muted-foreground font-semibold">{mn}</p>
+                        <p className="text-sm font-bold mt-1 text-foreground">
+                          {tgt ? `৳ ${toBanglaNumber(tgt.target_amount)}` : 'সেট করা নেই'}
+                        </p>
+                        {tgt?.note && (
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5" title={tgt.note}>
+                            {tgt.note}
+                          </p>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 mt-2 text-[10px] text-gold hover:text-gold-light hover:bg-gold/10 w-full"
+                          onClick={() => {
+                            setTargetFormMonth(String(mNum));
+                            setTargetFormAmount(tgt ? String(tgt.target_amount) : "");
+                            setTargetFormNote(tgt?.note || "");
+                            // Focus on target_amount input
+                            const input = document.querySelector('input[name="target_amount"]') as HTMLInputElement;
+                            if (input) {
+                              input.focus();
+                              input.select();
+                            }
+                          }}
+                        >
+                          {tgt ? 'এডিট করুন' : 'সেট করুন'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* ===== Expense category breakdown ===== */}
@@ -2849,6 +2919,7 @@ const Finance = () => {
               phone: fd.phone,
               area: fd.area,
               monthly_rate: Number(fd.monthly_rate) || 500,
+              joined_date: fd.joined_date || new Date().toISOString().split('T')[0],
             } as any).select().single();
             setBusy(false);
             if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
@@ -2865,7 +2936,10 @@ const Finance = () => {
               <div className="space-y-1.5"><Label className="text-xs">ফোন</Label><Input name="phone" /></div>
               <div className="space-y-1.5"><Label className="text-xs">এলাকা</Label><Input name="area" /></div>
             </div>
-            <div className="space-y-1.5"><Label className="text-xs">মাসিক চাঁদা</Label><Input name="monthly_rate" type="number" defaultValue={500} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5"><Label className="text-xs">মাসিক চাঁদা</Label><Input name="monthly_rate" type="number" defaultValue={500} /></div>
+              <div className="space-y-1.5"><Label className="text-xs">যোগদানের তারিখ</Label><Input name="joined_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+            </div>
             <Button disabled={busy} className="w-full bg-gradient-gold text-primary-foreground font-bold h-11">সদস্য নিশ্চিত করুন</Button>
           </form>
         </DialogContent>
@@ -2941,6 +3015,7 @@ const Finance = () => {
                 <div className="space-y-1.5"><Label className="text-xs">এলাকা</Label><Input name="area" defaultValue={editingMember.area} /></div>
                 <div className="space-y-1.5"><Label className="text-xs">মাসিক চাঁদা</Label><Input name="monthly_rate" type="number" defaultValue={editingMember.monthly_rate} required /></div>
               </div>
+              <div className="space-y-1.5"><Label className="text-xs">যোগদানের তারিখ</Label><Input name="joined_date" type="date" defaultValue={editingMember.joined_date} required /></div>
               <Button disabled={busy} className="w-full bg-blue-600 text-white">সদস্য তথ্য আপডেট করুন</Button>
             </form>
           )}
