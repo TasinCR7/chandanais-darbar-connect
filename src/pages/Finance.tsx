@@ -279,7 +279,9 @@ const Finance = () => {
       let dueSum = 0;
       const cutoff = new Date(reportYear, m, 0); // last day of month
       for (const mem of activeMembers) {
+        if (!mem.joined_date) continue;
         const join = new Date(mem.joined_date);
+        if (isNaN(join.getTime())) continue;
         if (join > cutoff) continue;
         // months expected from join to cutoff
         const months = (cutoff.getFullYear() - join.getFullYear()) * 12
@@ -366,7 +368,9 @@ const Finance = () => {
     const list = activeOnly ? members.filter((m) => (m as any).is_active !== false) : members;
     for (const m of list) {
       const area = ((m as any).area ?? '').trim() || 'অজানা / Unspecified';
+      if (!(m as any).joined_date) continue;
       const join = new Date((m as any).joined_date);
+      if (isNaN(join.getTime())) continue;
       const startMonth = join.getFullYear() < reportYear ? 1 : (join.getFullYear() === reportYear ? join.getMonth() + 1 : 13);
       if (startMonth > 12) continue;
       const rate = Number((m as any).monthly_rate) || 0;

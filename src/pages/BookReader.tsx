@@ -18,10 +18,24 @@ const BookReader = () => {
   const resetZoom = useCallback(() => setZoom(100), []);
 
   const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
-    } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    try {
+      if (!document.fullscreenElement) {
+        const req = document.documentElement.requestFullscreen();
+        if (req && typeof req.then === 'function') {
+          req.then(() => setIsFullscreen(true)).catch(() => {});
+        } else {
+          setIsFullscreen(true);
+        }
+      } else {
+        const exit = document.exitFullscreen();
+        if (exit && typeof exit.then === 'function') {
+          exit.then(() => setIsFullscreen(false)).catch(() => {});
+        } else {
+          setIsFullscreen(false);
+        }
+      }
+    } catch (e) {
+      console.warn("Fullscreen API not fully supported:", e);
     }
   }, []);
 

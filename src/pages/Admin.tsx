@@ -266,6 +266,7 @@ const Admin = () => {
   };
 
   const deleteNotice = async (id: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই নোটিশটি মুছে ফেলতে চান?")) return;
     await supabase.from("notices").delete().eq("id", id);
     fetchNotices();
   };
@@ -276,6 +277,7 @@ const Admin = () => {
   };
 
   const deleteSubmission = async (id: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই প্রশ্ন/অভিযোগটি মুছে ফেলতে চান?")) return;
     await supabase.from("submissions").delete().eq("id", id);
     fetchSubmissions();
   };
@@ -345,6 +347,7 @@ const Admin = () => {
   };
 
   const deleteGalleryItem = async (id: string, url: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই ছবিটি গ্যালারি থেকে মুছে ফেলতে চান?")) return;
     const fileName = url.split("/").pop();
     if (fileName) {
       await supabase.storage.from("gallery").remove([fileName]);

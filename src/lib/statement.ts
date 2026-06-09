@@ -271,7 +271,8 @@ export interface OrgPaymentRow extends PaymentLite {
  * Build month-by-month status from join date to current month.
  */
 export function buildMonthlyStatement(member: MemberLite, payments: PaymentLite[]) {
-  const join = new Date(member.joined_date);
+  const joinedDate = member.joined_date ? new Date(member.joined_date) : new Date();
+  const join = isNaN(joinedDate.getTime()) ? new Date() : joinedDate;
   const now = new Date();
   const rows: { year: number; month: number; expected: number; paid: number; status: 'paid' | 'partial' | 'due' }[] = [];
 
@@ -1244,7 +1245,9 @@ export function computeOrgMonthlyTotals(
   let count = 0;
   const targetKey = year * 12 + (month - 1);
   for (const m of list) {
+    if (!m.joined_date) continue;
     const join = new Date(m.joined_date);
+    if (isNaN(join.getTime())) continue;
     if (join.getFullYear() * 12 + join.getMonth() > targetKey) continue;
     count++;
     const rate = Number(m.monthly_rate);
@@ -1292,7 +1295,9 @@ export function computeOrgAnnualTotals(
 
   const sortedList = list.slice().sort((a, b) => a.member_code.localeCompare(b.member_code));
   for (const m of sortedList) {
+    if (!m.joined_date) continue;
     const join = new Date(m.joined_date);
+    if (isNaN(join.getTime())) continue;
     const startMonth = join.getFullYear() < year ? 1 : (join.getFullYear() === year ? join.getMonth() + 1 : 13);
     if (startMonth > 12) continue;
     count++;
@@ -1397,7 +1402,9 @@ async function renderOrgMonthlyReport(
     .slice()
     .sort((a, b) => a.member_code.localeCompare(b.member_code))
     .forEach((m) => {
+      if (!m.joined_date) return;
       const join = new Date(m.joined_date);
+      if (isNaN(join.getTime())) return;
       if (join.getFullYear() * 12 + join.getMonth() > targetKey) return;
 
       const expected = Number(m.monthly_rate);
@@ -1592,7 +1599,9 @@ export async function downloadOrgAnnualReportPDF(
     .slice()
     .sort((a, b) => a.member_code.localeCompare(b.member_code))
     .forEach((m) => {
+      if (!m.joined_date) return;
       const join = new Date(m.joined_date);
+      if (isNaN(join.getTime())) return;
       const rate = Number(m.monthly_rate);
       const startMonth = join.getFullYear() < year ? 1 : (join.getFullYear() === year ? join.getMonth() + 1 : 13);
       if (startMonth > 12) return;
@@ -1723,7 +1732,9 @@ export function downloadOrgMonthlyReportCSV(
     .slice()
     .sort((a, b) => a.member_code.localeCompare(b.member_code))
     .forEach((m) => {
+      if (!m.joined_date) return;
       const join = new Date(m.joined_date);
+      if (isNaN(join.getTime())) return;
       if (join.getFullYear() * 12 + join.getMonth() > targetKey) return;
       const expected = Number(m.monthly_rate);
       const memberPays = payments.filter(
@@ -1828,7 +1839,9 @@ export function computeAreaSummaries(
 
   for (const m of list) {
     const area = normArea(m.area);
+    if (!m.joined_date) continue;
     const join = new Date(m.joined_date);
+    if (isNaN(join.getTime())) continue;
     const startMonth = join.getFullYear() < year ? 1 : (join.getFullYear() === year ? join.getMonth() + 1 : 13);
     if (startMonth > 12) continue;
 
@@ -2003,7 +2016,9 @@ export async function downloadAreaReportPDF(
     const areaRows: (string | number)[][] = [];
     let aExp = 0, aPaid = 0;
     for (const m of areaMembers) {
+      if (!m.joined_date) continue;
       const join = new Date(m.joined_date);
+      if (isNaN(join.getTime())) continue;
       const startMonth = join.getFullYear() < year ? 1 : (join.getFullYear() === year ? join.getMonth() + 1 : 13);
       if (startMonth > 12) continue;
       const rate = Number(m.monthly_rate) || 0;

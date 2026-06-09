@@ -89,12 +89,14 @@ const VoteTopicManager = () => {
   };
 
   const deleteTopic = async (id: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই ভোটের বিষয়টি মুছে ফেলতে চান?")) return;
     await supabase.from("vote_topics").delete().eq("id", id);
     fetchTopics();
     toast({ title: "মুছে ফেলা হয়েছে" });
   };
 
   const deleteComment = async (id: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই মন্তব্যটি মুছে ফেলতে চান?")) return;
     await supabase.from("committee_comments").delete().eq("id", id);
     fetchComments();
     toast({ title: "মতামত মুছে ফেলা হয়েছে" });

@@ -107,6 +107,7 @@ const CommitteeManager = () => {
   };
 
   const deleteMember = async (id: string, imageUrl: string | null) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই কমিটি সদস্য মুছে ফেলতে চান?")) return;
     if (imageUrl) {
       try {
         // More robust path extraction: get everything after 'gallery/'
