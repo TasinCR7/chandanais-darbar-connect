@@ -373,23 +373,50 @@ const Admin = () => {
   }
 
   return (
-    <div className="py-20 islamic-pattern min-h-screen">
-      <div className="container mx-auto px-4 max-w-[1400px]">
-            <AdminHeader adminInfo={{ name: user?.email?.split('@')[0] ?? 'Admin', image: '/default-avatar.png' }} />
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center gap-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg shadow-destructive/5"
-            >
-              লগআউট
-            </button>
+    <div className="py-12 md:py-20 islamic-pattern min-h-screen">
+      <div className="container mx-auto px-4 max-w-[1400px] space-y-8">
+        <div className="relative bg-card/60 backdrop-blur-xl rounded-2xl border border-gold/20 p-6 md:p-8 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-gold to-amber-500 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500" />
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-background relative border-2 border-gold/40 flex items-center justify-center">
+                <img
+                  src={user?.email?.includes('tasin') ? '/tasin-avatar.webp' : '/default-avatar.png'}
+                  alt="Admin avatar"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-background rounded-full animate-pulse" />
+            </div>
+            
+            <div>
+              <div className="flex flex-col sm:flex-row items-center gap-2 mb-1 justify-center sm:justify-start">
+                <h2 className="text-2xl md:text-3xl font-heading font-bold text-cream">
+                  স্বাগতম, {user?.email?.split('@')[0] ?? 'Admin'}
+                </h2>
+                <span className="px-3 py-1 bg-gold/10 border border-gold/30 rounded-full text-[10px] font-bold text-gold">
+                  🛡️ সুপার এডমিন
+                </span>
+              </div>
+              <p className="text-sm text-gold/60 font-medium">চন্দনাইশ দরবার শরীফ ড্যাশবোর্ড প্যানেল</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end">
             <button
               onClick={() => window.location.reload()}
-              className="ml-2 flex items-center justify-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg shadow-primary/5"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold/10 border border-gold/20 text-gold hover:bg-gold-gradient hover:text-primary-foreground px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-md"
             >
-              রিফ্রেশ
+              🔄 রিফ্রেশ
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive hover:text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-md"
+            >
+              🚪 লগআউট
             </button>
           </div>
-        
+        </div>
 
         <Tabs defaultValue="notices" className="space-y-8">
           <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
@@ -491,6 +518,7 @@ const Admin = () => {
           </AdminSection>
         </TabsContent>
         </Tabs>
+      </div>
     </div>
   );
 };
