@@ -50,3 +50,19 @@ export const fetchSettings = async (): Promise<Record<string, string>> => {
   });
   return sObj;
 };
+
+export interface PaymentInput {
+  member_id: string;
+  amount: number;
+  for_year: number;
+  for_month: number;
+  method: string;
+  transaction_ref?: string;
+  payment_date: string;
+}
+
+export async function batchInsertPayments(payments: PaymentInput[]) {
+  const { error } = await supabase.from('payments').insert(payments as any);
+  if (error) throw error;
+  return { success: true };
+}

@@ -5,6 +5,8 @@ import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { compressImage } from "@/utils/imageCompression";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminSection from "@/components/admin/AdminSection";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -373,28 +375,18 @@ const Admin = () => {
   return (
     <div className="py-20 islamic-pattern min-h-screen">
       <div className="container mx-auto px-4 max-w-[1400px]">
-        <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 bg-card/40 backdrop-blur-md p-6 rounded-3xl border border-gold/20 shadow-2xl">
-          <div className="flex items-center gap-4">
-             <div className="w-12 h-12 rounded-2xl bg-gold-gradient p-0.5">
-               <div className="w-full h-full rounded-[14px] bg-background flex items-center justify-center">
-                 <span className="text-gold font-heading font-black text-xl">A</span>
-               </div>
-             </div>
-             <div>
-               <h1 className="text-2xl font-heading font-bold text-premium-gradient">এডমিন ড্যাশবোর্ড</h1>
-               <p className="text-xs text-gold/60 font-medium tracking-wider uppercase">Administrative Control Center</p>
-             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-right mr-2">
-               <p className="text-sm font-bold text-cream">{user.email?.split('@')[0]}</p>
-               <p className="text-[10px] text-gold/50 uppercase font-black">Logged In</p>
-            </div>
-            <button 
-              onClick={handleLogout} 
+            <AdminHeader adminInfo={{ name: user?.email?.split('@')[0] ?? 'Admin', image: '/default-avatar.png' }} />
+            <button
+              onClick={handleLogout}
               className="flex items-center justify-center gap-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg shadow-destructive/5"
             >
               লগআউট
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="ml-2 flex items-center justify-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg shadow-primary/5"
+            >
+              রিফ্রেশ
             </button>
           </div>
         </div>
@@ -414,6 +406,7 @@ const Admin = () => {
           </div>
 
           <TabsContent value="notices">
+          <AdminSection title="নোটিশ">
             <Suspense fallback={<PremiumLoader />}>
               <NoticeManager 
                 notices={notices as any} 
@@ -423,15 +416,19 @@ const Admin = () => {
                 onDeleteNotice={deleteNotice} 
               />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
           <TabsContent value="donations">
+          <AdminSection title="দান">
             <Suspense fallback={<PremiumLoader />}>
               <DonationManager />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
           <TabsContent value="submissions">
+          <AdminSection title="প্রশ্ন ও অভিযোগ">
             <Suspense fallback={<PremiumLoader />}>
               <SubmissionManager 
                 submissions={submissions} 
@@ -441,9 +438,11 @@ const Admin = () => {
                 onUpdateSubmission={updateSubmissionDetails}
               />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
           <TabsContent value="gallery">
+          <AdminSection title="গ্যালারি">
             <Suspense fallback={<PremiumLoader />}>
               <GalleryManager 
                 gallery={gallery}
@@ -456,32 +455,41 @@ const Admin = () => {
                 onDelete={deleteGalleryItem}
               />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
 
           <TabsContent value="committee">
+          <AdminSection title="কমিটি">
             <Suspense fallback={<PremiumLoader />}>
               <CommitteeManager />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
           <TabsContent value="voting">
+          <AdminSection title="ভোটিং">
             <Suspense fallback={<PremiumLoader />}>
               <VoteTopicManager />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
           <TabsContent value="broadcast">
+          <AdminSection title="বার্তা পাঠান">
             <Suspense fallback={<PremiumLoader />}>
               <CommitteeBroadcast />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
 
           <TabsContent value="settings">
+          <AdminSection title="সেটিংস">
             <Suspense fallback={<PremiumLoader />}>
               <SettingsManager />
             </Suspense>
-          </TabsContent>
+          </AdminSection>
+        </TabsContent>
         </Tabs>
       </div>
     </div>
