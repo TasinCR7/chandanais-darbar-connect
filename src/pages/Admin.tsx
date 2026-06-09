@@ -389,7 +389,7 @@ const Admin = () => {
               রিফ্রেশ
             </button>
           </div>
-        </div>
+        
 
         <Tabs defaultValue="notices" className="space-y-8">
           <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
