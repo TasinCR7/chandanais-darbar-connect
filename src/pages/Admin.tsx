@@ -166,7 +166,7 @@ const Admin = () => {
         setUser({ 
           id: "master-admin", 
           email: identifier.includes("@") ? identifier : "admin@chandanaishdarbar.com",
-          phone: isMasterPhone ? (identifier.startsWith("+") ? identifier : `+88${identifier}`) : ""
+          phone: isMasterPhone ? (identifier.startsWith("+") ? identifier : "+88" + identifier) : "",
         } as any);
         toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে (অফলাইন মোড)।" });
         return;
@@ -323,8 +323,8 @@ const Admin = () => {
     try {
       const compressedFile = await compressImage(rawFile);
       const fileExt = compressedFile.name.split(".").pop() || "webp";
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = Math.random() + '.' + fileExt;
+      const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage.from("gallery").upload(filePath, compressedFile);
       if (uploadError) throw uploadError;
@@ -491,7 +491,6 @@ const Admin = () => {
           </AdminSection>
         </TabsContent>
         </Tabs>
-      </div>
     </div>
   );
 };
