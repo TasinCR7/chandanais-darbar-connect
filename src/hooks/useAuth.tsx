@@ -28,16 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const checkMasterAdmin = () => {
-      const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
-      if (isMasterAdmin) {
-        setUser({
-          id: "master-admin",
-          email: "admin@chandanaishdarbar.com"
-        } as any);
-        setRoles(['admin']);
-      }
-    };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(sess);
@@ -45,17 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(sess.user);
         setTimeout(() => fetchRoles(sess.user.id), 0);
       } else {
-        const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
-        if (isMasterAdmin) {
-          setUser({
-            id: "master-admin",
-            email: "admin@chandanaishdarbar.com"
-          } as any);
-          setRoles(['admin']);
-        } else {
-          setUser(null);
-          setRoles([]);
-        }
+        setUser(null);
+        setRoles([]);
       }
     });
 
@@ -66,15 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (sess?.user) {
             setUser(sess.user);
             await fetchRoles(sess.user.id);
-          } else {
-            const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
-            if (isMasterAdmin) {
-              setUser({
-                id: "master-admin",
-                email: "admin@chandanaishdarbar.com"
-              } as any);
-              setRoles(['admin']);
-            }
           }
         } catch (err) {
           console.error("Error fetching roles on auth init:", err);
@@ -91,9 +63,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem("master_admin_auth");
-    }
     await supabase.auth.signOut();
     setRoles([]);
     setUser(null);

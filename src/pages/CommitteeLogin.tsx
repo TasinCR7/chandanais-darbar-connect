@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, ArrowRight, ShieldCheck } from "lucide-react";
+import { Phone, ArrowRight, ShieldCheck, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
@@ -11,7 +11,10 @@ import SEO from "@/components/SEO";
 
 const CommitteeLogin = () => {
   const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [remainingTime, setRemainingTime] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -23,10 +26,64 @@ const CommitteeLogin = () => {
     }
   }, [navigate]);
 
+  // Handle lockout countdown timer
+  useEffect(() => {
+    const lockoutUntilStr = localStorage.getItem("committee_login_lockout_until");
+    if (lockoutUntilStr) {
+      const lockoutUntil = parseInt(lockoutUntilStr, 10);
+      if (Date.now() < lockoutUntil) {
+        setLockoutTime(lockoutUntil);
+        setRemainingTime(Math.ceil((lockoutUntil - Date.now()) / 1000));
+      } else {
+        localStorage.removeItem("committee_login_lockout_until");
+        localStorage.removeItem("committee_login_attempts");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!lockoutTime) return;
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setLockoutTime(null);
+        setRemainingTime(0);
+        localStorage.removeItem("committee_login_lockout_until");
+        localStorage.removeItem("committee_login_attempts");
+        clearInterval(interval);
+      } else {
+        setRemainingTime(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutTime]);
+
+  const hashPin = async (pinStr: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(pinStr);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (lockoutTime && Date.now() < lockoutTime) {
+      toast({ 
+        title: "লগইন ব্লকড", 
+        description: `অনেক বেশি ভুল চেষ্টা করা হয়েছে। অনুগ্রহ করে ${remainingTime} সেকেন্ড অপেক্ষা করুন।`, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     if (!isValidPhoneNumber(phone)) {
       toast({ title: "ভুল নম্বর", description: "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।", variant: "destructive" });
+      return;
+    }
+
+    if (pin.length !== 4) {
+      toast({ title: "ভুল PIN", description: "৪ ডিজিটের PIN দিন।", variant: "destructive" });
       return;
     }
 
@@ -41,27 +98,86 @@ const CommitteeLogin = () => {
         cleanPhone.startsWith("0") ? cleanPhone.substring(1) : cleanPhone
       ];
 
-      // Find the committee member by phone using multiple variants
+      // Find the committee member by phone using multiple variants, selecting pin_hash as well
       const { data, error } = await supabase
         .from("committee_members")
-        .select("id, name, designation")
+        .select("id, name, designation, pin_hash")
         .eq("is_active", true)
         .in("phone", searchVariants)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // If pin_hash doesn't exist in the database (migration not run yet)
+        if (error.message && error.message.includes("pin_hash")) {
+          throw new Error("ডাটাবেজে 'pin_hash' কলামটি পাওয়া যায়নি। অনুগ্রহ করে Supabase-এ মাইগ্রেশন সম্পন্ন করুন।");
+        }
+        throw error;
+      }
 
-      if (data) {
-        // Success
-        localStorage.setItem("committee_auth", data.id);
-        toast({ title: "লগইন সফল", description: `স্বাগতম, ${data.name} (${data.designation})` });
-        navigate("/committee-dashboard");
-      } else {
+      if (!data) {
         toast({ 
-          title: "প্রবেশাধিকার প্রতক্ষ্যাত", 
+          title: "প্রवेशাধিকার প্রতক্ষ্যাত", 
           description: "আপনার ফোন নম্বর ডেটাবেজের কোনো সক্রিয় কমিটির সদস্যের সাথে মিলছে না। নম্বরটি চেক করুন।", 
           variant: "destructive" 
         });
+        setLoading(false);
+        return;
+      }
+
+      const hashedInputPin = await hashPin(pin);
+
+      // Case 1: First-time setup (pin_hash is null)
+      if (!data.pin_hash) {
+        const { error: updateError } = await supabase
+          .from("committee_members")
+          .update({ pin_hash: hashedInputPin } as any) // cast as any to handle types sync lag
+          .eq("id", data.id);
+
+        if (updateError) throw updateError;
+
+        localStorage.setItem("committee_auth", data.id);
+        localStorage.removeItem("committee_login_attempts");
+        localStorage.removeItem("committee_login_lockout_until");
+        
+        toast({ 
+          title: "লগইন সফল ও PIN সেটআপ সম্পূর্ণ", 
+          description: `স্বাগতম, ${data.name}! আপনার ৪-ডিজিট PIN পরবর্তীতে লগইনের জন্য সেট করা হয়েছে।` 
+        });
+        navigate("/committee-dashboard");
+        return;
+      }
+
+      // Case 2: PIN comparison
+      if (data.pin_hash === hashedInputPin) {
+        // Success
+        localStorage.setItem("committee_auth", data.id);
+        localStorage.removeItem("committee_login_attempts");
+        localStorage.removeItem("committee_login_lockout_until");
+
+        toast({ title: "লগইন সফল", description: `স্বাগতম, ${data.name} (${data.designation})` });
+        navigate("/committee-dashboard");
+      } else {
+        // Wrong PIN - increment failure counter
+        const currentAttempts = parseInt(localStorage.getItem("committee_login_attempts") || "0", 10) + 1;
+        localStorage.setItem("committee_login_attempts", currentAttempts.toString());
+
+        if (currentAttempts >= 3) {
+          const lockoutUntil = Date.now() + 5 * 60 * 1000;
+          localStorage.setItem("committee_login_lockout_until", lockoutUntil.toString());
+          setLockoutTime(lockoutUntil);
+          setRemainingTime(300);
+          toast({ 
+            title: "অ্যাক্সেস ব্লকড", 
+            description: "নিরাপত্তার স্বার্থে আপনার অ্যাকাউন্ট ৫ মিনিটের জন্য ব্লক করা হয়েছে।", 
+            variant: "destructive" 
+          });
+        } else {
+          toast({ 
+            title: "ভুল PIN", 
+            description: `প্রদত্ত PIN-টি সঠিক নয়। (বাকি সুযোগ: ${3 - currentAttempts} বার)`, 
+            variant: "destructive" 
+          });
+        }
       }
      
     } catch (error: any) {
@@ -105,6 +221,7 @@ const CommitteeLogin = () => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="017XXXXX..." 
+                disabled={loading || (lockoutTime !== null)}
                 className="pl-11 h-12 bg-black/40 border-gold/20 focus:border-gold/50 rounded-xl text-cream"
               />
             </div>
@@ -113,12 +230,31 @@ const CommitteeLogin = () => {
             </p>
           </div>
 
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-cream/80 ml-1">৪-ডিজিট PIN</label>
+            <div className="relative">
+              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/50" />
+              <Input 
+                type="password"
+                maxLength={4}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                placeholder="••••" 
+                disabled={loading || (lockoutTime !== null)}
+                className="pl-11 h-12 bg-black/40 border-gold/20 focus:border-gold/50 rounded-xl text-cream tracking-[0.5em] text-center font-bold text-lg"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 px-1">
+              * প্রথমবার লগইন করলে যেকোনো ৪-ডিজিট টাইপ করুন, এটিই আপনার ভবিষ্যৎ PIN হবে।
+            </p>
+          </div>
+
           <Button 
             type="submit" 
-            disabled={loading}
+            disabled={loading || (lockoutTime !== null)}
             className="w-full h-12 bg-gold-gradient text-primary-foreground font-bold rounded-xl gold-glow-hover text-base"
           >
-            {loading ? "যাচাই করা হচ্ছে..." : (
+            {lockoutTime ? `লগইন ব্লকড (${remainingTime}s)` : loading ? "যাচাই করা হচ্ছে..." : (
               <>
                 প্রবেশ করুন <ArrowRight size={18} className="ml-2" />
               </>

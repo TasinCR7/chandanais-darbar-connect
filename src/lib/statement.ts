@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
+import { escapeHtml } from '@/utils/security';
 // Lazy load the font base64 to avoid 267KB being in the main bundle
 let _fontBase64Cache: string | null = null;
 async function getFontBase64(): Promise<string> {
@@ -346,6 +347,12 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   // Lazy load the font for HTML embedding
   const fontBase64 = await getFontBase64();
 
+  const fullNameEscaped = escapeHtml(member.full_name);
+  const memberCodeEscaped = escapeHtml(member.member_code);
+  const phoneEscaped = escapeHtml(member.phone || "-");
+  const areaEscaped = escapeHtml(member.area || "-");
+  const joinedDateEscaped = escapeHtml(member.joined_date || "-");
+
   // Create HTML template for the annual statement with base64 font embedded
   const html = `
     <div id="statement-container" style="
@@ -412,19 +419,19 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
       <div style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
         <div>
           <div class="label">সদস্যের নাম / Name</div>
-          <div class="value">${member.full_name}</div>
+          <div class="value">${fullNameEscaped}</div>
         </div>
         <div>
           <div class="label">সদস্য আইডি / Member ID</div>
-          <div class="value" style="font-family: monospace; color: #B48E49;">${member.member_code}</div>
+          <div class="value" style="font-family: monospace; color: #B48E49;">${memberCodeEscaped}</div>
         </div>
         <div>
           <div class="label">মোবাইল নম্বর / Phone</div>
-          <div class="value" style="font-family: monospace;">${toBanglaNumber(member.phone || "-")}</div>
+          <div class="value" style="font-family: monospace;">${toBanglaNumber(phoneEscaped)}</div>
         </div>
         <div>
           <div class="label">এলাকা / Area</div>
-          <div class="value">${member.area || "-"}</div>
+          <div class="value">${areaEscaped}</div>
         </div>
         <div>
           <div class="label">মাসিক হার / Rate</div>
@@ -432,7 +439,7 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
         </div>
         <div>
           <div class="label">যোগদানের তারিখ / Join Date</div>
-          <div class="value">${toBanglaNumber(member.joined_date || "-")}</div>
+          <div class="value">${toBanglaNumber(joinedDateEscaped)}</div>
         </div>
       </div>
 
@@ -730,6 +737,12 @@ export async function downloadReceiptPDF(
   // Lazy load the font for HTML embedding
   const fontBase64 = await getFontBase64();
 
+  const receiptNoEscaped = escapeHtml(receiptNo);
+  const fullNameEscaped = escapeHtml(member.full_name);
+  const phoneEscaped = escapeHtml(member.phone || "-");
+  const memberCodeEscaped = escapeHtml(member.member_code);
+  const areaEscaped = escapeHtml(member.area || "-");
+
   // Create HTML template for the receipt
   const html = `
     <div id="receipt-container" style="
@@ -788,26 +801,26 @@ export async function downloadReceiptPDF(
         <div style="background: #fff; border: 1px solid #f1f5f9; padding: 15px; border-radius: 8px;">
           <div style="margin-bottom: 15px;">
             <p class="label">রসিদ নম্বর / Receipt No</p>
-            <p class="value" style="font-family: monospace;">${receiptNo}</p>
+            <p class="value" style="font-family: monospace;">${receiptNoEscaped}</p>
           </div>
           <div style="margin-bottom: 15px;">
             <p class="label">সদস্যের নাম / Full Name</p>
-            <p class="value">${member.full_name}</p>
+            <p class="value">${fullNameEscaped}</p>
           </div>
           <div>
             <p class="label">মোবাইল / Phone</p>
-            <p class="value">${member.phone || '-'}</p>
+            <p class="value">${phoneEscaped}</p>
           </div>
         </div>
         
         <div style="background: #fff; border: 1px solid #f1f5f9; padding: 15px; border-radius: 8px;">
           <div style="margin-bottom: 15px;">
             <p class="label">সদস্য আইডি / Member ID</p>
-            <p class="value">${member.member_code}</p>
+            <p class="value">${memberCodeEscaped}</p>
           </div>
           <div style="margin-bottom: 15px;">
             <p class="label">এলাকা / Area</p>
-            <p class="value">${member.area || '-'}</p>
+            <p class="value">${areaEscaped}</p>
           </div>
           <div>
             <p class="label">মাসের নাম / Payment For</p>

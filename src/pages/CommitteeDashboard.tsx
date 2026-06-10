@@ -12,6 +12,7 @@ import PremiumLoader from "@/components/PremiumLoader";
 import { Download, Share2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { escapeHtml } from "@/utils/security";
 // Lazy load font to avoid 267KB in main bundle
 let _fontBase64Cache: string | null = null;
 async function getFontBase64(): Promise<string> {
@@ -223,6 +224,11 @@ export default function CommitteeDashboard() {
       // Lazy load the font for HTML embedding
       const fontBase64 = await getFontBase64();
 
+      const nameEscaped = escapeHtml(c.name || "-");
+      const areaEscaped = escapeHtml(c.area || "N/A");
+      const paymentMethodEscaped = escapeHtml(c.payment_method || "ক্যাশ");
+      const transactionIdEscaped = escapeHtml(c.transaction_id || "N/A");
+
       // Create HTML template for the receipt with base64 font embedded
       const html = `
         <div id="receipt-container" style="
@@ -271,11 +277,11 @@ export default function CommitteeDashboard() {
             <div style="padding: 20px;">
               <div class="data-row">
                 <div class="data-col"><span class="label">দাতার নাম / Donor Name</span></div>
-                <div class="data-col" style="text-align: right;"><span class="value">${c.name || "-"}</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${nameEscaped}</span></div>
               </div>
               <div class="data-row">
                 <div class="data-col"><span class="label">এলাকা/অবস্থান / Location</span></div>
-                <div class="data-col" style="text-align: right;"><span class="value">${c.area || "N/A"}</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${areaEscaped}</span></div>
               </div>
               <div class="data-row">
                 <div class="data-col"><span class="label">সংগ্রহের মাস / Contribution Month</span></div>
@@ -283,11 +289,11 @@ export default function CommitteeDashboard() {
               </div>
               <div class="data-row">
                 <div class="data-col"><span class="label">পেমেন্ট মাধ্যম / Method</span></div>
-                <div class="data-col" style="text-align: right;"><span class="value" style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; font-size: 13px;">${c.payment_method || "ক্যাশ"}</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value" style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; font-size: 13px;">${paymentMethodEscaped}</span></div>
               </div>
               <div class="data-row">
                 <div class="data-col"><span class="label">ট্রানজেকশন আইডি / Transaction ID</span></div>
-                <div class="data-col" style="text-align: right;"><span class="value" style="font-family: monospace;">${c.transaction_id || "N/A"}</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value" style="font-family: monospace;">${transactionIdEscaped}</span></div>
               </div>
               <div class="data-row" style="border-bottom: none;">
                 <div class="data-col"><span class="label">ইস্যু তারিখ / Issue Date</span></div>

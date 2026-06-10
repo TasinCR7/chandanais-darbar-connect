@@ -19,6 +19,7 @@ import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { sendTelegramNotification } from "@/utils/telegram";
 import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
 import { fetchSettings } from "@/lib/api";
+import { escapeHtml } from "@/utils/security";
 
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
@@ -192,6 +193,11 @@ const Hadia = () => {
       const statusBg = isVerified ? '#dcfce7' : d.status === 'rejected' ? '#fee2e2' : '#ffedd5';
       const statusColor = isVerified ? '#166534' : d.status === 'rejected' ? '#991b1b' : '#9a3412';
       
+      const donorNameEscaped = escapeHtml(d.donor_name);
+      const donorPhoneEscaped = escapeHtml(d.donor_phone);
+      const transactionIdEscaped = escapeHtml(d.transaction_id || '-');
+      const payMethodLabelEscaped = escapeHtml(payMethodLabel);
+      
       const html = `
         <div style="width:794px;min-height:1123px;background:#fff;font-family:'Noto Sans Bengali',sans-serif;color:#1a1a1a;position:relative;overflow:hidden;padding:0;margin:0;box-sizing:border-box;">
           <style>@font-face{font-family:'Noto Sans Bengali';src:url('data:font/ttf;base64,${fontBase64}') format('truetype');font-weight:normal;font-style:normal;}</style>
@@ -230,8 +236,8 @@ const Hadia = () => {
               <div style="font-size:12px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #d1fae5;">দাতার তথ্য / Donor Information</div>
               <table style="width:100%;border-collapse:collapse;">
                 <tr>
-                  <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">নাম / Name</div><div style="font-size:16px;font-weight:700;color:#111827;">${d.donor_name}</div></td>
-                  <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">মোবাইল / Phone</div><div style="font-size:15px;font-weight:600;color:#111827;font-family:monospace;">${d.donor_phone}</div></td>
+                  <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">নাম / Name</div><div style="font-size:16px;font-weight:700;color:#111827;">${donorNameEscaped}</div></td>
+                  <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">মোবাইল / Phone</div><div style="font-size:15px;font-weight:600;color:#111827;font-family:monospace;">${donorPhoneEscaped}</div></td>
                   <td style="padding:4px 0;"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">যাচাই কোড</div><div style="font-size:13px;font-weight:700;color:#065f46;font-family:monospace;">${verificationCode}</div></td>
                 </tr>
               </table>
@@ -245,8 +251,8 @@ const Hadia = () => {
               </tr></thead>
               <tbody><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
                 <td style="padding:16px;font-size:15px;font-weight:600;color:#065f46;">${getCategoryLabel(d.donation_category, d.recipient_id)}</td>
-                <td style="padding:16px;"><span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px;">${payMethodLabel}</span></td>
-                <td style="padding:16px;font-family:monospace;font-size:13px;color:#374151;letter-spacing:1px;">${d.transaction_id || '-'}</td>
+                <td style="padding:16px;"><span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px;">${payMethodLabelEscaped}</span></td>
+                <td style="padding:16px;font-family:monospace;font-size:13px;color:#374151;letter-spacing:1px;">${transactionIdEscaped}</td>
                 <td style="padding:16px;text-align:right;font-size:20px;font-weight:900;color:#065f46;">${d.amount.toLocaleString('en-US')} ৳</td>
               </tr></tbody>
             </table>

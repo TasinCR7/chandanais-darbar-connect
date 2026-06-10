@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useRef } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
@@ -26,7 +26,7 @@ const Admin = () => {
   const [authLoading, setAuthLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
-  const isMasterSessionRef = useRef(false);
+
 
 
   const [notices, setNotices] = useState<Tables<"notices">[]>([]);
@@ -48,21 +48,6 @@ const Admin = () => {
 
     const checkAdminStatus = async (currentUser: User | null) => {
       if (!currentUser) return false;
-      const isMasterEmail = [
-        "chandanaishdarbarsharif@gmail.com",
-        "tasinskder@gmail.com",
-        "tasinbook@gmail.com"
-      ].some(email => currentUser.email?.toLowerCase() === email.toLowerCase());
-      
-      const isMasterPhone = [
-        "+8801714338533", // User's phone number
-        "+8801819614444", // Placeholder for other admin phone
-        "+8801835674454", // New admin phone number
-        "+8801622721996", // Added new admin phone
-        "+8801316131444"  // Added tasinskder's phone if applicable
-      ].some(phone => currentUser.phone === phone);
-
-      if (isMasterEmail || isMasterPhone) return true;
 
       try {
         const { data, error } = await supabase.rpc("has_role", { _user_id: currentUser.id, _role: "admin" });
@@ -73,20 +58,6 @@ const Admin = () => {
     };
 
     const initializeAuth = async () => {
-      const isMasterAdmin = typeof window !== 'undefined' && localStorage.getItem("master_admin_auth") === "true";
-      if (isMasterAdmin) {
-        isMasterSessionRef.current = true;
-        setIsAdmin(true);
-        setUser({ 
-          id: "master-admin", 
-          email: "admin@chandanaishdarbar.com"
-        } as any);
-        if (isMounted) {
-          setVerifying(false);
-          clearTimeout(safetyTimer);
-        }
-        return;
-      }
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
@@ -120,7 +91,7 @@ const Admin = () => {
             setIsAdmin(isAdminUser);
             setVerifying(false);
           }
-        } else if (!isMasterSessionRef.current) {
+        } else {
           if (isMounted) {
             setIsAdmin(false);
             setVerifying(false);
@@ -150,28 +121,6 @@ const Admin = () => {
         return;
       }
 
-      // Master Bypass Logic for designated Admin users (Fallback if Supabase auth fails)
-      const cleanId = identifier.replace(/\D/g, "");
-      const masterNums = ["01622721996", "01714338533"]; // Designated master numbers
-      const isMasterPhone = masterNums.some(num => cleanId.endsWith(num));
-      const isMasterEmail = ["chandanaishdarbarsharif@gmail.com", "tasinskder@gmail.com"].includes(identifier.toLowerCase());
-      
-      const masterPassEnv = import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "Admin2026@Darbar";
-      const isMasterPass = pass.trim() === masterPassEnv; 
-      
-      if ((isMasterPhone || isMasterEmail) && isMasterPass) {
-        localStorage.setItem("master_admin_auth", "true");
-        isMasterSessionRef.current = true;
-        setIsAdmin(true);
-        setUser({ 
-          id: "master-admin", 
-          email: identifier.includes("@") ? identifier : "admin@chandanaishdarbar.com",
-          phone: isMasterPhone ? (identifier.startsWith("+") ? identifier : "+88" + identifier) : "",
-        } as any);
-        toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "মাস্টার এডমিন হিসেবে লগইন সফল হয়েছে (অফলাইন মোড)।" });
-        return;
-      }
-
       if (error) {
         toast({ title: "লগইন ব্যর্থ", description: error.message, variant: "destructive" });
       }
@@ -184,46 +133,17 @@ const Admin = () => {
 
   const handleLogout = async () => {
     try {
-      localStorage.removeItem("master_admin_auth");
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
       setUser(null);
       setIsAdmin(false);
-      isMasterSessionRef.current = false;
       setVerifying(false);
       toast({ title: "লগআউট সফল", description: "আপনি সফলভাবে লগআউট করেছেন।" });
     }
   };
 
-  // Special bypass for master email or phone
-  const forceAdminAccess = (phone?: string, pass?: string) => {
-    const isMasterEmail = [
-      "chandanaishdarbarsharif@gmail.com",
-      "tasinskder@gmail.com"
-    ].some(email => user?.email?.toLowerCase() === email.toLowerCase());
-    
-    // Check if phone and pass match (using a generic logic for now)
-    const masterPassEnv = import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "Admin2026@Darbar";
-    const isMasterPhone = [
-      "+8801714338533",
-      "01714338533",
-      "8801714338533",
-      "+8801835674454",
-      "01835674454",
-      "8801835674454",
-      "+8801622721996",
-      "01622721996"
-    ].some(p => phone?.includes(p)) && pass === masterPassEnv; 
-    
-    if (isMasterEmail || isMasterPhone) {
-      setIsAdmin(true);
-      toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "আপনি এখন এডমিন প্যানেল ব্যবহার করতে পারবেন।" });
-    } else {
-      toast({ title: "অ্যাক্সেস ডিনাইড", description: "আপনার ফোন নম্বর বা পাসওয়ার্ড ভুল।", variant: "destructive" });
-    }
-  };
 
   const fetchNotices = async () => {
     const { data } = await supabase.from("notices").select("*").order("created_at", { ascending: false });
@@ -323,7 +243,7 @@ const Admin = () => {
     try {
       const compressedFile = await compressImage(rawFile);
       const fileExt = compressedFile.name.split(".").pop() || "webp";
-      const fileName = Math.random() + '.' + fileExt;
+      const fileName = crypto.randomUUID() + '.' + fileExt;
       const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage.from("gallery").upload(filePath, compressedFile);

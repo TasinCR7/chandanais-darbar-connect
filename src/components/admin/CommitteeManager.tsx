@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, GripVertical, Eye, EyeOff } from "lucide-react";
+import { Trash2, Plus, GripVertical, Eye, EyeOff, RotateCcw } from "lucide-react";
 import { compressImage } from "@/utils/imageCompression";
 
 
@@ -16,6 +16,7 @@ interface Member {
   image_url: string | null;
   display_order: number;
   is_active: boolean;
+  pin_hash?: string | null;
 }
 
 const AvatarImage = ({ url, name, className }: { url: string | null; name: string; className: string }) => {
@@ -125,6 +126,21 @@ const CommitteeManager = () => {
     fetchMembers();
   };
 
+  const handleResetPin = async (id: string) => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে এই সদস্যের PIN রিসেট করতে চান? এর ফলে তিনি আবার নতুন করে PIN সেট করতে পারবেন।")) return;
+    try {
+      const { error } = await supabase
+        .from("committee_members")
+        .update({ pin_hash: null } as any)
+        .eq("id", id);
+      if (error) throw error;
+      toast({ title: "সফল", description: "PIN সফলভাবে রিসেট করা হয়েছে।" });
+      fetchMembers();
+    } catch (err: any) {
+      toast({ title: "ত্রুটি", description: err.message || "রিসেট করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Add Form */}
@@ -174,10 +190,26 @@ const CommitteeManager = () => {
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-cream truncate">{m.name}</p>
                 <p className="text-xs text-gold/60">{m.designation}</p>
-                {m.phone && <p className="text-xs text-muted-foreground">{m.phone}</p>}
+                <div className="flex items-center gap-2 mt-1">
+                  {m.phone && <span className="text-xs text-muted-foreground">{m.phone}</span>}
+                  {m.pin_hash && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gold/10 text-gold border border-gold/20 font-bangla">
+                      PIN সেট করা আছে
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {m.pin_hash && (
+                  <button
+                    onClick={() => handleResetPin(m.id)}
+                    className="p-2 rounded-lg text-gold hover:bg-gold/10 transition-colors"
+                    title="PIN রিসেট করুন"
+                  >
+                    <RotateCcw size={16} />
+                  </button>
+                )}
                 <button
                   onClick={() => toggleActive(m.id, m.is_active)}
                   className={`p-2 rounded-lg transition-colors ${m.is_active ? "text-green-400 hover:bg-green-400/10" : "text-muted-foreground hover:bg-muted"}`}
