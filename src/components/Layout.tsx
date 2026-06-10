@@ -410,9 +410,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
               <Suspense fallback={null}><VisitorCounter /></Suspense>
-              <Link to="/admin" className="text-muted-foreground/50 text-xs hover:text-gold transition-colors duration-300">
-                এডমিন লগইন
-              </Link>
             </div>
           </div>
         </div>
