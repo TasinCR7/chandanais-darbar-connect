@@ -18,7 +18,7 @@ import RouteProgressBar from "./components/RouteProgressBar";
 import MaintenanceGuard from "./components/MaintenanceGuard";
 const Maintenance = lazy(() => import("./pages/Maintenance"));
 
-import Index from "./pages/Index";
+const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const Pir = lazy(() => import("./pages/Pir"));
 const Rules = lazy(() => import("./pages/Rules"));
