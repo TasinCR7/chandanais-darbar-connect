@@ -37,6 +37,7 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
   }, []);
 
   // When selection changes, initialize rows for new members
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const newRows: RowData[] = selectedIds.map((id) => {
       const existing = rows.find((r) => r.member_id === id);

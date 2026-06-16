@@ -1,0 +1,49 @@
+/* designTokens.css */
+:root {
+  /* Color palette (HSL) */
+  --color-primary-h: 35;   /* Gold-like */
+  --color-primary-s: 55%;
+  --color-primary-l: 55%;
+  --color-primary: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l));
+  --color-primary-dark: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) - 10%));
+  --color-primary-light: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) + 10%));
+  --color-bg: hsl(210, 10%, 96%);
+  --color-bg-dark: hsl(210, 10%, 12%);
+  --color-text: hsl(210, 15%, 20%);
+  --color-text-light: hsl(210, 15%, 90%);
+  --border-radius: 8px;
+  --shadow-elev-1: 0 2px 4px rgba(0,0,0,0.1);
+  --transition-fast: 0.2s ease;
+}
+
+/* Utility classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-elev-1);
+  padding: 1.5rem;
+  transition: var(--transition-fast);
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}

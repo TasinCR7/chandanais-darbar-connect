@@ -19,6 +19,7 @@ import type { Payment, Expense, Member } from '@/types/finance';
 import { fetchMembers, fetchPayments, fetchExpenses, fetchTargets, fetchSettings } from '@/lib/api';
 import { toBanglaNumber } from '@/lib/bangla';
 import { monthName, BANGLA_MONTHS } from '@/lib/months';
+import { computeFinancialSummary, computeTotalDues, computeMemberStats } from '@/utils/calculations';
 import {
   buildMonthlyStatement, calculateDues, downloadAnnualStatementPDF,
   downloadMemberBankStatementPDF, downloadOrganizationStatementPDF,
@@ -154,34 +155,21 @@ const Finance = () => {
   useEffect(() => { loadAll(); }, []);
 
   // Aggregates - ONLY approved and pending payments count towards income
-  const totalIncome = useMemo(() => payments.filter(p => p.status !== 'rejected').reduce((s, p) => s + Number(p.amount), 0), [payments]);
-  const totalExpense = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount), 0), [expenses]);
-  const balance = totalIncome - totalExpense;
-  const activeMembers = members.filter((m) => m.is_active).length;
+  const { totalIncome, totalExpense, balance, activeMembers } = useMemo(() => computeFinancialSummary(payments, expenses, members), [payments, expenses, members]);
 
   // Per-member dues / paid
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
   // Optimized per-member dues / paid calculation
   const memberStats = useMemo(() => {
-    const payMap = new Map<string, PaymentLite[]>();
-    // Count all payments except rejected
-    payments.filter(p => p.status !== 'rejected').forEach(p => {
-      if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
-      payMap.get(p.member_id)?.push({
-        amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
-        payment_date: p.payment_date, method: p.method, transaction_ref: p.transaction_ref,
-      });
-    });
-
-    return members.map((m) => {
-      const memPays = payMap.get(m.id) || [];
-      const stats = calculateDues(m as unknown as MemberLite, memPays);
-      return { ...m, ...stats, memPays };
+    const membersWithPays = computeMemberStats(members, payments);
+    return membersWithPays.map(m => {
+      const stats = calculateDues(m as unknown as MemberLite, m.memPays);
+      return { ...m, ...stats };
     });
   }, [members, payments]);
 
-  const totalDues = useMemo(() => memberStats.reduce((s, m) => s + m.dues, 0), [memberStats]);
+  const totalDues = useMemo(() => computeTotalDues(memberStats), [memberStats]);
 
   const compareStats = useMemo(() => {
     return memberStats.filter(m => compareIds.includes(m.id));

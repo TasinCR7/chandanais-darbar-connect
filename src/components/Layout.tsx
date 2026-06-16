@@ -147,9 +147,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     !location.pathname.startsWith('/committee-login') && 
     !location.pathname.startsWith('/committee-dashboard');
 
-  // Removed blocking loader on public routes to load website instantly without waiting for Supabase/auth network queries.
-
-
+  // Show a minimal loader while authentication or settings are loading.
+  if (authLoading || settingsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background text-gold">
+        লোড হচ্ছে…
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

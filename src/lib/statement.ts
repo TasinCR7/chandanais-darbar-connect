@@ -225,7 +225,7 @@ function formatDateNice(iso?: string | null): string {
   if (!iso) return '-';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
-  return `${String(d.getDate()).padStart(2, '0')} ${MONTHS_EN_SHORT[d.getMonth()]} ${d.getFullYear()}`;
+  return `${String(d.getDate()).padStart(2, '0')} ${MONTHS_EN[d.getMonth()]} ${d.getFullYear()}`;
 }
 const MONTHS_EN_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
