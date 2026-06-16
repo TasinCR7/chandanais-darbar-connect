@@ -36,19 +36,18 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
     load();
   }, []);
 
-  // When selection changes, initialize rows for new members
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const newRows: RowData[] = selectedIds.map((id) => {
-      const existing = rows.find((r) => r.member_id === id);
-      return existing || {
-        member_id: id,
-        amount: 0,
-        payment_date: new Date().toISOString().split('T')[0],
-        note: '',
-      };
-    });
-    setRows(newRows);
+    setRows((prevRows) =>
+      selectedIds.map((id) => {
+        const existing = prevRows.find((r) => r.member_id === id);
+        return existing || {
+          member_id: id,
+          amount: 0,
+          payment_date: new Date().toISOString().split('T')[0],
+          note: '',
+        };
+      })
+    );
   }, [selectedIds]);
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {

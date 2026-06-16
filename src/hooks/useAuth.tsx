@@ -95,6 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const v = useContext(Ctx);
   if (!v) throw new Error('useAuth must be used inside AuthProvider');
