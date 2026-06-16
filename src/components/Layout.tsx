@@ -87,7 +87,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
   const isBypassed = isStaff || isCommitteeMember;
 
-  const { data: scrollingNotices = [] } = useQuery({
+  const { data: dbNotices = [] } = useQuery({
     queryKey: ['scrolling_notices'],
     queryFn: async () => {
       const { data } = await supabase
@@ -96,18 +96,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .eq('type', 'scrolling')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
-
-      if (data && data.length > 0) {
-        return data.map(n => n.title);
-      } else if (appSettings.global_notice_message) {
-        return [appSettings.global_notice_message];
-      }
-      return [];
+      return data?.map(n => n.title) ?? [];
     },
-    enabled: !!appSettings,
     staleTime: 60000,
     refetchInterval: 60000,
   });
+
+  const scrollingNotices = dbNotices.length > 0 
+    ? dbNotices 
+    : (appSettings.global_notice_message ? [appSettings.global_notice_message] : []);
 
   useEffect(() => {
     // Real-time Subscription for App Settings
