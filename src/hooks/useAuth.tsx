@@ -28,8 +28,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    // Safety timeout: never stay in loading state forever.
+    // If Supabase is slow or unreachable, unlock the app after 3 seconds.
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 3000);
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (!isMounted) return;
       setSession(sess);
       if (sess?.user) {
         setUser(sess.user);
@@ -42,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     supabase.auth.getSession()
       .then(async ({ data: { session: sess } }) => {
+        if (!isMounted) return;
         setSession(sess);
         try {
           if (sess?.user) {
@@ -56,10 +65,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error getting session on auth init:", err);
       })
       .finally(() => {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          clearTimeout(safetyTimer);
+        }
       });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

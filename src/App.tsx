@@ -59,7 +59,7 @@ const AppContent = () => {
   return (
     <Layout>
       <RouteProgressBar />
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0 }}

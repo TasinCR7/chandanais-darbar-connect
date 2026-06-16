@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,7 +13,8 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
   const location = useLocation();
   const { isStaff, loading: authLoading } = useAuth();
   
-  const { data: settings = {}, isLoading: settingsLoading } = useQuery({
+  // Share the same query key and staleTime as Layout so we reuse the cache.
+  const { data: settings = {} } = useQuery({
     queryKey: ['app_settings'],
     queryFn: async () => {
       const s = await fetchSettings();
@@ -35,10 +36,8 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
       }
       return undefined;
     },
-    staleTime: 5000,
+    staleTime: 60000, // Match Layout's staleTime to prevent extra refetches
   });
-
-  const queryClient = useQueryClient();
 
   // Committee members log in via phone verification stored in localStorage
   const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
@@ -55,9 +54,9 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
     !location.pathname.startsWith('/committee-dashboard') &&
     !location.pathname.startsWith('/maintenance');
 
-  // While loading auth or settings, we can just render children or a loader.
-  // We'll let the existing Layout loader handle global loading state to prevent double loaders.
-  if (authLoading || settingsLoading) {
+  // While auth is loading, render children immediately.
+  // The Layout loader already handles the initial loading state.
+  if (authLoading) {
     return <>{children}</>;
   }
 
