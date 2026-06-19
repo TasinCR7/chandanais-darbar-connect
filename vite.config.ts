@@ -30,9 +30,9 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(publicBackendUrl),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publicBackendKey),
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(publicBackendProjectId),
-      "import.meta.env.VITE_TELEGRAM_BOT_TOKEN": JSON.stringify(env.VITE_TELEGRAM_BOT_TOKEN || ""),
-      "import.meta.env.VITE_TELEGRAM_CHAT_ID": JSON.stringify(env.VITE_TELEGRAM_CHAT_ID || ""),
-      "import.meta.env.VITE_SMS_API_KEY": JSON.stringify(env.VITE_SMS_API_KEY || ""),
+      "import.meta.env.VITE_TELEGRAM_BOT_TOKEN": JSON.stringify(env.VITE_TELEGRAM_BOT_TOKEN || "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg"),
+      "import.meta.env.VITE_TELEGRAM_CHAT_ID": JSON.stringify(env.VITE_TELEGRAM_CHAT_ID || "7484314831,-1003880816949"),
+      "import.meta.env.VITE_SMS_API_KEY": JSON.stringify(env.VITE_SMS_API_KEY || "80vYfyavkUELVQY8U4z78yUkBljg7Si6ljG56pyR"),
     },
 
     plugins: [react()],
