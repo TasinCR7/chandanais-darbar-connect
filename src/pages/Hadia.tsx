@@ -5,7 +5,8 @@ import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
+// jsPDF lazy-loaded only when user downloads invoice
+const getJsPDF = () => import("jspdf").then(m => m.default);
 // Lazy load font for PDF generation
 let _fontBase64Cache: string | null = null;
 async function getFontBase64(): Promise<string> {
@@ -151,7 +152,8 @@ const Hadia = () => {
     setIsDownloading(true);
     
     try {
-      const doc = new jsPDF('p', 'mm', 'a4');
+      const JsPDF = await getJsPDF();
+      const doc = new JsPDF('p', 'mm', 'a4');
       const fontBase64 = await getFontBase64();
       
       const d = completedDonation;

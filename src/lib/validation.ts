@@ -7,8 +7,9 @@
 // - duplicate transaction references
 // - font / glyph compatibility risks for jsPDF
 
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// jsPDF + autoTable lazy-loaded only when generating validation report PDF
+const getJsPDF = () => import('jspdf').then(m => m.default);
+const getAutoTable = () => import('jspdf-autotable').then(m => m.default);
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
 import { computeMemberDues, type MemberForDues, type PaymentForDues } from './dues';
 import type { Member, Payment, Expense } from '@/types/finance';
@@ -383,7 +384,8 @@ const SEV_BN: Record<Severity, string> = {
 };
 
 export async function downloadValidationReportPDF(report: ValidationReport) {
-  const doc = new jsPDF({ orientation: 'landscape' });
+  const JsPDF = await getJsPDF();
+  const doc = new JsPDF({ orientation: 'landscape' });
   await ensureBanglaFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -456,7 +458,8 @@ export async function downloadValidationReportPDF(report: ValidationReport) {
     iss.message,
   ]);
 
-  autoTable(doc, {
+  const autoTableFn = await getAutoTable();
+  autoTableFn(doc, {
     startY: 34,
     head: [[
       'ID', 'মাত্রা', 'টেবিল', 'রেকর্ড', 'ফিল্ড', 'ভুল মান', 'কোড', 'বিবরণ',
@@ -514,7 +517,8 @@ export async function downloadValidationReportPDF(report: ValidationReport) {
     doc.setFontSize(14);
     doc.text('সমাধানের পরামর্শ', 14, 16);
 
-    autoTable(doc, {
+    const autoTableFn = await getAutoTable();
+    autoTableFn(doc, {
       startY: 22,
       head: [['ID', 'রেকর্ড', 'পরামর্শ']],
       body: withSuggestions.map((i) => [i.id, i.recordLabel, i.suggestion!]),

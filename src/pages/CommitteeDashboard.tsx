@@ -10,8 +10,8 @@ import SEO from "@/components/SEO";
 import PremiumLoader from "@/components/PremiumLoader";
 
 import { Download, Share2 } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF + autoTable lazy-loaded only when generating receipt PDF
+const getJsPDF = () => import("jspdf").then(m => m.default);
 import { escapeHtml } from "@/utils/security";
 // Lazy load font to avoid 267KB in main bundle
 let _fontBase64Cache: string | null = null;
@@ -217,7 +217,8 @@ export default function CommitteeDashboard() {
 
   const generateReceiptPdf = async (c: Contribution) => {
     try {
-      const doc = new jsPDF('p', 'mm', 'a4');
+      const JsPDF = await getJsPDF();
+      const doc = new JsPDF('p', 'mm', 'a4');
       const W = 210;
       const rid = c.id.slice(0, 8).toUpperCase();
       

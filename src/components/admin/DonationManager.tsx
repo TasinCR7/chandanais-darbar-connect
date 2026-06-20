@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HeartHandshake, Home, Users, CheckCircle, Clock, Download, Trash2, XCircle, Calendar } from "lucide-react";
 import { format } from "date-fns";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+// html2canvas + jsPDF lazy-loaded only when generating PDF
+const getHtml2Canvas = () => import("html2canvas").then(m => m.default);
+const getJsPDF = () => import("jspdf").then(m => m.default);
 // Lazy load font for PDF generation
 let _fontBase64Cache: string | null = null;
 async function getFontBase64(): Promise<string> {
@@ -45,7 +46,8 @@ const DonationManager = () => {
     setDownloadingId(donation.id);
     
     try {
-      const doc = new jsPDF('p', 'mm', 'a4');
+      const JsPDF = await getJsPDF();
+      const doc = new JsPDF('p', 'mm', 'a4');
       const fontBase64 = await getFontBase64();
       
       const d = donation;
@@ -189,7 +191,8 @@ const DonationManager = () => {
       }
       try {
         const element = reportRef.current;
-        const canvas = await html2canvas(element, { 
+        const html2canvasFn = await getHtml2Canvas();
+        const canvas = await html2canvasFn(element, { 
           scale: 3, // Higher scale for even better quality
           useCORS: true,
           allowTaint: true,
@@ -211,7 +214,8 @@ const DonationManager = () => {
         });
 
         const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
+        const JsPDF2 = await getJsPDF();
+        const pdf = new JsPDF2("p", "mm", "a4");
         
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();

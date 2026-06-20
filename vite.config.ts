@@ -44,6 +44,8 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
+      target: 'es2020',
+      cssCodeSplit: true,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
@@ -53,6 +55,15 @@ export default defineConfig(({ mode }) => {
               }
               if (id.includes('recharts')) {
                 return 'recharts';
+              }
+              if (id.includes('framer-motion')) {
+                return 'framer-motion';
+              }
+              if (id.includes('@supabase')) {
+                return 'supabase';
+              }
+              if (id.includes('@radix-ui')) {
+                return 'radix-ui';
               }
               return 'vendor';
             }
