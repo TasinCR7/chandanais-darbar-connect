@@ -5,16 +5,16 @@
 
 export const sendTelegramNotification = async (message: string) => {
   try {
-    // Get credentials from Vite environment or use hardcoded fallbacks
+    // Get credentials from Vite environment (hardcoded fallbacks are set in vite.config.ts)
     const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "";
     const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "";
 
-    if (!botToken || botToken === "undefined" || botToken.trim() === "") {
+    if (!botToken || botToken.trim() === "") {
       console.error("❌ Telegram Error: VITE_TELEGRAM_BOT_TOKEN is missing or empty");
       return false;
     }
 
-    if (!chatIdsString || chatIdsString === "undefined" || chatIdsString.trim() === "") {
+    if (!chatIdsString || chatIdsString.trim() === "") {
       console.error("❌ Telegram Error: VITE_TELEGRAM_CHAT_ID is missing or empty");
       return false;
     }
@@ -25,6 +25,11 @@ export const sendTelegramNotification = async (message: string) => {
       console.error("❌ Telegram Error: No valid Chat IDs found after parsing.");
       return false;
     }
+
+    // Clean the message: remove problematic Markdown characters that cause Telegram parse errors
+    const cleanMessage = message
+      .replace(/`/g, "'")   // Replace backticks with single quotes (backticks break Markdown)
+      .replace(/\\/g, "");   // Remove backslashes
 
     // Send to all chats concurrently
     const sendPromises = chatIds.map(async (chatId: string) => {
@@ -37,32 +42,36 @@ export const sendTelegramNotification = async (message: string) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
-            text: message,
+            text: cleanMessage,
             parse_mode: "Markdown",
           }),
         });
 
-        // Attempt 2: If Markdown fails (HTTP 400 Bad Request due to parsing), fallback to plain text immediately
+        // Attempt 2: If Markdown fails, fallback to plain text immediately
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({}));
           console.warn(`⚠️ Markdown parsing failed for ${chatId}. Retrying with plain text. Error:`, errorData);
+          
+          // Remove all Markdown formatting for plain text fallback
+          const plainMessage = cleanMessage.replace(/\*/g, "");
           
           response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: chatId,
-              text: message, // No parse_mode sent
+              text: plainMessage,
             }),
           });
           
           if (!response.ok) {
-            const fallbackError = await response.json();
+            const fallbackError = await response.json().catch(() => ({}));
             console.error(`❌ Plain text fallback also failed for ${chatId}:`, fallbackError);
             return false;
           }
         }
 
+        console.log(`✅ Telegram notification sent to ${chatId}`);
         return true;
       } catch (err) {
         console.error(`❌ Network or fetch error for Telegram Chat ID ${chatId}:`, err);
@@ -71,10 +80,15 @@ export const sendTelegramNotification = async (message: string) => {
     });
 
     const results = await Promise.all(sendPromises);
-    return results.some(res => res === true); // Return true if at least one succeeded
+    const success = results.some(res => res === true);
+    if (!success) {
+      console.error("❌ All Telegram notifications failed. This may be due to adblocker or network issues.");
+    }
+    return success;
 
   } catch (error) {
     console.error("❌ Unexpected error in sendTelegramNotification:", error);
     return false;
   }
 };
+

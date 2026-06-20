@@ -130,7 +130,7 @@ const Hadia = () => {
 🎯 *খাত:* ${categoryText}
 💰 *পরিমাণ:* ${amount} ৳
 💳 *পেমেন্ট:* ${paymentMethod}
-🔑 *TrxID:* \`${transactionId}\`
+🔑 *TrxID:* ${transactionId}
 ━━━━━━━━━━━━━━━━━━
 অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
       `;
