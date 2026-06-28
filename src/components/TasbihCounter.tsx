@@ -2,9 +2,29 @@ import React, { useState, useEffect } from "react";
 import { Volume2, VolumeX, Sparkles, RotateCcw, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 
+let sharedAudioCtx: AudioContext | null = null;
+
+const getAudioCtx = (): AudioContext | null => {
+  if (typeof window === "undefined") return null;
+  if (!sharedAudioCtx) {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+      sharedAudioCtx = new AudioContextClass();
+    }
+  }
+  return sharedAudioCtx;
+};
+
 const playClickSound = () => {
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioCtx = getAudioCtx();
+    if (!audioCtx) return;
+    
+    // Resume context if suspended (browser security policy requirement)
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -27,8 +47,15 @@ const playClickSound = () => {
 
 const playChimeSound = () => {
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioCtx = getAudioCtx();
+    if (!audioCtx) return;
+
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
     const playNote = (freq: number, delay: number, duration: number) => {
+      if (!audioCtx) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
