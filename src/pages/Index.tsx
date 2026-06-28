@@ -154,54 +154,6 @@ const Index = () => {
           />
         </motion.div>
       </section>
-
-      {/* Detailed Notices Section */}
-      {detailedNotices.length > 0 && (
-        <section className="py-12 bg-background relative overflow-hidden gpu-smooth">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col gap-6">
-              {detailedNotices.map((n, i) => (
-                <motion.div
-                  key={n.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-card/40 backdrop-blur-md border border-gold/20 rounded-3xl p-6 md:p-8 relative group hover:border-gold/40 transition-all shadow-2xl"
-                >
-                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <Bell size={64} className="text-gold" />
-                  </div>
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center shrink-0">
-                      <Info className="text-gold h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-heading font-bold text-cream group-hover:text-gold transition-colors font-bangla">
-                        {n.title}
-                      </h3>
-                      <p className="text-[10px] text-gold/50 font-bold uppercase tracking-widest mt-1">
-                        ঘোষিত: {n.created_at ? new Date(n.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }) : 'অজানা তারিখ'}
-                      </p>
-                    </div>
-                  </div>
-                  {n.message && (
-                    <div className="text-foreground/80 leading-relaxed font-bangla text-base md:text-lg border-l-2 border-gold/20 pl-6 py-2 bg-white/5 rounded-r-2xl">
-                      {n.message}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-
-
-
-
       {/* Welcome / About Section */}
       <section className="py-20 islamic-pattern">
         <div className="container mx-auto px-4">
@@ -330,6 +282,49 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Detailed Notices Section (moved to the end of the homepage) */}
+      {detailedNotices.length > 0 && (
+        <section className="py-12 bg-background relative overflow-hidden gpu-smooth">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col gap-6">
+              {detailedNotices.map((n, i) => (
+                <motion.div
+                  key={n.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-card/40 backdrop-blur-md border border-gold/20 rounded-3xl p-6 md:p-8 relative group hover:border-gold/40 transition-all shadow-2xl"
+                >
+                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Bell size={64} className="text-gold" />
+                  </div>
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center shrink-0">
+                      <Info className="text-gold h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-heading font-bold text-cream group-hover:text-gold transition-colors font-bangla">
+                        {n.title}
+                      </h3>
+                      <p className="text-[10px] text-gold/50 font-bold uppercase tracking-widest mt-1">
+                        ঘোষিত: {n.created_at ? new Date(n.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }) : 'অজানা তারিখ'}
+                      </p>
+                    </div>
+                  </div>
+                  {n.message && (
+                    <div className="text-foreground/80 leading-relaxed font-bangla text-base md:text-lg border-l-2 border-gold/20 pl-6 py-2 bg-white/5 rounded-r-2xl">
+                      {n.message}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
