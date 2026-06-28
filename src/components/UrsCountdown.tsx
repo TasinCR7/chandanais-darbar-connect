@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Star } from "lucide-react";
 
 interface UrsEvent {
@@ -75,14 +75,28 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
     animate={{ scale: 1, opacity: 1 }}
     transition={{ duration: 0.5 }}
   >
-    <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-14 h-14 xs:w-[72px] xs:h-[72px] sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden">
-      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-gold/50 rounded-tl-xl" />
-      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-gold/50 rounded-tr-xl" />
-      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-gold/50 rounded-bl-xl" />
-      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-gold/50 rounded-br-xl" />
-      <span className="text-xl xs:text-3xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]">
-        {toBengaliNum(value)}
-      </span>
+    {/* Wrapper with radial glow */}
+    <div className="relative">
+      {/* Radial glow behind box */}
+      <div className="absolute -inset-2 rounded-2xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.12),transparent_70%)] blur-sm pointer-events-none" />
+      <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-14 h-14 xs:w-[72px] xs:h-[72px] sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.4),inset_0_-1px_4px_rgba(0,0,0,0.2)]">
+        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-gold/50 rounded-tl-xl" />
+        <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-gold/50 rounded-tr-xl" />
+        <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-gold/50 rounded-bl-xl" />
+        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-gold/50 rounded-br-xl" />
+        <AnimatePresence mode="popLayout">
+          <motion.span
+            key={value}
+            className="text-xl xs:text-3xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]"
+            initial={{ y: 14, opacity: 0, filter: "blur(2px)" }}
+            animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+            exit={{ y: -14, opacity: 0, filter: "blur(2px)" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            {toBengaliNum(value)}
+          </motion.span>
+        </AnimatePresence>
+      </div>
     </div>
     <span className="text-gold-light/80 text-xs sm:text-sm mt-2 font-bengali">{label}</span>
   </motion.div>
@@ -90,10 +104,22 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
 
 const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center">
-    <div className="relative bg-emerald border border-gold/20 rounded-lg w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden shadow-inner">
-      <span className="text-xl sm:text-2xl font-heading font-bold text-gold drop-shadow-sm">
-        {toBengaliNum(value)}
-      </span>
+    <div className="relative">
+      <div className="absolute -inset-1.5 rounded-xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.08),transparent_70%)] blur-sm pointer-events-none" />
+      <div className="relative bg-emerald border border-gold/20 rounded-lg w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden shadow-[inset_0_1px_4px_rgba(0,0,0,0.35),inset_0_-1px_3px_rgba(0,0,0,0.15)]">
+        <AnimatePresence mode="popLayout">
+          <motion.span
+            key={value}
+            className="text-xl sm:text-2xl font-heading font-bold text-gold drop-shadow-sm"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            {toBengaliNum(value)}
+          </motion.span>
+        </AnimatePresence>
+      </div>
     </div>
     <span className="text-gold-light/60 text-[10px] sm:text-xs mt-1.5 font-bengali">{label}</span>
   </div>
@@ -122,7 +148,7 @@ const UrsCountdown = () => {
       transition={{ duration: 0.8 }}
       className="max-w-2xl mx-auto text-center"
     >
-      <div className="relative bg-card border border-gold/20 rounded-2xl p-8 sm:p-10 overflow-hidden">
+      <div className="relative bg-card rounded-2xl p-8 sm:p-10 overflow-hidden before:absolute before:inset-0 before:rounded-2xl before:p-px before:bg-gradient-to-b before:from-gold/30 before:via-transparent before:to-gold/10 before:pointer-events-none before:-z-0 border border-gold/20">
         <div className="absolute inset-0 opacity-5 islamic-pattern pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 border-b-2 border-gold/20 rounded-b-full" />
 
@@ -160,7 +186,7 @@ const UrsCountdown = () => {
         </div>
       </div>
 
-      <div className="relative bg-card border border-gold/15 rounded-2xl p-6 overflow-hidden mt-6 max-w-lg mx-auto transform transition-all hover:scale-[1.02]">
+      <div className="relative bg-card rounded-2xl p-6 overflow-hidden mt-6 max-w-lg mx-auto transform transition-all hover:scale-[1.02] before:absolute before:inset-0 before:rounded-2xl before:p-px before:bg-gradient-to-b before:from-gold/25 before:via-transparent before:to-gold/10 before:pointer-events-none before:-z-0 border border-gold/15">
         <div className="absolute inset-0 opacity-[0.03] islamic-pattern pointer-events-none" />
         <h4 className="text-cream text-base sm:text-lg font-heading font-bold mb-1">
           প্রতি আরবি মাসের ৩ তারিখ ওরশ

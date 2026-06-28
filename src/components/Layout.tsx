@@ -28,6 +28,7 @@ import { lazy, Suspense } from "react";
 const DeveloperTeam = lazy(() => import("./DeveloperTeam"));
 const Chatbot = lazy(() => import("./Chatbot"));
 const VisitorCounter = lazy(() => import("./VisitorCounter"));
+const BackToTop = lazy(() => import("./BackToTop"));
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
@@ -58,6 +59,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const { isStaff, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const [scrolled, setScrolled] = useState(false);
+
+  // Scroll-aware navbar
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
@@ -174,8 +183,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-gold/20 transition-all duration-300`}>
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
+      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 transition-all duration-500 ${scrolled ? 'bg-background/95 backdrop-blur-xl shadow-lg shadow-black/20' : 'bg-background/80 backdrop-blur-md'}`}>
+        <div className={`container mx-auto px-4 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-14' : 'h-16'}`}>
           <div className="flex items-center gap-2 md:gap-3 min-w-0 mr-2">
             <Link to="/" className="flex items-center gap-2 md:gap-3" aria-label="হোম পেজ">
               {appSettings.site_logo_url && (
@@ -205,12 +214,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     routeImports[route]();
                   }
                 }}
-                className={`whitespace-nowrap text-[11px] 2xl:text-xs font-medium transition-colors duration-300 hover:text-gold ${location.pathname === link.path
+                className={`relative whitespace-nowrap text-[11px] 2xl:text-xs font-medium transition-colors duration-300 hover:text-gold py-1 ${location.pathname === link.path
                   ? "text-gold"
                   : "text-muted-foreground"
                   }`}
               >
                 {link.label}
+                {location.pathname === link.path && (
+                  <motion.div
+                    layoutId="activeNavIndicator"
+                    className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent rounded-full"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
               </Link>
             ))}
             <Link
@@ -364,7 +380,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <Suspense fallback={null}><DeveloperTeam /></Suspense>
 
       {/* Footer */}
-      <footer className="border-t border-gold/20 bg-card islamic-pattern content-visibility-auto">
+      <footer className="border-t border-gold/20 bg-card islamic-pattern content-visibility-auto relative overflow-hidden">
+        {/* SVG Wave Divider */}
+        <div className="absolute top-0 left-0 right-0 -translate-y-[calc(100%-1px)]" aria-hidden="true">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block" preserveAspectRatio="none">
+            <path d="M0 60L48 53C96 46 192 32 288 26C384 20 480 22 576 28C672 34 768 44 864 46C960 48 1056 42 1152 36C1248 30 1344 24 1392 21L1440 18V60H0Z" fill="hsl(var(--card))" />
+          </svg>
+        </div>
+
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
@@ -374,6 +397,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <p className="text-muted-foreground text-sm leading-relaxed">
                 সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
               </p>
+              {/* Social Links */}
+              <div className="flex items-center gap-3 mt-4">
+                <a
+                  href="https://www.facebook.com/chandanaishdarbar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/40 transition-all duration-300 hover:scale-110"
+                  aria-label="Facebook"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+                <a
+                  href="https://www.youtube.com/@chandanaishdarbar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/40 transition-all duration-300 hover:scale-110"
+                  aria-label="YouTube"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+              </div>
             </div>
             <div>
               <h4 className="text-gold font-heading font-semibold mb-4">দ্রুত লিংক</h4>
@@ -382,8 +426,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className="text-muted-foreground text-sm hover:text-gold transition-colors duration-300"
+                    className="text-muted-foreground text-sm hover:text-gold hover:translate-x-1 transition-all duration-300 inline-flex items-center gap-1.5 group"
                   >
+                    <span className="w-0 group-hover:w-2 h-px bg-gold transition-all duration-300" />
                     {link.label}
                   </Link>
                 ))}
@@ -419,6 +464,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </footer>
+      <Suspense fallback={null}><BackToTop /></Suspense>
       <Suspense fallback={null}><Chatbot /></Suspense>
       {/* Admin Maintenance Mode Active Banner */}
       {isBypassed && String(appSettings.maintenance_mode) === 'true' && (

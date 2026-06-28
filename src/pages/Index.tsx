@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star, BookOpen } from "lucide-react";
+import { ArrowRight, Star, BookOpen, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-darbar.webp";
 import SectionTitle from "@/components/SectionTitle";
 import EventCard from "@/components/EventCard";
@@ -53,6 +53,34 @@ const Index = () => {
           loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background" />
+        {/* Radial gold tint overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(40_45%_56%/0.08)_0%,_transparent_70%)]" />
+
+        {/* Floating Gold Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full bg-gold/40"
+              style={{
+                left: `${12 + i * 11}%`,
+                bottom: '-5%',
+              }}
+              animate={{
+                y: [0, -window.innerHeight * 1.1],
+                x: [0, (i % 2 === 0 ? 30 : -30)],
+                opacity: [0, 0.8, 0.8, 0],
+                scale: [1, 0.6],
+              }}
+              transition={{
+                duration: 8 + i * 2,
+                repeat: Infinity,
+                delay: i * 1.5,
+                ease: 'linear',
+              }}
+            />
+          ))}
+        </div>
 
         <div className="relative z-10 container mx-auto px-4 text-center">
           <motion.div
@@ -60,15 +88,29 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="font-arabic text-gold text-base md:text-2xl mb-4">
+            <motion.p 
+              className="font-arabic text-gold text-base md:text-2xl mb-4 arabic-glow"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.5, delay: 0.3 }}
+            >
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-            </p>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-4 leading-tight px-2 bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold drop-shadow-sm">
+            </motion.p>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-4 leading-tight px-2 bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold drop-shadow-sm animate-text-shimmer">
               চন্দনাইশ দরবার শরীফ
             </h1>
-            <h2 className="text-gold text-base md:text-xl mb-2 font-medium">
-              সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
-            </h2>
+            <motion.h2 
+              className="text-gold text-base md:text-xl mb-2 font-medium"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+            >
+              <span className="inline-flex items-center gap-2">
+                <Sparkles size={14} className="text-gold/50" />
+                সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
+                <Sparkles size={14} className="text-gold/50" />
+              </span>
+            </motion.h2>
             <p className="text-cream text-base md:text-2xl font-medium leading-relaxed px-4 max-w-3xl mx-auto mb-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র দরবার
             </p>
@@ -82,16 +124,17 @@ const Index = () => {
           >
             <Link
               to="/about"
-              className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-md font-semibold gold-glow-hover transition-all duration-300 inline-flex items-center justify-center gap-2"
+              className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-md font-semibold gold-glow-hover transition-all duration-300 inline-flex items-center justify-center gap-2 btn-shimmer"
             >
               দরবার সম্পর্কে জানুন
               <ArrowRight size={18} />
             </Link>
             <Link
               to="/events"
-              className="border border-gold/40 text-gold px-8 py-3 rounded-md font-semibold hover:bg-gold/10 transition-all duration-300 inline-flex items-center justify-center gap-2"
+              className="border border-gold/40 text-gold px-8 py-3 rounded-md font-semibold hover:bg-gold/10 transition-all duration-300 inline-flex items-center justify-center gap-2 group"
             >
               ওরশের তারিখসমূহ
+              <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
             </Link>
           </motion.div>
         </div>
@@ -280,7 +323,7 @@ const Index = () => {
             </p>
             <Link
               to="/hadia"
-              className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-md font-semibold gold-glow-hover transition-all duration-300 animate-glow-pulse inline-block"
+              className="bg-gold-gradient text-primary-foreground px-8 py-3 rounded-md font-semibold gold-glow-hover transition-all duration-300 animate-glow-pulse inline-block btn-shimmer"
             >
               হাদিয়া দিন
             </Link>
