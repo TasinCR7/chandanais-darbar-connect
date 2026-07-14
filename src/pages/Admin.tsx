@@ -20,6 +20,7 @@ const VoteTopicManager = lazy(() => import("@/components/admin/VoteTopicManager"
 const DonationManager = lazy(() => import("@/components/admin/DonationManager"));
 const CommitteeBroadcast = lazy(() => import("@/components/admin/CommitteeBroadcast"));
 const SettingsManager = lazy(() => import("@/components/admin/SettingsManager"));
+const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -345,6 +346,7 @@ const Admin = () => {
               <TabsTrigger value="donations" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold">হাদিয়া ও নজরানা</TabsTrigger>
               <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">প্রশ্ন ও অভিযোগ</TabsTrigger>
               <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
+              <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
               <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
               <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">সেটিংস</TabsTrigger>
@@ -414,7 +416,15 @@ const Admin = () => {
           </AdminSection>
         </TabsContent>
 
-          <TabsContent value="voting">
+        <TabsContent value="finance">
+          <AdminSection title="আয়-ব্যয়">
+            <Suspense fallback={<PremiumLoader />}>
+              <FinanceManager />
+            </Suspense>
+          </AdminSection>
+        </TabsContent>
+
+        <TabsContent value="voting">
           <AdminSection title="ভোটিং">
             <Suspense fallback={<PremiumLoader />}>
               <VoteTopicManager />
@@ -422,7 +432,7 @@ const Admin = () => {
           </AdminSection>
         </TabsContent>
 
-          <TabsContent value="broadcast">
+        <TabsContent value="broadcast">
           <AdminSection title="বার্তা পাঠান">
             <Suspense fallback={<PremiumLoader />}>
               <CommitteeBroadcast />
@@ -430,7 +440,7 @@ const Admin = () => {
           </AdminSection>
         </TabsContent>
 
-          <TabsContent value="settings">
+        <TabsContent value="settings">
           <AdminSection title="সেটিংস">
             <Suspense fallback={<PremiumLoader />}>
               <SettingsManager />

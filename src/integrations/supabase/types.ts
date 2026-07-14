@@ -74,7 +74,7 @@ export type Database = {
           member_id: string
           method: string
           note?: string | null
-          payment_date?: string
+          payment_date: string
           recorded_by?: string | null
           status?: string
           transaction_ref?: string | null
@@ -273,6 +273,7 @@ export type Database = {
           name: string
           phone: string | null
           user_id: string | null
+          pin_hash: string | null
         }
         Insert: {
           created_at?: string
@@ -284,6 +285,7 @@ export type Database = {
           name: string
           phone?: string | null
           user_id?: string | null
+          pin_hash?: string | null
         }
         Update: {
           created_at?: string
@@ -295,6 +297,7 @@ export type Database = {
           name?: string
           phone?: string | null
           user_id?: string | null
+          pin_hash?: string | null
         }
         Relationships: []
       }

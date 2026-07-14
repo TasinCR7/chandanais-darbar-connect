@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Phone } from "lucide-react";
+import { Users, Phone, Vote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
@@ -48,6 +49,13 @@ const Committee = () => {
             title="পরিচালনা কমিটি"
             subtitle="চন্দনাইশ দরবার শরীফ পরিচালনা কমিটির সম্মানিত সদস্যবৃন্দ"
           />
+
+          <div className="flex justify-center mt-4 mb-6">
+            <Link to="/committee-login"
+              className="inline-flex items-center gap-2 bg-gold-gradient text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-gold/10 hover:shadow-gold/20 transition-all">
+              <Vote size={16} /> কমিটি সদস্য লগইন
+            </Link>
+          </div>
 
           {loading ? (
             <PremiumLoader />
