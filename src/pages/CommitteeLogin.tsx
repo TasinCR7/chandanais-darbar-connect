@@ -97,67 +97,23 @@ const CommitteeLogin = () => {
         `88${cleanPhone}`,
         cleanPhone.startsWith("0") ? cleanPhone.substring(1) : cleanPhone
       ];
+      
+      const hashedInputPin = await hashPin(pin);
 
-      // Find the committee member by phone using multiple variants, selecting pin_hash as well
-      const { data, error } = await supabase
-        .from("committee_members")
-        .select("id, name, designation, pin_hash")
-        .eq("is_active", true)
-        .in("phone", searchVariants)
-        .maybeSingle();
+      // Verify the credentials via the secure database RPC function (prevents exposing pin_hash to client)
+      const { data, error } = await supabase.rpc("verify_committee_member", {
+        p_phone_variants: searchVariants,
+        p_pin_hash: hashedInputPin
+      } as any);
 
       if (error) {
-        // If pin_hash doesn't exist in the database (migration not run yet)
-        if (error.message && error.message.includes("pin_hash")) {
-          throw new Error("ডাটাবেজে 'pin_hash' কলামটি পাওয়া যায়নি। অনুগ্রহ করে Supabase-এ মাইগ্রেশন সম্পন্ন করুন।");
-        }
         throw error;
       }
 
-      if (!data) {
-        toast({ 
-          title: "প্রवेशাধিকার প্রতক্ষ্যাত", 
-          description: "আপনার ফোন নম্বর ডেটাবেজের কোনো সক্রিয় কমিটির সদস্যের সাথে মিলছে না। নম্বরটি চেক করুন।", 
-          variant: "destructive" 
-        });
-        setLoading(false);
-        return;
-      }
+      const result = data && data[0];
 
-      const hashedInputPin = await hashPin(pin);
-
-      // Case 1: First-time setup (pin_hash is null)
-      if (!data.pin_hash) {
-        const { error: updateError } = await supabase
-          .from("committee_members")
-          .update({ pin_hash: hashedInputPin } as any) // cast as any to handle types sync lag
-          .eq("id", data.id);
-
-        if (updateError) throw updateError;
-
-        localStorage.setItem("committee_auth", data.id);
-        localStorage.removeItem("committee_login_attempts");
-        localStorage.removeItem("committee_login_lockout_until");
-        
-        toast({ 
-          title: "লগইন সফল ও PIN সেটআপ সম্পূর্ণ", 
-          description: `স্বাগতম, ${data.name}! আপনার ৪-ডিজিট PIN পরবর্তীতে লগইনের জন্য সেট করা হয়েছে।` 
-        });
-        navigate("/committee-dashboard");
-        return;
-      }
-
-      // Case 2: PIN comparison
-      if (data.pin_hash === hashedInputPin) {
-        // Success
-        localStorage.setItem("committee_auth", data.id);
-        localStorage.removeItem("committee_login_attempts");
-        localStorage.removeItem("committee_login_lockout_until");
-
-        toast({ title: "লগইন সফল", description: `স্বাগতম, ${data.name} (${data.designation})` });
-        navigate("/committee-dashboard");
-      } else {
-        // Wrong PIN - increment failure counter
+      if (!result || !result.success) {
+        // Wrong phone or wrong PIN - increment failure counter
         const currentAttempts = parseInt(localStorage.getItem("committee_login_attempts") || "0", 10) + 1;
         localStorage.setItem("committee_login_attempts", currentAttempts.toString());
 
@@ -173,12 +129,29 @@ const CommitteeLogin = () => {
           });
         } else {
           toast({ 
-            title: "ভুল PIN", 
-            description: `প্রদত্ত PIN-টি সঠিক নয়। (বাকি সুযোগ: ${3 - currentAttempts} বার)`, 
+            title: "ভুল নম্বর বা PIN", 
+            description: `প্রদত্ত নম্বর বা PIN-টি সঠিক নয়। (বাকি সুযোগ: ${3 - currentAttempts} বার)`, 
             variant: "destructive" 
           });
         }
+        setLoading(false);
+        return;
       }
+
+      // Success
+      localStorage.setItem("committee_auth", result.id);
+      localStorage.removeItem("committee_login_attempts");
+      localStorage.removeItem("committee_login_lockout_until");
+
+      if (result.is_new_pin) {
+        toast({ 
+          title: "লগইন সফল ও PIN সেটআপ সম্পূর্ণ", 
+          description: `স্বাগতম, ${result.name}! আপনার ৪-ডিজিট PIN পরবর্তীতে লগইনের জন্য সেট করা হয়েছে।` 
+        });
+      } else {
+        toast({ title: "লগইন সফল", description: `স্বাগতম, ${result.name} (${result.designation})` });
+      }
+      navigate("/committee-dashboard");
      
     } catch (error: any) {
       toast({ title: "ত্রুটি", description: error.message || "সার্ভারে সমস্যা হয়েছে।", variant: "destructive" });

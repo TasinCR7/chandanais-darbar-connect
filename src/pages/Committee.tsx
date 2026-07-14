@@ -26,7 +26,7 @@ const Committee = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("committee_members")
-        .select("*")
+        .select("id, name, designation, phone, image_url, display_order")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
       if (data) setMembers(data as CommitteeMember[]);

@@ -16,7 +16,7 @@ interface Member {
   image_url: string | null;
   display_order: number;
   is_active: boolean;
-  pin_hash?: string | null;
+  has_pin?: boolean | null;
 }
 
 const AvatarImage = ({ url, name, className }: { url: string | null; name: string; className: string }) => {
@@ -46,7 +46,7 @@ const CommitteeManager = () => {
   const fetchMembers = async () => {
     const { data } = await supabase
       .from("committee_members")
-      .select("*")
+      .select("id, name, designation, phone, image_url, display_order, is_active, has_pin")
       .order("display_order", { ascending: true });
     if (data) setMembers(data as Member[]);
   };
@@ -130,9 +130,9 @@ const CommitteeManager = () => {
     if (!window.confirm("আপনি কি নিশ্চিতভাবে এই সদস্যের PIN রিসেট করতে চান? এর ফলে তিনি আবার নতুন করে PIN সেট করতে পারবেন।")) return;
     try {
       const { error } = await supabase
-        .from("committee_members")
-        .update({ pin_hash: null } as any)
-        .eq("id", id);
+        .from("committee_member_auth")
+        .delete()
+        .eq("member_id", id);
       if (error) throw error;
       toast({ title: "সফল", description: "PIN সফলভাবে রিসেট করা হয়েছে।" });
       fetchMembers();
@@ -192,7 +192,7 @@ const CommitteeManager = () => {
                 <p className="text-xs text-gold/60">{m.designation}</p>
                 <div className="flex items-center gap-2 mt-1">
                   {m.phone && <span className="text-xs text-muted-foreground">{m.phone}</span>}
-                  {m.pin_hash && (
+                  {m.has_pin && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gold/10 text-gold border border-gold/20 font-bangla">
                       PIN সেট করা আছে
                     </span>
@@ -201,7 +201,7 @@ const CommitteeManager = () => {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                {m.pin_hash && (
+                {m.has_pin && (
                   <button
                     onClick={() => handleResetPin(m.id)}
                     className="p-2 rounded-lg text-gold hover:bg-gold/10 transition-colors"

@@ -273,7 +273,6 @@ export type Database = {
           name: string
           phone: string | null
           user_id: string | null
-          pin_hash: string | null
         }
         Insert: {
           created_at?: string
@@ -285,7 +284,6 @@ export type Database = {
           name: string
           phone?: string | null
           user_id?: string | null
-          pin_hash?: string | null
         }
         Update: {
           created_at?: string
@@ -297,9 +295,31 @@ export type Database = {
           name?: string
           phone?: string | null
           user_id?: string | null
-          pin_hash?: string | null
         }
         Relationships: []
+      }
+      committee_member_auth: {
+        Row: {
+          member_id: string
+          pin_hash: string
+        }
+        Insert: {
+          member_id: string
+          pin_hash: string
+        }
+        Update: {
+          member_id?: string
+          pin_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committee_member_auth_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "committee_members"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       committee_contributions: {
         Row: {
@@ -588,6 +608,25 @@ export type Database = {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: boolean
+      }
+      verify_committee_member: {
+        Args: {
+          p_phone_variants: string[]
+          p_pin_hash: string
+        }
+        Returns: {
+          id: string
+          name: string
+          designation: string
+          is_new_pin: boolean
+          success: boolean
+        }[]
+      }
+      has_pin: {
+        Args: {
+          m: Database["public"]["Tables"]["committee_members"]["Row"]
         }
         Returns: boolean
       }
