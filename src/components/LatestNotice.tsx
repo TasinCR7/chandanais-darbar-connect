@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Info, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const LatestNotice = () => {
@@ -8,8 +8,9 @@ const LatestNotice = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchNotice = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("notices")
         .select("title, message")
         .eq("is_active", true)
@@ -18,11 +19,16 @@ const LatestNotice = () => {
         .limit(1)
         .maybeSingle();
       
-      if (data) {
-        setNotice(data);
+      if (isMounted) {
+        if (error) {
+          console.error("Error fetching latest notice:", error);
+        } else if (data) {
+          setNotice(data);
+        }
       }
     };
     fetchNotice();
+    return () => { isMounted = false; };
   }, []);
 
   if (!notice || !isVisible) return null;

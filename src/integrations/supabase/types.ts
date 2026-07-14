@@ -321,6 +321,35 @@ export type Database = {
           }
         ]
       }
+      committee_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          member_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          member_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committee_sessions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "committee_members"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       committee_contributions: {
         Row: {
           amount: number
@@ -617,12 +646,35 @@ export type Database = {
           p_pin_hash: string
         }
         Returns: {
-          id: string
-          name: string
-          designation: string
+          id: string | null
+          name: string | null
+          designation: string | null
           is_new_pin: boolean
           success: boolean
+          lockout_remaining_seconds: number
+          session_token: string | null
         }[]
+      }
+      get_committee_dashboard_data: {
+        Args: {
+          p_session_token: string
+        }
+        Returns: unknown
+      }
+      cast_committee_vote: {
+        Args: {
+          p_session_token: string
+          p_topic_id: string
+          p_vote: string
+        }
+        Returns: boolean
+      }
+      add_committee_comment: {
+        Args: {
+          p_session_token: string
+          p_message: string
+        }
+        Returns: boolean
       }
       has_pin: {
         Args: {

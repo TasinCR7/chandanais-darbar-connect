@@ -75,16 +75,36 @@ const QnA = () => {
       return;
     }
 
-    if (trimmedName.length > 100 || trimmedDetails.length > 2000) {
+    // Client-side rate limiting (spam protection)
+    const nowTime = Date.now();
+    const windowMs = 5 * 60 * 1000; // 5 minutes
+    const maxSubmissions = 3;
+    
+    let submissionTimes: number[] = [];
+    try {
+      submissionTimes = JSON.parse(localStorage.getItem("last_qna_submissions") || "[]");
+    } catch (e) {
+      submissionTimes = [];
+    }
+    
+    // Filter timestamps within the window
+    submissionTimes = submissionTimes.filter((time: number) => nowTime - time < windowMs);
+    
+    if (submissionTimes.length >= maxSubmissions) {
+      const minutesLeft = Math.ceil((windowMs - (nowTime - submissionTimes[0])) / 60000);
       toast({
-        title: "তথ্য অতিরিক্ত দীর্ঘ",
-        description: "নাম ১০০ ও বিবরণ ২০০০ অক্ষরের মধ্যে রাখুন।",
+        title: "অতিরিক্ত অনুরোধ",
+        description: `নিরাপত্তার স্বার্থে প্রতি ৫ মিনিটে সর্বোচ্চ ৩ বার সাবমিট করা যাবে। অনুগ্রহ করে ${minutesLeft} মিনিট পর আবার চেষ্টা করুন।`,
         variant: "destructive",
       });
       return;
     }
 
     setSubmitting(true);
+
+    // Save submission timestamp on success
+    submissionTimes.push(nowTime);
+    localStorage.setItem("last_qna_submissions", JSON.stringify(submissionTimes));
 
     const { data, error } = await supabase.rpc("insert_submission", {
       p_type: type,

@@ -140,11 +140,7 @@ const MemberSearch = () => {
       if (m < 1 || m > 12) issues.push(`Invalid month: ${m}`);
     });
 
-    // 2. year filter integrity
-    const wrongYear = payments.filter((p) => p.for_year === year && (p.for_year !== year));
-    if (wrongYear.length) issues.push(`Year filter broken: ${wrongYear.length}`);
-
-    // 3. monthly rate sanity
+    // 2. monthly rate sanity
     if (expected <= 0) issues.push('Monthly rate is zero/negative');
 
     const summary = [
@@ -161,10 +157,6 @@ const MemberSearch = () => {
       title: issues.length ? 'টেস্ট: ইস্যু পাওয়া গেছে' : 'টেস্ট: সফল ✓',
       description: summary,
       variant: issues.length ? 'destructive' : 'default',
-    });
-    console.table({
-      year, member: member.member_code, expected, totalPaid, yearExpected,
-      paymentCount: yearPayments.length, monthsCovered: monthsCovered.size, issues,
     });
   };
 

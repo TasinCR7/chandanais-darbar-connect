@@ -150,6 +150,8 @@ const Gallery = () => {
               <button
                 className="absolute top-6 right-6 text-gold hover:text-gold-light"
                 onClick={() => setLightbox(null)}
+                title="বন্ধ করুন"
+                aria-label="বন্ধ করুন"
               >
                 <X size={32} />
               </button>
@@ -162,6 +164,8 @@ const Gallery = () => {
                     e.stopPropagation();
                     setLightbox(prev => (prev !== null && prev > 0 ? prev - 1 : prev));
                   }}
+                  title="পূর্ববর্তী ছবি"
+                  aria-label="পূর্ববর্তী ছবি"
                 >
                   <ChevronLeft size={24} />
                 </button>
@@ -175,6 +179,8 @@ const Gallery = () => {
                     e.stopPropagation();
                     setLightbox(prev => (prev !== null && prev < filtered.length - 1 ? prev + 1 : prev));
                   }}
+                  title="পরবর্তী ছবি"
+                  aria-label="পরবর্তী ছবি"
                 >
                   <ChevronRight size={24} />
                 </button>

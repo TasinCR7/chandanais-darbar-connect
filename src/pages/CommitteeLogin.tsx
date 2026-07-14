@@ -113,24 +113,20 @@ const CommitteeLogin = () => {
       const result = data && data[0];
 
       if (!result || !result.success) {
-        // Wrong phone or wrong PIN - increment failure counter
-        const currentAttempts = parseInt(localStorage.getItem("committee_login_attempts") || "0", 10) + 1;
-        localStorage.setItem("committee_login_attempts", currentAttempts.toString());
-
-        if (currentAttempts >= 3) {
-          const lockoutUntil = Date.now() + 5 * 60 * 1000;
+        if (result && result.lockout_remaining_seconds > 0) {
+          const lockoutUntil = Date.now() + result.lockout_remaining_seconds * 1000;
           localStorage.setItem("committee_login_lockout_until", lockoutUntil.toString());
           setLockoutTime(lockoutUntil);
-          setRemainingTime(300);
+          setRemainingTime(result.lockout_remaining_seconds);
           toast({ 
             title: "অ্যাক্সেস ব্লকড", 
-            description: "নিরাপত্তার স্বার্থে আপনার অ্যাকাউন্ট ৫ মিনিটের জন্য ব্লক করা হয়েছে।", 
+            description: `নিরাপত্তার স্বার্থে আপনার অ্যাকাউন্ট ১৫ মিনিটের জন্য ব্লক করা হয়েছে। (অবশিষ্ট: ${result.lockout_remaining_seconds} সেকেন্ড)`, 
             variant: "destructive" 
           });
         } else {
           toast({ 
             title: "ভুল নম্বর বা PIN", 
-            description: `প্রদত্ত নম্বর বা PIN-টি সঠিক নয়। (বাকি সুযোগ: ${3 - currentAttempts} বার)`, 
+            description: "প্রদত্ত নম্বর বা PIN-টি সঠিক নয়। অনুগ্রহ করে পুনরায় চেষ্টা করুন।", 
             variant: "destructive" 
           });
         }
@@ -139,7 +135,7 @@ const CommitteeLogin = () => {
       }
 
       // Success
-      localStorage.setItem("committee_auth", result.id);
+      localStorage.setItem("committee_auth", result.session_token);
       localStorage.removeItem("committee_login_attempts");
       localStorage.removeItem("committee_login_lockout_until");
 

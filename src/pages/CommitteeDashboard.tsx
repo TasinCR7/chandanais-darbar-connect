@@ -59,35 +59,30 @@ export default function CommitteeDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const loadDashboard = async (authId: string) => {
+  const loadDashboard = async (sessionToken: string) => {
     try {
-      // 1. Verify Member Profile
-      const { data: memberData, error: memberErr } = await supabase
-        .from("committee_members")
-        .select("id, name, designation")
-        .eq("id", authId)
-        .eq("is_active", true)
-        .single();
-        
-      if (memberErr || !memberData) {
+      // Call the secure RPC function to get all dashboard data in a single call (prevents UUID spoofing)
+      const { data, error } = await supabase.rpc("get_committee_dashboard_data", {
+        p_session_token: sessionToken
+      });
+
+      if (error || !data) {
         handleLogout();
         return;
       }
-      setMember(memberData);
-      // 2. Load Active Voting Topics, All Votes, All Comments, and Committee Notices
-      const [topicsRes, votesRes, commentsRes, noticesRes, contributionsRes] = await Promise.all([
-        supabase.from("vote_topics").select("*").eq("is_active", true).order("created_at", { ascending: false }),
-        supabase.from("votes").select("*"),
-        supabase.from("committee_comments").select("*").order("created_at", { ascending: false }),
-        supabase.from("committee_notices").select("*").eq("is_active", true).order("created_at", { ascending: false }),
-        supabase.from("committee_contributions").select("*").eq("name", memberData.name).order("created_at", { ascending: false })
-      ]);
-        
-      if (topicsRes.data) setTopics(topicsRes.data);
-      if (votesRes.data) setVotesData(votesRes.data);
-      if (commentsRes.data) setCommentsList(commentsRes.data);
-      if (noticesRes.data) setNotices(noticesRes.data);
-      if (contributionsRes.data) setContributions(contributionsRes.data as Contribution[]);
+
+      const res = data as any;
+      if (res.error) {
+        handleLogout();
+        return;
+      }
+
+      if (res.member) setMember(res.member);
+      if (res.topics) setTopics(res.topics);
+      if (res.votes) setVotesData(res.votes);
+      if (res.comments) setCommentsList(res.comments);
+      if (res.notices) setNotices(res.notices);
+      if (res.contributions) setContributions(res.contributions as Contribution[]);
 
     } catch (err) {
       console.error(err);
@@ -122,17 +117,18 @@ export default function CommitteeDashboard() {
       return;
     }
 
-    // Since we are enforcing one vote per topic, we do not need to delete previous votes.
-    const { error } = await supabase.from("votes").insert({
-      topic_id: topicId,
-      user_id: member.id,
-      vote: voteType
+    const sessionToken = localStorage.getItem("committee_auth");
+    if (!sessionToken) return;
+
+    const { error } = await supabase.rpc("cast_committee_vote", {
+      p_session_token: sessionToken,
+      p_topic_id: topicId,
+      p_vote: voteType
     });
 
     if (!error) {
       toast({ title: "সফল", description: "আপনার মতামত সংরক্ষিত হয়েছে।" });
-      const authId = localStorage.getItem("committee_auth");
-      if (authId) loadDashboard(authId);
+      loadDashboard(sessionToken);
     } else {
       toast({ title: "ব্যর্থ", description: "ভোট সেভ করা সম্ভব হয়নি।", variant: "destructive" });
     }
@@ -142,15 +138,17 @@ export default function CommitteeDashboard() {
     if (!comment.trim() || !member) return;
     setSubmitLoading(true);
     try {
-      const { error } = await supabase.from("committee_comments").insert({
-        user_id: member.id,
-        message: comment.trim()
+      const sessionToken = localStorage.getItem("committee_auth");
+      if (!sessionToken) return;
+
+      const { error } = await supabase.rpc("add_committee_comment", {
+        p_session_token: sessionToken,
+        p_message: comment.trim()
       });
       if (!error) {
         toast({ title: "সফল", description: "আপনার মন্তব্য পাঠানো হয়েছে।" });
         setComment("");
-        const authId = localStorage.getItem("committee_auth");
-        if (authId) loadDashboard(authId);
+        loadDashboard(sessionToken);
       } else {
         toast({ title: "ব্যর্থ", description: "মন্তব্য পাঠানো সম্ভব হয়নি।", variant: "destructive" });
       }

@@ -81,12 +81,16 @@ const Chatbot: React.FC = () => {
               <div className="flex items-center gap-1">
                 <button 
                   onClick={() => setIsMinimized(!isMinimized)}
+                  title={isMinimized ? "উইন্ডো বড় করুন" : "উইন্ডো ছোট করুন"}
+                  aria-label={isMinimized ? "উইন্ডো বড় করুন" : "উইন্ডো ছোট করুন"}
                   className="p-1.5 hover:bg-white/10 rounded-lg text-white transition-colors"
                 >
                   {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
                 </button>
                 <button 
                   onClick={() => setIsOpen(false)}
+                  title="বন্ধ করুন"
+                  aria-label="বন্ধ করুন"
                   className="p-1.5 hover:bg-white/10 rounded-lg text-white transition-colors"
                 >
                   <X size={18} />
@@ -171,6 +175,8 @@ const Chatbot: React.FC = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
+        title="এআই চ্যাট ওপেন করুন"
+        aria-label="এআই চ্যাট ওপেন করুন"
         className={`bg-gold-gradient p-3.5 rounded-full shadow-2xl gold-glow-hover transition-all duration-300 ring-2 ring-gold/20 ${isOpen ? 'rotate-90 hidden' : ''}`}
       >
         <MessageSquare className="text-white w-7 h-7" />

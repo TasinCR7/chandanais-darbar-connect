@@ -33,18 +33,43 @@ const VoteTopicManager = () => {
   const { toast } = useToast();
 
   const fetchTopics = async () => {
-    const { data } = await supabase.from("vote_topics").select("*").order("created_at", { ascending: false });
-    if (data) setTopics(data as VoteTopic[]);
+    const { data, error } = await supabase.from("vote_topics").select("*").order("created_at", { ascending: false });
+    if (error) {
+      toast({ title: "ত্রুটি", description: "ভোটের বিষয়সমূহ লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else if (data) {
+      setTopics(data as VoteTopic[]);
+    }
   };
 
   const fetchComments = async () => {
-    const { data } = await supabase.from("committee_comments").select("*").order("created_at", { ascending: false });
-    if (data) setComments(data);
+    const { data, error } = await supabase.from("committee_comments").select("*").order("created_at", { ascending: false });
+    if (error) {
+      toast({ title: "ত্রুটি", description: "মন্তব্যসমূহ লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else if (data) {
+      setComments(data);
+    }
   };
 
   useEffect(() => { 
-    fetchTopics(); 
-    fetchComments();
+    let isMounted = true;
+    const load = async () => {
+      const { data: topicsData, error: topicsError } = await supabase.from("vote_topics").select("*").order("created_at", { ascending: false });
+      const { data: commentsData, error: commentsError } = await supabase.from("committee_comments").select("*").order("created_at", { ascending: false });
+      if (isMounted) {
+        if (topicsError) {
+          toast({ title: "ত্রুটি", description: "ভোটের বিষয়সমূহ লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+        } else if (topicsData) {
+          setTopics(topicsData as VoteTopic[]);
+        }
+        if (commentsError) {
+          toast({ title: "ত্রুটি", description: "মন্তব্যসমূহ লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+        } else if (commentsData) {
+          setComments(commentsData);
+        }
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   const addTopic = async () => {
@@ -84,22 +109,35 @@ const VoteTopicManager = () => {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("vote_topics").update({ is_active: !current }).eq("id", id);
-    fetchTopics();
+    const { error } = await supabase.from("vote_topics").update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "অবস্থা পরিবর্তন করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else {
+      toast({ title: "সফল", description: "ভোটের বিষয় সক্রিয় অবস্থা পরিবর্তন করা হয়েছে।" });
+      fetchTopics();
+    }
   };
 
   const deleteTopic = async (id: string) => {
     if (!window.confirm("আপনি কি নিশ্চিতভাবে এই ভোটের বিষয়টি মুছে ফেলতে চান?")) return;
-    await supabase.from("vote_topics").delete().eq("id", id);
-    fetchTopics();
-    toast({ title: "মুছে ফেলা হয়েছে" });
+    const { error } = await supabase.from("vote_topics").delete().eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "মুছে ফেলতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else {
+      toast({ title: "মুছে ফেলা হয়েছে" });
+      fetchTopics();
+    }
   };
 
   const deleteComment = async (id: string) => {
     if (!window.confirm("আপনি কি নিশ্চিতভাবে এই মন্তব্যটি মুছে ফেলতে চান?")) return;
-    await supabase.from("committee_comments").delete().eq("id", id);
-    fetchComments();
-    toast({ title: "মতামত মুছে ফেলা হয়েছে" });
+    const { error } = await supabase.from("committee_comments").delete().eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "মুছে ফেলতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else {
+      toast({ title: "মতামত মুছে ফেলা হয়েছে" });
+      fetchComments();
+    }
   };
 
   const parseTopicData = (topic: VoteTopic) => {

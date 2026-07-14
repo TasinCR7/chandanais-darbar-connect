@@ -44,15 +44,34 @@ const CommitteeManager = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const fetchMembers = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("committee_members")
       .select("id, name, designation, phone, image_url, display_order, is_active, has_pin")
       .order("display_order", { ascending: true });
-    if (data) setMembers(data as Member[]);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "সদস্য তালিকা লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else if (data) {
+      setMembers(data as Member[]);
+    }
   };
 
   useEffect(() => {
-    fetchMembers();
+    let isMounted = true;
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("committee_members")
+        .select("id, name, designation, phone, image_url, display_order, is_active, has_pin")
+        .order("display_order", { ascending: true });
+      if (isMounted) {
+        if (error) {
+          toast({ title: "ত্রুটি", description: "সদস্য তালিকা লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+        } else if (data) {
+          setMembers(data as Member[]);
+        }
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
   const handleAdd = async () => {
@@ -103,8 +122,13 @@ const CommitteeManager = () => {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("committee_members").update({ is_active: !current }).eq("id", id);
-    fetchMembers();
+    const { error } = await supabase.from("committee_members").update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "অবস্থা পরিবর্তন করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else {
+      toast({ title: "সফল", description: "সদস্যের সক্রিয় অবস্থা পরিবর্তন করা হয়েছে।" });
+      fetchMembers();
+    }
   };
 
   const deleteMember = async (id: string, imageUrl: string | null) => {
@@ -121,9 +145,13 @@ const CommitteeManager = () => {
         console.error("Storage delete error:", err);
       }
     }
-    await supabase.from("committee_members").delete().eq("id", id);
-    toast({ title: "মুছে ফেলা হয়েছে" });
-    fetchMembers();
+    const { error } = await supabase.from("committee_members").delete().eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "মুছে ফেলতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else {
+      toast({ title: "মুছে ফেলা হয়েছে" });
+      fetchMembers();
+    }
   };
 
   const handleResetPin = async (id: string) => {
@@ -206,6 +234,7 @@ const CommitteeManager = () => {
                     onClick={() => handleResetPin(m.id)}
                     className="p-2 rounded-lg text-gold hover:bg-gold/10 transition-colors"
                     title="PIN রিসেট করুন"
+                    aria-label="PIN রিসেট করুন"
                   >
                     <RotateCcw size={16} />
                   </button>
@@ -213,13 +242,16 @@ const CommitteeManager = () => {
                 <button
                   onClick={() => toggleActive(m.id, m.is_active)}
                   className={`p-2 rounded-lg transition-colors ${m.is_active ? "text-green-400 hover:bg-green-400/10" : "text-muted-foreground hover:bg-muted"}`}
-                  title={m.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}
+                  title={m.is_active ? "নিষ্ক্রিয় করুন" : "সক্রিয় করুন"}
+                  aria-label={m.is_active ? "সদস্য নিষ্ক্রিয় করুন" : "সদস্য সক্রিয় করুন"}
                 >
                   {m.is_active ? <Eye size={16} /> : <EyeOff size={16} />}
                 </button>
                 <button
                   onClick={() => deleteMember(m.id, m.image_url)}
                   className="p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                  title="মুছে ফেলুন"
+                  aria-label="মুছে ফেলুন"
                 >
                   <Trash2 size={16} />
                 </button>

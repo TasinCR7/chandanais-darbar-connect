@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,9 +10,7 @@ import Layout from "./components/Layout";
 import PremiumLoader from "./components/PremiumLoader";
 import ScrollToTop from "./components/ScrollToTop";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import ProtectedRoute from "./components/ProtectedRoute";
 import RouteProgressBar from "./components/RouteProgressBar";
 
 import MaintenanceGuard from "./components/MaintenanceGuard";

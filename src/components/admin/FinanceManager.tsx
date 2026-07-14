@@ -37,14 +37,35 @@ const FinanceManager = () => {
   const { toast } = useToast();
 
   const fetchFinances = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("finances")
       .select("*")
       .order("date", { ascending: false });
-    if (data) setFinances(data as Finance[]);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "অর্থ হিসাব লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else if (data) {
+      setFinances(data as Finance[]);
+    }
   };
 
-  useEffect(() => { fetchFinances(); }, []);
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("finances")
+        .select("*")
+        .order("date", { ascending: false });
+      if (isMounted) {
+        if (error) {
+          toast({ title: "ত্রুটি", description: "অর্থ হিসাব লোড করতে ব্যর্থ হয়েছে", variant: "destructive" });
+        } else if (data) {
+          setFinances(data as Finance[]);
+        }
+      }
+    };
+    load();
+    return () => { isMounted = false; };
+  }, []);
 
   const addFinance = async () => {
     if (!category || !amount || !date) {
@@ -98,8 +119,13 @@ const FinanceManager = () => {
   };
 
   const deleteFinance = async (id: string) => {
-    await supabase.from("finances").delete().eq("id", id);
-    fetchFinances();
+    const { error } = await supabase.from("finances").delete().eq("id", id);
+    if (error) {
+      toast({ title: "ত্রুটি", description: "লেনদেন মুছে ফেলতে ব্যর্থ হয়েছে", variant: "destructive" });
+    } else {
+      toast({ title: "সফল", description: "লেনদেনটি সফলভাবে মুছে ফেলা হয়েছে।" });
+      fetchFinances();
+    }
   };
 
   // Filtered data
@@ -135,6 +161,16 @@ const FinanceManager = () => {
 
   // PDF generation
   const generatePDF = async () => {
+    const escapeHtml = (text: string | null | undefined) => {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
     const title = viewMode === "monthly"
       ? `মাসিক আয়-ব্যয় রিপোর্ট — ${selectedMonth}`
       : `বার্ষিক আয়-ব্যয় রিপোর্ট — ${selectedMonth.slice(0, 4)}`;
@@ -279,7 +315,7 @@ const FinanceManager = () => {
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;${i < incomeCats.length - 1 ? 'border-bottom:1px dashed #e0f2e5;' : ''}">
                     <div style="display:flex;align-items:center;gap:10px;">
                       <div style="width:7px;height:7px;border-radius:2px;background:linear-gradient(135deg,#4caf50,#2e7d32);"></div>
-                      <span style="color:#333;font-size:12px;font-weight:700;">${c.name}</span>
+                      <span style="color:#333;font-size:12px;font-weight:700;">${escapeHtml(c.name)}</span>
                     </div>
                     <span style="font-weight:900;color:#1b5e20;font-size:13px;font-family:'Courier New',monospace;background:#e8f5e9;padding:3px 10px;border-radius:8px;">৳${c.total.toLocaleString("bn-BD")}</span>
                   </div>
@@ -296,7 +332,7 @@ const FinanceManager = () => {
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;${i < expenseCats.length - 1 ? 'border-bottom:1px dashed #ffebee;' : ''}">
                     <div style="display:flex;align-items:center;gap:10px;">
                       <div style="width:7px;height:7px;border-radius:2px;background:linear-gradient(135deg,#ef5350,#c62828);"></div>
-                      <span style="color:#333;font-size:12px;font-weight:700;">${c.name}</span>
+                      <span style="color:#333;font-size:12px;font-weight:700;">${escapeHtml(c.name)}</span>
                     </div>
                     <span style="font-weight:900;color:#b71c1c;font-size:13px;font-family:'Courier New',monospace;background:#ffebee;padding:3px 10px;border-radius:8px;">৳${c.total.toLocaleString("bn-BD")}</span>
                   </div>
@@ -344,9 +380,9 @@ const FinanceManager = () => {
                         ${f.type === "income" ? "✦ আয়" : "✦ ব্যয়"}
                       </span>
                     </td>
-                    <td style="padding:13px 20px;color:#333;font-weight:700;border-bottom:1px solid #eef2ef;">${f.category}</td>
+                    <td style="padding:13px 20px;color:#333;font-weight:700;border-bottom:1px solid #eef2ef;">${escapeHtml(f.category)}</td>
                     <td style="padding:13px 20px;text-align:right;font-weight:900;font-family:'Courier New',monospace;border-bottom:1px solid #eef2ef;color:${f.type === 'income' ? '#1b5e20' : '#b71c1c'};font-size:13px;">৳${Number(f.amount).toLocaleString("bn-BD")}</td>
-                    <td style="padding:13px 20px;color:#888;font-size:11px;border-bottom:1px solid #eef2ef;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.description || "—"}</td>
+                    <td style="padding:13px 20px;color:#888;font-size:11px;border-bottom:1px solid #eef2ef;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(f.description || "—")}</td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -593,10 +629,10 @@ const FinanceManager = () => {
                   <td className="p-3 text-right font-mono font-bold text-foreground">৳{Number(f.amount).toLocaleString("bn-BD")}</td>
                   <td className="p-3 text-muted-foreground">{f.description || "-"}</td>
                   <td className="p-3 flex items-center gap-1">
-                    <button onClick={() => startEdit(f)} className="text-amber-500/60 hover:text-amber-500 transition-colors">
+                    <button onClick={() => startEdit(f)} title="সম্পাদনা করুন" aria-label="সম্পাদনা করুন" className="text-amber-500/60 hover:text-amber-500 transition-colors">
                       <Pencil size={16} />
                     </button>
-                    <button onClick={() => deleteFinance(f.id)} className="text-red-500/60 hover:text-red-500 transition-colors">
+                    <button onClick={() => deleteFinance(f.id)} title="মুছে ফেলুন" aria-label="মুছে ফেলুন" className="text-red-500/60 hover:text-red-500 transition-colors">
                       <Trash2 size={16} />
                     </button>
                   </td>

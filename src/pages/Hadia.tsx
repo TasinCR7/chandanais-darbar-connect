@@ -79,7 +79,33 @@ const Hadia = () => {
 
   const handleDonate = async () => {
     if (!canDonate) return;
+
+    // Client-side rate limiting (spam protection)
+    const nowTime = Date.now();
+    const windowMs = 5 * 60 * 1000; // 5 minutes
+    const maxSubmissions = 3;
+    
+    let submissionTimes: number[] = [];
+    try {
+      submissionTimes = JSON.parse(localStorage.getItem("last_donation_submissions") || "[]");
+    } catch (e) {
+      submissionTimes = [];
+    }
+    
+    // Filter timestamps within the window
+    submissionTimes = submissionTimes.filter((time: number) => nowTime - time < windowMs);
+    
+    if (submissionTimes.length >= maxSubmissions) {
+      const minutesLeft = Math.ceil((windowMs - (nowTime - submissionTimes[0])) / 60000);
+      toast.error(`নিরাপত্তার স্বার্থে প্রতি ৫ মিনিটে সর্বোচ্চ ৩ বার হাদিয়া দেওয়া যাবে। অনুগ্রহ করে ${minutesLeft} মিনিট পর আবার চেষ্টা করুন।`);
+      return;
+    }
+
     setIsSubmitting(true);
+
+    // Save submission timestamp on success
+    submissionTimes.push(nowTime);
+    localStorage.setItem("last_donation_submissions", JSON.stringify(submissionTimes));
     
     const donationId = generateUUID();
     
