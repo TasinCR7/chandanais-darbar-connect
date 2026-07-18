@@ -78,7 +78,7 @@
     content: '';
     position: fixed;
     inset: 0;
-    background-image: url('/darbar-mazar.png');
+    background-image: url('/darbar-mazar.webp');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
