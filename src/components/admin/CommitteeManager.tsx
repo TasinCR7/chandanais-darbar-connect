@@ -72,7 +72,7 @@ const CommitteeManager = () => {
     };
     load();
     return () => { isMounted = false; };
-  }, []);
+  }, [toast]);
 
   const handleAdd = async () => {
     if (!name.trim() || !designation.trim()) {

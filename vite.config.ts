@@ -40,6 +40,7 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
+      modulePreload: false,
       target: 'es2020',
       cssCodeSplit: true,
       chunkSizeWarningLimit: 600,

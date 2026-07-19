@@ -70,7 +70,7 @@ const VoteTopicManager = () => {
     };
     load();
     return () => { isMounted = false; };
-  }, []);
+  }, [toast]);
 
   const addTopic = async () => {
     if (!title.trim()) return;

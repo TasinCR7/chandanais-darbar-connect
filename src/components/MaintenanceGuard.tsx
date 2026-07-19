@@ -36,7 +36,7 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
       }
       return undefined;
     },
-    staleTime: 60000, // Match Layout's staleTime to prevent extra refetches
+    staleTime: 5 * 60 * 1000, // Match Layout's staleTime to prevent extra refetches
   });
 
   // Committee members log in via phone verification stored in localStorage

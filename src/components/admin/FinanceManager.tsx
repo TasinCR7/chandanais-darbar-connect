@@ -65,7 +65,7 @@ const FinanceManager = () => {
     };
     load();
     return () => { isMounted = false; };
-  }, []);
+  }, [toast]);
 
   const addFinance = async () => {
     if (!category || !amount || !date) {

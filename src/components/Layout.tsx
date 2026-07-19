@@ -90,7 +90,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
       return undefined;
     },
-    staleTime: 60000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
@@ -107,8 +107,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .order('created_at', { ascending: false });
       return data?.map(n => n.title) ?? [];
     },
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
 
   const scrollingNotices = dbNotices.length > 0 
