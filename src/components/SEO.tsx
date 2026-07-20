@@ -52,7 +52,7 @@ const SEO = ({ title, description, canonical, keywords, type = "website", faq, e
       },
       "telephone": "+8801819385557",
       "sameAs": [
-        "https://www.facebook.com/ChandanaishDarbar",
+        "https://www.facebook.com/Torikaye.Chandanaishi.Al.Maijvandri",
         "https://www.youtube.com/@ChandanaishDarbar"
       ]
     },

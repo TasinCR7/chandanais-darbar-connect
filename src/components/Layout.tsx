@@ -400,7 +400,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               {/* Social Links */}
               <div className="flex items-center gap-3 mt-4">
                 <a
-                  href="https://www.facebook.com/chandanaishdarbar"
+                  href="https://www.facebook.com/Torikaye.Chandanaishi.Al.Maijvandri"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-9 h-9 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/40 transition-all duration-300 hover:scale-110"
