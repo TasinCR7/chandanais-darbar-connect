@@ -597,76 +597,121 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
 
   drawOrgHeader(
     doc,
-    'MEMBER ACCOUNT STATEMENT',
-    'Official Transaction Ledger'
+    'MEMBER BANK STATEMENT OF ACCOUNT',
+    `Official Bank Ledger Statement — ${member.member_code}`
   );
 
-  // 2. MEMBER INFO BOX & QR
+  // 2. MEMBER ACCOUNT DETAILS & QR
   const infoY = 60;
-  const qrDataS = `Statement: ${member.member_code}\nMember: ${member.full_name}\nStatus: ${calculateDues(member, payments).dues > 0 ? 'Dues Pending' : 'Clear'}`;
+  const stats = calculateDues(member, payments);
+  const isCleared = stats.dues <= 0;
+  const qrDataS = `Bank Statement: ${member.member_code}\nAccount Holder: ${member.full_name}\nTotal Paid: BDT ${stats.totalPaid}\nOutstanding Due: BDT ${stats.dues}\nStatus: ${isCleared ? 'CLEARED' : 'PENDING'}\nDate: ${new Date().toISOString().slice(0, 10)}`;
+  
   try {
-    const qrDataUrlS = await QRCode.toDataURL(qrDataS, { margin: 1, width: 80 });
-    doc.addImage(qrDataUrlS, 'PNG', pageWidth - 38, infoY - 8, 25, 25);
+    const qrDataUrlS = await QRCode.toDataURL(qrDataS, { margin: 1, width: 90 });
+    doc.addImage(qrDataUrlS, 'PNG', pageWidth - 42, infoY - 6, 28, 28);
   } catch (e) { console.warn(e); }
 
   doc.setTextColor(0, 0, 0);
   doc.setFont(BANGLA_FONT_NAME, 'bold');
   doc.setFontSize(11);
-  doc.text('ACCOUNT HOLDER DETAILS', 14, infoY);
-  doc.setDrawColor(220, 220, 220);
-  doc.line(14, infoY + 3, 100, infoY + 3);
+  doc.text('ACCOUNT HOLDER INFORMATION / গ্রাহকের তথ্য', 14, infoY);
+  doc.setDrawColor(...PDF_COLORS.accent);
+  doc.setLineWidth(0.4);
+  doc.line(14, infoY + 3, 115, infoY + 3);
   
-  doc.setFontSize(9);
-  doc.text(`Name: ${member.full_name}`, 14, infoY + 12);
-  doc.text(`Member ID: ${member.member_code}`, 14, infoY + 18);
-  doc.text(`Phone: ${member.phone || '-'}`, 14, infoY + 24);
-  doc.text(`Area: ${member.area || '-'}`, 110, infoY + 12);
-  doc.text(`Joined: ${member.joined_date}`, 110, infoY + 18);
+  doc.setFont(BANGLA_FONT_NAME, 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text(`Account Name: ${member.full_name}`, 14, infoY + 11);
+  doc.text(`Account / Member ID: ${member.member_code}`, 14, infoY + 17);
+  doc.text(`Mobile / Contact: ${member.phone || '-'}`, 14, infoY + 23);
 
-  // 3. SUMMARY BANNER
-  const stats = calculateDues(member, payments);
-  const summaryY = infoY + 35;
-  
-  doc.setFillColor(245, 245, 245);
-  doc.rect(14, summaryY, pageWidth - 28, 20, 'F');
-  doc.setDrawColor(220, 220, 220);
-  doc.rect(14, summaryY, pageWidth - 28, 20);
-  
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text('TOTAL EXPECTED (CHARGES)', 18, summaryY + 8);
-  doc.text('TOTAL PAID (CREDITS)', 80, summaryY + 8);
-  doc.text('OUTSTANDING BALANCE', 145, summaryY + 8);
-  
-  doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0);
-  doc.text(formatBDT(stats.totalExpected), 18, summaryY + 15);
-  doc.setTextColor(22, 122, 50);
-  doc.text(formatBDT(stats.totalPaid), 80, summaryY + 15);
-  doc.setTextColor(stats.dues > 0 ? 180 : 22, stats.dues > 0 ? 24 : 122, stats.dues > 0 ? 24 : 50);
-  doc.text(formatBDT(stats.dues), 145, summaryY + 15);
+  doc.text(`Branch / Area: ${member.area || '-'}`, 105, infoY + 11);
+  doc.text(`Account Created: ${formatDateNice(member.joined_date)}`, 105, infoY + 17);
+  doc.text(`Monthly Rate: ${formatBDT(member.monthly_rate || 0)} / Mo`, 105, infoY + 23);
+
+  // 3. BANK SUMMARY DASHBOARD (4-COLUMN GRID)
+  const summaryY = infoY + 32;
+  const colW = (pageWidth - 28) / 4;
+
+  // Box 1: Total Expected (Debit)
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(14, summaryY, colW - 2, 22, 1.5, 1.5, 'FD');
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('TOTAL CHARGES (DEBIT)', 18, summaryY + 7);
+  doc.setFontSize(10.5);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setTextColor(30, 41, 59);
+  doc.text(formatBDT(stats.totalExpected), 18, summaryY + 16);
+
+  // Box 2: Total Paid (Credit)
+  const b2X = 14 + colW;
+  doc.setFillColor(...PDF_COLORS.successFill);
+  doc.setDrawColor(...PDF_COLORS.successBorder);
+  doc.roundedRect(b2X, summaryY, colW - 2, 22, 1.5, 1.5, 'FD');
+  doc.setFontSize(6.5);
+  doc.setTextColor(22, 101, 52);
+  doc.text('TOTAL DEPOSITS (CREDIT)', b2X + 4, summaryY + 7);
+  doc.setFontSize(10.5);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setTextColor(...PDF_COLORS.successText);
+  doc.text(formatBDT(stats.totalPaid), b2X + 4, summaryY + 16);
+
+  // Box 3: Outstanding Ledger Balance
+  const b3X = 14 + colW * 2;
+  const dueFillColor = stats.dues > 0 ? PDF_COLORS.dueFill : PDF_COLORS.successFill;
+  const dueBorderColor = stats.dues > 0 ? PDF_COLORS.dueBorder : PDF_COLORS.successBorder;
+  const dueTextColor = stats.dues > 0 ? PDF_COLORS.dueText : PDF_COLORS.successText;
+  doc.setFillColor(...dueFillColor);
+  doc.setDrawColor(...dueBorderColor);
+  doc.roundedRect(b3X, summaryY, colW - 2, 22, 1.5, 1.5, 'FD');
+  doc.setFontSize(6.5);
+  doc.setTextColor(stats.dues > 0 ? 153 : 22, stats.dues > 0 ? 27 : 101, stats.dues > 0 ? 27 : 52);
+  doc.text('LEDGER BALANCE DUE', b3X + 4, summaryY + 7);
+  doc.setFontSize(10.5);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setTextColor(...dueTextColor);
+  doc.text(formatBDT(stats.dues), b3X + 4, summaryY + 16);
+
+  // Box 4: Account Status
+  const b4X = 14 + colW * 3;
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(...PDF_COLORS.accent);
+  doc.roundedRect(b4X, summaryY, colW - 2, 22, 1.5, 1.5, 'FD');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...PDF_COLORS.accentDark);
+  doc.text('ACCOUNT STATUS', b4X + 4, summaryY + 7);
+  doc.setFontSize(10);
+  doc.setFont(BANGLA_FONT_NAME, 'bold');
+  doc.setTextColor(isCleared ? 22 : 180, isCleared ? 122 : 24, isCleared ? 50 : 24);
+  doc.text(isCleared ? 'CLEARED ✅' : 'PENDING ⚠️', b4X + 4, summaryY + 16);
 
   // 4. TRANSACTION LEDGER
   const txs: any[] = [];
   
-  // Add monthly charges
+  // Add monthly subscription charges
   stats.rows.forEach(r => {
     txs.push({
       date: `${r.year}-${String(r.month).padStart(2, '0')}-01`,
-      desc: `${MONTHS_EN[r.month-1]} ${r.year} - Monthly Subscription`,
-      ref: 'System Charge',
+      desc: `Subscription Charge: ${MONTHS_EN[r.month-1]} ${r.year}`,
+      ref: 'SYSTEM-DEBIT',
+      channel: 'Auto Charge',
       debit: r.expected,
       credit: 0
     });
   });
   
-  // Add payments
+  // Add approved payments
   payments.forEach(p => {
     if (p.status === 'approved' || !p.status) {
       txs.push({
         date: p.payment_date,
-        desc: `${MONTHS_EN[p.for_month-1]} ${p.for_year} - Donation/Payment`,
-        ref: p.transaction_ref || methodLabel(p.method),
+        desc: `Deposit Payment: ${MONTHS_EN[p.for_month-1]} ${p.for_year}`,
+        ref: p.transaction_ref || 'TRX-REF',
+        channel: methodLabel(p.method),
         debit: 0,
         credit: p.amount
       });
@@ -675,46 +720,54 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   
   txs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
-  let runningDue = 0;
+  let runningBalance = 0;
   const tableData = txs.map(t => {
-    runningDue += (t.debit - t.credit);
+    runningBalance += (t.debit - t.credit);
     return [
-      t.date,
+      formatDateNice(t.date),
       t.desc,
-      t.ref,
-      t.debit > 0 ? formatBDT(t.debit) : '',
-      t.credit > 0 ? formatBDT(t.credit) : '',
-      formatBDT(Math.max(0, runningDue))
+      `${t.channel} (${t.ref})`,
+      t.debit > 0 ? formatBDT(t.debit) : '-',
+      t.credit > 0 ? formatBDT(t.credit) : '-',
+      formatBDT(Math.max(0, runningBalance))
     ];
   });
 
   autoTable(doc, {
     startY: summaryY + 28,
-    head: [['Date', 'Description', 'Reference', 'Debit (Charge)', 'Credit (Pay)', 'Balance Due']],
+    head: [['Date (তারিখ)', 'Particulars (বিবরণী)', 'Channel / Ref (মেথড/আইডি)', 'Debit (ডেবিট ৳)', 'Credit (ক্রেডিট ৳)', 'Balance Due (জের ৳)']],
     body: tableData,
-    headStyles: { fillColor: [30, 30, 30], textColor: 255, font: BANGLA_FONT_NAME, fontSize: 9 },
-    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8.5 },
+    headStyles: { fillColor: [18, 18, 18], textColor: [255, 255, 255], font: BANGLA_FONT_NAME, fontSize: 8.5, fontStyle: 'bold' },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8 },
     columnStyles: {
-      3: { halign: 'right' },
-      4: { halign: 'right' },
-      5: { halign: 'right', fontStyle: 'bold' }
+      0: { cellWidth: 28 },
+      1: { cellWidth: 55 },
+      2: { cellWidth: 35 },
+      3: { halign: 'right', cellWidth: 22 },
+      4: { halign: 'right', cellWidth: 22, textColor: [22, 101, 52] },
+      5: { halign: 'right', cellWidth: 24, fontStyle: 'bold' }
     },
-    alternateRowStyles: { fillColor: [252, 252, 252] },
-    margin: { bottom: 25 },
+    alternateRowStyles: { fillColor: [250, 250, 250] },
+    margin: { bottom: 35 },
     didDrawPage: (data) => {
-      // Small header for overflow pages
       if (data.pageNumber > 1) {
-        doc.setFillColor(30, 30, 30);
+        doc.setFillColor(18, 18, 18);
         doc.rect(0, 0, pageWidth, 12, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(8);
-        doc.text(`Statement: ${member.full_name} (${member.member_code}) - Continued`, 14, 8);
+        doc.text(`Bank Statement: ${member.full_name} (${member.member_code}) — Continued`, 14, 8);
       }
     }
   });
 
-  stampFooters(doc, 'This is a computer generated bank statement. For any queries, contact the committee.');
-  doc.save(`Statement-${member.member_code}.pdf`);
+  // 5. OFFICIAL SIGNATURES & VERIFICATION STAMP AT END OF LEDGER
+  const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : 220;
+  if (finalY + 30 < pageHeight - 20) {
+    drawVerificationStamp(doc, finalY);
+  }
+
+  stampFooters(doc, 'Computer Generated Official Bank Statement of Account — Chandanaish Darbar Sharif Treasury');
+  doc.save(`Bank-Statement-${member.member_code}.pdf`);
 }
 
 export async function downloadReceiptPDF(
