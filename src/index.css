@@ -436,9 +436,12 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Ensure Smooth Momentum Scrolling on iOS */
-    .overflow-y-auto, .overflow-x-auto, .overflow-auto, body {
-      -webkit-overflow-scrolling: touch;
+    /* iOS WebKit Hardware Acceleration for Fixed Elements */
+    .fixed, .sticky {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     /* Fix iOS 100vh Layout Jumping */
