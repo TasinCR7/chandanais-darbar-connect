@@ -85,31 +85,37 @@ const Doa = () => {
 
     setIsSubmitting(true);
 
-    const { error } = await supabase.from("submissions").insert({
-      type: "doa",
-      name: trimmedName,
-      phone: formData.phone.trim() || null,
-      subject: formData.subject,
-      address: formData.address.trim() || null,
-      details: trimmedDetails,
-    });
-
-    if (error) {
-      toast({
-        title: "ত্রুটি হয়েছে",
-        description: "আবেদন পাঠাতে সমস্যা হয়েছে, আবার চেষ্টা করুন।",
-        variant: "destructive",
+    try {
+      const { error } = await supabase.from("submissions").insert({
+        type: "doa",
+        name: trimmedName,
+        phone: formData.phone.trim() || null,
+        subject: formData.subject,
+        address: formData.address.trim() || null,
+        details: trimmedDetails,
       });
-      setIsSubmitting(false);
-      return;
-    }
 
-    // Save submission timestamp on success
-    submissionTimes.push(nowTime);
-    localStorage.setItem("last_doa_submissions", JSON.stringify(submissionTimes));
+      if (error) {
+        console.error("Supabase Doa submission error:", error);
+        toast({
+          title: "ত্রুটি হয়েছে",
+          description: "আবেদন পাঠাতে সমস্যা হয়েছে, অনুগ্রহ করে আবার চেষ্টা করুন।",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-    // Send Telegram Notification
-    const textMessage = `
+      // Save submission timestamp on success safely
+      try {
+        submissionTimes.push(nowTime);
+        localStorage.setItem("last_doa_submissions", JSON.stringify(submissionTimes));
+      } catch (storageErr) {
+        console.warn("localStorage quota/privacy error:", storageErr);
+      }
+
+      // Send Telegram Notification
+      const textMessage = `
 🤲 *নতুন দোয়া আবেদন জমা হয়েছে!*
 ━━━━━━━━━━━━━━━━━━
 👤 *নাম:* ${escapeTelegramHtml(trimmedName)}
@@ -120,28 +126,37 @@ const Doa = () => {
 ${escapeTelegramHtml(trimmedDetails)}
 ━━━━━━━━━━━━━━━━━━
 পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
-    `;
-    
-    // Send Telegram Notification in background to avoid blocking the UI
-    sendTelegramNotification(textMessage)
-      .catch((err) => console.error("Failed to send Telegram notification from Doa page:", err));
+      `;
+      
+      // Send Telegram Notification in background
+      sendTelegramNotification(textMessage)
+        .catch((err) => console.error("Failed to send Telegram notification from Doa page:", err));
 
-    toast({
-      title: "দোয়া আবেদন পাঠানো হয়েছে ✅",
-      description: "আপনার আবেদন সফলভাবে জমা হয়েছে।",
-    });
+      toast({
+        title: "দোয়া আবেদন পাঠানো হয়েছে ✅",
+        description: "আপনার আবেদন সফলভাবে জমা হয়েছে।",
+      });
 
-    setFormData({ name: "", phone: "", subject: "", address: "", details: "" });
-    setIsSubmitting(false);
-    setShowSuccess(true);
+      setFormData({ name: "", phone: "", subject: "", address: "", details: "" });
+      setIsSubmitting(false);
+      setShowSuccess(true);
+    } catch (err: any) {
+      console.error("Unexpected Doa page error:", err);
+      toast({
+        title: "ত্রুটি হয়েছে",
+        description: "নেটওয়ার্ক বা সার্ভার সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <>
       <SEO 
-        title="অনলাইন দোয়া আবেদন" 
+        title="অনলাইন দোয়া আবেদন | চন্দনাইশ দরবার শরীফ" 
         description="আপনার যেকোনো সমস্যা বা অসুস্থতার জন্য চন্দনাইশ দরবার শরীফে অনলাইনে দোয়া আবেদন করুন। পীর সাহেব হুজুর আপনার জন্য খাস দোয়া করবেন।" 
-        keywords="দোয়া আবেদন, অনলাইন দোয়া, পীর সাহেবের দোয়া, রোগমুক্তি দোয়া, চন্দনাইশ দরবার দোয়া"
+        keywords="দোয়া আবেদন, অনলাইন দোয়া, পীর সাহেবের দোয়া, রোগমুক্তি দোয়া, চন্দনাইশ দরবার দোয়া, চন্দনাইশের মাজার"
         canonical="/doa" 
       />
       <div className="py-12 md:py-20 islamic-pattern min-h-screen">
@@ -183,7 +198,7 @@ ${escapeTelegramHtml(trimmedDetails)}
                     </label>
                     <Input
                       placeholder="পূর্ণ নাম লিখুন"
-                      value={formData.name}
+                      value={formData.name || ""}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       maxLength={100}
                       className="border-gold/20 focus:border-gold"
@@ -195,7 +210,7 @@ ${escapeTelegramHtml(trimmedDetails)}
                     </label>
                     <Input
                       placeholder="০১XXXXXXXXX"
-                      value={formData.phone}
+                      value={formData.phone || ""}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       maxLength={15}
                       className="border-gold/20 focus:border-gold"
@@ -210,7 +225,7 @@ ${escapeTelegramHtml(trimmedDetails)}
                       দোয়ার বিষয় <span className="text-destructive">*</span>
                     </label>
                     <Select
-                      value={formData.subject}
+                      value={formData.subject || undefined}
                       onValueChange={(val) => setFormData({ ...formData, subject: val })}
                     >
                       <SelectTrigger className="border-gold/20 focus:border-gold">
