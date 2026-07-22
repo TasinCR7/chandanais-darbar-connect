@@ -2095,39 +2095,55 @@ const Finance = () => {
             )}
 
             {/* ===== সদস্য ব্যবস্থাপনা / Member Management ===== */}
-            <div className="card-gold rounded-2xl p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                <h3 className="font-display text-lg gold-text flex items-center gap-2">
-                  <UserSearch className="h-5 w-5" /> সদস্য ব্যবস্থাপনা (Member Management)
-                </h3>
-                <div className="flex items-center gap-2">
+            <div className="card-gold rounded-2xl p-4 sm:p-6 shadow-2xl border border-gold/20 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
+                <div>
+                  <h3 className="font-display text-lg gold-text flex items-center gap-2 font-bold">
+                    <UserSearch className="h-5 w-5 text-gold" /> সদস্য ব্যবস্থাপনা (Member Management)
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1.5 font-bangla text-xs">
+                    <span className="bg-gold/10 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full font-bold">
+                      মোট সদস্য: {toBanglaNumber(members.length)} জন
+                    </span>
+                    <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">
+                      সক্রিয়: {toBanglaNumber(members.filter(m => m.is_active !== false).length)} জন
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gold/60" />
                     <Input 
-                      placeholder="সদস্য খুঁজুন..." 
-                      className="pl-9 h-9 w-48 text-xs font-bangla"
+                      placeholder="কোড, নাম, ফোন বা এলাকা খুঁজুন..." 
+                      className="pl-9 h-10 w-64 text-xs font-bangla bg-background/50 border-gold/30 focus:border-gold focus:ring-1 focus:ring-gold rounded-xl"
                       value={memberSearchQuery}
                       onChange={(e) => setMemberSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button onClick={() => setQuickMemberOpen(true)} size="sm" className="h-9 bg-primary text-primary-foreground font-bangla">
-                    <Plus className="h-4 w-4 mr-1" /> নতুন সদস্য
+                  <Button 
+                    onClick={() => setQuickMemberOpen(true)} 
+                    size="sm" 
+                    className="h-10 bg-gold-gradient text-primary-foreground font-bangla font-semibold rounded-xl shadow-lg hover:opacity-90 px-4"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" /> নতুন সদস্য যোগ করুন
                   </Button>
                 </div>
               </div>
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px] rounded-lg border border-border/40 relative">
+
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px] rounded-xl border border-gold/20 relative shadow-inner">
                 <table className="w-full text-sm font-bangla whitespace-nowrap">
-                  <thead className="bg-muted text-left sticky top-0 z-10 shadow-sm">
+                  <thead className="bg-black/60 text-gold text-left sticky top-0 z-10 backdrop-blur-md border-b border-gold/20">
                     <tr>
-                      <th className="py-2 px-3">কোড</th>
-                      <th className="px-3">নাম</th>
-                      <th className="px-3">ফোন</th>
-                      <th className="px-3">এলাকা</th>
-                      <th className="px-3">অবস্থা</th>
-                      <th className="px-3 text-right">অ্যাকশন</th>
+                      <th className="py-3 px-4 font-bold">কোড</th>
+                      <th className="px-4 font-bold">নাম</th>
+                      <th className="px-4 font-bold">ফোন</th>
+                      <th className="px-4 font-bold">এলাকা</th>
+                      <th className="px-4 font-bold">অবস্থা</th>
+                      <th className="px-4 text-right font-bold">অ্যাকশন</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-border/20">
                     {members
                       .filter(m => 
                         m.full_name.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
@@ -2138,87 +2154,136 @@ const Finance = () => {
                       .slice()
                       .sort((a, b) => (a.member_code || '').localeCompare(b.member_code || ''))
                       .map((m) => (
-                        <tr key={m.id} className="border-t border-border/40 hover:bg-primary/5 transition-colors">
-                        <td className="py-2 px-3 font-mono text-primary">{m.member_code}</td>
-                        <td className="px-3 font-semibold">{m.full_name}</td>
-                        <td className="px-3 text-muted-foreground">{m.phone || '-'}</td>
-                        <td className="px-3 text-[12px]">{m.area || '-'}</td>
-                        <td className="px-3">
-                          <button 
-                            onClick={() => toggleMemberStatus(m.id, !!m.is_active)}
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              m.is_active ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'
-                            }`}
-                          >
-                            {m.is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                          </button>
-                        </td>
-                        <td className="px-3">
-                          <div className="flex justify-end gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-7 w-7 text-emerald-600 hover:bg-emerald-500/10"
-                              onClick={() => {
-                                setSelectedMember(m);
-                                setTab('personal');
-                              }}
-                              title="বিস্তারিত দেখুন"
+                        <tr key={m.id} className="hover:bg-gold/5 transition-colors group">
+                          <td className="py-3 px-4 font-mono font-bold text-gold">{m.member_code}</td>
+                          <td className="px-4 font-semibold text-foreground group-hover:text-gold transition-colors">{m.full_name}</td>
+                          <td className="px-4 text-muted-foreground font-mono">{m.phone || '-'}</td>
+                          <td className="px-4 text-xs">{m.area || '-'}</td>
+                          <td className="px-4">
+                            <button 
+                              onClick={() => toggleMemberStatus(m.id, !!m.is_active)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold transition-all duration-300 ${
+                                m.is_active 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' 
+                                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30'
+                              }`}
                             >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-7 w-7 text-blue-600 hover:bg-blue-500/10"
-                              onClick={() => setEditingMember(m)}
-                              title="এডিট করুন"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-7 w-7 text-rose-600 hover:bg-rose-500/10"
-                              onClick={() => deleteMember(m.id)}
-                              title="মুছে ফেলুন"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                              {m.is_active ? '✓ সক্রিয়' : '✕ নিষ্ক্রিয়'}
+                            </button>
+                          </td>
+                          <td className="px-4">
+                            <div className="flex justify-end gap-1.5">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 rounded-lg"
+                                onClick={() => {
+                                  setSelectedMember(m);
+                                  setTab('personal');
+                                }}
+                                title="ব্যাংক স্টেটমেন্ট ও বিস্তারিত দেখুন"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 rounded-lg"
+                                onClick={() => setEditingMember(m)}
+                                title="তথ্য পরিবর্তন করুন"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-lg"
+                                onClick={() => deleteMember(m.id)}
+                                title="মুছে ফেলুন"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    {members.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-12 text-muted-foreground font-bangla">
+                          <UserSearch className="h-10 w-10 mx-auto text-gold/30 mb-2" />
+                          কোনো সদস্য রেকর্ড পাওয়া যায়নি।
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
             {/* ===== Bulk CSV Upload ===== */}
-            <div className="card-gold rounded-2xl p-4 sm:p-6 bg-primary/5 border-primary/20">
-              <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
-                <Upload className="h-5 w-5" /> বাল্ক সিএসভি আপলোড (Bulk CSV Upload)
-              </h3>
+            <div className="card-gold rounded-2xl p-4 sm:p-6 bg-card/60 border border-gold/20 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+                <h3 className="font-display text-lg gold-text flex items-center gap-2 font-bold">
+                  <Upload className="h-5 w-5 text-gold" /> বাল্ক সিএসভি আপলোড (Bulk CSV Upload)
+                </h3>
+                <span className="text-xs text-muted-foreground font-bangla bg-gold/5 border border-gold/10 px-3 py-1 rounded-full">
+                  এক্সেল বা সিএসভি ফাইল থেকে একসাথে ডেটা ইমপোর্ট করুন
+                </span>
+              </div>
+
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3 relative">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-bangla">সদস্য তালিকা (CSV)</Label>
-                    <Button variant="link" size="sm" className="h-auto p-0 text-[10px]" onClick={downloadSampleMembersCsv}>
-                      <Download className="h-3 w-3 mr-1"/> টেমপ্লেট ডাউনলোড
-                    </Button>
+                <div className="border-2 border-dashed border-gold/30 hover:border-gold/60 transition-colors rounded-2xl p-5 bg-black/20 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-bold font-bangla text-foreground flex items-center gap-2">
+                        <FileSpreadsheet className="h-4 w-4 text-gold" /> সদস্য তালিকা (CSV)
+                      </Label>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 text-xs border-gold/30 hover:bg-gold/10 text-gold font-bangla rounded-lg"
+                        onClick={downloadSampleMembersCsv}
+                      >
+                        <Download className="h-3 w-3 mr-1"/> নমুনা ফাইল
+                      </Button>
+                    </div>
+                    <Input 
+                      type="file" 
+                      accept=".csv" 
+                      onChange={(e) => handleBulkUpload(e, 'members')} 
+                      className="h-10 text-xs font-mono cursor-pointer border-gold/20 bg-background/50 file:bg-gold/20 file:text-gold file:border-0 file:rounded-md file:px-2 file:py-1 hover:file:bg-gold/30" 
+                    />
                   </div>
-                  <Input type="file" accept=".csv" onChange={(e) => handleBulkUpload(e, 'members')} className="h-9 text-xs" />
-                  <p className="text-[10px] text-muted-foreground">Headers: full_name, member_code, phone, area, monthly_rate</p>
+                  <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                    কলাম শিরোনাম: full_name, member_code, phone, area, monthly_rate
+                  </p>
                 </div>
-                <div className="space-y-3 relative">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-bangla">পেমেন্ট হিস্ট্রি (CSV)</Label>
-                    <Button variant="link" size="sm" className="h-auto p-0 text-[10px]" onClick={downloadSamplePaymentsCsv}>
-                      <Download className="h-3 w-3 mr-1"/> টেমপ্লেট ডাউনলোড
-                    </Button>
+
+                <div className="border-2 border-dashed border-gold/30 hover:border-gold/60 transition-colors rounded-2xl p-5 bg-black/20 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-bold font-bangla text-foreground flex items-center gap-2">
+                        <Receipt className="h-4 w-4 text-gold" /> পেমেন্ট হিস্ট্রি (CSV)
+                      </Label>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 text-xs border-gold/30 hover:bg-gold/10 text-gold font-bangla rounded-lg"
+                        onClick={downloadSamplePaymentsCsv}
+                      >
+                        <Download className="h-3 w-3 mr-1"/> নমুনা ফাইল
+                      </Button>
+                    </div>
+                    <Input 
+                      type="file" 
+                      accept=".csv" 
+                      onChange={(e) => handleBulkUpload(e, 'payments')} 
+                      className="h-10 text-xs font-mono cursor-pointer border-gold/20 bg-background/50 file:bg-gold/20 file:text-gold file:border-0 file:rounded-md file:px-2 file:py-1 hover:file:bg-gold/30" 
+                    />
                   </div>
-                  <Input type="file" accept=".csv" onChange={(e) => handleBulkUpload(e, 'payments')} className="h-9 text-xs" />
-                  <p className="text-[10px] text-muted-foreground">Headers: member_code, amount, for_month, for_year, method, payment_date</p>
+                  <p className="text-[11px] text-muted-foreground mt-3 font-mono">
+                    কলাম শিরোনাম: member_code, amount, for_month, for_year, method, payment_date
+                  </p>
                 </div>
               </div>
             </div>
