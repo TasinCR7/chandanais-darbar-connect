@@ -137,15 +137,24 @@ const Contact = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-card/60 backdrop-blur-sm border border-gold/20 rounded-2xl p-2 shadow-xl h-full min-h-[400px] lg:min-h-full flex flex-col"
+            className="bg-card/60 backdrop-blur-sm border border-gold/20 rounded-2xl p-3 shadow-xl h-full min-h-[400px] lg:min-h-full flex flex-col gap-3"
           >
             <iframe
               title="চন্দনাইশ দরবার শরীফ মানচিত্র"
               src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1351.2555801026124!2d92.0172438419116!3d22.210989333116487!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30ad17f9c4c7b08f:0x6756e9af87130438!2z4Kaa4Kao4KeN4Kam4Kao4Ka-4KaH4Ka2IOCmpuCmsOCmrOCmvuCmsCDgprbgprDgp4Dgpqs!5e1!3m2!1sbn!2sbd!4v1773926592389!5m2!1sbn!2sbd"
-              className="w-full h-full border-0 rounded-xl flex-1"
+              className="w-full h-full border-0 rounded-xl flex-1 min-h-[350px]"
               loading="lazy"
               allowFullScreen
             />
+            <a
+              href="https://maps.google.com/?q=22.210989,92.017243"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-gold-gradient text-primary-foreground font-heading font-semibold text-center py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            >
+              <MapPin className="w-4 h-4" />
+              গুগল ম্যাপে দিকনির্দেশনা দেখুন (Get Directions)
+            </a>
           </motion.div>
         </div>
       </div>
