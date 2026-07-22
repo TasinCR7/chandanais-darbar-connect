@@ -5,10 +5,25 @@ import type { User } from "@supabase/supabase-js";
 import PremiumLoader from "@/components/PremiumLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { compressImage } from "@/utils/imageCompression";
-import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSection from "@/components/admin/AdminSection";
 import type { Tables } from "@/integrations/supabase/types";
-
+import { 
+  Bell, 
+  HandHeart, 
+  MessageSquare, 
+  Image as ImageIcon, 
+  Landmark, 
+  Users, 
+  Vote, 
+  Settings, 
+  Megaphone, 
+  RefreshCw, 
+  LogOut, 
+  ShieldCheck,
+  TrendingUp,
+  Sparkles,
+  Inbox
+} from "lucide-react";
 
 // Lazy-loaded admin sub-modules
 import AdminLogin from "@/components/admin/AdminLogin";
@@ -21,28 +36,27 @@ const DonationManager = lazy(() => import("@/components/admin/DonationManager"))
 const CommitteeBroadcast = lazy(() => import("@/components/admin/CommitteeBroadcast"));
 const SettingsManager = lazy(() => import("@/components/admin/SettingsManager"));
 const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
+
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
-
-
 
   const [notices, setNotices] = useState<Tables<"notices">[]>([]);
   const [submissions, setSubmissions] = useState<Tables<"submissions">[]>([]);
   const [gallery, setGallery] = useState<Tables<"gallery">[]>([]);
+  const [donationCount, setDonationCount] = useState<number>(0);
   const [galleryCategory, setGalleryCategory] = useState("দরবার শরীফ");
   const [galleryCaption, setGalleryCaption] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [refreshingStats, setRefreshingStats] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     let isMounted = true;
     
-    // Safety fallback: hide verifying indicator after 3 seconds
     const safetyTimer = setTimeout(() => {
       if (isMounted) setVerifying(false);
     }, 3000);
@@ -184,7 +198,6 @@ const Admin = () => {
     }
   };
 
-
   const fetchNotices = async () => {
     const { data } = await supabase.from("notices").select("*").order("created_at", { ascending: false });
     if (data) setNotices(data);
@@ -200,11 +213,29 @@ const Admin = () => {
     if (data) setGallery(data);
   };
 
+  const fetchDonationStats = async () => {
+    const { count } = await supabase.from("donations").select("*", { count: 'exact', head: true });
+    if (count !== null) setDonationCount(count);
+  };
+
+  const refreshAllStats = async () => {
+    setRefreshingStats(true);
+    await Promise.all([
+      fetchNotices(),
+      fetchSubmissions(),
+      fetchGallery(),
+      fetchDonationStats()
+    ]);
+    setRefreshingStats(false);
+    toast({ title: "তথ্য রিফ্রেশ হয়েছে", description: "ড্যাশবোর্ডের সব তথ্য আপডেট করা হয়েছে।" });
+  };
+
   useEffect(() => {
     if (isAdmin) {
       fetchNotices();
       fetchSubmissions();
       fetchGallery();
+      fetchDonationStats();
     }
   }, [isAdmin]);
 
@@ -318,7 +349,6 @@ const Admin = () => {
     fetchGallery();
   };
 
-
   if (!user || !isAdmin) {
     return (
       <AdminLogin 
@@ -332,160 +362,229 @@ const Admin = () => {
     );
   }
 
+  const activeNoticesCount = notices.filter(n => n.is_active).length;
+  const unreadSubmissionsCount = submissions.filter(s => !s.is_read).length;
+
   return (
-    <div className="py-12 md:py-20 islamic-pattern min-h-screen">
-      <div className="container mx-auto px-4 max-w-[1400px] space-y-8">
-        <div className="relative bg-card/60 backdrop-blur-xl rounded-2xl border border-gold/20 p-6 md:p-8 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+    <div className="py-10 md:py-16 islamic-pattern min-h-screen">
+      <div className="container mx-auto px-4 max-w-[1400px] space-y-6">
+        
+        {/* Header Bar */}
+        <div className="relative bg-card/70 backdrop-blur-xl rounded-2xl border border-gold/20 p-5 md:p-6 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-gold to-amber-500 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500" />
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-background relative border-2 border-gold/40 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-background relative border-2 border-gold/40 flex items-center justify-center shadow-lg">
                 <img
                   src="https://api.dicebear.com/7.x/bottts/svg?seed=tasinskder"
                   alt="Admin avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-background rounded-full animate-pulse" />
+              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-background rounded-full animate-pulse" />
             </div>
             
             <div>
-              <div className="flex flex-col sm:flex-row items-center gap-2 mb-1 justify-center sm:justify-start">
-                <h2 className="text-2xl md:text-3xl font-heading font-bold text-cream">
+              <div className="flex flex-col sm:flex-row items-center gap-2 mb-0.5 justify-center sm:justify-start">
+                <h1 className="text-xl md:text-2xl font-heading font-bold text-cream">
                   স্বাগতম, {user?.email?.split('@')[0] ?? 'Admin'}
-                </h2>
-                <span className="px-3 py-1 bg-gold/10 border border-gold/30 rounded-full text-[10px] font-bold text-gold">
-                  🛡️ সুপার এডমিন
+                </h1>
+                <span className="px-2.5 py-0.5 bg-gold/10 border border-gold/30 rounded-full text-[10px] font-bold text-gold flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-gold" /> সুপার এডমিন
                 </span>
               </div>
-              <p className="text-sm text-gold/60 font-medium">চন্দনাইশ দরবার শরীফ ড্যাশবোর্ড প্যানেল</p>
+              <p className="text-xs text-gold/70 font-medium">চন্দনাইশ দরবার শরীফ কন্ট্রোল প্যানেল</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end">
+          <div className="flex items-center gap-2.5 w-full md:w-auto justify-center md:justify-end">
             <button
-              onClick={() => window.location.reload()}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold/10 border border-gold/20 text-gold hover:bg-gold-gradient hover:text-primary-foreground px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-md"
+              onClick={refreshAllStats}
+              disabled={refreshingStats}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 px-4 py-2 rounded-xl transition-all duration-300 font-bold text-xs shadow-md disabled:opacity-50"
             >
-              🔄 রিফ্রেশ
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshingStats ? 'animate-spin' : ''}`} />
+              রিফ্রেশ
             </button>
             <button
               onClick={handleLogout}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive hover:text-white px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-md"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive hover:text-white px-4 py-2 rounded-xl transition-all duration-300 font-bold text-xs shadow-md"
             >
-              🚪 লগআউট
+              <LogOut className="w-3.5 h-3.5" />
+              লগআউট
             </button>
           </div>
         </div>
 
-        <Tabs defaultValue="notices" className="space-y-8">
-          <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-            <TabsList className="bg-card/40 backdrop-blur-md border border-gold/20 w-max min-w-full flex h-auto p-1.5 rounded-2xl shadow-xl">
-              <TabsTrigger value="notices" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">নোটিশ</TabsTrigger>
-              <TabsTrigger value="donations" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold">হাদিয়া ও নজরানা</TabsTrigger>
-              <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">প্রশ্ন ও অভিযোগ</TabsTrigger>
-              <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">গ্যালারি</TabsTrigger>
-              <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-28 px-4 py-3 rounded-xl transition-all font-bold">আয়-ব্যয়</TabsTrigger>
-              <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">কমিটি</TabsTrigger>
-              <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">ভোটিং</TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-24 px-4 py-3 rounded-xl transition-all font-bold">সেটিংস</TabsTrigger>
-              <TabsTrigger value="broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground min-w-32 px-4 py-3 rounded-xl transition-all font-bold text-premium-gold shadow-lg shadow-gold/10 ml-2">বার্তা পাঠান 📢</TabsTrigger>
+        {/* Real-time Quick Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="bg-card/60 backdrop-blur-md border border-gold/20 rounded-2xl p-4 flex items-center gap-3 shadow-lg hover:border-gold/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold shrink-0">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground font-bold">সক্রিয় নোটিশ</p>
+              <h3 className="text-xl font-heading font-black text-gold">{activeNoticesCount}টি</h3>
+            </div>
+          </div>
+
+          <div className="bg-card/60 backdrop-blur-md border border-gold/20 rounded-2xl p-4 flex items-center gap-3 shadow-lg hover:border-gold/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground font-bold">নতুন প্রশ্ন/অভিযোগ</p>
+              <h3 className="text-xl font-heading font-black text-amber-400">{unreadSubmissionsCount}টি</h3>
+            </div>
+          </div>
+
+          <div className="bg-card/60 backdrop-blur-md border border-gold/20 rounded-2xl p-4 flex items-center gap-3 shadow-lg hover:border-gold/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground font-bold">গ্যালারি ছবি</p>
+              <h3 className="text-xl font-heading font-black text-blue-400">{gallery.length}টি</h3>
+            </div>
+          </div>
+
+          <div className="bg-card/60 backdrop-blur-md border border-gold/20 rounded-2xl p-4 flex items-center gap-3 shadow-lg hover:border-gold/40 transition-all">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <HandHeart className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground font-bold">মোট হাদিয়া এনট্রি</p>
+              <h3 className="text-xl font-heading font-black text-emerald-400">{donationCount}টি</h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabbed Admin Interface */}
+        <Tabs defaultValue="notices" className="space-y-6">
+          <div className="w-full overflow-x-auto pb-2 custom-scrollbar">
+            <TabsList className="bg-card/50 backdrop-blur-md border border-gold/20 w-max min-w-full flex h-auto p-1.5 rounded-2xl shadow-xl gap-1">
+              <TabsTrigger value="notices" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5" /> নোটিশ
+              </TabsTrigger>
+              <TabsTrigger value="donations" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <HandHeart className="w-3.5 h-3.5" /> হাদিয়া ও নজরানা
+              </TabsTrigger>
+              <TabsTrigger value="submissions" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" /> প্রশ্ন ও অভিযোগ
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5" /> গ্যালারি
+              </TabsTrigger>
+              <TabsTrigger value="finance" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <Landmark className="w-3.5 h-3.5" /> আয়-ব্যয়
+              </TabsTrigger>
+              <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" /> কমিটি
+              </TabsTrigger>
+              <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <Vote className="w-3.5 h-3.5" /> ভোটিং
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <Settings className="w-3.5 h-3.5" /> সেটিংস
+              </TabsTrigger>
+              <TabsTrigger value="broadcast" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 text-gold">
+                <Megaphone className="w-3.5 h-3.5" /> বার্তা পাঠান 📢
+              </TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="notices">
-          <AdminSection title="নোটিশ">
-            <Suspense fallback={<PremiumLoader />}>
-              <NoticeManager 
-                notices={notices as any} 
-                loading={loading} 
-                onAddNotice={addNotice} 
-                onToggleActive={toggleNotice} 
-                onDeleteNotice={deleteNotice} 
-              />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+            <AdminSection title="নোটিশ পরিচালনা">
+              <Suspense fallback={<PremiumLoader />}>
+                <NoticeManager 
+                  notices={notices as any} 
+                  loading={loading} 
+                  onAddNotice={addNotice} 
+                  onToggleActive={toggleNotice} 
+                  onDeleteNotice={deleteNotice} 
+                />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
           <TabsContent value="donations">
-          <AdminSection title="দান">
-            <Suspense fallback={<PremiumLoader />}>
-              <DonationManager />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+            <AdminSection title="হাদিয়া ও নজরানা হিসাব">
+              <Suspense fallback={<PremiumLoader />}>
+                <DonationManager />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
           <TabsContent value="submissions">
-          <AdminSection title="প্রশ্ন ও অভিযোগ">
-            <Suspense fallback={<PremiumLoader />}>
-              <SubmissionManager 
-                submissions={submissions} 
-                onMarkRead={markSubmissionRead} 
-                onDelete={deleteSubmission} 
-                onReply={submitReply} 
-                onUpdateSubmission={updateSubmissionDetails}
-              />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+            <AdminSection title="প্রশ্ন ও অভিযোগ উত্তর ও রিপ্লাই">
+              <Suspense fallback={<PremiumLoader />}>
+                <SubmissionManager 
+                  submissions={submissions} 
+                  onMarkRead={markSubmissionRead} 
+                  onDelete={deleteSubmission} 
+                  onReply={submitReply} 
+                  onUpdateSubmission={updateSubmissionDetails}
+                />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
           <TabsContent value="gallery">
-          <AdminSection title="গ্যালারি">
-            <Suspense fallback={<PremiumLoader />}>
-              <GalleryManager 
-                gallery={gallery}
-                uploading={uploading}
-                galleryCaption={galleryCaption}
-                setGalleryCaption={setGalleryCaption}
-                galleryCategory={galleryCategory}
-                setGalleryCategory={setGalleryCategory}
-                onUpload={uploadGalleryImage}
-                onDelete={deleteGalleryItem}
-              />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
-
+            <AdminSection title="গ্যালারি অ্যালবাম ও ছবি আপলোড">
+              <Suspense fallback={<PremiumLoader />}>
+                <GalleryManager 
+                  gallery={gallery}
+                  uploading={uploading}
+                  galleryCaption={galleryCaption}
+                  setGalleryCaption={setGalleryCaption}
+                  galleryCategory={galleryCategory}
+                  setGalleryCategory={setGalleryCategory}
+                  onUpload={uploadGalleryImage}
+                  onDelete={deleteGalleryItem}
+                />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
           <TabsContent value="committee">
-          <AdminSection title="কমিটি">
-            <Suspense fallback={<PremiumLoader />}>
-              <CommitteeManager />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+            <AdminSection title="কমিটি সদস্য তালিকা">
+              <Suspense fallback={<PremiumLoader />}>
+                <CommitteeManager />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
-        <TabsContent value="finance">
-          <AdminSection title="আয়-ব্যয়">
-            <Suspense fallback={<PremiumLoader />}>
-              <FinanceManager />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+          <TabsContent value="finance">
+            <AdminSection title="আয় ও খরচের বিস্তারিত">
+              <Suspense fallback={<PremiumLoader />}>
+                <FinanceManager />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
-        <TabsContent value="voting">
-          <AdminSection title="ভোটিং">
-            <Suspense fallback={<PremiumLoader />}>
-              <VoteTopicManager />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+          <TabsContent value="voting">
+            <AdminSection title="ভোটিং টপিক তৈরি ও ফলাফল">
+              <Suspense fallback={<PremiumLoader />}>
+                <VoteTopicManager />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
-        <TabsContent value="broadcast">
-          <AdminSection title="বার্তা পাঠান">
-            <Suspense fallback={<PremiumLoader />}>
-              <CommitteeBroadcast />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+          <TabsContent value="broadcast">
+            <AdminSection title="কমিটি ব্রডকাস্ট মেসেজ">
+              <Suspense fallback={<PremiumLoader />}>
+                <CommitteeBroadcast />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
 
-        <TabsContent value="settings">
-          <AdminSection title="সেটিংস">
-            <Suspense fallback={<PremiumLoader />}>
-              <SettingsManager />
-            </Suspense>
-          </AdminSection>
-        </TabsContent>
+          <TabsContent value="settings">
+            <AdminSection title="ওয়েবসাইট সিস্টেম সেটিংস">
+              <Suspense fallback={<PremiumLoader />}>
+                <SettingsManager />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
         </Tabs>
       </div>
     </div>

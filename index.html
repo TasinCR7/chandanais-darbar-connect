@@ -31,8 +31,10 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <!-- Hero image is loaded via Vite import in Index.tsx -->
     
-    <!-- Optimized Font Loading -->
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Optimized Non-Blocking Font Loading -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet"></noscript>
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://chandanaish-darbar.com/" />
     <meta property="og:locale" content="bn_BD" />
@@ -112,13 +114,14 @@
     </div>
     <script>
       // Fail-safe timer: Show a reload option if the app takes too long to load/mount
-      setTimeout(function() {
+      window.__loaderTimer = setTimeout(function() {
+        if (window.__appMounted) return;
         var loaderText = document.querySelector('.initial-loader-text');
         if (loaderText && loaderText.textContent.indexOf('লোড হচ্ছে') !== -1) {
           loaderText.innerHTML = 
             'লোড হতে সাধারণের চেয়ে বেশি সময় নিচ্ছে...<br/><button onclick="window.location.reload()" style="margin-top: 16px; border: none; border-radius: 999px; padding: 10px 20px; background: #dca523; color: #0a0a0a; font-weight: 700; cursor: pointer; font-size: 0.95rem; font-family: inherit; box-shadow: 0 4px 12px rgba(220,165,35,0.25);">পেজটি রিলোড করুন</button>';
         }
-      }, 6000);
+      }, 12000);
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

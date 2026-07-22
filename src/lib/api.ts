@@ -42,13 +42,21 @@ export const fetchTargets = async (): Promise<MonthlyTarget[]> => {
 };
 
 export const fetchSettings = async (): Promise<Record<string, string>> => {
-  const { data, error } = await supabase.from('app_settings').select('*');
-  if (error) throw error;
-  const sObj: Record<string, string> = {};
-  (data ?? []).forEach((row: { key: string; value: string }) => {
-    sObj[row.key] = row.value;
-  });
-  return sObj;
+  try {
+    const { data, error } = await supabase.from('app_settings').select('*');
+    if (error) {
+      console.warn("fetchSettings database error:", error);
+      return {};
+    }
+    const sObj: Record<string, string> = {};
+    (data ?? []).forEach((row: { key: string; value: string }) => {
+      sObj[row.key] = row.value;
+    });
+    return sObj;
+  } catch (err) {
+    console.warn("fetchSettings exception:", err);
+    return {};
+  }
 };
 
 export interface PaymentInput {

@@ -23,8 +23,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchRoles = async (uid: string) => {
-    const { data } = await supabase.from('user_roles').select('role').eq('user_id', uid);
-    setRoles((data?.map((r: { role: string }) => r.role as Role)) ?? []);
+    try {
+      const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', uid);
+      if (error) {
+        console.warn("Error fetching user roles:", error);
+      }
+      setRoles((data?.map((r: { role: string }) => r.role as Role)) ?? []);
+    } catch (err) {
+      console.error("Exception fetching roles:", err);
+      setRoles([]);
+    }
   };
 
   useEffect(() => {
@@ -36,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const safetyTimer = setTimeout(() => {
       if (isMounted) setLoading(false);
-    }, hasAuthToken ? 800 : 300);
+    }, hasAuthToken ? 600 : 200);
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       if (!isMounted) return;

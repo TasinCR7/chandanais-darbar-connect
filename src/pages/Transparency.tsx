@@ -7,6 +7,8 @@ import { monthName } from '@/lib/months';
 import { TrendingUp, TrendingDown, Wallet, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { Payment, Expense } from '@/types/finance';
+import PremiumLoader from '@/components/PremiumLoader';
+
 const Transparency = () => {
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
@@ -17,53 +19,57 @@ const Transparency = () => {
   const { isStaff, loading } = useAuth();
   useEffect(() => {
     (async () => {
-      const [statsRes, chartRes, paysRes, expRes] = await Promise.all([
-        supabase.rpc('get_transparency_stats'),
-        supabase.rpc('get_transparency_chart'),
-        supabase.rpc('get_recent_payments'),
-        supabase.rpc('get_recent_expenses')
-      ]);
+      try {
+        const [statsRes, chartRes, paysRes, expRes] = await Promise.all([
+          supabase.rpc('get_transparency_stats'),
+          supabase.rpc('get_transparency_chart'),
+          supabase.rpc('get_recent_payments'),
+          supabase.rpc('get_recent_expenses')
+        ]);
 
-      if (statsRes.data && statsRes.data.length > 0) {
-        const stats = statsRes.data[0];
-        setIncome(Number(stats.total_income));
-        setExpense(Number(stats.total_expense));
-        setMemberCount(Number(stats.active_members));
-      }
+        if (statsRes.data && statsRes.data.length > 0) {
+          const stats = statsRes.data[0];
+          setIncome(Number(stats.total_income || 0));
+          setExpense(Number(stats.total_expense || 0));
+          setMemberCount(Number(stats.active_members || 0));
+        }
 
-      if (chartRes.data) {
-        setChart(
-          chartRes.data.map((row: any) => {
-            const [, m] = (row.month_key || '').split('-');
-            return {
-              label: monthName(Number(m || 0)).slice(0, 3),
-              income: Number(row.income),
-              expense: Number(row.expense)
-            };
-          })
-        );
-      }
+        if (chartRes.data) {
+          setChart(
+            chartRes.data.map((row: any) => {
+              const [, m] = (row.month_key || '').split('-');
+              return {
+                label: monthName(Number(m || 0)).slice(0, 3),
+                income: Number(row.income || 0),
+                expense: Number(row.expense || 0)
+              };
+            })
+          );
+        }
 
-      if (paysRes.data) {
-        const mapped = paysRes.data.map((p: any) => ({
-          ...p,
-          members: {
-            full_name: p.member_name,
-            member_code: p.member_code
-          }
-        }));
-        setRecentPayments(mapped);
-      }
+        if (paysRes.data) {
+          const mapped = paysRes.data.map((p: any) => ({
+            ...p,
+            members: {
+              full_name: p.member_name,
+              member_code: p.member_code
+            }
+          }));
+          setRecentPayments(mapped);
+        }
 
-      if (expRes.data) {
-        setRecentExpenses(expRes.data);
+        if (expRes.data) {
+          setRecentExpenses(expRes.data);
+        }
+      } catch (err) {
+        console.error("Error fetching transparency data:", err);
       }
     })();
   }, []);
 
   const balance = income - expense;
 
-  if (loading) return null;
+  if (loading) return <PremiumLoader />;
 
   return (
     <div className="min-h-screen bg-background pb-20 font-bengali">

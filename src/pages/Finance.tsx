@@ -35,6 +35,7 @@ import {
   formatBDT,
   type OrgMonthlyTotals, type OrgAnnualTotals, type PaymentLite, type MemberLite,
 } from '@/lib/statement';
+import PremiumLoader from '@/components/PremiumLoader';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -930,7 +931,7 @@ const Finance = () => {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
-  if (loading) return null;
+  if (loading) return <PremiumLoader />;
 
   const TABS = [
     { key: 'summary', label: 'সারসংক্ষেপ', icon: LayoutGrid },

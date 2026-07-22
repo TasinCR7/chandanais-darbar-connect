@@ -29,6 +29,12 @@ const renderBootstrapFallback = () => {
 try {
   const rootElement = document.getElementById("root");
   if (rootElement) {
+    if (typeof window !== "undefined") {
+      (window as any).__appMounted = true;
+      if ((window as any).__loaderTimer) {
+        clearTimeout((window as any).__loaderTimer);
+      }
+    }
     createRoot(rootElement, {
       onRecoverableError: (error) => {
         if (isIgnorableExtensionError(error)) {
