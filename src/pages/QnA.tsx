@@ -5,7 +5,7 @@ import QnAFormCard from "@/components/QnAFormCard";
 import { HelpCircle, AlertTriangle, FileQuestion, MessageSquareWarning, Search, Copy, Calendar, MessageSquare, ShieldCheck, Clock, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { sendTelegramNotification } from "@/utils/telegram";
+import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -136,11 +136,11 @@ const QnA = () => {
 ${icon} *${titleText}*
 ━━━━━━━━━━━━━━━━━━
 🆔 *ট্র্যাকিং নম্বর:* ${trackingNumber}
-👤 *নাম:* ${trimmedName}
-📱 *মোবাইল:* ${form.phone.trim() || "দেওয়া হয়নি"}
-📌 *বিষয়:* ${form.subject}
+👤 *নাম:* ${escapeTelegramHtml(trimmedName)}
+📱 *মোবাইল:* ${escapeTelegramHtml(form.phone.trim() || "দেওয়া হয়নি")}
+📌 *বিষয়:* ${escapeTelegramHtml(form.subject)}
 📝 *বিস্তারিত:*
-${trimmedDetails}
+${escapeTelegramHtml(trimmedDetails)}
 ━━━━━━━━━━━━━━━━━━
 অনুগ্রহ করে প্যানেল থেকে ব্যবস্থা নিন।
     `;

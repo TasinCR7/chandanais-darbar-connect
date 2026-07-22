@@ -17,7 +17,7 @@ async function getFontBase64(): Promise<string> {
 }
 import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
-import { sendTelegramNotification } from "@/utils/telegram";
+import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
 import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
 import { fetchSettings } from "@/lib/api";
 import { escapeHtml } from "@/utils/security";
@@ -151,12 +151,12 @@ const Hadia = () => {
       const textMessage = `
 🟢 *নতুন হাদিয়া/নজরানা জমা হয়েছে!*
 ━━━━━━━━━━━━━━━━━━
-👤 *নাম:* ${donorName}
-📱 *মোবাইল:* ${donorPhone}
-🎯 *খাত:* ${categoryText}
-💰 *পরিমাণ:* ${amount} ৳
-💳 *পেমেন্ট:* ${paymentMethod}
-🔑 *TrxID:* ${transactionId}
+👤 *নাম:* ${escapeTelegramHtml(donorName)}
+📱 *মোবাইল:* ${escapeTelegramHtml(donorPhone)}
+🎯 *খাত:* ${escapeTelegramHtml(categoryText)}
+💰 *পরিমাণ:* ${escapeTelegramHtml(amount)} ৳
+💳 *পেমেন্ট:* ${escapeTelegramHtml(paymentMethod)}
+🔑 *TrxID:* ${escapeTelegramHtml(transactionId)}
 ━━━━━━━━━━━━━━━━━━
 অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
       `;

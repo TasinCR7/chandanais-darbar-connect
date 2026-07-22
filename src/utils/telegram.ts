@@ -1,11 +1,19 @@
 /**
  * Telegram Notification Utility
- * Supports sending messages to multiple chat IDs simultaneously.
+ * Supports sending messages to multiple chat IDs simultaneously with HTML parse mode and fallback.
  */
+
+// Helper to escape HTML characters in dynamic user content
+export const escapeTelegramHtml = (str: string | number | null | undefined): string => {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+};
 
 export const sendTelegramNotification = async (message: string) => {
   try {
-    // Get credentials from Vite environment (hardcoded fallbacks are set in vite.config.ts)
     const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "";
     const chatIdsString = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "";
 
@@ -19,41 +27,43 @@ export const sendTelegramNotification = async (message: string) => {
       return false;
     }
 
-    const chatIds = chatIdsString.split(",").map((id: string) => id.trim()).filter((id: string) => id.length > 0);
+    const chatIds = chatIdsString
+      .split(",")
+      .map((id: string) => id.trim())
+      .filter((id: string) => id.length > 0);
     
     if (chatIds.length === 0) {
       console.error("❌ Telegram Error: No valid Chat IDs found after parsing.");
       return false;
     }
 
-    // Clean the message: remove problematic Markdown characters that cause Telegram parse errors
-    const cleanMessage = message
-      .replace(/`/g, "'")   // Replace backticks with single quotes (backticks break Markdown)
-      .replace(/\\/g, "");   // Remove backslashes
+    // Convert Markdown *bold* tags into HTML <b>bold</b> tags safely
+    const htmlMessage = message
+      .replace(/\*(.*?)\*/g, "<b>$1</b>")
+      .replace(/`/g, "'");
 
-    // Send to all chats concurrently
+    // Create a plain text fallback version without any formatting tags
+    const plainMessage = message.replace(/[*`_]/g, "");
+
     const sendPromises = chatIds.map(async (chatId: string) => {
       try {
         const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
         
-        // Attempt 1: Try with Markdown parse_mode
+        // Attempt 1: Send with HTML parse_mode
         let response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
-            text: cleanMessage,
-            parse_mode: "Markdown",
+            text: htmlMessage,
+            parse_mode: "HTML",
           }),
         });
 
-        // Attempt 2: If Markdown fails, fallback to plain text immediately
+        // Attempt 2: If HTML mode fails, retry with Plain Text POST
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.warn(`⚠️ Markdown parsing failed for ${chatId}. Retrying with plain text. Error:`, errorData);
-          
-          // Remove all Markdown formatting for plain text fallback
-          const plainMessage = cleanMessage.replace(/\*/g, "");
+          console.warn(`⚠️ HTML parse failed for Chat ID ${chatId}. Retrying plain text. Error:`, errorData);
           
           response = await fetch(url, {
             method: "POST",
@@ -63,26 +73,33 @@ export const sendTelegramNotification = async (message: string) => {
               text: plainMessage,
             }),
           });
-          
-          if (!response.ok) {
-            const fallbackError = await response.json().catch(() => ({}));
-            console.error(`❌ Plain text fallback also failed for ${chatId}:`, fallbackError);
-            return false;
-          }
         }
 
-        console.log(`✅ Telegram notification sent to ${chatId}`);
-        return true;
+        // Attempt 3: If POST fails, attempt GET fallback query params
+        if (!response.ok) {
+          console.warn(`⚠️ POST failed for ${chatId}. Trying GET fallback...`);
+          const getUrl = `${url}?chat_id=${encodeURIComponent(chatId)}&text=${encodeURIComponent(plainMessage)}`;
+          response = await fetch(getUrl);
+        }
+
+        if (response.ok) {
+          console.log(`✅ Telegram notification sent successfully to ${chatId}`);
+          return true;
+        } else {
+          const finalError = await response.json().catch(() => ({}));
+          console.error(`❌ Telegram send failed for Chat ID ${chatId}:`, finalError);
+          return false;
+        }
       } catch (err) {
-        console.error(`❌ Network or fetch error for Telegram Chat ID ${chatId}:`, err);
+        console.error(`❌ Fetch/Network error sending Telegram notification to ${chatId}:`, err);
         return false;
       }
     });
 
     const results = await Promise.all(sendPromises);
-    const success = results.some(res => res === true);
+    const success = results.some((res) => res === true);
     if (!success) {
-      console.error("❌ All Telegram notifications failed. This may be due to adblocker or network issues.");
+      console.error("❌ All Telegram notifications failed. Please check network/AdBlocker settings.");
     }
     return success;
 

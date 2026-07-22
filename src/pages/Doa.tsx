@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HandHeart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { sendTelegramNotification } from "@/utils/telegram";
+import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
 import SuccessOverlay from "@/components/SuccessOverlay";
 
 const doaSubjects = [
@@ -84,12 +84,12 @@ const Doa = () => {
     const textMessage = `
 🤲 *নতুন দোয়া আবেদন জমা হয়েছে!*
 ━━━━━━━━━━━━━━━━━━
-👤 *নাম:* ${trimmedName}
-📱 *মোবাইল:* ${formData.phone.trim() || "দেওয়া হয়নি"}
-📌 *বিষয়:* ${formData.subject}
-📍 *ঠিকানা:* ${formData.address.trim() || "দেওয়া হয়নি"}
+👤 *নাম:* ${escapeTelegramHtml(trimmedName)}
+📱 *মোবাইল:* ${escapeTelegramHtml(formData.phone.trim() || "দেওয়া হয়নি")}
+📌 *বিষয়:* ${escapeTelegramHtml(formData.subject)}
+📍 *ঠিকানা:* ${escapeTelegramHtml(formData.address.trim() || "দেওয়া হয়নি")}
 📝 *বিস্তারিত:*
-${trimmedDetails}
+${escapeTelegramHtml(trimmedDetails)}
 ━━━━━━━━━━━━━━━━━━
 পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
     `;
