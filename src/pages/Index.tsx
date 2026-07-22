@@ -339,22 +339,22 @@ const Index = () => {
         </section>
       )}
       {/* Contact & Important Phone Numbers Section */}
-      <section className="py-12 md:py-20 bg-background relative overflow-hidden">
-        <div className="container mx-auto px-4 max-w-4xl space-y-6">
+      <section className="py-8 md:py-12 bg-background relative overflow-hidden">
+        <div className="container mx-auto px-4 max-w-2xl space-y-4">
           {/* Card 1: Address */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="bg-[#121212] border border-[#2d281e] rounded-2xl p-6 sm:p-7 flex items-center gap-5 sm:gap-6 shadow-2xl hover:border-gold/35 transition-all"
+            transition={{ duration: 0.4 }}
+            className="bg-[#121212] border border-[#2d281e] rounded-xl p-4 sm:p-4.5 flex items-center gap-4 shadow-xl hover:border-gold/35 transition-all"
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#191814] border border-[#3d3725] flex items-center justify-center text-gold shrink-0 shadow-inner">
-              <MapPin className="w-6 h-6 sm:w-7 sm:h-7 text-[#d4af37]" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#191814] border border-[#3d3725] flex items-center justify-center text-gold shrink-0 shadow-inner">
+              <MapPin className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#d4af37]" />
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-bold text-[#b59a59] mb-1">ঠিকানা</p>
-              <h4 className="text-cream font-heading font-bold text-lg sm:text-2xl leading-snug">
+              <p className="text-[11px] sm:text-xs font-bold text-[#b59a59] mb-0.5">ঠিকানা</p>
+              <h4 className="text-cream font-heading font-bold text-sm sm:text-base leading-snug">
                 চন্দনাইশ দরবার শরীফ, চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ
               </h4>
             </div>
@@ -362,20 +362,20 @@ const Index = () => {
 
           {/* Card 2: Email */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-[#121212] border border-[#2d281e] rounded-2xl p-6 sm:p-7 flex items-center gap-5 sm:gap-6 shadow-2xl hover:border-gold/35 transition-all"
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="bg-[#121212] border border-[#2d281e] rounded-xl p-4 sm:p-4.5 flex items-center gap-4 shadow-xl hover:border-gold/35 transition-all"
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#191814] border border-[#3d3725] flex items-center justify-center text-gold shrink-0 shadow-inner">
-              <Mail className="w-6 h-6 sm:w-7 sm:h-7 text-[#d4af37]" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#191814] border border-[#3d3725] flex items-center justify-center text-gold shrink-0 shadow-inner">
+              <Mail className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#d4af37]" />
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-bold text-[#b59a59] mb-1">ইমেইল</p>
+              <p className="text-[11px] sm:text-xs font-bold text-[#b59a59] mb-0.5">ইমেইল</p>
               <a 
                 href="mailto:info@chandanaishdarbar.com" 
-                className="text-cream font-heading font-bold text-lg sm:text-2xl leading-snug hover:text-gold transition-colors block tracking-wide"
+                className="text-cream font-heading font-bold text-sm sm:text-base leading-snug hover:text-gold transition-colors block tracking-wide"
               >
                 info@chandanaishdarbar.com
               </a>
@@ -384,75 +384,75 @@ const Index = () => {
 
           {/* Card 3: Important Phone Numbers Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-[#101010] border border-[#2d281e] rounded-3xl p-6 sm:p-9 shadow-2xl space-y-6"
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="bg-[#101010] border border-[#2d281e] rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4"
           >
             {/* Header */}
-            <div className="flex items-center gap-3.5 border-b border-[#24211a] pb-5">
-              <Phone className="w-6 h-6 sm:w-7 sm:h-7 text-[#d4af37]" />
-              <h3 className="font-heading font-bold text-cream text-2xl sm:text-3xl tracking-wide">
+            <div className="flex items-center gap-2.5 border-b border-[#24211a] pb-3.5">
+              <Phone className="w-5 h-5 text-[#d4af37]" />
+              <h3 className="font-heading font-bold text-cream text-lg sm:text-xl tracking-wide">
                 গুরুত্বপূর্ণ ফোন নম্বর
               </h3>
             </div>
 
             {/* 2x2 Contacts Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Contact 1 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-2xl p-5 flex items-center gap-4 hover:border-gold/40 transition-all shadow-md">
-                <div className="w-12 h-12 rounded-xl bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
-                  <Phone className="w-5 h-5 text-[#d4af37]" />
+              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
+                  <Phone className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#b59a59] mb-1">যোগাযোগ</p>
-                  <h5 className="font-heading font-bold text-cream text-base sm:text-lg mb-0.5">শাহজাদা বাহাদুর শাহ</h5>
-                  <a href="tel:+8801714338533" className="font-mono font-bold text-[#cbb06d] text-sm sm:text-base tracking-wide hover:underline block">
+                  <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">যোগাযোগ</p>
+                  <h5 className="font-heading font-bold text-cream text-xs sm:text-sm mb-0.5">শাহজাদা বাহাদুর শাহ</h5>
+                  <a href="tel:+8801714338533" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801714338533
                   </a>
                 </div>
               </div>
 
               {/* Contact 2 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-2xl p-5 flex items-center gap-4 hover:border-gold/40 transition-all shadow-md">
-                <div className="w-12 h-12 rounded-xl bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
-                  <Phone className="w-5 h-5 text-[#d4af37]" />
+              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
+                  <Phone className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#b59a59] mb-1">যোগাযোগ</p>
-                  <h5 className="font-heading font-bold text-cream text-base sm:text-lg mb-0.5">শাহজাদা জাহাঙ্গীর শাহ</h5>
-                  <a href="tel:+8801726285000" className="font-mono font-bold text-[#cbb06d] text-sm sm:text-base tracking-wide hover:underline block">
+                  <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">যোগাযোগ</p>
+                  <h5 className="font-heading font-bold text-cream text-xs sm:text-sm mb-0.5">শাহজাদা জাহাঙ্গীর শাহ</h5>
+                  <a href="tel:+8801726285000" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801726285000
                   </a>
                 </div>
               </div>
 
               {/* Contact 3 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-2xl p-5 flex items-center gap-4 hover:border-gold/40 transition-all shadow-md">
-                <div className="w-12 h-12 rounded-xl bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
-                  <Phone className="w-5 h-5 text-[#d4af37]" />
+              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
+                  <Phone className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#b59a59] mb-1">যোগাযোগ</p>
-                  <h5 className="font-heading font-bold text-cream text-base sm:text-lg mb-0.5">শাহজাদা পারভেজ শাহ</h5>
-                  <a href="tel:+8801717621418" className="font-mono font-bold text-[#cbb06d] text-sm sm:text-base tracking-wide hover:underline block">
+                  <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">যোগাযোগ</p>
+                  <h5 className="font-heading font-bold text-cream text-xs sm:text-sm mb-0.5">শাহজাদা পারভেজ শাহ</h5>
+                  <a href="tel:+8801717621418" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801717621418
                   </a>
                 </div>
               </div>
 
               {/* Contact 4 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-2xl p-5 flex items-center gap-4 hover:border-gold/40 transition-all shadow-md">
-                <div className="w-12 h-12 rounded-xl bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
-                  <User className="w-5 h-5 text-[#d4af37]" />
+              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
+                  <User className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#b59a59] mb-1">কারিগরি সহায়তা</p>
-                  <h5 className="font-heading font-bold text-cream text-base sm:text-lg leading-tight mb-0.5">
+                  <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">কারিগরি সহায়তা</p>
+                  <h5 className="font-heading font-bold text-cream text-xs sm:text-sm leading-snug mb-0.5">
                     ওয়েবসাইট ডেভেলপার <br className="hidden sm:inline" /> (তাসিন)
                   </h5>
-                  <a href="tel:+8801622721996" className="font-mono font-bold text-[#cbb06d] text-sm sm:text-base tracking-wide hover:underline block">
+                  <a href="tel:+8801622721996" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801622721996
                   </a>
                 </div>
