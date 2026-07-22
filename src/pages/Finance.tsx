@@ -2559,28 +2559,28 @@ const Finance = () => {
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* চাঁদা এন্ট্রি */}
-              <form onSubmit={submitPayment} className="card-gold rounded-2xl p-4 sm:p-6 space-y-6 relative overflow-hidden">
+              <form onSubmit={submitPayment} className="card-gold rounded-2xl p-5 sm:p-6 space-y-6 relative overflow-hidden bg-card/60 border border-gold/30 shadow-2xl backdrop-blur-xl">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                  <Wallet className="h-24 w-24" />
+                  <Wallet className="h-28 w-28 text-gold" />
                 </div>
 
-                <div className="bg-orange-950/30 border border-orange-700/40 rounded-xl p-4 flex gap-3 text-sm">
-                  <AlertOctagon className="h-5 w-5 text-orange-400 shrink-0" />
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex gap-3 text-sm shadow-inner">
+                  <AlertOctagon className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                   <div className="font-bangla">
-                    <p className="font-bold text-orange-400">চাঁদার নিয়মাবলী:</p>
-                    <p className="text-white/60 text-xs">প্রতি মাসের ১০ তারিখের মধ্যে চাঁদা জমা দেয়া বাঞ্ছনীয়।</p>
+                    <p className="font-bold text-amber-400 text-xs">চাঁদার নিয়মাবলী:</p>
+                    <p className="text-muted-foreground text-xs mt-0.5">প্রতি মাসের ১০ তারিখের মধ্যে চাঁদা জমা দেয়া বাঞ্ছনীয়।</p>
                   </div>
                 </div>
 
-                <h3 className="font-display text-xl gold-text flex items-center gap-2">
-                  <TrendingUp className="h-6 w-6" /> চাঁদা সংগ্রহ (Collection)
+                <h3 className="font-display text-xl gold-text flex items-center gap-2 font-bold">
+                  <TrendingUp className="h-6 w-6 text-gold" /> চাঁদা সংগ্রহ (Collection)
                 </h3>
 
                 {selectedMemberId && (
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gold/10 border border-gold/20 rounded-2xl p-4 shadow-inner"
+                    className="bg-gold/10 border border-gold/30 rounded-2xl p-4 shadow-inner"
                   >
                     {(() => {
                       const m = memberStats.find(ms => ms.id === selectedMemberId);
@@ -2589,12 +2589,12 @@ const Finance = () => {
                         <div className="space-y-3 font-bangla">
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-1">
-                              <p className="text-[10px] text-gold/60 uppercase font-bold tracking-wider">বর্তমান বকেয়া</p>
-                              <p className="text-2xl font-black text-rose-500">৳ {toBanglaNumber(m.dues.toFixed(0))}</p>
+                              <p className="text-[10px] text-gold/80 uppercase font-bold tracking-wider">বর্তমান বকেয়া</p>
+                              <p className="text-2xl font-black text-rose-400">৳ {toBanglaNumber(m.dues.toFixed(0))}</p>
                             </div>
                             <div className="text-right space-y-1">
-                              <p className="text-[10px] text-gold/60 uppercase font-bold tracking-wider">বকেয়া মাস</p>
-                              <p className="text-2xl font-black text-amber-500">{toBanglaNumber(m.dueMonths)} মাস</p>
+                              <p className="text-[10px] text-gold/80 uppercase font-bold tracking-wider">বকেয়া মাস</p>
+                              <p className="text-2xl font-black text-amber-400">{toBanglaNumber(m.dueMonths)} মাস</p>
                             </div>
                           </div>
                           {m.dues > 0 && (
@@ -2602,7 +2602,7 @@ const Finance = () => {
                               type="button" 
                               variant="outline" 
                               size="sm" 
-                              className="w-full text-xs bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 mt-2 font-bangla"
+                              className="w-full text-xs bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 mt-2 font-bangla rounded-xl font-bold"
                               onClick={() => {
                                 const dueRows = m.rows.filter(r => r.year === reportYear && r.status !== 'paid');
                                 if (dueRows.length > 0) {
@@ -2613,7 +2613,6 @@ const Finance = () => {
                                   }
                                   toast({ title: 'বকেয়া মাস এবং মাসিক হার স্বয়ংক্রিয়ভাবে সিলেক্ট করা হয়েছে ✓' });
                                 } else {
-                                  // If no dues in this reportYear, look for any other years or select all due months overall
                                   const allDueRows = m.rows.filter(r => r.status !== 'paid');
                                   if (allDueRows.length > 0) {
                                     setSelectedMonths(allDueRows.filter(r => r.year === reportYear || r.year === new Date().getFullYear()).map(r => r.month));
@@ -2640,7 +2639,7 @@ const Finance = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-[1fr_50px] gap-2 items-end">
                     <div className="relative">
-                      <Label className="text-xs font-bangla text-muted-foreground mb-1.5 block">সদস্য নির্বাচন করুন *</Label>
+                      <Label className="text-xs font-bangla font-bold text-gold/80 mb-1.5 block">সদস্য নির্বাচন করুন *</Label>
                       <input type="hidden" name="member_id" value={selectedMemberId} />
                       <Popover open={memberSearchOpen} onOpenChange={setMemberSearchOpen}>
                         <PopoverTrigger asChild>
@@ -2648,23 +2647,23 @@ const Finance = () => {
                             variant="outline"
                             role="combobox"
                             aria-expanded={memberSearchOpen}
-                            className="w-full justify-between font-bangla font-normal h-12 px-3 bg-background/50 border-gold/20"
+                            className="w-full justify-between font-bangla font-semibold h-12 px-3 bg-background/50 border-gold/30 rounded-xl focus:border-gold"
                           >
                             <span className="truncate">
                               {selectedMemberId
                                 ? members.find((m) => m.id === selectedMemberId)?.full_name
                                 : "সদস্য নির্বাচন করুন *"}
                             </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gold" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="start">
+                        <PopoverContent className="w-[320px] p-0 border-gold/30 shadow-2xl" align="start">
                           <Command className="font-bangla">
-                            <CommandInput placeholder="নাম বা কোড দিয়ে খুঁজুন..." />
+                            <CommandInput placeholder="নাম বা কোড দিয়ে খুঁজুন..." className="h-10 text-xs" />
                             <CommandList>
-                              <CommandEmpty>কোনো সদস্য পাওয়া যায়নি।</CommandEmpty>
+                              <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">কোনো সদস্য পাওয়া যায়নি।</CommandEmpty>
                               <CommandGroup>
-                                {members.filter(m => m.is_active).map((m) => (
+                                {members.filter(m => m.is_active !== false).map((m) => (
                                   <CommandItem
                                     key={m.id}
                                     value={`${m.member_code} ${m.full_name} ${m.phone || ''}`}
@@ -2672,15 +2671,16 @@ const Finance = () => {
                                       setSelectedMemberId(m.id);
                                       setMemberSearchOpen(false);
                                     }}
+                                    className="cursor-pointer hover:bg-gold/10"
                                   >
                                     <Check
                                       className={cn(
-                                        "mr-2 h-4 w-4",
+                                        "mr-2 h-4 w-4 text-gold",
                                         selectedMemberId === m.id ? "opacity-100" : "opacity-0"
                                       )}
                                     />
                                     <div className="flex flex-col">
-                                      <span>{m.member_code} — {m.full_name}</span>
+                                      <span className="font-bold text-xs">{m.member_code} — {m.full_name}</span>
                                       <span className="text-[10px] text-muted-foreground">{m.phone} | {m.area}</span>
                                     </div>
                                   </CommandItem>
@@ -2695,59 +2695,69 @@ const Finance = () => {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="h-12 w-full border-gold/20 bg-gold/5 text-gold hover:bg-gold/10"
+                      className="h-12 w-full border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 rounded-xl"
                       onClick={() => setQuickMemberOpen(true)}
+                      title="নতুন সদস্য যুক্ত করুন"
                     >
                       <Plus className="h-5 w-5" />
                     </Button>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bangla text-muted-foreground block">পরিমাণ (৳) *</Label>
-                    <Input name="amount" type="number" placeholder="৳ ০.০০" required className="h-12 text-lg font-bold bg-background/50 border-gold/20" />
+                    <Label className="text-xs font-bangla font-bold text-gold/80 block">পরিমাণ (৳) *</Label>
+                    <Input 
+                      name="amount" 
+                      type="number" 
+                      placeholder="৳ ০.০০" 
+                      required 
+                      className="h-12 text-lg font-mono font-bold bg-background/50 border-gold/30 focus:border-gold rounded-xl" 
+                    />
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {[50, 100, 500, 1000].map(amt => (
-                    <Button 
-                      key={amt} 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 text-[11px] font-bangla border-primary/20"
-                      onClick={(e) => {
-                        const input = (e.currentTarget.closest('form')?.querySelector('input[name="amount"]') as HTMLInputElement);
-                        if (input) input.value = String(amt);
-                      }}
-                    >
-                      ৳ {toBanglaNumber(amt)}
-                    </Button>
-                  ))}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bangla text-muted-foreground block">দ্রুত পরিমাণ নির্বাচন:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {[50, 100, 500, 1000].map(amt => (
+                      <Button 
+                        key={amt} 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-9 text-xs font-bangla font-semibold border-gold/30 hover:bg-gold/20 hover:text-gold hover:border-gold rounded-xl transition-all"
+                        onClick={(e) => {
+                          const input = (e.currentTarget.closest('form')?.querySelector('input[name="amount"]') as HTMLInputElement);
+                          if (input) input.value = String(amt);
+                        }}
+                      >
+                        ৳ {toBanglaNumber(amt)}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <Label className="text-[11px] text-muted-foreground font-bangla">মাসসমূহ নির্বাচন করুন (Multi-month)</Label>
+                    <Label className="text-xs font-bold text-gold/80 font-bangla">মাসসমূহ নির্বাচন (Multi-month)</Label>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setSelectedMonths([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])}
-                        className="text-[10px] text-gold hover:underline font-bangla"
+                        className="text-[11px] text-gold hover:underline font-bangla font-bold"
                       >
                         সব মাস
                       </button>
-                      <span className="text-[10px] text-muted-foreground">|</span>
+                      <span className="text-[11px] text-muted-foreground">|</span>
                       <button
                         type="button"
                         onClick={() => setSelectedMonths([])}
-                        className="text-[10px] text-gold hover:underline font-bangla"
+                        className="text-[11px] text-rose-400 hover:underline font-bangla font-bold"
                       >
                         সব মুছুন
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-primary/10 bg-background/40">
+                  <div className="flex flex-wrap gap-2 p-3 rounded-2xl border border-gold/20 bg-black/40 shadow-inner">
                     {BANGLA_MONTHS.map((mn, i) => {
                       const mNum = i + 1;
                       const isSelected = selectedMonths.includes(mNum);
@@ -2759,10 +2769,10 @@ const Finance = () => {
                             if (isSelected) setSelectedMonths(selectedMonths.filter(m => m !== mNum));
                             else setSelectedMonths([...selectedMonths, mNum].sort((a, b) => a - b));
                           }}
-                          className={`px-2 py-1 rounded text-[10px] font-bangla transition-all border ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bangla font-bold transition-all duration-300 border ${
                             isSelected 
-                              ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
-                              : 'bg-background border-border hover:border-primary/40'
+                              ? 'bg-gold-gradient text-primary-foreground border-gold shadow-md scale-105' 
+                              : 'bg-background/40 border-white/10 text-muted-foreground hover:border-gold/40 hover:text-gold'
                           }`}
                         >
                           {mn}
@@ -2774,78 +2784,116 @@ const Finance = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bangla text-muted-foreground">পদ্ধতি</Label>
+                    <Label className="text-xs font-bangla font-bold text-gold/80">পদ্ধতি</Label>
                     <Select name="method" defaultValue="cash" required>
-                      <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-11 bg-background/50 border-gold/30 rounded-xl font-bangla font-semibold"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="cash">Cash</SelectItem>
-                        <SelectItem value="bkash">bKash</SelectItem>
-                        <SelectItem value="nagad">Nagad</SelectItem>
-                        <SelectItem value="rocket">Rocket</SelectItem>
-                        <SelectItem value="bank">Bank</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="cash" className="font-bangla">ক্যাশ (Cash)</SelectItem>
+                        <SelectItem value="bkash" className="font-bangla">বিকাশ (bKash)</SelectItem>
+                        <SelectItem value="nagad" className="font-bangla">নগদ (Nagad)</SelectItem>
+                        <SelectItem value="rocket" className="font-bangla">রকেট (Rocket)</SelectItem>
+                        <SelectItem value="bank" className="font-bangla">ব্যাংক ট্রান্সফার (Bank)</SelectItem>
+                        <SelectItem value="other" className="font-bangla">অন্যান্য (Other)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bangla text-muted-foreground">তারিখ</Label>
-                    <Input name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} className="h-10" />
+                    <Label className="text-xs font-bangla font-bold text-gold/80">তারিখ</Label>
+                    <Input 
+                      name="payment_date" 
+                      type="date" 
+                      defaultValue={new Date().toISOString().split('T')[0]} 
+                      className="h-11 bg-background/50 border-gold/30 rounded-xl font-mono text-xs" 
+                    />
                   </div>
                 </div>
 
-                <Input name="transaction_ref" placeholder="TrxID / রেফারেন্স (ঐচ্ছিক)" className="h-10" />
+                <Input 
+                  name="transaction_ref" 
+                  placeholder="TrxID / রেফারেন্স আইডি (ঐচ্ছিক)" 
+                  className="h-11 font-mono text-xs bg-background/50 border-gold/30 rounded-xl" 
+                />
 
-                <Button disabled={busy} className="w-full bg-gradient-gold text-primary-foreground font-bangla h-12 shadow-lg shadow-gold/20">
-                  <Save className="h-4 w-4 mr-2" /> {busy ? 'অপেক্ষা...' : 'সেভ ও রশিদ ডাউনলোড'}
+                <Button 
+                  disabled={busy} 
+                  className="w-full bg-gold-gradient text-primary-foreground font-bangla font-bold text-sm h-12 shadow-xl shadow-gold/20 rounded-xl hover:opacity-90 transition-all"
+                >
+                  <Save className="h-5 w-5 mr-2" /> {busy ? 'অপেক্ষা করুন...' : 'সেভ ও রশিদ পিন্ট / ডাউনলোড'}
                 </Button>
               </form>
 
               {/* খরচ এন্ট্রি */}
-              <form onSubmit={submitExpense} className="card-gold rounded-2xl p-4 sm:p-6 space-y-6">
-                <h3 className="font-display text-lg text-rose-500 flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5" /> খরচ এন্ট্রি (Expense)
+              <form onSubmit={submitExpense} className="card-gold rounded-2xl p-5 sm:p-6 space-y-6 bg-card/60 border border-rose-500/30 shadow-2xl backdrop-blur-xl">
+                <h3 className="font-display text-xl text-rose-400 flex items-center gap-2 font-bold">
+                  <TrendingDown className="h-6 w-6 text-rose-500" /> খরচ এন্ট্রি (Expense Entry)
                 </h3>
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bangla text-muted-foreground">টাইটেল *</Label>
-                    <Input name="title" placeholder="খরচের কারণ..." required className="h-10" />
+                    <Label className="text-xs font-bangla font-bold text-rose-400/80 block">টাইটেল / খরচের কারণ *</Label>
+                    <Input 
+                      name="title" 
+                      placeholder="যেমন: ওরশ মোবারকের আপ্যায়ন খরচ..." 
+                      required 
+                      className="h-12 bg-background/50 border-rose-500/30 focus:border-rose-500 rounded-xl font-bangla text-sm" 
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bangla text-muted-foreground">পরিমাণ *</Label>
-                      <Input name="amount" type="number" placeholder="৳ ০.০০" required className="h-10" />
+                      <Label className="text-xs font-bangla font-bold text-rose-400/80 block">পরিমাণ (৳) *</Label>
+                      <Input 
+                        name="amount" 
+                        type="number" 
+                        placeholder="৳ ০.০০" 
+                        required 
+                        className="h-11 bg-background/50 border-rose-500/30 focus:border-rose-500 rounded-xl font-mono text-sm font-bold" 
+                      />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bangla text-muted-foreground">তারিখ *</Label>
-                      <Input name="expense_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required className="h-10" />
+                      <Label className="text-xs font-bangla font-bold text-rose-400/80 block">তারিখ *</Label>
+                      <Input 
+                        name="expense_date" 
+                        type="date" 
+                        defaultValue={new Date().toISOString().split('T')[0]} 
+                        required 
+                        className="h-11 bg-background/50 border-rose-500/30 focus:border-rose-500 rounded-xl font-mono text-xs" 
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bangla text-muted-foreground">বিভাগ</Label>
+                      <Label className="text-xs font-bangla font-bold text-rose-400/80 block">বিভাগ</Label>
                       <Select name="category" defaultValue="অন্যান্য">
-                        <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-11 bg-background/50 border-rose-500/30 rounded-xl font-bangla font-semibold">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="আপ্যায়ন">আপ্যায়ন</SelectItem>
-                          <SelectItem value="যাতায়াত">যাতায়াত</SelectItem>
-                          <SelectItem value="অনুষ্ঠান">অনুষ্ঠান</SelectItem>
-                          <SelectItem value="মেরামত">মেরামত</SelectItem>
-                          <SelectItem value="অন্যান্য">অন্যান্য</SelectItem>
+                          <SelectItem value="আপ্যায়ন" className="font-bangla">আপ্যায়ন</SelectItem>
+                          <SelectItem value="যাতায়াত" className="font-bangla">যাতায়াত</SelectItem>
+                          <SelectItem value="অনুষ্ঠান" className="font-bangla">অনুষ্ঠান / মাহফিল</SelectItem>
+                          <SelectItem value="মেরামত" className="font-bangla">মেরামত ও উন্নয়ন</SelectItem>
+                          <SelectItem value="অন্যান্য" className="font-bangla">অন্যান্য</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bangla text-muted-foreground">অনুমোদনকারী</Label>
-                      <Input name="approved_by" placeholder="নাম..." className="h-10" />
+                      <Label className="text-xs font-bangla font-bold text-rose-400/80 block">অনুমোদনকারী</Label>
+                      <Input 
+                        name="approved_by" 
+                        placeholder="যেমন: কোষাধ্যক্ষ" 
+                        className="h-11 bg-background/50 border-rose-500/30 rounded-xl font-bangla text-xs" 
+                      />
                     </div>
                   </div>
                 </div>
 
-                <Button disabled={busy} className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bangla h-12">
-                  <Plus className="h-4 w-4 mr-2" /> খরচ রেকর্ড করুন
+                <Button 
+                  disabled={busy} 
+                  className="w-full bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-bangla font-bold text-sm h-12 shadow-xl shadow-rose-600/30 rounded-xl transition-all"
+                >
+                  <Plus className="h-5 w-5 mr-2" /> খরচ রেকর্ড করুন
                 </Button>
               </form>
             </div>
