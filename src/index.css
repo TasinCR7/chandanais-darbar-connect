@@ -69,7 +69,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    transform: translate3d(0,0,0); /* Trigger GPU */
     touch-action: manipulation; /* Remove 300ms delay */
     overscroll-behavior-y: contain;
   }
@@ -447,5 +446,11 @@
       min-height: 100dvh !important;
       min-height: -webkit-fill-available !important;
     }
+  }
+
+  /* Prevent Radix UI Modal, Select & Popover Body Layout Shaking */
+  body[data-scroll-locked] {
+    padding-right: 0px !important;
+    margin-right: 0px !important;
   }
 }
