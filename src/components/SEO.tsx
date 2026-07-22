@@ -26,19 +26,54 @@ interface SEOProps {
 const SITE_NAME = "চন্দনাইশ দরবার শরীফ";
 const BASE_URL = "https://chandanaish-darbar.com";
 
+const DEFAULT_KEYWORDS = [
+  "দরবার শরীফ",
+  "চন্দনাইশ দরবার শরীফ",
+  "চন্দনাইশের মাজার",
+  "চন্দনাইশ মাজার",
+  "হযরত আবদুল লতিফ শাহ্",
+  "চট্টগ্রামের দরবার",
+  "বাংলাদেশের সেরা মাজার",
+  "মাজার",
+  "চট্টগ্রামের মাজার",
+  "চট্টগ্রাম দরবার শরীফ",
+  "গাউছে জামান চন্দনাইশী",
+  "আবদুল লতিফ শাহ চন্দনাইশী",
+  "মাইজভান্ডারী দরবার শরীফ",
+  "সিলসিলা ই তরিকায়ে মাইজভান্ডারিয়া",
+  "চন্দনাইশ দরবার শরীফের ইতিহাস",
+  "চন্দনাইশ দরবার শরীফের ওরশ",
+  "বাংলাদেশের বিখ্যাত মাজার",
+  "পীর বাবা চন্দনাইশী",
+  "Chandanaish Darbar Sharif",
+  "Chandanaish Mazar Sharif",
+  "Famous Mazar in Chittagong Bangladesh",
+  "Hazrat Syed Abdul Latif Shah Chandanaishi",
+  "Best Darbar Sharif in Chittagong",
+  "Maizbhandari Torika"
+].join(", ");
+
 const SEO = ({ title, description, canonical, keywords, type = "website", faq, events }: SEOProps) => {
   const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
   const url = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
-  const siteKeywords = keywords || "চন্দনাইশ দরবার শরীফ, দরবার শরীফ, মাইজভান্ডারী, গাউছে জামান আবদুল লতিফ শাহ, সুফিবাদ, ইসলাম, চন্দনাইশ, চট্টগ্রাম, ওরশ, হাদিয়া, দোয়া আবেদন, আধ্যাত্মিক সাধনা, অলি আল্লাহ, কুতুবুল আলম, ত্বরিকত, সুফি সংগীত, সামা মাহফিল, মাজহাব, আহলে সুন্নাত ওয়াল জামাত, Chandanaish Darbar Sharif, Maizbhandari, Sufism, Islam, Chattogram, Best Darbar Sharif in Chittagong, Spiritual Center Bangladesh, Hazrat Abdul Latif Shah, Maizbhandari Torika, Sufi Shrine Bangladesh, Islamic Spirituality, Chandanaish News, Chattogram Religious Center";
+  const siteKeywords = keywords ? `${keywords}, ${DEFAULT_KEYWORDS}` : DEFAULT_KEYWORDS;
   const ogImage = `${BASE_URL}/logo.png`; 
 
   // Base Schema Markups
   const structuredData: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
-      "@type": "ReligiousOrganization",
+      "@type": "PlaceOfWorship",
       "name": SITE_NAME,
-      "alternateName": ["Chandanaish Darbar Sharif", "চন্দনাইশ দরবার শরীফ", "Maizbhandari Darbar Sharif Chandanaish"],
+      "alternateName": [
+        "Chandanaish Darbar Sharif", 
+        "চন্দনাইশের মাজার", 
+        "চন্দনাইশ মাজার", 
+        "হযরত আবদুল লতিফ শাহ্ মাজার শরীফ", 
+        "চট্টগ্রামের দরবার", 
+        "বাংলাদেশের সেরা মাজার", 
+        "মাইজভান্ডারী দরবার শরীফ চন্দনাইশ"
+      ],
       "description": description,
       "url": url,
       "logo": `${BASE_URL}/logo.png`,
@@ -50,11 +85,21 @@ const SEO = ({ title, description, canonical, keywords, type = "website", faq, e
         "addressRegion": "Chattogram",
         "addressCountry": "BD"
       },
-      "telephone": "+8801819385557",
+      "telephone": "+8801622721996",
       "sameAs": [
         "https://www.facebook.com/Torikaye.Chandanaishi.Al.Maijvandri",
         "https://www.youtube.com/@ChandanaishDarbar"
       ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ReligiousOrganization",
+      "name": SITE_NAME,
+      "alternateName": ["Chandanaish Darbar Sharif", "চন্দনাইশের মাজার"],
+      "description": description,
+      "url": url,
+      "logo": `${BASE_URL}/logo.png`,
+      "image": `${BASE_URL}/logo.png`
     },
     {
       "@context": "https://schema.org",
