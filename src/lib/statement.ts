@@ -608,7 +608,7 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   const qrDataS = `Bank Statement: ${member.member_code}\nAccount Holder: ${member.full_name}\nTotal Paid: BDT ${stats.totalPaid}\nOutstanding Due: BDT ${stats.dues}\nStatus: ${isCleared ? 'CLEARED' : 'PENDING'}\nDate: ${new Date().toISOString().slice(0, 10)}`;
   
   try {
-    const qrDataUrlS = await QRCode.toDataURL(qrDataS, { margin: 1, width: 90 });
+    const qrDataUrlS = await QRCode.toDataURL(qrDataS, { margin: 1, width: 120, errorCorrectionLevel: 'M' });
     doc.addImage(qrDataUrlS, 'PNG', pageWidth - 42, infoY - 6, 28, 28);
   } catch (e) { console.warn(e); }
 
