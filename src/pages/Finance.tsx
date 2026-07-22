@@ -949,8 +949,10 @@ const Finance = () => {
   return (
     <div className={`min-h-screen pb-20 font-bengali transition-colors duration-500 ${isDark ? 'dark bg-neutral-950 text-neutral-100' : 'bg-background'}`}>
       <SEO
-        title="অর্থব্যবস্থাপনা - চন্দনাইশ দরবার শরীফ"
-        description="চন্দনাইশ দরবার শরীফ কমিটি ফান্ডের সম্পূর্ণ অর্থব্যবস্থাপনা ড্যাশবোর্ড। আয়-ব্যয় হিসাব, সদস্যদের বকেয়া, স্বচ্ছতা রিপোর্ট এবং PDF ডাউনলোড।"
+        title="অর্থব্যবস্থাপনা ও ব্যাংক হিসাব - চন্দনাইশ দরবার শরীফ"
+        description="চন্দনাইশ দরবার শরীফ কেন্দ্রীয় ফান্ড ও অর্থব্যবস্থাপনা ড্যাশবোর্ড। সদস্য চাঁদা জমা, আয়-ব্যয় হিসাব, বকেয়া তালিকা, ব্যাংক লেজার ও স্বচ্ছতা রিপোর্ট।"
+        keywords="চন্দনাইশ দরবার শরীফ হিসাব, চন্দনাইশের মাজার ফান্ড, চাঁদা স্টেটমেন্ট, ব্যাংক হিসাব, বকেয়া তালিকা, চন্দনাইশ মাজার ফিন্যান্স, দরবার শরীফ ব্যাংক স্টেটমেন্ট"
+        canonical="/finance"
       />
       {/* Ultra-Premium Hero Section with Framer Motion */}
       <div className="relative pt-24 pb-20 overflow-hidden bg-[#050505]">
