@@ -274,6 +274,25 @@ ${escapeTelegramHtml(trimmedDetails)}
                 </Button>
               </form>
             </div>
+
+            {/* Quran Verse Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="bg-card/60 backdrop-blur-md border border-gold/20 rounded-2xl p-6 sm:p-8 text-center space-y-3 mt-8 shadow-xl relative overflow-hidden"
+            >
+              <p className="font-arabic text-gold text-xl sm:text-2xl leading-relaxed arabic-glow">
+                وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ ۖ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ
+              </p>
+              <p className="text-cream text-xs sm:text-sm font-medium italic max-w-xl mx-auto leading-relaxed">
+                “আর যখন আমার বান্দাগণ আপনাকে আমার সম্পর্কে জিজ্ঞাসা করবে, নিশ্চয়ই আমি নিকটে। আহ্বানকারী যখন আমাকে ডাকে, আমি তার ডাকে সাড়া দেই।”
+              </p>
+              <p className="text-[10px] text-gold/60 font-bold uppercase tracking-widest pt-1">
+                — সূরা আল-বাকারা: ১৮৬
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </div>
