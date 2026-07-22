@@ -96,6 +96,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
   const isBypassed = isStaff || isCommitteeMember;
 
+  const [isIdleLoaded, setIsIdleLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsIdleLoaded(true), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { data: dbNotices = [] } = useQuery({
     queryKey: ['scrolling_notices'],
     queryFn: async () => {
@@ -105,7 +112,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .eq('type', 'scrolling')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
-      return data?.map(n => n.title) ?? [];
+      const list = data?.map(n => n.title) ?? [];
+      if (typeof window !== 'undefined' && list.length > 0) {
+        localStorage.setItem('scrolling_notices_cache', JSON.stringify(list));
+      }
+      return list;
+    },
+    initialData: () => {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('scrolling_notices_cache');
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            return undefined;
+          }
+        }
+      }
+      return undefined;
     },
     staleTime: 5 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
@@ -377,7 +401,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }>{children}</main>
 
       <div className="border-t border-gold/20" />
-      <Suspense fallback={null}><DeveloperTeam /></Suspense>
+      {isIdleLoaded && <Suspense fallback={null}><DeveloperTeam /></Suspense>}
 
       {/* Footer */}
       <footer className="border-t border-gold/20 bg-card islamic-pattern content-visibility-auto relative overflow-hidden">
@@ -459,13 +483,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               © {new Date().getFullYear()} চন্দনাইশ দরবার শরীফ। সর্বস্বত্ব সংরক্ষিত।
             </p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
-              <Suspense fallback={null}><VisitorCounter /></Suspense>
+              {isIdleLoaded && <Suspense fallback={null}><VisitorCounter /></Suspense>}
             </div>
           </div>
         </div>
       </footer>
-      <Suspense fallback={null}><BackToTop /></Suspense>
-      <Suspense fallback={null}><Chatbot /></Suspense>
+      {isIdleLoaded && (
+        <>
+          <Suspense fallback={null}><BackToTop /></Suspense>
+          <Suspense fallback={null}><Chatbot /></Suspense>
+        </>
+      )}
       {/* Admin Maintenance Mode Active Banner */}
       {isBypassed && String(appSettings.maintenance_mode) === 'true' && (
         <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-500 text-black text-[11px] md:text-xs font-bold py-2 px-4 text-center shadow-lg border-t border-amber-600 animate-pulse flex items-center justify-center gap-2">

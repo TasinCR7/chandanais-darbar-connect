@@ -32,9 +32,22 @@ const Index = () => {
         .eq('type', 'detailed')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
-      return (data as Tables<"notices">[]) ?? [];
+      const list = (data as Tables<"notices">[]) ?? [];
+      if (typeof window !== 'undefined' && list.length > 0) {
+        localStorage.setItem('detailed_notices_cache', JSON.stringify(list));
+      }
+      return list;
     },
-    staleTime: 60000,
+    initialData: () => {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('detailed_notices_cache');
+        if (cached) {
+          try { return JSON.parse(cached); } catch (e) { return undefined; }
+        }
+      }
+      return undefined;
+    },
+    staleTime: 5 * 60 * 1000,
   });
   return (
     <div>

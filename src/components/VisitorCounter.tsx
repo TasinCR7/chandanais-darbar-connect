@@ -8,6 +8,9 @@ const VisitorCounter = () => {
   useEffect(() => {
     const fetchCount = async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
         const hasVisited = sessionStorage.getItem('hasVisited_v1');
         let url = 'https://api.counterapi.dev/v1/chandanish-dorbar/website';
         
@@ -16,16 +19,15 @@ const VisitorCounter = () => {
           sessionStorage.setItem('hasVisited_v1', 'true');
         }
 
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
         
         if (data && typeof data.count === 'number') {
-          // You can add a baseline number here if you want to show past visits
-          // example: setCount(data.count + 5000);
           setCount(data.count + 1540); 
         }
       } catch (err) {
-        console.error('Failed to fetch visitor count', err);
+        // Silently catch network errors or timeouts to not log noise
       }
     };
 

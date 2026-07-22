@@ -85,6 +85,7 @@
     opacity: 0.08;
     z-index: -1;
     pointer-events: none;
+    content-visibility: auto;
   }
 
   h1,

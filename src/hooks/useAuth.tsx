@@ -31,10 +31,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     // Safety timeout: never stay in loading state forever.
-    // If Supabase is slow or unreachable, unlock the app after 3 seconds.
+    // If Supabase is slow or unreachable, unlock the app after 1.2 seconds.
     const safetyTimer = setTimeout(() => {
       if (isMounted) setLoading(false);
-    }, 3000);
+    }, 1200);
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       if (!isMounted) return;
