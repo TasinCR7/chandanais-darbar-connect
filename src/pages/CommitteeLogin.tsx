@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, ArrowRight, ShieldCheck, Lock } from "lucide-react";
+import { Phone, ArrowRight, ShieldCheck, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
+import { normalizePhoneNumber, isValidPhoneNumber, convertBanglaToEnglishDigits } from "@/utils/phoneUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
@@ -12,6 +12,7 @@ import SEO from "@/components/SEO";
 const CommitteeLogin = () => {
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [remainingTime, setRemainingTime] = useState(0);
@@ -192,14 +193,14 @@ const CommitteeLogin = () => {
               <Input 
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(convertBanglaToEnglishDigits(e.target.value))}
                 placeholder="017XXXXX..." 
                 disabled={loading || (lockoutTime !== null)}
-                className="pl-11 h-12 bg-black/40 border-gold/20 focus:border-gold/50 rounded-xl text-cream"
+                className="pl-11 h-12 bg-black/40 border-gold/20 focus:border-gold/50 rounded-xl text-cream font-mono"
               />
             </div>
             <p className="text-xs text-muted-foreground mt-2 px-1">
-              * ওয়েবসাইটে আপনার নামের নিচে যেই নম্বরটি দেয়া আছে হুবহু সেটি দিন।
+              * ওয়েবসাইটে আপনার নামের সাথে যুক্ত ১১ ডিজিটের মোবাইল নম্বরটি লিখুন।
             </p>
           </div>
 
@@ -208,14 +209,25 @@ const CommitteeLogin = () => {
             <div className="relative">
               <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/50" />
               <Input 
-                type="password"
+                type={showPin ? "text" : "password"}
                 maxLength={4}
                 value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => {
+                  const cleaned = convertBanglaToEnglishDigits(e.target.value).replace(/\D/g, "");
+                  setPin(cleaned);
+                }}
                 placeholder="••••" 
                 disabled={loading || (lockoutTime !== null)}
-                className="pl-11 h-12 bg-black/40 border-gold/20 focus:border-gold/50 rounded-xl text-cream tracking-[0.5em] text-center font-bold text-lg"
+                className="pl-11 pr-11 h-12 bg-black/40 border-gold/20 focus:border-gold/50 rounded-xl text-cream tracking-[0.5em] text-center font-bold text-lg font-mono"
               />
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gold/60 hover:text-gold transition-colors"
+                title={showPin ? "PIN লুকান" : "PIN দেখুন"}
+              >
+                {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
             <p className="text-xs text-muted-foreground mt-2 px-1">
               * প্রথমবার লগইন করলে যেকোনো ৪-ডিজিট টাইপ করুন, এটিই আপনার ভবিষ্যৎ PIN হবে।

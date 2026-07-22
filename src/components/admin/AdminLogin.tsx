@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { LogIn, Mail, Phone, ArrowRight } from "lucide-react";
+import { LogIn, Mail, Phone, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SEO from "@/components/SEO";
 import type { User } from "@supabase/supabase-js";
+import { convertBanglaToEnglishDigits } from "@/utils/phoneUtils";
 
 interface AdminLoginProps {
   onLogin: (identifier: string, password: string, method: "email" | "phone") => void;
@@ -28,12 +29,15 @@ const AdminLogin = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (method === "email") {
       onLogin(email.trim(), password, "email");
     } else {
-      let cleanPhone = phone.trim().replace(/[^0-9+]/g, "");
+      const convertedPhone = convertBanglaToEnglishDigits(phone);
+      let cleanPhone = convertedPhone.trim().replace(/[^0-9+]/g, "");
       if (!cleanPhone.startsWith("+")) {
         if (cleanPhone.startsWith("88")) {
           cleanPhone = `+${cleanPhone}`;
@@ -79,10 +83,11 @@ const AdminLogin = ({
             </motion.div>
           )}
 
-          <div className="space-y-6 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             {/* Method Toggle */}
             <div className="flex bg-black/20 rounded-xl p-1 border border-gold/10">
               <button
+                type="button"
                 onClick={() => setMethod("email")}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
                   method === "email" 
@@ -93,6 +98,7 @@ const AdminLogin = ({
                 <Mail size={16} /> ইমেইল
               </button>
               <button
+                type="button"
                 onClick={() => setMethod("phone")}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
                   method === "phone" 
@@ -125,8 +131,8 @@ const AdminLogin = ({
                       type="tel"
                       placeholder="01XXXXXXXXX"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ""))}
-                      className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl pl-14 pr-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
+                      onChange={(e) => setPhone(convertBanglaToEnglishDigits(e.target.value))}
+                      className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl pl-14 pr-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium font-mono"
                     />
                   </div>
                 </div>
@@ -134,18 +140,27 @@ const AdminLogin = ({
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gold/80 uppercase tracking-wider ml-1">পাসওয়ার্ড</label>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl px-4 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
-                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-black/20 border-gold/30 focus:border-gold h-12 rounded-xl pl-4 pr-11 text-cream placeholder:text-muted-foreground/50 transition-all font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gold/60 hover:text-gold transition-colors"
+                    title={showPassword ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখুন"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <Button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={loading || !(method === "email" ? email : phone) || !password}
                 className="w-full bg-gold-gradient text-primary-foreground gold-glow-hover h-12 text-base font-bold rounded-xl mt-4 transition-all duration-300"
               >
@@ -163,13 +178,13 @@ const AdminLogin = ({
 
               {user && !isAdmin && (
                 <div className="pt-4 border-t border-gold/10">
-                  <Button variant="outline" onClick={onLogout} className="w-full border-gold/30 text-gold h-12 rounded-xl font-semibold hover:bg-gold/5">
+                  <Button type="button" variant="outline" onClick={onLogout} className="w-full border-gold/30 text-gold h-12 rounded-xl font-semibold hover:bg-gold/5">
                     অন্য অ্যাকাউন্টে লগইন
                   </Button>
                 </div>
               )}
             </div>
-          </div>
+          </form>
         </motion.div>
       </div>
     </>
