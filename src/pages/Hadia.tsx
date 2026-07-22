@@ -581,7 +581,7 @@ const Hadia = () => {
                         )}
 
                         <div>
-                          <label className="block text-foreground mb-2 font-medium text-sm">পরিমাণ (৳)</label>
+                          <label className="block text-foreground mb-2 font-medium text-sm">পরিমাণ (৳) *</label>
                           <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-bold">৳</span>
                             <input
@@ -589,9 +589,26 @@ const Hadia = () => {
                               value={amount}
                               onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : "")}
                               placeholder="0.00"
-                              className="w-full pl-8 pr-4 py-3 text-lg rounded-lg bg-background/50 border border-gold/20 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
+                              className="w-full pl-8 pr-4 py-3 text-lg font-mono font-bold rounded-lg bg-background/50 border border-gold/20 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
                               min="1"
                             />
+                          </div>
+                          {/* Quick Preset Amount Buttons */}
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {[100, 500, 1000, 2000, 5010].map((presetAmt) => (
+                              <button
+                                key={presetAmt}
+                                type="button"
+                                onClick={() => setAmount(presetAmt)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                                  amount === presetAmt 
+                                    ? "bg-gold text-primary-foreground border-gold shadow-md" 
+                                    : "bg-background/40 border-gold/20 text-gold hover:border-gold hover:bg-gold/10"
+                                }`}
+                              >
+                                ৳ {presetAmt}
+                              </button>
+                            ))}
                           </div>
                         </div>
 
@@ -650,19 +667,34 @@ const Hadia = () => {
 
                         {paymentMethod && (
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                            <div className="bg-background/40 p-4 rounded-lg border border-gold/10 mb-4 text-sm text-muted-foreground">
-                              অনুগ্রহ করে নিচের নাম্বারে <span className="text-gold font-bold">{amount} ৳</span> Send Money করে Transaction ID টি নিচের বক্সে দিন।
-                              <div className="mt-2 font-mono text-lg text-emerald-light font-bold tracking-wider">
-                                {appSettings.hadia_payment_number || "+88017***********"}
+                            <div className="bg-background/40 p-4 rounded-xl border border-gold/20 mb-4 text-sm text-muted-foreground flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+                              <div>
+                                <p className="text-xs text-muted-foreground">
+                                  অনুগ্রহ করে নিচের নাম্বারে <span className="text-gold font-bold">{amount || 0} ৳</span> Send Money করুন:
+                                </p>
+                                <div className="mt-1 font-mono text-xl text-emerald-400 font-bold tracking-wider">
+                                  {appSettings.hadia_payment_number || "+8801714338533"}
+                                </div>
                               </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const num = appSettings.hadia_payment_number || "+8801714338533";
+                                  navigator.clipboard.writeText(num);
+                                  toast.success("নম্বর কপি করা হয়েছে! bKash/Nagad অ্যাপে পেস্ট করুন।");
+                                }}
+                                className="px-3 py-1.5 bg-gold/10 hover:bg-gold/20 text-gold border border-gold/30 rounded-lg text-xs font-bold font-bangla transition-all flex items-center justify-center gap-1.5 shrink-0"
+                              >
+                                📋 নম্বর কপি করুন
+                              </button>
                             </div>
-                            <label className="block text-foreground mb-2 font-medium text-sm">Transaction ID (ট্রানজেকশন আইডি)</label>
+                            <label className="block text-foreground mb-2 font-medium text-sm">Transaction ID (ট্রানজেকশন আইডি) *</label>
                             <input
                               type="text"
                               value={transactionId}
                               onChange={(e) => setTransactionId(e.target.value)}
                               placeholder="যেমন: A1B2C3D4E5"
-                              className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground uppercase placeholder:normal-case placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
+                              className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground uppercase placeholder:normal-case placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none font-mono"
                             />
                           </motion.div>
                         )}
