@@ -1098,6 +1098,50 @@ const Finance = () => {
               <StatCard icon={<Users className="h-5 w-5" />} label="সক্রিয় সদস্য" value={toBanglaNumber(activeMembers)} />
             </div>
 
+            {/* Ultra-Advanced Quick PDF Report Export Hub */}
+            <div className="bg-card/60 border border-gold/20 rounded-2xl p-5 shadow-xl backdrop-blur-xl">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center shrink-0">
+                    <FileText className="h-5 w-5 text-gold" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-bold text-foreground text-base">দ্রুত ব্যাংক স্টেটমেন্ট ও রিপোর্ট</h3>
+                    <p className="text-xs text-muted-foreground font-bangla">অফিশিয়াল ব্যাংকিং লেজার, মাসিক ও বার্ষিক আয়-ব্যয় বিবরণী এক ক্লিকে ডাউনলোড করুন</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  <Button
+                    onClick={() => openPreview('monthly')}
+                    variant="outline"
+                    size="sm"
+                    className="border-gold/30 hover:bg-gold/10 font-bangla text-xs flex-1 md:flex-initial"
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1.5 text-gold" />
+                    মাসিক স্টেটমেন্ট
+                  </Button>
+                  <Button
+                    onClick={() => openPreview('annual')}
+                    variant="outline"
+                    size="sm"
+                    className="border-gold/30 hover:bg-gold/10 font-bangla text-xs flex-1 md:flex-initial"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5 text-gold" />
+                    বার্ষিক রিপোর্ট
+                  </Button>
+                  <Button
+                    onClick={downloadGeneralReport}
+                    disabled={busy}
+                    size="sm"
+                    className="bg-gold-gradient text-primary-foreground font-bangla text-xs font-semibold flex-1 md:flex-initial"
+                  >
+                    <ReceiptText className="h-3.5 w-3.5 mr-1.5" />
+                    জেনারেল লেজার (PDF)
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             {/* Target Alert */}
             {targetAchievement < 50 && reportMonth === currentMonth && reportYear === currentYear && (
               <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in zoom-in duration-500">
