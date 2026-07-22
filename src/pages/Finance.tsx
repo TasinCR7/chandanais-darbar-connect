@@ -2361,37 +2361,112 @@ const Finance = () => {
             </div>
 
             {/* ===== লক্ষ্যমাত্রা / Targets ===== */}
-            <div className="card-gold rounded-2xl p-4 sm:p-6">
-              <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
-                <Target className="h-5 w-5" /> লক্ষ্যমাত্রা ও সেটিংস
-              </h3>
+            <div className="card-gold rounded-2xl p-4 sm:p-6 shadow-2xl border border-gold/20 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+                <div>
+                  <h3 className="font-display text-lg gold-text flex items-center gap-2 font-bold">
+                    <Target className="h-5 w-5 text-gold" /> লক্ষ্যমাত্রা ও সেটিংস (Financial Target & Goals)
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-bangla mt-1">
+                    কমিটি ফান্ডের মাসিক ও বার্ষিক সংগ্রহের লক্ষ্যমাত্রা নির্ধারণ এবং ট্র্যাকিং
+                  </p>
+                </div>
+                <span className="text-xs text-gold font-bangla bg-gold/10 border border-gold/30 px-3 py-1 rounded-full font-bold">
+                  বাজেট বছর: {toBanglaNumber(targetFormYear)}
+                </span>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <ProgressCard label={`${toBanglaNumber(reportYear)} বার্ষিক অর্জন`} current={yearIncome} target={yearTargetTotal || Number(settings.default_annual_target || 0)} />
-                <ProgressCard label={`${BANGLA_MONTHS[reportMonth - 1]} ${toBanglaNumber(reportYear)} মাসিক অর্জন`} current={monthIncome} target={Number(monthTargetRow?.target_amount || 0)} />
-                <div className="rounded-xl border border-primary/20 bg-background/40 p-4">
-                  <p className="font-bangla text-xs text-muted-foreground">নেট ব্যালেন্স ({toBanglaNumber(reportYear)})</p>
-                  <p className={`font-display text-2xl mt-1 ${yearBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>৳ {toBanglaNumber(yearBalance.toFixed(0))}</p>
-                  <p className="font-bangla text-[11px] text-muted-foreground mt-1">আয় ৳ {toBanglaNumber(yearIncome.toFixed(0))} − খরচ ৳ {toBanglaNumber(yearExpense.toFixed(0))}</p>
+                <ProgressCard 
+                  label={`${toBanglaNumber(reportYear)} বার্ষিক অর্জন`} 
+                  current={yearIncome} 
+                  target={yearTargetTotal || Number(settings.default_annual_target || 0)} 
+                />
+                <ProgressCard 
+                  label={`${BANGLA_MONTHS[reportMonth - 1]} ${toBanglaNumber(reportYear)} মাসিক অর্জন`} 
+                  current={monthIncome} 
+                  target={Number(monthTargetRow?.target_amount || 0)} 
+                />
+                <div className="rounded-2xl border border-gold/30 bg-black/40 p-4 shadow-inner flex flex-col justify-between">
+                  <div className="flex justify-between items-center">
+                    <p className="font-bangla text-xs text-gold/80 font-bold">নেট ব্যালেন্স ({toBanglaNumber(reportYear)})</p>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${yearBalance >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                      {yearBalance >= 0 ? 'উদ্বৃত্ত (Surplus)' : 'ঘাটতি (Deficit)'}
+                    </span>
+                  </div>
+                  <p className={`font-display text-3xl font-black mt-2 ${yearBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    ৳ {toBanglaNumber(yearBalance.toFixed(0))}
+                  </p>
+                  <p className="font-bangla text-[11px] text-muted-foreground mt-2 border-t border-white/10 pt-2 flex justify-between">
+                    <span>আয়: <strong className="text-emerald-400">৳ {toBanglaNumber(yearIncome.toFixed(0))}</strong></span>
+                    <span>খরচ: <strong className="text-rose-400">৳ {toBanglaNumber(yearExpense.toFixed(0))}</strong></span>
+                  </p>
                 </div>
               </div>
-              <form onSubmit={saveMonthlyTarget} className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-end mb-4">
-                <div className="col-span-1"><label className="font-bangla text-xs text-muted-foreground">বছর</label><Input name="for_year" type="number" value={targetFormYear} onChange={(e) => setTargetFormYear(Number(e.target.value))} required className="h-9" /></div>
-                <div className="col-span-1"><label className="font-bangla text-xs text-muted-foreground">মাস</label>
+
+              <form onSubmit={saveMonthlyTarget} className="bg-black/30 border border-gold/20 p-4 rounded-2xl grid grid-cols-2 sm:grid-cols-5 gap-3 items-end mb-6 shadow-inner">
+                <div className="col-span-1">
+                  <label className="font-bangla text-xs font-bold text-gold/80 block mb-1">বছর</label>
+                  <Input 
+                    name="for_year" 
+                    type="number" 
+                    value={targetFormYear} 
+                    onChange={(e) => setTargetFormYear(Number(e.target.value))} 
+                    required 
+                    className="h-10 text-xs font-mono bg-background/50 border-gold/30 focus:border-gold focus:ring-1 focus:ring-gold rounded-xl" 
+                  />
+                </div>
+                <div className="col-span-1">
+                  <label className="font-bangla text-xs font-bold text-gold/80 block mb-1">মাস</label>
                   <Select name="for_month" value={targetFormMonth} onValueChange={setTargetFormMonth} required>
-                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent>{BANGLA_MONTHS.map((mn, i) => (<SelectItem key={i} value={String(i + 1)}>{mn}</SelectItem>))}</SelectContent>
+                    <SelectTrigger className="h-10 text-xs font-bangla bg-background/50 border-gold/30 focus:border-gold focus:ring-1 focus:ring-gold rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BANGLA_MONTHS.map((mn, i) => (<SelectItem key={i} value={String(i + 1)} className="font-bangla">{mn}</SelectItem>))}
+                    </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-2 sm:col-span-1"><label className="font-bangla text-xs text-muted-foreground">লক্ষ্যমাত্রা (৳)</label><Input name="target_amount" type="number" min="0" value={targetFormAmount} onChange={(e) => setTargetFormAmount(e.target.value)} required className="h-9" /></div>
-                <div className="col-span-2 sm:col-span-1"><label className="font-bangla text-xs text-muted-foreground">নোট</label><Input name="note" value={targetFormNote} onChange={(e) => setTargetFormNote(e.target.value)} className="h-9" /></div>
-                <Button disabled={busy} className="bg-gradient-gold text-primary-foreground font-bangla h-9 col-span-2 sm:col-span-1"><Save className="h-4 w-4 mr-1" /> সেভ</Button>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="font-bangla text-xs font-bold text-gold/80 block mb-1">লক্ষ্যমাত্রা (৳)</label>
+                  <Input 
+                    name="target_amount" 
+                    type="number" 
+                    min="0" 
+                    placeholder="যেমন: ৫০,০০০"
+                    value={targetFormAmount} 
+                    onChange={(e) => setTargetFormAmount(e.target.value)} 
+                    required 
+                    className="h-10 text-xs font-mono bg-background/50 border-gold/30 focus:border-gold focus:ring-1 focus:ring-gold rounded-xl" 
+                  />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="font-bangla text-xs font-bold text-gold/80 block mb-1">নোট (ঐচ্ছিক)</label>
+                  <Input 
+                    name="note" 
+                    placeholder="যেমন: ওরশ তহবিল"
+                    value={targetFormNote} 
+                    onChange={(e) => setTargetFormNote(e.target.value)} 
+                    className="h-10 text-xs font-bangla bg-background/50 border-gold/30 focus:border-gold focus:ring-1 focus:ring-gold rounded-xl" 
+                  />
+                </div>
+                <Button 
+                  disabled={busy} 
+                  className="bg-gold-gradient text-primary-foreground font-bangla font-semibold h-10 col-span-2 sm:col-span-1 rounded-xl shadow-lg hover:opacity-90"
+                >
+                  <Save className="h-4 w-4 mr-1.5" /> সেভ করুন
+                </Button>
               </form>
 
               {/* Monthly Targets Grid for Selected Year */}
-              <div className="mt-6 pt-6 border-t border-primary/10">
-                <h4 className="font-bangla text-sm font-semibold gold-text mb-3">
-                  📅 {toBanglaNumber(targetFormYear)} সালের সকল মাসের লক্ষ্যমাত্রা
-                </h4>
+              <div className="mt-6 pt-6 border-t border-gold/20">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bangla text-sm font-bold gold-text flex items-center gap-2">
+                    📅 {toBanglaNumber(targetFormYear)} সালের সকল মাসের লক্ষ্যমাত্রা সূচক
+                  </h4>
+                  <span className="text-[11px] text-muted-foreground font-bangla">যেকোনো মাসে ক্লিক করে দ্রুত আপডেট করুন</span>
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 font-bangla">
                   {BANGLA_MONTHS.map((mn, idx) => {
                     const mNum = idx + 1;
@@ -2399,31 +2474,32 @@ const Finance = () => {
                     return (
                       <div 
                         key={idx} 
-                        className={`p-3 rounded-xl border text-center transition-all ${
+                        className={`p-3.5 rounded-2xl border text-center transition-all duration-300 flex flex-col justify-between ${
                           tgt 
-                            ? 'bg-gold/5 border-gold/30 hover:border-gold/60' 
-                            : 'bg-background/40 border-primary/10 hover:border-primary/30'
+                            ? 'bg-gold/10 border-gold/40 shadow-lg hover:border-gold hover:scale-[1.02]' 
+                            : 'bg-black/20 border-white/10 hover:border-gold/30 hover:bg-gold/5'
                         }`}
                       >
-                        <p className="text-xs text-muted-foreground font-semibold">{mn}</p>
-                        <p className="text-sm font-bold mt-1 text-foreground">
-                          {tgt ? `৳ ${toBanglaNumber(tgt.target_amount)}` : 'সেট করা নেই'}
-                        </p>
-                        {tgt?.note && (
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5" title={tgt.note}>
-                            {tgt.note}
+                        <div>
+                          <span className="text-xs text-muted-foreground font-bold block mb-1">{mn}</span>
+                          <p className={`text-sm font-extrabold ${tgt ? 'text-gold' : 'text-muted-foreground/60'}`}>
+                            {tgt ? `৳ ${toBanglaNumber(tgt.target_amount)}` : 'সেট করা নেই'}
                           </p>
-                        )}
+                          {tgt?.note && (
+                            <p className="text-[10px] text-gold/80 truncate mt-1 bg-gold/10 px-1.5 py-0.5 rounded-md" title={tgt.note}>
+                              {tgt.note}
+                            </p>
+                          )}
+                        </div>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-6 mt-2 text-[10px] text-gold hover:text-gold-light hover:bg-gold/10 w-full"
+                          className="h-7 mt-3 text-xs text-gold hover:text-gold-light hover:bg-gold/20 w-full rounded-lg font-semibold"
                           onClick={() => {
                             setTargetFormMonth(String(mNum));
                             setTargetFormAmount(tgt ? String(tgt.target_amount) : "");
                             setTargetFormNote(tgt?.note || "");
-                            // Focus on target_amount input
                             const input = document.querySelector('input[name="target_amount"]') as HTMLInputElement;
                             if (input) {
                               input.focus();
@@ -2431,7 +2507,7 @@ const Finance = () => {
                             }
                           }}
                         >
-                          {tgt ? 'এডিট করুন' : 'সেট করুন'}
+                          {tgt ? '✏️ সম্পাদনা' : '+ সেট করুন'}
                         </Button>
                       </div>
                     );
@@ -2441,24 +2517,38 @@ const Finance = () => {
             </div>
 
             {/* ===== Expense category breakdown ===== */}
-            <div className="card-gold rounded-2xl p-4 sm:p-6">
-              <h3 className="font-display text-lg gold-text flex items-center gap-2 mb-4">
-                <PieIcon className="h-5 w-5" /> খরচ বিভাগ অনুযায়ী ({toBanglaNumber(reportYear)})
-              </h3>
+            <div className="card-gold rounded-2xl p-4 sm:p-6 shadow-2xl border border-gold/20 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+                <h3 className="font-display text-lg gold-text flex items-center gap-2 font-bold">
+                  <PieIcon className="h-5 w-5 text-gold" /> খরচ বিভাগ অনুযায়ী বিশ্লেষণ ({toBanglaNumber(reportYear)})
+                </h3>
+                <span className="text-xs text-muted-foreground font-bangla bg-gold/5 border border-gold/10 px-3 py-1 rounded-full">
+                  খাতভিত্তিক ব্যয়ের অনুপাত
+                </span>
+              </div>
+
               {expenseByCategory.length === 0 ? (
-                <p className="font-bangla text-center text-muted-foreground py-6">এই বছরের কোনো খরচ নেই</p>
+                <div className="text-center py-10 text-muted-foreground font-bangla border border-dashed border-gold/20 rounded-2xl bg-black/20">
+                  <PieIcon className="h-10 w-10 mx-auto text-gold/30 mb-2" />
+                  <p className="text-sm font-semibold">এই বছরে এখনো কোনো খরচের তথ্য রেকর্ড করা হয়নি।</p>
+                </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {expenseByCategory.map((c) => {
                     const pct = yearExpense > 0 ? (c.total / yearExpense) * 100 : 0;
                     return (
-                      <div key={c.category}>
-                        <div className="flex justify-between text-sm font-bangla mb-1">
-                          <span>{c.category}</span>
-                          <span className="text-muted-foreground">৳ {toBanglaNumber(c.total.toFixed(0))} ({Math.round(pct)}%)</span>
+                      <div key={c.category} className="bg-black/30 p-3.5 rounded-xl border border-gold/10 space-y-2">
+                        <div className="flex justify-between items-center text-sm font-bangla">
+                          <span className="font-bold text-foreground">{c.category}</span>
+                          <span className="text-xs font-mono font-bold text-gold">
+                            ৳ {toBanglaNumber(c.total.toFixed(0))} ({toBanglaNumber(Math.round(pct)) }%)
+                          </span>
                         </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500" style={{ width: `${Math.min(100, pct)}%` }} />
+                        <div className="h-2.5 rounded-full bg-black/60 overflow-hidden p-0.5 border border-white/5">
+                          <div 
+                            className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-gold" 
+                            style={{ width: `${Math.min(100, pct)}%` }} 
+                          />
                         </div>
                       </div>
                     );
