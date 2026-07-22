@@ -70,7 +70,7 @@
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     touch-action: manipulation; /* Remove 300ms delay */
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
   }
 
   body::before {
@@ -84,7 +84,8 @@
     opacity: 0.08;
     z-index: -1;
     pointer-events: none;
-    content-visibility: auto;
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   h1,
@@ -187,11 +188,11 @@
 
   @keyframes marquee {
     0% {
-      transform: translateX(0);
+      transform: translate3d(0, 0, 0);
     }
 
     100% {
-      transform: translateX(-50%);
+      transform: translate3d(-50%, 0, 0);
     }
   }
 
