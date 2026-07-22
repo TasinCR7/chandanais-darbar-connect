@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { Bell, Info } from "lucide-react";
+import { Bell, Info, MapPin, Mail, Phone, User } from "lucide-react";
 
 const upcomingEvents = [
   { title: "বাবাজান কেবলা চন্দনাইশী সহধর্মিণীর ওরশ", date: "পৌষ ৩০", calendarType: "bengali" as const },
@@ -338,6 +338,127 @@ const Index = () => {
           </div>
         </section>
       )}
+      {/* Contact & Important Phone Numbers Section */}
+      <section className="py-12 md:py-16 bg-background relative overflow-hidden">
+        <div className="container mx-auto px-4 max-w-4xl space-y-6">
+          {/* Card 1: Address */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="bg-card/60 backdrop-blur-xl border border-gold/20 rounded-2xl p-5 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-xl hover:border-gold/40 transition-all"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0 shadow-inner">
+              <MapPin className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-gold/80 mb-0.5">ঠিকানা</p>
+              <h4 className="text-cream font-heading font-bold text-base sm:text-xl leading-snug">
+                চন্দনাইশ দরবার শরীফ, চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ
+              </h4>
+            </div>
+          </motion.div>
+
+          {/* Card 2: Email */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-card/60 backdrop-blur-xl border border-gold/20 rounded-2xl p-5 sm:p-6 flex items-center gap-4 sm:gap-5 shadow-xl hover:border-gold/40 transition-all"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0 shadow-inner">
+              <Mail className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-gold/80 mb-0.5">ইমেইল</p>
+              <a 
+                href="mailto:info@chandanaishdarbar.com" 
+                className="text-cream font-heading font-bold text-base sm:text-xl leading-snug hover:text-gold transition-colors block"
+              >
+                info@chandanaishdarbar.com
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Card 3: Important Phone Numbers Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-card/60 backdrop-blur-xl border border-gold/20 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6"
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-gold/15 pb-4">
+              <Phone className="w-6 h-6 text-gold" />
+              <h3 className="font-heading font-bold text-cream text-xl sm:text-2xl">
+                গুরুত্বপূর্ণ ফোন নম্বর
+              </h3>
+            </div>
+
+            {/* 2x2 Contacts Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Contact 1 */}
+              <div className="bg-black/40 border border-gold/15 rounded-2xl p-4 sm:p-5 flex items-center gap-4 hover:border-gold/35 transition-all">
+                <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-gold/70 uppercase tracking-wider">যোগাযোগ</p>
+                  <h5 className="font-heading font-bold text-cream text-sm sm:text-base">শাহজাদা বাহাদুর শাহ</h5>
+                  <a href="tel:+8801714338533" className="font-mono font-bold text-gold text-xs sm:text-sm hover:underline">
+                    +8801714338533
+                  </a>
+                </div>
+              </div>
+
+              {/* Contact 2 */}
+              <div className="bg-black/40 border border-gold/15 rounded-2xl p-4 sm:p-5 flex items-center gap-4 hover:border-gold/35 transition-all">
+                <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-gold/70 uppercase tracking-wider">যোগাযোগ</p>
+                  <h5 className="font-heading font-bold text-cream text-sm sm:text-base">শাহজাদা জাহাঙ্গীর শাহ</h5>
+                  <a href="tel:+8801726285000" className="font-mono font-bold text-gold text-xs sm:text-sm hover:underline">
+                    +8801726285000
+                  </a>
+                </div>
+              </div>
+
+              {/* Contact 3 */}
+              <div className="bg-black/40 border border-gold/15 rounded-2xl p-4 sm:p-5 flex items-center gap-4 hover:border-gold/35 transition-all">
+                <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-gold/70 uppercase tracking-wider">যোগাযোগ</p>
+                  <h5 className="font-heading font-bold text-cream text-sm sm:text-base">শাহজাদা পারভেজ শাহ</h5>
+                  <a href="tel:+8801717621418" className="font-mono font-bold text-gold text-xs sm:text-sm hover:underline">
+                    +8801717621418
+                  </a>
+                </div>
+              </div>
+
+              {/* Contact 4 */}
+              <div className="bg-black/40 border border-gold/15 rounded-2xl p-4 sm:p-5 flex items-center gap-4 hover:border-gold/35 transition-all">
+                <div className="w-11 h-11 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-gold/70 uppercase tracking-wider">কারিগরি সহায়তা</p>
+                  <h5 className="font-heading font-bold text-cream text-sm sm:text-base">ওয়েবসাইট ডেভেলপার (তাসিন)</h5>
+                  <a href="tel:+8801622721996" className="font-mono font-bold text-gold text-xs sm:text-sm hover:underline">
+                    +8801622721996
+                  </a>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 };
