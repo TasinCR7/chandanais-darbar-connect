@@ -127,17 +127,56 @@ const Admin = () => {
     
     try {
       if (method === "email") {
-        const cleanEmail = identifier.trim().toLowerCase();
+        const cleanEmail = identifier.replace(/\s+/g, "").toLowerCase();
+        
+        if (!cleanEmail.includes("@")) {
+          toast({ 
+            title: "অসম্পূর্ণ ইমেইল", 
+            description: "অনুগ্রহ করে একটি সঠিক ইমেইল এড্রেস লিখুন (যেমন: admin@gmail.com)।", 
+            variant: "destructive" 
+          });
+          setLoginLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: pass });
         
         if (!error && data?.user) {
-          toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "লগইন সফল হয়েছে।" });
+          // Check if the user has admin role
+          const { data: hasAdminRole, error: roleErr } = await supabase.rpc("has_role", { 
+            _user_id: data.user.id, 
+            _role: "admin" 
+          });
+
+          if (hasAdminRole && !roleErr) {
+            setUser(data.user);
+            setIsAdmin(true);
+            toast({ title: "প্রবেশাধিকার মঞ্জুর ✓", description: `স্বাগতম! এডমিন ড্যাশবোর্ডে প্রবেশ করা হয়েছে।` });
+          } else {
+            setUser(data.user);
+            setIsAdmin(false);
+            toast({ 
+              title: "এডমিন অনুমতি নেই ⚠️", 
+              description: "আপনার ইমেইল ও পাসওয়ার্ড সঠিক, কিন্তু অ্যাকাউন্টে এডমিন পারমিশন (Admin Role) যুক্ত করা নেই।", 
+              variant: "destructive" 
+            });
+          }
           return;
         }
+
         if (error) {
+          let errorMsg = error.message;
+          if (error.message.includes("Invalid login credentials")) {
+            errorMsg = "ভুল ইমেইল বা পাসওয়ার্ড দেওয়া হয়েছে। দয়া করে সঠিক ইমেইল ও পাসওয়ার্ড লিখুন।";
+          } else if (error.message.includes("Email not confirmed")) {
+            errorMsg = "আপনার ইমেইলটি নিশ্চিত (Confirm) করা হয়নি। অনুগ্রহ করে আপনার ইমেইল ইনবক্স চেক করুন।";
+          } else if (error.message.includes("Too many requests") || error.message.includes("rate limit")) {
+            errorMsg = "অনেক বেশিবার ভুল চেষ্টা করা হয়েছে। নিরাপত্তার স্বার্থে কিছুক্ষণ পর আবার চেষ্টা করুন।";
+          }
+
           toast({ 
-            title: "লগইন ব্যর্থ", 
-            description: error.message === "Invalid login credentials" ? "ভুল ইমেইল বা পাসওয়ার্ড দেওয়া হয়েছে।" : error.message, 
+            title: "ইমেইল লগইন ব্যর্থ", 
+            description: errorMsg, 
             variant: "destructive" 
           });
         }
@@ -166,20 +205,41 @@ const Admin = () => {
         }
 
         if (loggedInUser) {
-          toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "লগইন সফল হয়েছে।" });
+          const { data: hasAdminRole } = await supabase.rpc("has_role", { 
+            _user_id: loggedInUser.id, 
+            _role: "admin" 
+          });
+
+          if (hasAdminRole) {
+            setUser(loggedInUser);
+            setIsAdmin(true);
+            toast({ title: "প্রবেশাধিকার মঞ্জুর ✓", description: "মোবাইল নম্বর দিয়ে লগইন সফল হয়েছে।" });
+          } else {
+            setUser(loggedInUser);
+            setIsAdmin(false);
+            toast({ 
+              title: "এডমিন অনুমতি নেই ⚠️", 
+              description: "আপনার নম্বর সঠিক, কিন্তু অ্যাকাউন্টে এডমিন পারমিশন যুক্ত নেই।", 
+              variant: "destructive" 
+            });
+          }
           return;
         }
 
         if (lastError) {
+          let errorMsg = lastError.message;
+          if (lastError.message.includes("Invalid login credentials")) {
+            errorMsg = "ভুল নম্বর বা পাসওয়ার্ড দেওয়া হয়েছে।";
+          }
           toast({ 
             title: "লগইন ব্যর্থ", 
-            description: lastError.message === "Invalid login credentials" ? "ভুল মোবাইল নম্বর বা পাসওয়ার্ড দেওয়া হয়েছে।" : lastError.message, 
+            description: errorMsg, 
             variant: "destructive" 
           });
         }
       }
-    } catch (err) {
-      toast({ title: "ত্রুটি", description: "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "ত্রুটি", description: err.message || "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setLoginLoading(false);
     }
