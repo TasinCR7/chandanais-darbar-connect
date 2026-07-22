@@ -103,9 +103,13 @@ const Hadia = () => {
 
     setIsSubmitting(true);
 
-    // Save submission timestamp on success
-    submissionTimes.push(nowTime);
-    localStorage.setItem("last_donation_submissions", JSON.stringify(submissionTimes));
+    // Save submission timestamp safely
+    try {
+      submissionTimes.push(nowTime);
+      localStorage.setItem("last_donation_submissions", JSON.stringify(submissionTimes));
+    } catch (storageErr) {
+      console.warn("localStorage setItem warning:", storageErr);
+    }
     
     const donationId = generateUUID();
     

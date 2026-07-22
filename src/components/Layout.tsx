@@ -73,27 +73,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     queryFn: async () => {
       const settings = await fetchSettings();
       if (typeof window !== 'undefined') {
-        localStorage.setItem('app_settings_cache', JSON.stringify(settings));
+        try {
+          localStorage.setItem('app_settings_cache', JSON.stringify(settings));
+        } catch (e) { console.warn('Cache write warning', e); }
       }
       return settings;
     },
     initialData: () => {
       if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem('app_settings_cache');
-        if (cached) {
-          try {
-            return JSON.parse(cached);
-          } catch (e) {
-            return undefined;
-          }
-        }
+        try {
+          const cached = localStorage.getItem('app_settings_cache');
+          if (cached) return JSON.parse(cached);
+        } catch (e) { return undefined; }
       }
       return undefined;
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
+  const isCommitteeMember = typeof window !== 'undefined' && (() => {
+    try { return !!localStorage.getItem("committee_auth"); } catch { return false; }
+  })();
   const isBypassed = isStaff || isCommitteeMember;
 
   const [isIdleLoaded, setIsIdleLoaded] = useState(false);
@@ -114,20 +114,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         .order('created_at', { ascending: false });
       const list = data?.map(n => n.title) ?? [];
       if (typeof window !== 'undefined' && list.length > 0) {
-        localStorage.setItem('scrolling_notices_cache', JSON.stringify(list));
+        try {
+          localStorage.setItem('scrolling_notices_cache', JSON.stringify(list));
+        } catch (e) { console.warn('Cache write warning', e); }
       }
       return list;
     },
     initialData: () => {
       if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem('scrolling_notices_cache');
-        if (cached) {
-          try {
-            return JSON.parse(cached);
-          } catch (e) {
-            return undefined;
-          }
-        }
+        try {
+          const cached = localStorage.getItem('scrolling_notices_cache');
+          if (cached) return JSON.parse(cached);
+        } catch (e) { return undefined; }
       }
       return undefined;
     },

@@ -144,9 +144,11 @@ const CommitteeBroadcast = () => {
   }, []);
 
   const saveSettings = () => {
-    localStorage.setItem("sms_api_key", apiKey);
-    localStorage.setItem("sms_sender_id", senderId);
-    localStorage.setItem("sms_content_id", contentId);
+    try {
+      localStorage.setItem("sms_api_key", apiKey);
+      localStorage.setItem("sms_sender_id", senderId);
+      localStorage.setItem("sms_content_id", contentId);
+    } catch (e) { console.warn("localStorage error", e); }
     fetchBalance(apiKey);
     toast({ title: "সফল", description: "SMS এপিআই সেটিংস সেভ করা হয়েছে।" });
   };

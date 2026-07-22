@@ -112,7 +112,7 @@ const QnAFormCard = ({
               <label className="text-sm font-semibold text-foreground mb-1.5 block">
                 বিষয় <span className="text-destructive">*</span>
               </label>
-              <Select value={form.subject} onValueChange={(val) => setForm({ ...form, subject: val })}>
+              <Select value={form.subject || undefined} onValueChange={(val) => setForm({ ...form, subject: val })}>
                 <SelectTrigger className="bg-black/20 border-gold/25 focus:border-gold/60 focus:ring-1 focus:ring-gold/30 rounded-xl py-4.5">
                   <SelectValue placeholder="বিষয় নির্বাচন করুন" />
                 </SelectTrigger>

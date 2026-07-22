@@ -115,7 +115,9 @@ const CommitteeLogin = () => {
       if (!result || !result.success) {
         if (result && result.lockout_remaining_seconds > 0) {
           const lockoutUntil = Date.now() + result.lockout_remaining_seconds * 1000;
-          localStorage.setItem("committee_login_lockout_until", lockoutUntil.toString());
+          try {
+            localStorage.setItem("committee_login_lockout_until", lockoutUntil.toString());
+          } catch (e) { console.warn("localStorage error", e); }
           setLockoutTime(lockoutUntil);
           setRemainingTime(result.lockout_remaining_seconds);
           toast({ 
@@ -135,9 +137,11 @@ const CommitteeLogin = () => {
       }
 
       // Success
-      localStorage.setItem("committee_auth", result.session_token);
-      localStorage.removeItem("committee_login_attempts");
-      localStorage.removeItem("committee_login_lockout_until");
+      try {
+        localStorage.setItem("committee_auth", result.session_token);
+        localStorage.removeItem("committee_login_attempts");
+        localStorage.removeItem("committee_login_lockout_until");
+      } catch (e) { console.warn("localStorage auth write warning", e); }
 
       if (result.is_new_pin) {
         toast({ 

@@ -130,9 +130,13 @@ const QnA = () => {
       return;
     }
 
-    // Save submission timestamp on success
-    submissionTimes.push(nowTime);
-    localStorage.setItem("last_qna_submissions", JSON.stringify(submissionTimes));
+    // Save submission timestamp on success safely
+    try {
+      submissionTimes.push(nowTime);
+      localStorage.setItem("last_qna_submissions", JSON.stringify(submissionTimes));
+    } catch (storageErr) {
+      console.warn("localStorage setItem warning:", storageErr);
+    }
 
     const trackingNumber = data ? data.replace(/-/g, "").substring(0, 8).toUpperCase() : "";
     setLastTrackingId(trackingNumber);

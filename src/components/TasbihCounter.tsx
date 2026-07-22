@@ -89,38 +89,65 @@ const zikrOptions = [
 ];
 
 const TasbihCounter = () => {
-  const [count, setCount] = useState(() => {
-    const saved = localStorage.getItem("tasbih_count");
-    return saved ? parseInt(saved, 10) : 0;
+  const [count, setCount] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("tasbih_count");
+      return saved ? parseInt(saved, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
   });
-  const [zikrIndex, setZikrIndex] = useState(() => {
-    const saved = localStorage.getItem("tasbih_zikr_index");
-    return saved ? parseInt(saved, 10) : 0;
+
+  const [zikrIndex, setZikrIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("tasbih_zikr_index");
+      return saved ? parseInt(saved, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
   });
-  const [target, setTarget] = useState<33 | 100 | 0>(() => {
-    const saved = localStorage.getItem("tasbih_target");
-    return saved ? (parseInt(saved, 10) as 33 | 100 | 0) : 33;
+
+  const [target, setTarget] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("tasbih_target");
+      return saved ? parseInt(saved, 10) || 33 : 33;
+    } catch {
+      return 33;
+    }
   });
-  const [soundEnabled, setSoundEnabled] = useState(() => {
-    const saved = localStorage.getItem("tasbih_sound");
-    return saved !== "false"; // default true
+
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("tasbih_sound");
+      return saved !== "false";
+    } catch {
+      return true;
+    }
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("tasbih_count", count.toString());
+    try {
+      localStorage.setItem("tasbih_count", count.toString());
+    } catch (e) { console.warn("localStorage error", e); }
   }, [count]);
 
   useEffect(() => {
-    localStorage.setItem("tasbih_zikr_index", zikrIndex.toString());
+    try {
+      localStorage.setItem("tasbih_zikr_index", zikrIndex.toString());
+    } catch (e) { console.warn("localStorage error", e); }
   }, [zikrIndex]);
 
   useEffect(() => {
-    localStorage.setItem("tasbih_target", target.toString());
+    try {
+      localStorage.setItem("tasbih_target", target.toString());
+    } catch (e) { console.warn("localStorage error", e); }
   }, [target]);
 
   useEffect(() => {
-    localStorage.setItem("tasbih_sound", soundEnabled.toString());
+    try {
+      localStorage.setItem("tasbih_sound", soundEnabled.toString());
+    } catch (e) { console.warn("localStorage error", e); }
   }, [soundEnabled]);
 
   const currentZikr = zikrOptions[zikrIndex];
