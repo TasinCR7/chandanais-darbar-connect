@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, MessageCircle, HeartHandshake, Home, Users, User, Calculator, CheckCircle2, CreditCard, Send, Download } from "lucide-react";
+import { Phone, MessageCircle, HeartHandshake, Home, Users, User, Calculator, CheckCircle2, CreditCard, Send, Download, Info } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -683,6 +683,17 @@ const Hadia = () => {
                         </>
                       )}
                     </button>
+
+                    {/* Small Notice Box below button */}
+                    <div className="bg-gold/10 border border-gold/30 rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-muted-foreground font-bangla shadow-inner mt-4">
+                      <Info className="h-4 w-4 text-gold shrink-0 mt-0.5" />
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-gold text-xs">জরুরী নোটিশ / দ্রষ্টব্য:</p>
+                        <p className="text-muted-foreground text-[11px] leading-relaxed">
+                          {appSettings.hadia_notice || "পেমেন্ট সম্পন্ন করার পর আপনার সঠিক ট্রানজেকশন আইডি (TrxID) দিন। পেমেন্ট ভেরিফাই হওয়ার পর স্বয়ংক্রিয়ভাবে অফিসিয়াল ডিজিটাল রশিদ ডাউনলোড করতে পারবেন।"}
+                        </p>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -115,6 +115,16 @@ const SettingsManager = () => {
                 className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
               />
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-foreground mb-2">হাদিয়া পেজের জরুরী নোটিশ (Hadia Page Notice)</label>
+              <textarea
+                value={settings.hadia_notice || ""}
+                onChange={(e) => handleChange("hadia_notice", e.target.value)}
+                rows={2}
+                placeholder="যেমন: পেমেন্ট সম্পন্ন করার পর আপনার সঠিক ট্রানজেকশন আইডি (TrxID) দিন..."
+                className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors font-bangla text-sm"
+              />
+            </div>
           </div>
         </div>
 
