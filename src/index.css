@@ -360,14 +360,52 @@
     box-shadow: 0 12px 40px hsl(40 45% 56% / 0.12);
   }
 
-  /* === Low-End Mobile Performance Optimizations === */
+  /* === Low-End Mobile & Performance Optimizations === */
+  img {
+    decoding: async;
+  }
+
+  @keyframes pureCssParticle {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 0;
+    }
+    20% {
+      opacity: 0.8;
+    }
+    80% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(-90vh) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  .css-particle {
+    will-change: transform, opacity;
+    animation: pureCssParticle linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    .css-particle {
+      display: none !important;
+    }
+  }
+
   @media (max-width: 768px) {
     /* Reduce heavy backdrop-filters which cause UI lag on budget phones */
     .glass-card, .glass-morphism, .card-gold, 
     .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
       backdrop-filter: blur(2px) !important;
       -webkit-backdrop-filter: blur(2px) !important;
-      background-color: rgba(10, 10, 10, 0.85) !important; /* Fallback for readability */
+      background-color: rgba(10, 10, 10, 0.88) !important; /* Fallback for readability */
     }
     
     /* Minimize expensive box-shadow rendering */

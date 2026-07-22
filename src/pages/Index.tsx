@@ -69,27 +69,17 @@ const Index = () => {
         {/* Radial gold tint overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(40_45%_56%/0.08)_0%,_transparent_70%)]" />
 
-        {/* Floating Gold Particles */}
+        {/* Floating Gold Particles (100% GPU-accelerated CSS) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
+          {[...Array(6)].map((_, i) => (
+            <div
               key={i}
-              className="absolute w-1 h-1 rounded-full bg-gold/40"
+              className="absolute w-1.5 h-1.5 rounded-full bg-gold/50 css-particle"
               style={{
-                left: `${12 + i * 11}%`,
+                left: `${15 + i * 14}%`,
                 bottom: '-5%',
-              }}
-              animate={{
-                y: [0, -window.innerHeight * 1.1],
-                x: [0, (i % 2 === 0 ? 30 : -30)],
-                opacity: [0, 0.8, 0.8, 0],
-                scale: [1, 0.6],
-              }}
-              transition={{
-                duration: 8 + i * 2,
-                repeat: Infinity,
-                delay: i * 1.5,
-                ease: 'linear',
+                animationDuration: `${7 + i * 2}s`,
+                animationDelay: `${i * 1.2}s`,
               }}
             />
           ))}
