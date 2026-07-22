@@ -375,7 +375,7 @@ const Index = () => {
               <p className="text-[11px] sm:text-xs font-bold text-[#b59a59] mb-0.5">ইমেইল</p>
               <a 
                 href="mailto:info@chandanaishdarbar.com" 
-                className="text-cream font-heading font-bold text-sm sm:text-base leading-snug hover:text-gold transition-colors block tracking-wide"
+                className="text-cream font-heading font-bold text-sm sm:text-base leading-snug hover:text-gold transition-colors block tracking-wide break-all"
               >
                 info@chandanaishdarbar.com
               </a>
