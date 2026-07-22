@@ -425,7 +425,16 @@ const FinanceManager = () => {
     document.body.appendChild(container);
 
     try {
-      const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+      const canvas = await html2canvas(container, { 
+        scale: 2, 
+        useCORS: true, 
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        windowWidth: 800,
+      });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -445,10 +454,13 @@ const FinanceManager = () => {
 
       pdf.save(`invoice-${invoiceNo}.pdf`);
       toast({ title: "✅ ডাউনলোড সফল", description: "প্রিমিয়াম PDF ইনভয়েস ডাউনলোড হয়েছে।" });
-    } catch {
+    } catch (err) {
+      console.error("PDF generation error:", err);
       toast({ title: "ত্রুটি", description: "PDF তৈরিতে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
-      document.body.removeChild(container);
+      if (container.parentNode) {
+        document.body.removeChild(container);
+      }
     }
   };
 

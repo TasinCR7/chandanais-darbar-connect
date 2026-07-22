@@ -1,8 +1,7 @@
 // Bangla / Bengali font support for jsPDF.
 // Loads NotoSansBengali (TTF) from /fonts/, base64-encodes it once,
 // registers with jsPDF, and exposes a single helper to set the font
-// safely. jsPDF synthesizes bold from the regular face, so a single
-// Variable TTF is enough.
+// safely. Fallback to bundled base64 font if URL fetch fails.
 import type jsPDF from 'jspdf';
 
 const FONT_URL = '/fonts/NotoSansBengali-Regular.ttf';
@@ -15,20 +14,34 @@ let inflight: Promise<string> | null = null;
 async function fetchFontBase64(): Promise<string> {
   if (cachedBase64) return cachedBase64;
   if (inflight) return inflight;
+
   inflight = (async () => {
-    const res = await fetch(FONT_URL);
-    if (!res.ok) throw new Error(`Failed to load Bangla font: ${res.status}`);
-    const buf = await res.arrayBuffer();
-    // Convert ArrayBuffer to base64 in chunks (browser-safe).
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    const chunk = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunk) {
-      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    try {
+      const res = await fetch(FONT_URL);
+      if (!res.ok) throw new Error(`Failed to load Bangla font: ${res.status}`);
+      const buf = await res.arrayBuffer();
+      // Convert ArrayBuffer to base64 in chunks (browser-safe).
+      const bytes = new Uint8Array(buf);
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      cachedBase64 = btoa(binary);
+      return cachedBase64;
+    } catch (e) {
+      console.warn('Bangla font fetch via URL failed, falling back to static bundled font...', e);
+      try {
+        const mod = await import('@/fonts/bengaliFont');
+        cachedBase64 = mod.default;
+        return cachedBase64;
+      } catch (importErr) {
+        console.error('Static font import also failed:', importErr);
+        throw importErr;
+      }
     }
-    cachedBase64 = btoa(binary);
-    return cachedBase64;
   })();
+
   return inflight;
 }
 
@@ -47,13 +60,10 @@ export async function ensureBanglaFont(
     if (!vfs) {
       doc.addFileToVFS(FONT_FILE, b64);
       doc.addFont(FONT_FILE, FONT_NAME, 'normal');
-      // Register a synthetic bold mapping that points at the same file —
-      // jsPDF will fall back to faux-bold rendering for it.
       doc.addFont(FONT_FILE, FONT_NAME, 'bold');
     }
     doc.setFont(FONT_NAME, style);
   } catch (e) {
-    // Hard fallback so PDFs still generate (Latin only) if font fails.
     console.warn('Bangla font load failed; falling back to helvetica.', e);
     doc.setFont('helvetica', style);
   }
