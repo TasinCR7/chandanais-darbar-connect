@@ -84,8 +84,6 @@
     opacity: 0.08;
     z-index: -1;
     pointer-events: none;
-    will-change: transform;
-    transform: translateZ(0);
   }
 
   h1,
@@ -351,13 +349,14 @@
     }
   }
 
-  /* Card lift on hover */
-  .card-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .card-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px hsl(40 45% 56% / 0.12);
+  /* Card lift on hover - desktop only */
+  @media (hover: hover) {
+    .card-lift {
+      transition: box-shadow 0.3s ease;
+    }
+    .card-lift:hover {
+      box-shadow: 0 12px 40px hsl(40 45% 56% / 0.12);
+    }
   }
 
   /* === Low-End Mobile & Performance Optimizations === */
@@ -400,24 +399,26 @@
   }
 
   @media (max-width: 768px) {
-    /* Reduce heavy backdrop-filters which cause UI lag on budget phones */
-    .glass-card, .glass-morphism, .card-gold, 
-    .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
-      backdrop-filter: blur(2px) !important;
-      -webkit-backdrop-filter: blur(2px) !important;
-      background-color: rgba(10, 10, 10, 0.88) !important; /* Fallback for readability */
+    /* Disable ALL backdrop-filters on mobile — this is the #1 cause of shaking */
+    * {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Solid opaque backgrounds instead of blur for readability */
+    .glass-card, .glass-morphism, .card-gold {
+      background-color: rgba(10, 10, 10, 0.95) !important;
     }
     
     /* Minimize expensive box-shadow rendering */
     .gold-glow, .gold-glow-hover:hover, 
     .shadow-gold, .premium-shadow, .shadow-2xl {
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+      box-shadow: none !important;
     }
-    
-    /* Force Hardware Acceleration for animations */
-    .animate-marquee, .animate-marquee-slow, .animate-marquee-fast {
-      will-change: transform;
-      transform: translateZ(0);
+
+    /* Disable ALL hover scale/translate animations on touch devices */
+    *:hover {
+      transform: none !important;
     }
   }
 
@@ -437,10 +438,8 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* iOS WebKit Hardware Acceleration for Fixed Elements */
-    .fixed, .sticky {
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
+    /* Prevent WebKit repainting on fixed elements */
+    header, .fixed, .sticky {
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
     }

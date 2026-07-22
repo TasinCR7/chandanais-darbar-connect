@@ -21,9 +21,9 @@ const EventCard = React.memo(({ title, date, calendarType, index }: EventCardPro
     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
     {/* Card body with glassmorphism */}
-    <div className="bg-card/40 backdrop-blur-sm border border-gold/20 rounded-lg p-5 hover:border-gold/50 gold-glow-hover transition-all duration-500 hover:-translate-y-1">
+    <div className="bg-card/40 border border-gold/20 rounded-lg p-5 hover:border-gold/50 transition-colors duration-300">
       {/* Decorative star — top-right, visible on hover */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:scale-100 scale-75">
+      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
         <Star size={12} className="text-gold/50 fill-gold/20" />
       </div>
 
