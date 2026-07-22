@@ -112,18 +112,57 @@ const Admin = () => {
     setLoginLoading(true);
     
     try {
-      const credentials = method === "email" 
-        ? { email: identifier, password: pass }
-        : { phone: identifier, password: pass };
-      const { data, error } = await supabase.auth.signInWithPassword(credentials);
-      
-      if (!error && data?.user) {
-        toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "লগইন সফল হয়েছে।" });
-        return;
-      }
+      if (method === "email") {
+        const cleanEmail = identifier.trim().toLowerCase();
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: pass });
+        
+        if (!error && data?.user) {
+          toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "লগইন সফল হয়েছে।" });
+          return;
+        }
+        if (error) {
+          toast({ 
+            title: "লগইন ব্যর্থ", 
+            description: error.message === "Invalid login credentials" ? "ভুল ইমেইল বা পাসওয়ার্ড দেওয়া হয়েছে।" : error.message, 
+            variant: "destructive" 
+          });
+        }
+      } else {
+        const rawPhone = identifier.trim().replace(/[^0-9+]/g, "");
+        let phoneVariants: string[] = [];
 
-      if (error) {
-        toast({ title: "লগইন ব্যর্থ", description: error.message, variant: "destructive" });
+        if (rawPhone.startsWith("+")) {
+          phoneVariants = [rawPhone, rawPhone.replace(/^\+88/, "")];
+        } else if (rawPhone.startsWith("880")) {
+          phoneVariants = [`+${rawPhone}`, rawPhone.substring(2)];
+        } else {
+          phoneVariants = [`+88${rawPhone}`, rawPhone];
+        }
+
+        let lastError: any = null;
+        let loggedInUser = null;
+
+        for (const p of phoneVariants) {
+          const { data, error } = await supabase.auth.signInWithPassword({ phone: p, password: pass });
+          if (!error && data?.user) {
+            loggedInUser = data.user;
+            break;
+          }
+          lastError = error;
+        }
+
+        if (loggedInUser) {
+          toast({ title: "প্রবেশাধিকার মঞ্জুর", description: "লগইন সফল হয়েছে।" });
+          return;
+        }
+
+        if (lastError) {
+          toast({ 
+            title: "লগইন ব্যর্থ", 
+            description: lastError.message === "Invalid login credentials" ? "ভুল মোবাইল নম্বর বা পাসওয়ার্ড দেওয়া হয়েছে।" : lastError.message, 
+            variant: "destructive" 
+          });
+        }
       }
     } catch (err) {
       toast({ title: "ত্রুটি", description: "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });

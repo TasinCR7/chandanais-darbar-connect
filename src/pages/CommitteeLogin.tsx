@@ -77,8 +77,9 @@ const CommitteeLogin = () => {
       return;
     }
 
-    if (!isValidPhoneNumber(phone)) {
-      toast({ title: "ভুল নম্বর", description: "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।", variant: "destructive" });
+    const cleanPhone = normalizePhoneNumber(phone);
+    if (!isValidPhoneNumber(cleanPhone)) {
+      toast({ title: "ভুল নম্বর", description: "সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন। (যেমন: ০১৭XXXXXXXX)", variant: "destructive" });
       return;
     }
 
@@ -89,7 +90,6 @@ const CommitteeLogin = () => {
 
     setLoading(true);
     try {
-      const cleanPhone = normalizePhoneNumber(phone);
       
       const searchVariants = [
         cleanPhone,
