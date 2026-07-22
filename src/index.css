@@ -420,4 +420,32 @@
       transform: translateZ(0);
     }
   }
+
+  /* === iOS WebKit (Safari & Chrome on iOS) Compatibility & Fixes === */
+  @supports (-webkit-touch-callout: none) {
+    /* Prevent WebKit Auto Zoom on Input Focus on iOS Safari/Chrome */
+    @media (max-width: 768px) {
+      input:not([type="checkbox"]):not([type="radio"]), 
+      select, 
+      textarea {
+        font-size: 16px !important;
+      }
+    }
+
+    /* Prevent WebKit Tap Highlight Gray Box */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Ensure Smooth Momentum Scrolling on iOS */
+    .overflow-y-auto, .overflow-x-auto, .overflow-auto, body {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Fix iOS 100vh Layout Jumping */
+    .min-h-screen {
+      min-height: 100dvh !important;
+      min-height: -webkit-fill-available !important;
+    }
+  }
 }
