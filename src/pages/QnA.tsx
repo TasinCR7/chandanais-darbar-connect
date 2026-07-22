@@ -102,10 +102,6 @@ const QnA = () => {
 
     setSubmitting(true);
 
-    // Save submission timestamp on success
-    submissionTimes.push(nowTime);
-    localStorage.setItem("last_qna_submissions", JSON.stringify(submissionTimes));
-
     const { data, error } = await supabase.rpc("insert_submission", {
       p_type: type,
       p_name: trimmedName,
@@ -123,6 +119,10 @@ const QnA = () => {
       setSubmitting(false);
       return;
     }
+
+    // Save submission timestamp on success
+    submissionTimes.push(nowTime);
+    localStorage.setItem("last_qna_submissions", JSON.stringify(submissionTimes));
 
     const trackingNumber = data ? data.replace(/-/g, "").substring(0, 8).toUpperCase() : "";
     setLastTrackingId(trackingNumber);
