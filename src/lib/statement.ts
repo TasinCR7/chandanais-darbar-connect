@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
 import { escapeHtml } from '@/utils/security';
@@ -558,7 +559,16 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
   document.body.appendChild(container);
 
   try {
+    if (typeof document !== 'undefined' && document.fonts) {
+      await document.fonts.ready;
+    }
     await doc.html(container, {
+      html2canvas: {
+        scale: 1,
+        useCORS: true,
+        allowTaint: true,
+        windowWidth: 794,
+      },
       callback: function (doc) {
         doc.save(`statement-${member.member_code}-${targetYear}.pdf`);
       },
@@ -883,7 +893,16 @@ export async function downloadReceiptPDF(
   document.body.appendChild(container);
 
   try {
+    if (typeof document !== 'undefined' && document.fonts) {
+      await document.fonts.ready;
+    }
     await doc.html(container, {
+      html2canvas: {
+        scale: 1,
+        useCORS: true,
+        allowTaint: true,
+        windowWidth: 794,
+      },
       callback: function (doc) {
         doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
       },
