@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, Phone, Globe, Settings2, Bell, AlertTriangle } from "lucide-react";
 import { fetchSettings } from "@/lib/api";
 import { Switch } from "@/components/ui/switch";
+import { useQueryClient } from "@tanstack/react-query";
 
 const SettingsManager = () => {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -23,6 +24,8 @@ const SettingsManager = () => {
     }
   };
 
+  const queryClient = useQueryClient();
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,6 +38,11 @@ const SettingsManager = () => {
       const { error } = await supabase.from("app_settings").upsert(updates, { onConflict: 'key' });
       if (error) throw error;
       
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('app_settings_cache', JSON.stringify(settings));
+      }
+      queryClient.invalidateQueries({ queryKey: ['app_settings'] });
+
       toast({ title: "সফল", description: "সেটিংস সংরক্ষিত হয়েছে।" });
     } catch (err: any) {
       toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });

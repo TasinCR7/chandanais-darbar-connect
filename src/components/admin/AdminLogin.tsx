@@ -31,11 +31,17 @@ const AdminLogin = ({
 
   const handleSubmit = () => {
     if (method === "email") {
-      onLogin(email, password, "email");
+      onLogin(email.trim(), password, "email");
     } else {
-      // Ensure phone has country code
-      const formattedPhone = phone.startsWith("+") ? phone : `+88${phone}`;
-      onLogin(formattedPhone, password, "phone");
+      let cleanPhone = phone.trim().replace(/[^0-9+]/g, "");
+      if (!cleanPhone.startsWith("+")) {
+        if (cleanPhone.startsWith("88")) {
+          cleanPhone = `+${cleanPhone}`;
+        } else {
+          cleanPhone = `+88${cleanPhone}`;
+        }
+      }
+      onLogin(cleanPhone, password, "phone");
     }
   };
 
