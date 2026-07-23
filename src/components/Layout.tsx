@@ -170,22 +170,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  const isPublicRoute = 
-    !location.pathname.startsWith('/admin') && 
-    !location.pathname.startsWith('/committee-login') && 
-    !location.pathname.startsWith('/committee-dashboard');
+  // Render immediately without blocking full page render for auth checks
 
-  // Only block rendering for admin/staff routes while auth is loading.
-  // Public routes render immediately without waiting for auth.
-  const needsAuthGate = !isPublicRoute && authLoading;
-  if (needsAuthGate) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <div className="w-14 h-14 rounded-full border-[3px] border-gold/20 border-t-gold animate-spin mb-4" />
-        <p className="text-gold/80 font-heading animate-pulse tracking-widest text-sm">লোড হচ্ছে...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">

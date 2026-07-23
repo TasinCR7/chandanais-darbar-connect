@@ -37,10 +37,13 @@ const CommitteeBroadcast = lazy(() => import("@/components/admin/CommitteeBroadc
 const SettingsManager = lazy(() => import("@/components/admin/SettingsManager"));
 const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
 
+import { useAuth } from "@/hooks/useAuth";
+
 const Admin = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [verifying, setVerifying] = useState(true);
+  const { user: authUser, isAdmin: authIsAdmin, loading: authLoading } = useAuth();
+  const [user, setUser] = useState<User | null>(authUser);
+  const [isAdmin, setIsAdmin] = useState(authIsAdmin);
+  const [verifying, setVerifying] = useState(authLoading);
   const [loginLoading, setLoginLoading] = useState(false);
 
   const [notices, setNotices] = useState<Tables<"notices">[]>([]);
@@ -54,16 +57,23 @@ const Admin = () => {
   const [refreshingStats, setRefreshingStats] = useState(false);
   const { toast } = useToast();
 
+  // Sync with global auth state instantly
+  useEffect(() => {
+    setUser(authUser);
+    setIsAdmin(authIsAdmin);
+    setVerifying(authLoading);
+  }, [authUser, authIsAdmin, authLoading]);
+
   useEffect(() => {
     let isMounted = true;
     
+    // Quick safety timer (300ms fallback)
     const safetyTimer = setTimeout(() => {
       if (isMounted) setVerifying(false);
-    }, 3000);
+    }, 300);
 
     const checkAdminStatus = async (currentUser: User | null) => {
       if (!currentUser) return false;
-
       try {
         const { data, error } = await supabase.rpc("has_role", { _user_id: currentUser.id, _role: "admin" });
         return !!data && !error;
@@ -80,8 +90,11 @@ const Admin = () => {
         const currentUser = session?.user ?? null;
         if (currentUser) {
           setUser(currentUser);
-          const isAdminUser = await checkAdminStatus(currentUser);
+          const isAdminUser = authIsAdmin || (await checkAdminStatus(currentUser));
           if (isMounted) setIsAdmin(isAdminUser);
+        } else {
+          setUser(null);
+          setIsAdmin(false);
         }
       } catch (err) {
         console.error("Auth error:", err);
@@ -101,13 +114,14 @@ const Admin = () => {
         const currentUser = session?.user ?? null;
         if (currentUser) {
           setUser(currentUser);
-          const isAdminUser = await checkAdminStatus(currentUser);
+          const isAdminUser = authIsAdmin || (await checkAdminStatus(currentUser));
           if (isMounted) {
             setIsAdmin(isAdminUser);
             setVerifying(false);
           }
         } else {
           if (isMounted) {
+            setUser(null);
             setIsAdmin(false);
             setVerifying(false);
           }
@@ -120,7 +134,7 @@ const Admin = () => {
       clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [authIsAdmin]);
 
   const handleLogin = async (identifier: string, pass: string, method: "email" | "phone") => {
     setLoginLoading(true);
