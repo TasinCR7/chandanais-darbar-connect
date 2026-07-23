@@ -157,12 +157,35 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (menuOpen) {
-      document.body.style.overflow = "hidden";
+      // Lock body scroll without losing scroll position (prevents iOS Safari jump)
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "";
+      // Restore scroll position
+      const savedY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      if (savedY) {
+        window.scrollTo(0, parseInt(savedY || '0') * -1);
+      }
     }
     return () => {
-      document.body.style.overflow = "";
+      const savedY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      if (savedY) {
+        window.scrollTo(0, parseInt(savedY || '0') * -1);
+      }
     };
   }, [menuOpen]);
 
