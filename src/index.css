@@ -60,17 +60,21 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-bengali overflow-x-hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    touch-action: manipulation; /* Remove 300ms delay */
+    touch-action: manipulation; /* Remove 300ms delay on mobile touch */
     overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body::before {
@@ -422,15 +426,27 @@
     }
   }
 
+  /* Universal iOS input zoom prevention for all form inputs on mobile */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="password"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="search"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
   /* === iOS WebKit (Safari & Chrome on iOS) Compatibility & Fixes === */
   @supports (-webkit-touch-callout: none) {
     /* Prevent WebKit Auto Zoom on Input Focus on iOS Safari/Chrome */
-    @media (max-width: 768px) {
-      input:not([type="checkbox"]):not([type="radio"]), 
-      select, 
-      textarea {
-        font-size: 16px !important;
-      }
+    input:not([type="checkbox"]):not([type="radio"]), 
+    select, 
+    textarea {
+      font-size: 16px !important;
     }
 
     /* Prevent WebKit Tap Highlight Gray Box */
@@ -438,7 +454,14 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Prevent WebKit repainting on fixed elements */
+    /* Smooth Momentum Touch Scrolling for iOS */
+    .ios-touch-scroll,
+    .overflow-y-auto,
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent WebKit repainting flicker on fixed elements */
     header, .fixed, .sticky {
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;

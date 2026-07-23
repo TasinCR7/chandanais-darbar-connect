@@ -300,9 +300,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col h-[100dvh] overflow-hidden"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col h-[100dvh] overflow-hidden pb-safe"
             >
-              <div className="p-4 flex justify-end border-b border-gold/10">
+              <div className="p-4 flex justify-end border-b border-gold/10 pt-safe">
                 <button
                   onClick={() => setMenuOpen(false)}
                   className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90"
@@ -311,7 +311,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto overscroll-contain py-6 px-6">
+              <div className="flex-1 overflow-y-auto overscroll-contain ios-touch-scroll py-6 px-6">
                 <div className="flex flex-col gap-1">
                   {navLinks.map((link, i) => (
                     <motion.div
@@ -334,10 +334,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4">
+              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4 pb-safe">
                 <Link
                   to="/hadia"
-                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-all relative z-50 mb-safe"
+                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-all relative z-50"
                 >
                   হাদিয়া দিন
                 </Link>
