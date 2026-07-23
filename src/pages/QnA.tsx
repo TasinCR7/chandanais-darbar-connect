@@ -261,21 +261,21 @@ ${escapeTelegramHtml(trimmedDetails)}
               <TabsList className="grid w-full grid-cols-3 mb-8 bg-black/40 border border-gold/20 p-1 rounded-xl h-auto gap-0.5 xs:gap-1">
                 <TabsTrigger
                   value="question"
-                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-2 sm:py-3 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-2 sm:py-3 px-1 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2 leading-tight text-center"
                 >
-                  <FileQuestion className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> প্রশ্ন / ফতোয়া
+                  <FileQuestion className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> <span className="truncate">প্রশ্ন / ফতোয়া</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="complaint"
-                  className="data-[state=active]:bg-destructive data-[state=active]:text-white py-2 sm:py-3 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2"
+                  className="data-[state=active]:bg-destructive data-[state=active]:text-white py-2 sm:py-3 px-1 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2 leading-tight text-center"
                 >
-                  <MessageSquareWarning className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> অভিযোগ
+                  <MessageSquareWarning className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> <span className="truncate">অভিযোগ</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="track"
-                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-2 sm:py-3 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2"
+                  className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground py-2 sm:py-3 px-1 rounded-lg font-bold text-[10px] xs:text-xs sm:text-sm md:text-base flex items-center justify-center gap-1 sm:gap-2 leading-tight text-center"
                 >
-                  <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> খোঁজ করুন
+                  <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0" /> <span className="truncate">খোঁজ করুন</span>
                 </TabsTrigger>
               </TabsList>
 

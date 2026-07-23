@@ -206,13 +206,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sticky Navigation */}
       <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background/95 shadow-lg shadow-black/30`}>
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2 md:gap-3 min-w-0 mr-2">
-            <Link to="/" className="flex items-center gap-2 md:gap-3" aria-label="হোম পেজ">
+        <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
+            <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
               {appSettings.site_logo_url && (
-                <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 md:h-10 md:w-10 object-contain shrink-0" />
+                <img src={appSettings.site_logo_url} alt="Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain shrink-0" />
               )}
-              <span className="text-gold font-heading font-bold text-sm md:text-lg leading-tight truncate">
+              <span className="text-gold font-heading font-bold text-xs xs:text-sm md:text-lg leading-tight truncate max-w-[140px] xs:max-w-[190px] sm:max-w-none">
                 {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
               </span>
             </Link>
@@ -259,26 +259,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </nav>
 
           {/* Mobile Actions */}
-          <div className="flex items-center gap-1 xl:hidden">
+          <div className="flex items-center gap-0.5 xs:gap-1 xl:hidden shrink-0">
             <Link
               to="/admin"
-              className="text-muted-foreground hover:text-gold p-2 active:scale-90 transition-transform flex items-center justify-center"
+              className="text-muted-foreground hover:text-gold p-1.5 xs:p-2 active:scale-90 transition-transform flex items-center justify-center"
               aria-label="এডমিন"
             >
-              <Settings size={20} />
+              <Settings size={18} className="xs:w-5 xs:h-5" />
             </Link>
             <Link
               to="/hadia"
-              className="bg-gold-gradient text-primary-foreground px-3 rounded-md text-[11px] font-bold shadow-lg shadow-gold/10 mr-1 min-h-[38px] flex items-center justify-center"
+              className="bg-gold-gradient text-primary-foreground px-2.5 py-1.5 xs:px-3 rounded-md text-[10px] xs:text-[11px] font-bold shadow-lg shadow-gold/10 mr-0.5 xs:mr-1 min-h-[34px] flex items-center justify-center shrink-0"
             >
               হাদিয়া
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gold p-2 active:scale-90 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="text-gold p-1.5 xs:p-2 active:scale-90 transition-transform min-w-[38px] min-h-[38px] flex items-center justify-center shrink-0"
               aria-label="মেনু"
             >
-              {menuOpen ? <X size={28} /> : <Menu size={28} />}
+              {menuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
           </div>
         </div>

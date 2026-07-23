@@ -70,7 +70,7 @@ const toBengaliNum = (n: number): string =>
 
 const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
   <motion.div
-    className="flex flex-col items-center"
+    className="flex flex-col items-center shrink-0"
     initial={{ scale: 0.8, opacity: 0 }}
     animate={{ scale: 1, opacity: 1 }}
     transition={{ duration: 0.5 }}
@@ -78,16 +78,16 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
     {/* Wrapper with radial glow */}
     <div className="relative">
       {/* Radial glow behind box */}
-      <div className="absolute -inset-2 rounded-2xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.12),transparent_70%)] blur-sm pointer-events-none" />
-      <div className="relative bg-emerald border-2 border-gold/30 rounded-xl w-14 h-14 xs:w-[72px] xs:h-[72px] sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.4),inset_0_-1px_4px_rgba(0,0,0,0.2)]">
-        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-gold/50 rounded-tl-xl" />
-        <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-gold/50 rounded-tr-xl" />
-        <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-gold/50 rounded-bl-xl" />
-        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-gold/50 rounded-br-xl" />
+      <div className="absolute -inset-1 xs:-inset-2 rounded-2xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.12),transparent_70%)] blur-sm pointer-events-none" />
+      <div className="relative bg-emerald border border-gold/30 sm:border-2 rounded-xl w-11 h-11 xs:w-14 xs:h-14 sm:w-24 sm:h-24 flex items-center justify-center overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.4),inset_0_-1px_4px_rgba(0,0,0,0.2)]">
+        <div className="absolute top-0 left-0 w-2 h-2 sm:w-3 sm:h-3 border-t sm:border-t-2 border-l sm:border-l-2 border-gold/50 rounded-tl-xl" />
+        <div className="absolute top-0 right-0 w-2 h-2 sm:w-3 sm:h-3 border-t sm:border-t-2 border-r sm:border-r-2 border-gold/50 rounded-tr-xl" />
+        <div className="absolute bottom-0 left-0 w-2 h-2 sm:w-3 sm:h-3 border-b sm:border-b-2 border-l sm:border-l-2 border-gold/50 rounded-bl-xl" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 sm:w-3 sm:h-3 border-b sm:border-b-2 border-r sm:border-r-2 border-gold/50 rounded-br-xl" />
         <AnimatePresence mode="popLayout">
           <motion.span
             key={value}
-            className="text-xl xs:text-3xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]"
+            className="text-base xs:text-2xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]"
             initial={{ y: 14, opacity: 0, filter: "blur(2px)" }}
             animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
             exit={{ y: -14, opacity: 0, filter: "blur(2px)" }}
@@ -98,19 +98,19 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
         </AnimatePresence>
       </div>
     </div>
-    <span className="text-gold-light/80 text-xs sm:text-sm mt-2 font-bengali">{label}</span>
+    <span className="text-gold-light/80 text-[10px] xs:text-xs sm:text-sm mt-1 xs:mt-2 font-bengali">{label}</span>
   </motion.div>
 ));
 
 const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) => (
-  <div className="flex flex-col items-center">
+  <div className="flex flex-col items-center shrink-0">
     <div className="relative">
-      <div className="absolute -inset-1.5 rounded-xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.08),transparent_70%)] blur-sm pointer-events-none" />
-      <div className="relative bg-emerald border border-gold/20 rounded-lg w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden shadow-[inset_0_1px_4px_rgba(0,0,0,0.35),inset_0_-1px_3px_rgba(0,0,0,0.15)]">
+      <div className="absolute -inset-1 rounded-xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.08),transparent_70%)] blur-sm pointer-events-none" />
+      <div className="relative bg-emerald border border-gold/20 rounded-lg w-9 h-9 xs:w-11 xs:h-11 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden shadow-[inset_0_1px_4px_rgba(0,0,0,0.35),inset_0_-1px_3px_rgba(0,0,0,0.15)]">
         <AnimatePresence mode="popLayout">
           <motion.span
             key={value}
-            className="text-xl sm:text-2xl font-heading font-bold text-gold drop-shadow-sm"
+            className="text-sm xs:text-lg sm:text-2xl font-heading font-bold text-gold drop-shadow-sm"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
@@ -121,7 +121,7 @@ const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) =
         </AnimatePresence>
       </div>
     </div>
-    <span className="text-gold-light/60 text-[10px] sm:text-xs mt-1.5 font-bengali">{label}</span>
+    <span className="text-gold-light/60 text-[9px] xs:text-[10px] sm:text-xs mt-1 font-bengali">{label}</span>
   </div>
 ));
 
@@ -148,7 +148,7 @@ const UrsCountdown = () => {
       transition={{ duration: 0.8 }}
       className="max-w-2xl mx-auto text-center"
     >
-      <div className="relative bg-card rounded-2xl p-8 sm:p-10 overflow-hidden before:absolute before:inset-0 before:rounded-2xl before:p-px before:bg-gradient-to-b before:from-gold/30 before:via-transparent before:to-gold/10 before:pointer-events-none before:-z-0 border border-gold/20">
+      <div className="relative bg-card rounded-2xl p-4 xs:p-6 sm:p-10 overflow-hidden before:absolute before:inset-0 before:rounded-2xl before:p-px before:bg-gradient-to-b before:from-gold/30 before:via-transparent before:to-gold/10 before:pointer-events-none before:-z-0 border border-gold/20">
         <div className="absolute inset-0 opacity-5 islamic-pattern pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 border-b-2 border-gold/20 rounded-b-full" />
 
@@ -167,25 +167,25 @@ const UrsCountdown = () => {
         <p className="font-arabic text-gold/60 text-sm mb-3">{nextUrs.arabicTitle}</p>
         
         {/* Premium Glowing Dual Date Badge */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-2.5 mb-8 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full bg-gradient-to-r from-gold/15 via-emerald-950/80 to-gold/15 border border-gold/30 backdrop-blur-md shadow-[0_4px_20px_rgba(180,142,73,0.18)] group hover:border-gold/60 transition-all duration-300">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold/20 text-gold font-bengali text-xs sm:text-sm font-bold border border-gold/40 shadow-inner">
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8 px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-gradient-to-r from-gold/15 via-emerald-950/80 to-gold/15 border border-gold/30 backdrop-blur-md shadow-[0_4px_20px_rgba(180,142,73,0.18)] group hover:border-gold/60 transition-all duration-300">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gold/20 text-gold font-bengali text-xs sm:text-sm font-bold border border-gold/40 shadow-inner">
             <Calendar className="h-3.5 w-3.5 text-gold animate-pulse" />
             <span>বাংলা: {nextUrs.bengaliDate}</span>
           </div>
           <span className="text-gold/40 text-xs hidden xs:inline">•</span>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald/70 text-cream/90 font-bengali text-xs sm:text-sm font-medium border border-gold/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald/70 text-cream/90 font-bengali text-xs sm:text-sm font-medium border border-gold/20">
             <Sparkles className="h-3.5 w-3.5 text-gold-light" />
             <span>ইংরেজি: {new Date(nextUrs.gregorianDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
         </div>
 
-        <div className="flex justify-center gap-2 xs:gap-3 sm:gap-5">
+        <div className="flex justify-center items-center gap-1 xs:gap-2.5 sm:gap-5">
           <TimeBox value={timeLeft.days} label="দিন" />
-          <div className="flex items-center text-gold/40 text-2xl font-bold">:</div>
+          <div className="flex items-center text-gold/40 text-sm xs:text-lg sm:text-2xl font-bold pb-4">:</div>
           <TimeBox value={timeLeft.hours} label="ঘন্টা" />
-          <div className="flex items-center text-gold/40 text-2xl font-bold">:</div>
+          <div className="flex items-center text-gold/40 text-sm xs:text-lg sm:text-2xl font-bold pb-4">:</div>
           <TimeBox value={timeLeft.minutes} label="মিনিট" />
-          <div className="flex items-center text-gold/40 text-2xl font-bold">:</div>
+          <div className="flex items-center text-gold/40 text-sm xs:text-lg sm:text-2xl font-bold pb-4">:</div>
           <TimeBox value={timeLeft.seconds} label="সেকেন্ড" />
         </div>
 

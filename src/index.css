@@ -403,26 +403,15 @@
   }
 
   @media (max-width: 768px) {
-    /* Disable ALL backdrop-filters on mobile — this is the #1 cause of shaking */
-    * {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
-
-    /* Solid opaque backgrounds instead of blur for readability */
+    /* Solid opaque backgrounds on mobile cards for performance & readability */
     .glass-card, .glass-morphism, .card-gold {
       background-color: rgba(10, 10, 10, 0.95) !important;
     }
     
-    /* Minimize expensive box-shadow rendering */
+    /* Minimize expensive box-shadow rendering on mobile */
     .gold-glow, .gold-glow-hover:hover, 
-    .shadow-gold, .premium-shadow, .shadow-2xl {
-      box-shadow: none !important;
-    }
-
-    /* Disable ALL hover scale/translate animations on touch devices */
-    *:hover {
-      transform: none !important;
+    .shadow-gold, .premium-shadow {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     }
   }
 
