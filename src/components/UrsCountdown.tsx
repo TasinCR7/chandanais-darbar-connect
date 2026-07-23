@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Star } from "lucide-react";
+import { Moon, Star, Calendar, Sparkles } from "lucide-react";
 
 interface UrsEvent {
   title: string;
@@ -164,10 +164,20 @@ const UrsCountdown = () => {
           আসন্ন ওরশ শরীফ
         </h3>
         <p className="text-gold font-semibold text-base mb-1">{nextUrs.title}</p>
-        <p className="font-arabic text-gold/60 text-sm mb-1">{nextUrs.arabicTitle}</p>
-        <p className="text-muted-foreground text-sm mb-8">
-          📅 {nextUrs.bengaliDate} • {new Date(nextUrs.gregorianDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+        <p className="font-arabic text-gold/60 text-sm mb-3">{nextUrs.arabicTitle}</p>
+        
+        {/* Premium Glowing Dual Date Badge */}
+        <div className="inline-flex flex-wrap items-center justify-center gap-2.5 mb-8 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full bg-gradient-to-r from-gold/15 via-emerald-950/80 to-gold/15 border border-gold/30 backdrop-blur-md shadow-[0_4px_20px_rgba(180,142,73,0.18)] group hover:border-gold/60 transition-all duration-300">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gold/20 text-gold font-bengali text-xs sm:text-sm font-bold border border-gold/40 shadow-inner">
+            <Calendar className="h-3.5 w-3.5 text-gold animate-pulse" />
+            <span>বাংলা: {nextUrs.bengaliDate}</span>
+          </div>
+          <span className="text-gold/40 text-xs hidden xs:inline">•</span>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald/70 text-cream/90 font-bengali text-xs sm:text-sm font-medium border border-gold/20">
+            <Sparkles className="h-3.5 w-3.5 text-gold-light" />
+            <span>ইংরেজি: {new Date(nextUrs.gregorianDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </div>
+        </div>
 
         <div className="flex justify-center gap-2 xs:gap-3 sm:gap-5">
           <TimeBox value={timeLeft.days} label="দিন" />

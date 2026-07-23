@@ -2824,3 +2824,192 @@ export async function downloadAreaPaymentsPDF(
   stampFooters(doc, `Area Payment Records — Generated ${new Date().toLocaleDateString()}`);
   doc.save(`Area-Payments-${year}${month ? '-' + month : ''}.pdf`);
 }
+
+/**
+ * Custom Date Range Financial Statement PDF Generator
+ */
+export async function downloadCustomRangeReportPDF(
+  payments: OrgPaymentRow[],
+  expenses: AreaExpenseRow[],
+  startDateStr: string,
+  endDateStr: string,
+  options: { methodFilter?: string; filename?: string } = {}
+) {
+  const doc = new jsPDF();
+  await ensureBanglaFont(doc);
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  drawPageBorder(doc);
+
+  const period = `${startDateStr}  থেকে  ${endDateStr}`;
+
+  drawOrgHeader(
+    doc,
+    'CUSTOM DATE RANGE FINANCIAL STATEMENT',
+    `সময়কাল: ${period}`
+  );
+
+  const qrDataL = `CustomLedger: ${startDateStr}_${endDateStr}\nGen: ${new Date().toLocaleDateString()}\nStatus: Official Verified`;
+  try {
+    const qrDataUrlL = await QRCode.toDataURL(qrDataL, { margin: 1, width: 80 });
+    doc.addImage(qrDataUrlL, 'PNG', pageWidth - 38, 10, 25, 25);
+  } catch (e) { console.warn(e); }
+
+  interface TxRow { date: string; desc: string; cat: string; ref: string; credit: number; debit: number; }
+  const txs: TxRow[] = [];
+
+  const startT = new Date(startDateStr).getTime();
+  const endT = new Date(endDateStr + 'T23:59:59').getTime();
+
+  payments.filter(p => {
+    if (p.status && p.status !== 'approved') return false;
+    if (options.methodFilter && options.methodFilter !== 'all' && p.method !== options.methodFilter) return false;
+    if (!p.payment_date) return false;
+    const pTime = new Date(p.payment_date).getTime();
+    return pTime >= startT && pTime <= endT;
+  }).forEach(p => {
+    const m = (p as any).members;
+    txs.push({
+      date: p.payment_date || '-',
+      desc: m ? `চাঁদা জমা: ${m.full_name} (${m.member_code})` : `চাঁদা জমা`,
+      cat: 'আয়',
+      ref: p.transaction_ref || methodLabel(p.method),
+      credit: Number(p.amount),
+      debit: 0,
+    });
+  });
+
+  expenses.filter(e => {
+    if (!e.expense_date) return false;
+    const eTime = new Date(e.expense_date).getTime();
+    return eTime >= startT && eTime <= endT;
+  }).forEach(e => {
+    txs.push({
+      date: e.expense_date,
+      desc: e.title || 'খরচ',
+      cat: e.category || 'সাধারণ খরচ',
+      ref: e.approved_by || '-',
+      credit: 0,
+      debit: Number(e.amount || 0),
+    });
+  });
+
+  txs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const totalIn = txs.reduce((s, t) => s + t.credit, 0);
+  const totalOut = txs.reduce((s, t) => s + t.debit, 0);
+  const netBalance = totalIn - totalOut;
+
+  let currentY = 52;
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['মোট লেনদেন', 'মোট আয় (BDT)', 'মোট খরচ (BDT)', 'অবশিষ্ট ক্যাশ ব্যালেন্স']],
+    body: [[
+      String(txs.length),
+      `BDT ${totalIn.toLocaleString()}`,
+      `BDT ${totalOut.toLocaleString()}`,
+      `BDT ${netBalance.toLocaleString()}`
+    ]],
+    theme: 'grid',
+    headStyles: { fillColor: [180, 142, 73], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 10, halign: 'center' },
+    margin: { left: 14, right: 14 },
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  let runningBal = 0;
+  const tableData = txs.map(t => {
+    runningBal += (t.credit - t.debit);
+    return [
+      t.date,
+      t.desc,
+      t.cat,
+      t.ref,
+      t.credit > 0 ? `৳ ${t.credit.toLocaleString()}` : '-',
+      t.debit > 0 ? `৳ ${t.debit.toLocaleString()}` : '-',
+      `৳ ${runningBal.toLocaleString()}`
+    ];
+  });
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['তারিখ', 'বিবরণ', 'ক্যাটাগরি', 'রেফারেন্স / মেথড', 'জমা (আয়)', 'খরচ', 'ব্যালেন্স']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [18, 18, 18], textColor: [255, 255, 255], fontStyle: 'bold' },
+    bodyStyles: { font: BANGLA_FONT_NAME, fontSize: 8 },
+    columnStyles: {
+      0: { cellWidth: 25 },
+      1: { cellWidth: 55 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 25 },
+      4: { halign: 'right', textColor: [22, 101, 52] },
+      5: { halign: 'right', textColor: [153, 27, 27] },
+      6: { halign: 'right', fontStyle: 'bold' }
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  stampFooters(doc, 'Custom Date-Range Financial Statement');
+  doc.save(safeFilename(options.filename || '', `custom-ledger-${startDateStr}_${endDateStr}`));
+}
+
+/**
+ * Custom Date Range Financial Statement CSV Generator
+ */
+export function downloadCustomRangeReportCSV(
+  payments: OrgPaymentRow[],
+  expenses: AreaExpenseRow[],
+  startDateStr: string,
+  endDateStr: string,
+  options: { methodFilter?: string; filename?: string } = {}
+) {
+  const rows: (string | number)[][] = [];
+  const startT = new Date(startDateStr).getTime();
+  const endT = new Date(endDateStr + 'T23:59:59').getTime();
+
+  rows.push([`Custom Date Range Financial Statement (${startDateStr} to ${endDateStr})`]);
+  rows.push([`Generated`, new Date().toISOString().slice(0, 16).replace('T', ' ')]);
+  rows.push([]);
+  rows.push(['Date', 'Type', 'Description', 'Category', 'Method / Ref', 'Credit (BDT)', 'Debit (BDT)']);
+
+  payments.filter(p => {
+    if (p.status && p.status !== 'approved') return false;
+    if (options.methodFilter && options.methodFilter !== 'all' && p.method !== options.methodFilter) return false;
+    if (!p.payment_date) return false;
+    const pTime = new Date(p.payment_date).getTime();
+    return pTime >= startT && pTime <= endT;
+  }).forEach(p => {
+    const m = (p as any).members;
+    rows.push([
+      p.payment_date || '',
+      'INCOME',
+      m ? `Subscription: ${m.full_name} (${m.member_code})` : `Subscription (${p.member_id})`,
+      'Subscription',
+      p.transaction_ref || p.method.toUpperCase(),
+      Number(p.amount),
+      0
+    ]);
+  });
+
+  expenses.filter(e => {
+    if (!e.expense_date) return false;
+    const eTime = new Date(e.expense_date).getTime();
+    return eTime >= startT && eTime <= endT;
+  }).forEach(e => {
+    rows.push([
+      e.expense_date,
+      'EXPENSE',
+      e.title || 'Expense',
+      e.category || 'General',
+      e.approved_by || '-',
+      0,
+      Number(e.amount || 0)
+    ]);
+  });
+
+  downloadCSV(rows, options.filename || `custom-ledger-${startDateStr}_${endDateStr}`);
+}
+

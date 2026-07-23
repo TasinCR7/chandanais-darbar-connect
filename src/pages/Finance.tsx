@@ -32,6 +32,8 @@ import {
   downloadAreaReportPDF, computeAreaSummaries,
   downloadReceiptPDF,
   downloadConsolidatedReceiptPDF,
+  downloadCustomRangeReportPDF,
+  downloadCustomRangeReportCSV,
   formatBDT,
   type OrgMonthlyTotals, type OrgAnnualTotals, type PaymentLite, type MemberLite,
 } from '@/lib/statement';
@@ -95,6 +97,14 @@ const Finance = () => {
   const [previewKind, setPreviewKind] = useState<'monthly' | 'annual' | 'combined'>('monthly');
   const [reportFilename, setReportFilename] = useState<string>('');
   const [areaFilter, setAreaFilter] = useState<string>('all');
+  const [methodFilter, setMethodFilter] = useState<string>('all');
+  const [customRangeOpen, setCustomRangeOpen] = useState<boolean>(false);
+  const [customStartDate, setCustomStartDate] = useState<string>(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [customEndDate, setCustomEndDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
   const [duesFilter, setDuesFilter] = useState<'all' | '3plus'>('all');
   const [duesSearch, setDuesSearch] = useState('');
   const [areaScope, setAreaScope] = useState<'year' | 'month'>('year');
@@ -512,6 +522,44 @@ const Finance = () => {
       setBusy(false);
     }
   };
+
+  const handleDownloadReceipt = async (p: Payment) => {
+    const member = members.find((m) => m.id === p.member_id) || (p as any).members;
+    if (!member) {
+      toast({ title: 'সদস্যের তথ্য পাওয়া যায়নি', variant: 'destructive' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const memberLite: MemberLite = {
+        id: member.id,
+        member_code: member.member_code || 'N/A',
+        full_name: member.full_name || 'সদস্য',
+        area: member.area || '-',
+        phone: member.phone || '-',
+        joined_date: member.joined_date || '',
+        monthly_rate: Number(member.monthly_rate) || 0,
+        status: member.status || 'active',
+      };
+      const paymentLite: PaymentLite & { id?: string } = {
+        id: p.id,
+        member_id: p.member_id,
+        amount: Number(p.amount),
+        for_year: p.for_year,
+        for_month: p.for_month,
+        payment_date: p.payment_date || new Date().toISOString().split('T')[0],
+        method: p.method,
+        transaction_ref: p.transaction_ref,
+      };
+      await downloadReceiptPDF(memberLite, paymentLite);
+      toast({ title: 'পেমেন্ট রশিদ সফলভাবে জেনারেট হয়েছে' });
+    } catch (err: any) {
+      toast({ title: 'ত্রুটি', description: err?.message || 'রশিদ তৈরিতে সমস্যা হয়েছে', variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
 
   const deleteMember = async (id: string) => {
     if (!confirm('সতর্কতা: এই সদস্যকে মুছে ফেললে তার সকল পেমেন্ট রেকর্ডও মুছে যেতে পারে। আপনি কি নিশ্চিত?')) return;
@@ -1098,6 +1146,49 @@ const Finance = () => {
               <StatCard icon={<Users className="h-5 w-5" />} label="সক্রিয় সদস্য" value={toBanglaNumber(activeMembers)} />
             </div>
 
+            {/* Target Collection Progress Card */}
+            <div className="card-gold rounded-2xl p-5 shadow-xl relative overflow-hidden border border-gold/30">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-gold animate-pulse" />
+                    <h3 className="font-display font-bold text-base sm:text-lg gold-text">
+                      মাসিক কালেকশন টার্গেট ({BANGLA_MONTHS[reportMonth - 1]} {toBanglaNumber(reportYear)})
+                    </h3>
+                  </div>
+                  <p className="font-bangla text-xs text-muted-foreground mt-1">
+                    লক্ষ্যমাত্রা: <span className="font-semibold text-foreground">৳ {toBanglaNumber(Number(monthTargetRow?.target_amount || 0).toFixed(0))}</span> |
+                    সংগৃহীত: <span className="font-semibold text-emerald-600 dark:text-emerald-400">৳ {toBanglaNumber(monthIncome.toFixed(0))}</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "text-xs px-3 py-1 rounded-full font-bold font-bangla shrink-0",
+                    targetAchievement >= 80 ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" :
+                    targetAchievement >= 50 ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30" :
+                    "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+                  )}>
+                    {toBanglaNumber(targetAchievement.toFixed(1))}% অর্জিত
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Track */}
+              <div className="w-full bg-secondary/60 h-3 rounded-full overflow-hidden mt-4 border border-border/40">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, Math.max(0, targetAchievement))}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    targetAchievement >= 80 ? "bg-gradient-to-r from-emerald-500 to-teal-400" :
+                    targetAchievement >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400" :
+                    "bg-gradient-to-r from-rose-500 to-red-400"
+                  )}
+                />
+              </div>
+            </div>
+
             {/* Ultra-Advanced Quick PDF Report Export Hub */}
             <div className="bg-card/60 border border-gold/20 rounded-2xl p-5 shadow-xl backdrop-blur-xl">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1128,6 +1219,15 @@ const Finance = () => {
                   >
                     <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5 text-gold" />
                     বার্ষিক রিপোর্ট
+                  </Button>
+                  <Button
+                    onClick={() => setCustomRangeOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-gold/40 text-gold hover:bg-gold/10 font-bangla text-xs font-semibold flex-1 md:flex-initial"
+                  >
+                    <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-gold" />
+                    কাস্টম তারিখ রেঞ্জ
                   </Button>
                   <Button
                     onClick={downloadGeneralReport}
@@ -1364,19 +1464,25 @@ const Finance = () => {
                 areaFilter === 'all' ? true :
                 areaFilter === '__none__' ? !((area ?? '').trim()) :
                 (area ?? '').trim() === areaFilter;
+              const matchMethod = (method: string) =>
+                methodFilter === 'all' ? true : method === methodFilter;
               const filteredPayments = payments.filter((p) =>
-                matchArea(p.members?.area ?? memberById.get(p.member_id)?.area));
+                matchArea(p.members?.area ?? memberById.get(p.member_id)?.area) && matchMethod(p.method)
+              );
               const expenseHasArea = expenses.some((e) => e.area);
               const filteredExpenses = expenses.filter((e) =>
                 areaFilter === 'all' || !expenseHasArea ? true : matchArea(e.area));
               return (
                 <>
                   <div className="card-gold rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 mb-2">
-                    <p className="font-bangla text-sm text-muted-foreground">এলাকা ফিল্টার (সাম্প্রতিক রেকর্ডসমূহ)</p>
-                    <div className="flex items-center gap-2">
+                    <div>
+                      <p className="font-bangla text-sm font-bold text-foreground">ফিল্টার হাব (এলাকা ও পেমেন্ট মেথড)</p>
+                      <p className="font-bangla text-xs text-muted-foreground">নির্দিষ্ট এলাকা বা মেথড অনুযায়ী লেনদেন দেখুন</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Select value={areaFilter} onValueChange={setAreaFilter}>
-                        <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-                        <SelectContent>
+                        <SelectTrigger className="w-40 font-bangla"><SelectValue placeholder="সব এলাকা" /></SelectTrigger>
+                        <SelectContent className="font-bangla">
                           <SelectItem value="all">সব এলাকা</SelectItem>
                           <SelectItem value="__none__">— এলাকা বিহীন —</SelectItem>
                           {areaOpts.map((a) => (
@@ -1384,8 +1490,22 @@ const Finance = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {areaFilter !== 'all' && (
-                        <Button size="sm" variant="ghost" onClick={() => setAreaFilter('all')} className="font-bangla">রিসেট</Button>
+                      <Select value={methodFilter} onValueChange={setMethodFilter}>
+                        <SelectTrigger className="w-36 font-bangla"><SelectValue placeholder="সব মেথড" /></SelectTrigger>
+                        <SelectContent className="font-bangla">
+                          <SelectItem value="all">সব মেথড</SelectItem>
+                          <SelectItem value="bkash">বিকাশ (bKash)</SelectItem>
+                          <SelectItem value="nagad">নগদ (Nagad)</SelectItem>
+                          <SelectItem value="rocket">রকেট (Rocket)</SelectItem>
+                          <SelectItem value="bank">ব্যাংক (Bank)</SelectItem>
+                          <SelectItem value="cash">ক্যাশ (Cash)</SelectItem>
+                          <SelectItem value="other">অন্যান্য</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {(areaFilter !== 'all' || methodFilter !== 'all') && (
+                        <Button size="sm" variant="ghost" onClick={() => { setAreaFilter('all'); setMethodFilter('all'); }} className="font-bangla text-xs">
+                          রিসেট
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -1440,7 +1560,13 @@ const Finance = () => {
                 </Button>
               </div>
             </form>
-            {selectedMember && <PersonalView member={selectedMember} payments={payments.filter((p) => p.member_id === selectedMember.id)} />}
+            {selectedMember && (
+              <PersonalView
+                member={selectedMember}
+                payments={payments.filter((p) => p.member_id === selectedMember.id)}
+                onDownloadReceipt={handleDownloadReceipt}
+              />
+            )}
           </div>
         )}
 
@@ -2928,10 +3054,13 @@ const Finance = () => {
                           <td className="text-right font-bold">৳ {toBanglaNumber(p.amount)}</td>
                           <td className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-primary" onClick={() => setEditingPayment(p)}>
+                              <Button size="icon" variant="ghost" title="রশিদ (PDF) ডাউনলোড" className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10" onClick={() => handleDownloadReceipt(p)}>
+                                <ReceiptText className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="সম্পাদনা" className="h-7 w-7 text-primary" onClick={() => setEditingPayment(p)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deletePayment(p.id)}>
+                              <Button size="icon" variant="ghost" title="মুছে ফেলুন" className="h-7 w-7 text-destructive" onClick={() => deletePayment(p.id)}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -2957,10 +3086,13 @@ const Finance = () => {
                         <p className="text-sm font-black text-emerald-600 mt-1">৳ {toBanglaNumber(p.amount)}</p>
                       </div>
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => setEditingPayment(p)}>
+                        <Button size="icon" variant="ghost" title="রশিদ (PDF) ডাউনলোড" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10" onClick={() => handleDownloadReceipt(p)}>
+                          <ReceiptText className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" title="সম্পাদনা" className="h-8 w-8 text-primary" onClick={() => setEditingPayment(p)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deletePayment(p.id)}>
+                        <Button size="icon" variant="ghost" title="মুছে ফেলুন" className="h-8 w-8 text-destructive" onClick={() => deletePayment(p.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -3154,6 +3286,101 @@ const Finance = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Custom Date Range Report Dialog */}
+      <Dialog open={customRangeOpen} onOpenChange={setCustomRangeOpen}>
+        <DialogContent className="max-w-md font-bangla">
+          <DialogHeader>
+            <DialogTitle className="gold-text flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-gold" />
+              কাস্টম তারিখ রেঞ্জ রিপোর্ট
+            </DialogTitle>
+            <DialogDescription>
+              আপনার পছন্দের যেকোনো দুই তারিখের মধ্যবর্তী আয়-ব্যয়ের লেজার রিপোর্ট ডাউনলোড করুন।
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">শুরুর তারিখ (Start Date)</Label>
+              <Input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="h-10 font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">শেষের তারিখ (End Date)</Label>
+              <Input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="h-10 font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">পেমেন্ট মেথড ফিল্টার</Label>
+              <Select value={methodFilter} onValueChange={setMethodFilter}>
+                <SelectTrigger className="h-10 font-bangla">
+                  <SelectValue placeholder="সব মেথড" />
+                </SelectTrigger>
+                <SelectContent className="font-bangla">
+                  <SelectItem value="all">সব মেথড (All Methods)</SelectItem>
+                  <SelectItem value="bkash">বিকাশ (bKash)</SelectItem>
+                  <SelectItem value="nagad">নগদ (Nagad)</SelectItem>
+                  <SelectItem value="rocket">রকেট (Rocket)</SelectItem>
+                  <SelectItem value="bank">ব্যাংক (Bank)</SelectItem>
+                  <SelectItem value="cash">ক্যাশ (Cash)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                try {
+                  downloadCustomRangeReportCSV(payments as any, expenses as any, customStartDate, customEndDate, {
+                    methodFilter,
+                    filename: `custom-ledger-${customStartDate}_${customEndDate}`,
+                  });
+                  toast({ title: 'CSV রিপোর্ট ডাউনলোড সম্পন্ন' });
+                } catch (err: any) {
+                  toast({ title: 'ত্রুটি', description: err?.message, variant: 'destructive' });
+                }
+              }}
+              className="font-bangla"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-1 text-emerald-600" />
+              CSV এক্সপোর্ট
+            </Button>
+            <Button
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await downloadCustomRangeReportPDF(payments as any, expenses as any, customStartDate, customEndDate, {
+                    methodFilter,
+                    filename: `custom-ledger-${customStartDate}_${customEndDate}`,
+                  });
+                  toast({ title: 'কাস্টম লেজার PDF জেনারেট সম্পন্ন' });
+                  setCustomRangeOpen(false);
+                } catch (err: any) {
+                  toast({ title: 'ত্রুটি', description: err?.message, variant: 'destructive' });
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className="bg-gold-gradient text-primary-foreground font-bold font-bangla"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              PDF ডাউনলোড
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={quickMemberOpen} onOpenChange={setQuickMemberOpen}>
         <DialogContent className="max-w-md font-bangla">
           <DialogHeader>
@@ -3307,7 +3534,15 @@ const ProgressCard = ({ label, current, target }: { label: string; current: numb
   );
 };
 
-const PersonalView = ({ member, payments }: { member: Member; payments: Payment[] }) => {
+const PersonalView = ({
+  member,
+  payments,
+  onDownloadReceipt,
+}: {
+  member: Member;
+  payments: Payment[];
+  onDownloadReceipt?: (p: Payment) => void;
+}) => {
   const memPays = payments.map((p) => ({
     amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
     payment_date: p.payment_date, method: p.method, transaction_ref: p.transaction_ref,
@@ -3344,26 +3579,43 @@ const PersonalView = ({ member, payments }: { member: Member; payments: Payment[
         <table className="w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
-              <th className="py-2">মাস</th><th className="text-right">প্রত্যাশিত</th><th className="text-right">পরিশোধিত</th><th>অবস্থা</th>
+              <th className="py-2">মাস</th><th className="text-right">প্রত্যাশিত</th><th className="text-right">পরিশোধিত</th><th>অবস্থা</th><th className="text-right">রশিদ</th>
             </tr>
           </thead>
           <tbody className="font-bangla">
-            {monthly.map((r) => (
-              <tr key={`${r.year}-${r.month}`} className="border-b border-border/40">
-                <td className="py-2">{monthName(r.month)} {toBanglaNumber(r.year)}</td>
-                <td className="text-right">৳ {toBanglaNumber(r.expected)}</td>
-                <td className="text-right text-primary">৳ {toBanglaNumber(r.paid)}</td>
-                <td>
-                  <span className={
-                    r.status === 'paid' ? 'text-xs px-2 py-1 rounded bg-primary/20 text-primary' :
-                    r.status === 'partial' ? 'text-xs px-2 py-1 rounded bg-yellow-500/20 text-yellow-500' :
-                    'text-xs px-2 py-1 rounded bg-destructive/20 text-destructive'
-                  }>
-                    {r.status === 'paid' ? 'পরিশোধিত' : r.status === 'partial' ? 'আংশিক' : 'বাকি'}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {monthly.map((r) => {
+              const matchingPay = payments.find((p) => p.for_year === r.year && p.for_month === r.month);
+              return (
+                <tr key={`${r.year}-${r.month}`} className="border-b border-border/40 hover:bg-primary/5 transition-colors">
+                  <td className="py-2">{monthName(r.month)} {toBanglaNumber(r.year)}</td>
+                  <td className="text-right">৳ {toBanglaNumber(r.expected)}</td>
+                  <td className="text-right text-primary font-semibold">৳ {toBanglaNumber(r.paid)}</td>
+                  <td>
+                    <span className={
+                      r.status === 'paid' ? 'text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold' :
+                      r.status === 'partial' ? 'text-xs px-2 py-1 rounded bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 font-semibold' :
+                      'text-xs px-2 py-1 rounded bg-destructive/20 text-destructive font-semibold'
+                    }>
+                      {r.status === 'paid' ? 'পরিশোধিত' : r.status === 'partial' ? 'আংশিক' : 'বাকি'}
+                    </span>
+                  </td>
+                  <td className="text-right">
+                    {matchingPay && onDownloadReceipt ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 font-bangla"
+                        onClick={() => onDownloadReceipt(matchingPay)}
+                      >
+                        <ReceiptText className="h-3.5 w-3.5 mr-1" /> রশিদ (PDF)
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

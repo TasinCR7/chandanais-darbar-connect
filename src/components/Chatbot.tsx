@@ -11,6 +11,9 @@ interface Message {
   content: string;
 }
 
+const MAX_DISPLAY_MESSAGES = 50;
+const MAX_API_CONTEXT = 20;
+
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -32,14 +35,20 @@ const Chatbot: React.FC = () => {
 
     const userMsg = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+    setMessages(prev => {
+      const updated = [...prev, { role: "user" as const, content: userMsg }];
+      return updated.length > MAX_DISPLAY_MESSAGES ? updated.slice(-MAX_DISPLAY_MESSAGES) : updated;
+    });
     setIsLoading(true);
 
     try {
-      // Pass chat history (excluding the very first welcome message for context economy, or keep it)
-      const history = messages.slice(1).map(m => ({ role: m.role, content: m.content }));
+      // Pass limited chat history to avoid token overflow
+      const history = messages.slice(-MAX_API_CONTEXT).map(m => ({ role: m.role, content: m.content }));
       const aiResponse = await getGeminiResponse(userMsg, history);
-      setMessages(prev => [...prev, { role: "ai", content: aiResponse }]);
+      setMessages(prev => {
+        const updated = [...prev, { role: "ai" as const, content: aiResponse }];
+        return updated.length > MAX_DISPLAY_MESSAGES ? updated.slice(-MAX_DISPLAY_MESSAGES) : updated;
+      });
     } catch (error) {
       console.error("Chat error:", error);
       setMessages(prev => [...prev, { role: "ai", content: "দুঃখিত, সংযোগ বিচ্ছিন্ন হয়েছে। আবার চেষ্টা করুন।" }]);

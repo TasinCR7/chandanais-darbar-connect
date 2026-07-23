@@ -12,18 +12,18 @@ const VisitorCounter = () => {
         const timeoutId = setTimeout(() => controller.abort(), 2500);
 
         const hasVisited = sessionStorage.getItem('hasVisited_v1');
-        let url = 'https://api.counterapi.dev/v1/chandanish-dorbar/website';
-        
-        if (!hasVisited) {
-          url += '/up';
-          sessionStorage.setItem('hasVisited_v1', 'true');
-        }
+        const url = hasVisited
+          ? 'https://api.counterapi.dev/v1/chandanish-dorbar/website'
+          : 'https://api.counterapi.dev/v1/chandanish-dorbar/website/up';
 
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
         const data = await res.json();
         
         if (data && typeof data.count === 'number') {
+          if (!hasVisited) {
+            sessionStorage.setItem('hasVisited_v1', 'true');
+          }
           setCount(data.count + 1540); 
         }
       } catch (err) {

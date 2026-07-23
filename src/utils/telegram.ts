@@ -12,16 +12,10 @@ export const escapeTelegramHtml = (str: string | number | null | undefined): str
     .replace(/>/g, "&gt;");
 };
 
-const DEFAULT_BOT_TOKEN = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
-const DEFAULT_CHAT_IDS = "7484314831,-1003880816949";
-
 export const sendTelegramNotification = async (message: string) => {
   try {
-    const envToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "";
-    const envChatIds = import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "";
-
-    const botToken = envToken.trim() !== "" ? envToken.trim() : DEFAULT_BOT_TOKEN;
-    const chatIdsString = envChatIds.trim() !== "" ? envChatIds.trim() : DEFAULT_CHAT_IDS;
+    const botToken = (import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "").trim();
+    const chatIdsString = (import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "").trim();
 
     if (!botToken || botToken.trim() === "") {
       console.error("❌ Telegram Error: VITE_TELEGRAM_BOT_TOKEN is missing or empty");

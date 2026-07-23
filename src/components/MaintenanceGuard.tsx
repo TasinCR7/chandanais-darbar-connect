@@ -40,7 +40,9 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
   });
 
   // Committee members log in via phone verification stored in localStorage
-  const isCommitteeMember = typeof window !== 'undefined' && !!localStorage.getItem("committee_auth");
+  const isCommitteeMember = typeof window !== 'undefined' && (() => {
+    try { return !!localStorage.getItem("committee_auth"); } catch { return false; }
+  })();
   const isBypassed = isStaff || isCommitteeMember;
 
   // Check both .env and Database settings
