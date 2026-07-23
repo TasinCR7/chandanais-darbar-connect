@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,7 +9,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import PremiumLoader from "./components/PremiumLoader";
 import ScrollToTop from "./components/ScrollToTop";
-import { motion, AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/hooks/useAuth";
 import RouteProgressBar from "./components/RouteProgressBar";
 
@@ -52,49 +51,38 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
-  const location = useLocation();
   return (
     <Layout>
       <RouteProgressBar />
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.1, ease: "linear" }}
-        >
-          <Suspense fallback={<PremiumLoader />}>
-            <MaintenanceGuard>
-              <Routes location={location} key={location.pathname}>
-                <Route path="/maintenance" element={<Maintenance />} />
-                <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/pir" element={<Pir />} />
-              <Route path="/rules" element={<Rules />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/hadia" element={<Hadia />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/doa" element={<Doa />} />
-              <Route path="/qna" element={<QnA />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/notices" element={<Notices />} />
-              <Route path="/committee" element={<Committee />} />
-              <Route path="/committee-login" element={<CommitteeLogin />} />
-              <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/book" element={<BookReader />} />
-              <Route path="/finance" element={<Finance />} />
-              <Route path="/member-search" element={<MemberSearch />} />
-              <Route path="/member/:id" element={<MemberProfile />} />
-              <Route path="/transparency" element={<TransparencyNew />} />
-              <Route path="/member-portal" element={<MemberPortal />} />
-              <Route path="*" element={<NotFound />} />
-              </Routes>
-            </MaintenanceGuard>
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
+      <Suspense fallback={<PremiumLoader />}>
+        <MaintenanceGuard>
+          <Routes>
+            <Route path="/maintenance" element={<Maintenance />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/pir" element={<Pir />} />
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/hadia" element={<Hadia />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/doa" element={<Doa />} />
+            <Route path="/qna" element={<QnA />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/notices" element={<Notices />} />
+            <Route path="/committee" element={<Committee />} />
+            <Route path="/committee-login" element={<CommitteeLogin />} />
+            <Route path="/committee-dashboard" element={<CommitteeDashboard />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/book" element={<BookReader />} />
+            <Route path="/finance" element={<Finance />} />
+            <Route path="/member-search" element={<MemberSearch />} />
+            <Route path="/member/:id" element={<MemberProfile />} />
+            <Route path="/transparency" element={<TransparencyNew />} />
+            <Route path="/member-portal" element={<MemberPortal />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MaintenanceGuard>
+      </Suspense>
     </Layout>
   );
 };
