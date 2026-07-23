@@ -270,13 +270,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <Link
               to="/hadia"
-              className="bg-gold-gradient text-primary-foreground px-2.5 py-1.5 xs:px-3 rounded-md text-[10px] xs:text-[11px] font-bold shadow-lg shadow-gold/10 mr-0.5 xs:mr-1 min-h-[34px] flex items-center justify-center shrink-0"
+              className="bg-gold-gradient text-primary-foreground px-2.5 py-1.5 xs:px-3 rounded-md text-[10px] xs:text-[11px] font-bold shadow-lg shadow-gold/10 mr-0.5 xs:mr-1 min-h-[44px] flex items-center justify-center shrink-0"
             >
               হাদিয়া
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gold p-1.5 xs:p-2 active:scale-90 transition-transform min-w-[38px] min-h-[38px] flex items-center justify-center shrink-0"
+              className="text-gold p-1.5 xs:p-2 active:scale-90 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
               aria-label="মেনু"
             >
               {menuOpen ? <X size={26} /> : <Menu size={26} />}

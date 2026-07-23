@@ -117,7 +117,7 @@ const Index = () => {
             >
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </motion.p>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-4 leading-tight px-2 bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold drop-shadow-sm animate-text-shimmer">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-4 leading-tight px-2 bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold drop-shadow-sm animate-text-shimmer">
               চন্দনাইশ দরবার শরীফ
             </h1>
             <motion.h2 
@@ -319,8 +319,8 @@ const Index = () => {
                   transition={{ delay: i * 0.1 }}
                   className="bg-card/40 backdrop-blur-md border border-gold/20 rounded-3xl p-6 md:p-8 relative group hover:border-gold/40 transition-all shadow-2xl"
                 >
-                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <Bell size={64} className="text-gold" />
+                  <div className="absolute top-0 right-0 p-3 md:p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Bell size={48} className="text-gold md:w-16 md:h-16" />
                   </div>
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center shrink-0">

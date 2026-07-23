@@ -1780,7 +1780,7 @@ const Finance = () => {
                     <span>বেশি</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-10 gap-1.5">
+                <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
                   {(() => {
                     const days = [];
                     const now = new Date();
@@ -2783,7 +2783,7 @@ const Finance = () => {
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gold" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[320px] p-0 border-gold/30 shadow-2xl" align="start">
+                        <PopoverContent className="w-[calc(100vw-2rem)] max-w-[320px] p-0 border-gold/30 shadow-2xl" align="start">
                           <Command className="font-bangla">
                             <CommandInput placeholder="নাম বা কোড দিয়ে খুঁজুন..." className="h-10 text-xs" />
                             <CommandList>
@@ -3702,7 +3702,7 @@ const MonthGridPreview = ({
       <p className="font-bangla text-xs text-muted-foreground mb-2">
         ১২ মাসের অবস্থা (যে রঙ বেশি সেটাই ঐ মাসের সারাংশ)
       </p>
-      <div className="grid grid-cols-12 gap-1.5">
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1.5">
         {rows.map((r) => {
           const k = dominant(r);
           return (

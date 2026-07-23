@@ -424,7 +424,7 @@ const Hadia = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="lg:col-span-3 bg-card/90 backdrop-blur border border-gold/20 rounded-xl p-6 md:p-8 shadow-lg relative overflow-hidden group"
+              className="lg:col-span-3 bg-card/90 backdrop-blur border border-gold/20 rounded-xl p-4 sm:p-6 md:p-8 shadow-lg relative overflow-hidden group"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-[80px] rounded-full group-hover:bg-gold/10 transition-colors duration-500" />
               
@@ -513,7 +513,7 @@ const Hadia = () => {
                       <div className="space-y-5">
                         <div>
                           <label className="block text-foreground capitalize mb-3 font-medium text-sm">খাত নির্বাচন করুন</label>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3">
                             <button
                               onClick={() => setDonationType("mosque_fund")}
                               className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-300 active:scale-95 ${
@@ -707,7 +707,7 @@ const Hadia = () => {
               transition={{ duration: 0.8 }}
               className="lg:col-span-2 space-y-6"
             >
-              <div className="bg-card border border-gold/20 rounded-xl p-8 shadow-lg flex flex-col justify-center h-full">
+              <div className="bg-card border border-gold/20 rounded-xl p-4 sm:p-8 shadow-lg flex flex-col justify-center h-full">
                 <div className="text-center mb-8">
                   <p className="font-arabic text-gold text-3xl mb-4 leading-relaxed">
                     إِنَّ اللَّهَ يُحِبُّ الْمُحْسِنِينَ

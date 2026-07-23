@@ -25,7 +25,7 @@ const Pir = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="bg-card border border-gold/20 rounded-lg p-8 md:p-12"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-8 md:p-12"
           >
             <h3 className="text-2xl font-heading font-bold text-gold mb-6">
               শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী মাইজভান্ডারী (মাদ্দাঃ)
@@ -52,7 +52,7 @@ const Pir = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="bg-card border border-gold/20 rounded-lg p-8 md:p-12"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-8 md:p-12"
           >
             <h3 className="text-2xl font-heading font-bold text-gold mb-6">
               তরিকায়ে মাইজভান্ডারীর অনুশীলন
@@ -76,7 +76,7 @@ const Pir = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="bg-card border border-gold/20 rounded-lg p-8 md:p-12"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-8 md:p-12"
           >
             <h3 className="text-2xl font-heading font-bold text-gold mb-10 text-center">
               বংশলতিকা — আওলাদগণ

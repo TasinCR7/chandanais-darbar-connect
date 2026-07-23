@@ -117,7 +117,7 @@ const About = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-card border border-gold/20 rounded-lg p-6 md:p-8"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8"
           >
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center">
@@ -139,7 +139,7 @@ const About = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.05 }}
-              className="bg-card border border-gold/20 rounded-lg p-6 md:p-8"
+              className="bg-card border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8"
             >
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center">
@@ -173,7 +173,7 @@ const About = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-card border border-gold/20 rounded-lg p-6 md:p-8"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8"
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center">
@@ -207,7 +207,7 @@ const About = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-card border border-gold/20 rounded-lg p-6 md:p-8"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8"
           >
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center">
@@ -239,7 +239,7 @@ const About = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-card border border-gold/20 rounded-lg p-6 md:p-8"
+            className="bg-card border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8"
           >
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center">

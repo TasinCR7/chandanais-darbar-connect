@@ -69,7 +69,7 @@ const Contact = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: i * 0.1 }}
-                  className="bg-card/60 backdrop-blur-sm border border-gold/20 rounded-xl p-6 flex items-start gap-5 shadow-lg hover:border-gold/40 transition-colors"
+                  className="bg-card/60 backdrop-blur-sm border border-gold/20 rounded-xl p-4 sm:p-6 flex items-start gap-3 sm:gap-5 shadow-lg hover:border-gold/40 transition-colors"
                 >
                   <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
                     <info.icon size={22} className="text-gold" />

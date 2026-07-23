@@ -30,7 +30,7 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName }:
     {/* Decorative ornament line with title */}
     <div className="flex items-center justify-center gap-3 mb-3">
       {/* Left ornament */}
-      <div className="flex items-center gap-1.5">
+      <div className="hidden sm:flex items-center gap-1.5">
         <div className="w-8 sm:w-12 h-px bg-gradient-to-r from-transparent to-gold/40" />
         <span className="text-gold/40 text-xs">✦</span>
         <div className="w-4 sm:w-6 h-px bg-gold/30" />
@@ -43,7 +43,7 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName }:
       </h2>
 
       {/* Right ornament */}
-      <div className="flex items-center gap-1.5">
+      <div className="hidden sm:flex items-center gap-1.5">
         <span className="text-gold/60 text-sm">★</span>
         <div className="w-4 sm:w-6 h-px bg-gold/30" />
         <span className="text-gold/40 text-xs">✦</span>
