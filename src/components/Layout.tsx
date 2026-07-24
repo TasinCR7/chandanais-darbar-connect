@@ -303,9 +303,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col h-[100dvh] overflow-hidden pb-safe will-change-transform"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col overflow-hidden pb-safe"
             >
               <div className="p-4 flex justify-end border-b border-gold/10 pt-safe">
                 <button

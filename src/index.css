@@ -463,10 +463,12 @@
 
   /* Prevent screen shaking & layout shifts when mobile menu or modals open */
   html.menu-open,
-  body.menu-open,
+  body.menu-open {
+    overflow: hidden !important;
+    height: 100% !important;
+  }
   body[data-scroll-locked] {
     overflow: hidden !important;
-    touch-action: none;
     padding-right: 0px !important;
     margin-right: 0px !important;
   }
