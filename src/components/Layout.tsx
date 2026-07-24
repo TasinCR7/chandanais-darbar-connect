@@ -209,7 +209,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background/95 shadow-lg shadow-black/30`}>
+      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background shadow-lg shadow-black/30`}>
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
@@ -369,7 +369,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text
             ? 'top-[88px]'
             : 'top-16'
-        } left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
+        } left-0 right-0 z-40 bg-background border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
           <div className="bg-gold-gradient text-primary-foreground px-3 md:px-5 h-full flex items-center gap-1 md:gap-2 z-10 shadow-xl font-heading font-black text-[10px] md:text-xs uppercase tracking-wider">
             <Bell className="h-3 w-3 md:h-3.5 md:w-3.5 animate-bounce" /> নোটিশ
           </div>
