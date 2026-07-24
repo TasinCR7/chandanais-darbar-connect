@@ -402,13 +402,33 @@
   }
 
   @media (max-width: 768px) {
-    /* Disable full-page fixed background image repaints on mobile */
-    body::before {
+    /* TURN OFF ALL ANIMATIONS, TRANSITIONS, AND MOTIONS ON MOBILE FOR 100% INSTANT STATIC PERFORMANCE */
+    *, ::before, ::after {
+      animation: none !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition: none !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .css-particle,
+    .animate-pulse,
+    .animate-bounce,
+    .animate-marquee,
+    .animate-marquee-slow,
+    .animate-marquee-fast,
+    .animate-shimmer,
+    .animate-glow-pulse,
+    .animate-glow-breathe,
+    .animate-text-shimmer,
+    .btn-shimmer::after {
+      animation: none !important;
       display: none !important;
     }
 
-    /* Disable floating CSS particles on mobile to free up GPU main thread */
-    .css-particle {
+    /* Disable full-page fixed background image repaints on mobile */
+    body::before {
       display: none !important;
     }
 
