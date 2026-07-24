@@ -402,6 +402,16 @@
   }
 
   @media (max-width: 768px) {
+    /* Disable full-page fixed background image repaints on mobile */
+    body::before {
+      display: none !important;
+    }
+
+    /* Disable floating CSS particles on mobile to free up GPU main thread */
+    .css-particle {
+      display: none !important;
+    }
+
     /* Solid opaque backgrounds on mobile cards for performance & readability */
     .glass-card, .glass-morphism, .card-gold {
       background-color: rgba(10, 10, 10, 0.95) !important;

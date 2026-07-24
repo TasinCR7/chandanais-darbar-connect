@@ -59,14 +59,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const { isStaff, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [scrolled, setScrolled] = useState(false);
-
-  // Scroll-aware navbar
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
@@ -295,8 +287,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm xl:hidden touch-none"
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-[70] bg-black/80 xl:hidden touch-none"
               onClick={() => setMenuOpen(false)}
             />
             <motion.nav
