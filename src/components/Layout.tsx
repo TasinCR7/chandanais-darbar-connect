@@ -157,35 +157,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (menuOpen) {
-      // Lock body scroll without losing scroll position (prevents iOS Safari jump)
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.overflow = 'hidden';
+      document.documentElement.classList.add("menu-open");
+      document.body.classList.add("menu-open");
     } else {
-      // Restore scroll position
-      const savedY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
-      if (savedY) {
-        window.scrollTo(0, parseInt(savedY || '0') * -1);
-      }
+      document.documentElement.classList.remove("menu-open");
+      document.body.classList.remove("menu-open");
     }
     return () => {
-      const savedY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
-      if (savedY) {
-        window.scrollTo(0, parseInt(savedY || '0') * -1);
-      }
+      document.documentElement.classList.remove("menu-open");
+      document.body.classList.remove("menu-open");
     };
   }, [menuOpen]);
 
@@ -308,13 +288,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
       </header>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {menuOpen && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm xl:hidden touch-none"
               onClick={() => setMenuOpen(false)}
             />
@@ -322,9 +303,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col h-[100dvh] overflow-hidden pb-safe"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col h-[100dvh] overflow-hidden pb-safe will-change-transform"
             >
               <div className="p-4 flex justify-end border-b border-gold/10 pt-safe">
                 <button
@@ -337,15 +318,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               <div className="flex-1 overflow-y-auto overscroll-contain ios-touch-scroll py-6 px-6">
                 <div className="flex flex-col gap-1">
-                  {navLinks.map((link, i) => (
-                    <motion.div
-                      key={link.path}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 + i * 0.05 }}
-                    >
+                  {navLinks.map((link) => (
+                    <div key={link.path}>
                       <Link
                         to={link.path}
+                        onClick={() => setMenuOpen(false)}
                         className={`w-full text-left text-sm font-medium py-3 px-4 block transition-all active:bg-gold/10 active:scale-[0.98] rounded-lg ${location.pathname === link.path
                           ? "text-gold bg-gold/5 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
                           : "text-muted-foreground hover:text-gold"
@@ -353,7 +330,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       >
                         {link.label}
                       </Link>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>

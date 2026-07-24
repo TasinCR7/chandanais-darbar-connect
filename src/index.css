@@ -73,7 +73,6 @@
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     touch-action: manipulation; /* Remove 300ms delay on mobile touch */
-    overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -459,12 +458,15 @@
     /* Fix iOS 100vh Layout Jumping */
     .min-h-screen {
       min-height: 100dvh !important;
-      min-height: -webkit-fill-available !important;
     }
   }
 
-  /* Prevent Radix UI Modal, Select & Popover Body Layout Shaking */
+  /* Prevent screen shaking & layout shifts when mobile menu or modals open */
+  html.menu-open,
+  body.menu-open,
   body[data-scroll-locked] {
+    overflow: hidden !important;
+    touch-action: none;
     padding-right: 0px !important;
     margin-right: 0px !important;
   }
