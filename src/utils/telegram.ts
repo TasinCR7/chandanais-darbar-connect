@@ -39,6 +39,9 @@ export const sendTelegramNotification = async (message: string) => {
 
     // Convert Markdown *bold* tags into HTML <b>bold</b> tags safely
     const htmlMessage = message
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
       .replace(/\*(.*?)\*/g, "<b>$1</b>")
       .replace(/`/g, "'");
 

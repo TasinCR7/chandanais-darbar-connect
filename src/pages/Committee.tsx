@@ -73,7 +73,7 @@ const Committee = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.07 }}
-                  className="bg-card border border-gold/20 rounded-2xl p-6 text-center hover:border-gold/40 transition-all duration-300 hover:shadow-lg hover:shadow-gold/5"
+                  className="bg-card border border-gold/20 rounded-2xl p-4 sm:p-6 text-center hover:border-gold/40 transition-all duration-300 hover:shadow-lg hover:shadow-gold/5"
                 >
                   {/* Avatar */}
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gold/30 bg-muted relative">

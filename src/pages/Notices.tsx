@@ -68,7 +68,7 @@ const Notices = () => {
                   transition={{ delay: index * 0.1 }}
                   className="bg-card border border-gold/20 rounded-xl overflow-hidden shadow-sm hover:shadow-gold/5 hover:border-gold/40 transition-all duration-300"
                 >
-                  <div className="p-6 md:p-8">
+                  <div className="p-4 sm:p-6 md:p-8">
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       <div className="flex items-center gap-1.5 text-gold bg-gold/10 px-3 py-1 rounded-full text-xs font-medium border border-gold/20">
                         <Calendar size={14} />
