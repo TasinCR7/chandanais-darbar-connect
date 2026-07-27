@@ -224,7 +224,8 @@ const MONTHS_EN = [
 /** Format an ISO date string as a human-friendly local date (DD MMM YYYY). */
 function formatDateNice(iso?: string | null): string {
   if (!iso) return '-';
-  const d = new Date(iso);
+  const cleanIso = iso.includes('T') ? iso : `${iso}T00:00:00`;
+  const d = new Date(cleanIso);
   if (isNaN(d.getTime())) return iso;
   return `${String(d.getDate()).padStart(2, '0')} ${MONTHS_EN[d.getMonth()]} ${d.getFullYear()}`;
 }
@@ -273,7 +274,12 @@ export interface OrgPaymentRow extends PaymentLite {
  * Build month-by-month status from join date to current month.
  */
 export function buildMonthlyStatement(member: MemberLite, payments: PaymentLite[]) {
-  const joinedDate = member.joined_date ? new Date(member.joined_date) : new Date();
+  const joinedStr = member.joined_date
+    ? member.joined_date.includes("T")
+      ? member.joined_date
+      : `${member.joined_date}T00:00:00`
+    : "";
+  const joinedDate = joinedStr ? new Date(joinedStr) : new Date();
   const join = isNaN(joinedDate.getTime()) ? new Date() : joinedDate;
   const now = new Date();
   const rows: { year: number; month: number; expected: number; paid: number; status: 'paid' | 'partial' | 'due' }[] = [];

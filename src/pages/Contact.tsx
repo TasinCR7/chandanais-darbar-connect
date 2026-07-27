@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, UserCircle2 } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
@@ -41,6 +42,8 @@ const phoneContacts = [
 ];
 
 const Contact = () => {
+  const [mapActive, setMapActive] = useState(false);
+
   return (
     <>
       <SEO 
@@ -107,13 +110,14 @@ const Contact = () => {
                </h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  {phoneContacts.map((contact, i) => (
-                   <motion.div 
+                   <motion.a 
+                     href={`tel:${contact.phone}`}
                      key={i}
                      initial={{ opacity: 0, scale: 0.95 }}
                      whileInView={{ opacity: 1, scale: 1 }}
                      viewport={{ once: true }}
                      transition={{ duration: 0.4, delay: 0.4 + (i * 0.1) }}
-                     className="bg-black/30 border border-gold/10 rounded-xl p-4 flex items-start gap-3 hover:border-gold/30 hover:bg-gold/5 transition-all group"
+                     className="bg-black/30 border border-gold/10 rounded-xl p-4 flex items-start gap-3 hover:border-gold/30 hover:bg-gold/5 transition-all group cursor-pointer"
                    >
                      <div className="w-10 h-10 rounded-lg bg-gold/5 border border-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-gold/10 transition-colors">
                        {contact.label === "কারিগরি সহায়তা" ? <UserCircle2 size={18} className="text-gold/70" /> : <Phone size={18} className="text-gold/70" />}
@@ -121,11 +125,11 @@ const Contact = () => {
                      <div>
                        <p className="text-[10px] text-gold/50 font-bold uppercase tracking-wider mb-1">{contact.label}</p>
                        <h4 className="text-cream font-bold text-sm mb-1">{contact.name}</h4>
-                       <a href={`tel:${contact.phone}`} className="text-gold font-mono text-sm hover:text-gold/80 transition-colors">
+                       <span className="text-gold font-mono text-sm group-hover:text-gold/80 transition-colors">
                          {contact.phone}
-                       </a>
+                       </span>
                      </div>
-                   </motion.div>
+                   </motion.a>
                  ))}
                </div>
             </motion.div>
@@ -139,13 +143,26 @@ const Contact = () => {
             transition={{ duration: 0.6 }}
             className="bg-card/60 backdrop-blur-sm border border-gold/20 rounded-2xl p-3 shadow-xl h-full min-h-[400px] lg:min-h-full flex flex-col gap-3"
           >
-            <iframe
-              title="চন্দনাইশ দরবার শরীফ মানচিত্র"
-              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1351.2555801026124!2d92.0172438419116!3d22.210989333116487!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30ad17f9c4c7b08f:0x6756e9af87130438!2z4Kaa4Kao4KeN4Kam4Kao4Ka-4KaH4Ka2IOCmpuCmsOCmrOCmvuCmsCDgprbgprDgp4Dgpqs!5e1!3m2!1sbn!2sbd!4v1773926592389!5m2!1sbn!2sbd"
-              className="w-full h-full border-0 rounded-xl flex-1 min-h-[350px]"
-              loading="lazy"
-              allowFullScreen
-            />
+            <div className="relative w-full h-full flex-1 min-h-[350px] rounded-xl overflow-hidden">
+              {!mapActive && (
+                <div 
+                  className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center cursor-pointer transition-colors hover:bg-black/30"
+                  onClick={() => setMapActive(true)}
+                >
+                  <div className="bg-background/90 text-gold px-6 py-3 rounded-full font-medium shadow-lg backdrop-blur-sm border border-gold/20 flex items-center gap-2">
+                    <MapPin size={18} />
+                    <span>ম্যাপ চালু করতে ট্যাপ করুন</span>
+                  </div>
+                </div>
+              )}
+              <iframe
+                title="চন্দনাইশ দরবার শরীফ মানচিত্র"
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1351.2555801026124!2d92.0172438419116!3d22.210989333116487!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30ad17f9c4c7b08f:0x6756e9af87130438!2z4Kaa4Kao4KeN4Kam4Kao4Ka-4KaH4Ka2IOCmpuCmsOCmrOCmvuCmsCDgprbgprDgp4Dgpqs!5e1!3m2!1sbn!2sbd!4v1773926592389!5m2!1sbn!2sbd"
+                className={`w-full h-full border-0 ${mapActive ? 'pointer-events-auto' : 'pointer-events-none'}`}
+                loading="lazy"
+                allowFullScreen
+              />
+            </div>
             <a
               href="https://maps.google.com/?q=22.210989,92.017243"
               target="_blank"

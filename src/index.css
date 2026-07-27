@@ -164,6 +164,12 @@
     padding-top: env(safe-area-inset-top, 16px);
   }
 
+  /* Universal dvh support */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
   /* Smooth GPU-accelerated transitions */
   .gpu-smooth {
     transform: translateZ(0);
@@ -416,9 +422,6 @@
     .css-particle,
     .animate-pulse,
     .animate-bounce,
-    .animate-marquee,
-    .animate-marquee-slow,
-    .animate-marquee-fast,
     .animate-shimmer,
     .animate-glow-pulse,
     .animate-glow-breathe,
@@ -426,6 +429,17 @@
     .btn-shimmer::after {
       animation: none !important;
       display: none !important;
+    }
+
+    /* Marquee fallback for mobile */
+    .animate-marquee,
+    .animate-marquee-slow,
+    .animate-marquee-fast {
+      animation: none !important;
+      display: block !important;
+      overflow-x: auto !important;
+      white-space: nowrap !important;
+      -webkit-overflow-scrolling: touch !important;
     }
 
     /* Disable full-page fixed background image repaints on mobile */

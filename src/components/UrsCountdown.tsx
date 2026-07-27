@@ -88,9 +88,9 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
           <motion.span
             key={value}
             className="text-base xs:text-2xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]"
-            initial={{ y: 14, opacity: 0, filter: "blur(2px)" }}
-            animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-            exit={{ y: -14, opacity: 0, filter: "blur(2px)" }}
+            initial={{ y: 14, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {toBengaliNum(value)}
@@ -175,7 +175,7 @@ const UrsCountdown = () => {
           <span className="text-gold/40 text-xs hidden xs:inline">•</span>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald/70 text-cream/90 font-bengali text-xs sm:text-sm font-medium border border-gold/20">
             <Sparkles className="h-3.5 w-3.5 text-gold-light" />
-            <span>ইংরেজি: {new Date(nextUrs.gregorianDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span>ইংরেজি: {new Date(nextUrs.gregorianDate + "T00:00:00").toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
         </div>
 
@@ -202,7 +202,11 @@ const UrsCountdown = () => {
           প্রতি আরবি মাসের ৩ তারিখ ওরশ
         </h4>
         <p className="text-gold font-semibold text-xs mb-1">
-          পরবর্তী: {monthlyTarget.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long' })}
+          পরবর্তী: {(() => {
+            const opts = { day: 'numeric', month: 'long' } as const;
+            try { return monthlyTarget.toLocaleDateString('bn-BD', opts); }
+            catch { return monthlyTarget.toLocaleDateString(undefined, opts); }
+          })()}
         </p>
         <p className="font-arabic text-gold/40 text-xs mb-4">عُرْس شَهْرِي</p>
 

@@ -58,21 +58,23 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-6 z-[100] flex flex-col items-end">
+    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-2 left-2 md:left-auto md:right-6 z-[100] flex flex-col items-end md:w-[350px]">
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            role="dialog"
+            aria-label="এআই সাহায্যকারী"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ 
               opacity: 1, 
               scale: 1, 
               y: 0,
-              height: isMinimized ? "60px" : "500px",
-              width: "min(350px, calc(100vw - 2rem))"
+              height: isMinimized ? "60px" : "min(500px, 80dvh)",
+              width: "100%"
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className={`bg-background/80 backdrop-blur-xl border border-gold/30 rounded-2xl shadow-2xl overflow-hidden mb-4 flex flex-col transition-all duration-300 ${isMinimized ? 'h-[60px]' : 'h-[500px]'}`}
+            className={`bg-background/80 backdrop-blur-xl border border-gold/30 rounded-2xl shadow-2xl overflow-hidden mb-4 flex flex-col w-full`}
           >
             {/* Header */}
             <div className="bg-gold-gradient p-4 flex items-center justify-between shadow-md">

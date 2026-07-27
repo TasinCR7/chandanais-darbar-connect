@@ -197,7 +197,7 @@ const Admin = () => {
           phoneVariants = [`+88${rawPhone}`, rawPhone];
         }
 
-        let lastError: any = null;
+        let lastError: unknown = null;
         let loggedInUser = null;
 
         for (const p of phoneVariants) {
@@ -243,8 +243,8 @@ const Admin = () => {
           });
         }
       }
-    } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message || "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "ত্রুটি", description: err instanceof Error ? err.message : "একটি অজানা সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setLoginLoading(false);
     }
@@ -397,8 +397,8 @@ const Admin = () => {
       setGalleryCaption("");
       fetchGallery();
      
-    } catch (err: any) {
-      toast({ title: "আপলোড ব্যর্থ", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "আপলোড ব্যর্থ", description: err instanceof Error ? err.message : "অজানা ত্রুটি", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -562,7 +562,7 @@ const Admin = () => {
             <AdminSection title="নোটিশ পরিচালনা">
               <Suspense fallback={<PremiumLoader />}>
                 <NoticeManager 
-                  notices={notices as any} 
+                  notices={notices as unknown as Record<string, unknown>[]} 
                   loading={loading} 
                   onAddNotice={addNotice} 
                   onToggleActive={toggleNotice} 

@@ -75,7 +75,7 @@ const Index = () => {
         canonical="/"
         faq={homeFaq}
       />
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden gpu-smooth">
+      <section className="relative min-h-[90dvh] flex items-center justify-center overflow-hidden gpu-smooth">
         <img 
           src={heroImage}
           alt="চন্দনাইশ দরবার শরীফ হিরো ইমেজ"
@@ -331,7 +331,12 @@ const Index = () => {
                         {n.title}
                       </h3>
                       <p className="text-[10px] text-gold/50 font-bold uppercase tracking-widest mt-1">
-                        ঘোষিত: {n.created_at ? new Date(n.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }) : 'অজানা তারিখ'}
+                        ঘোষিত: {n.created_at ? (() => {
+                          const date = new Date(n.created_at);
+                          const opts = { day: 'numeric', month: 'long', year: 'numeric' } as const;
+                          try { return date.toLocaleDateString('bn-BD', opts); }
+                          catch { return date.toLocaleDateString(undefined, opts); }
+                        })() : 'অজানা তারিখ'}
                       </p>
                     </div>
                   </div>
@@ -409,49 +414,49 @@ const Index = () => {
             {/* 2x2 Contacts Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Contact 1 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+              <a href="tel:+8801714338533" className="block bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
                   <Phone className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">যোগাযোগ</p>
                   <h5 className="font-heading font-bold text-cream text-xs sm:text-sm mb-0.5">শাহজাদা বাহাদুর শাহ</h5>
-                  <a href="tel:+8801714338533" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
+                  <span className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801714338533
-                  </a>
+                  </span>
                 </div>
-              </div>
+              </a>
 
               {/* Contact 2 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+              <a href="tel:+8801726285000" className="block bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
                   <Phone className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">যোগাযোগ</p>
                   <h5 className="font-heading font-bold text-cream text-xs sm:text-sm mb-0.5">শাহজাদা জাহাঙ্গীর শাহ</h5>
-                  <a href="tel:+8801726285000" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
+                  <span className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801726285000
-                  </a>
+                  </span>
                 </div>
-              </div>
+              </a>
 
               {/* Contact 3 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+              <a href="tel:+8801717621418" className="block bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
                   <Phone className="w-4 h-4 text-[#d4af37]" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#b59a59] mb-0.5">যোগাযোগ</p>
                   <h5 className="font-heading font-bold text-cream text-xs sm:text-sm mb-0.5">শাহজাদা পারভেজ শাহ</h5>
-                  <a href="tel:+8801717621418" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
+                  <span className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801717621418
-                  </a>
+                  </span>
                 </div>
-              </div>
+              </a>
 
               {/* Contact 4 */}
-              <div className="bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
+              <a href="tel:+8801622721996" className="block bg-[#151515] border border-[#29251c] rounded-xl p-3.5 flex items-center gap-3 hover:border-gold/40 transition-all shadow-md">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1a1914] border border-[#3a3424] flex items-center justify-center text-gold shrink-0">
                   <User className="w-4 h-4 text-[#d4af37]" />
                 </div>
@@ -460,11 +465,11 @@ const Index = () => {
                   <h5 className="font-heading font-bold text-cream text-xs sm:text-sm leading-snug mb-0.5">
                     ওয়েবসাইট ডেভেলপার <br className="hidden sm:inline" /> (তাসিন)
                   </h5>
-                  <a href="tel:+8801622721996" className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
+                  <span className="font-mono font-bold text-[#cbb06d] text-xs tracking-wide hover:underline block">
                     +8801622721996
-                  </a>
+                  </span>
                 </div>
-              </div>
+              </a>
             </div>
           </motion.div>
         </div>

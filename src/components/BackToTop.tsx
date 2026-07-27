@@ -27,8 +27,8 @@ const BackToTop = () => {
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           onClick={scrollToTop}
-          className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-6 z-50 p-3 rounded-full bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 active:scale-90 transition-all duration-300 backdrop-blur-sm"
-          aria-label="Back to top"
+          className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-6 z-50 p-3 rounded-full bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 active:scale-90 transition-all duration-300 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          aria-label="উপরে যান"
         >
           <ArrowUp size={20} />
         </motion.button>

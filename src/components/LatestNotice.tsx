@@ -67,10 +67,10 @@ const LatestNotice = () => {
 
             <button 
               onClick={() => setIsVisible(false)}
-              className="absolute top-0 right-0 p-2 text-muted-foreground hover:text-gold transition-colors"
+              className="absolute top-2 right-2 p-3 text-muted-foreground hover:text-gold transition-colors"
               aria-label="বন্ধ করুন"
             >
-              <X size={20} />
+              <X size={22} />
             </button>
           </div>
         </div>

@@ -1097,36 +1097,39 @@ const Finance = () => {
 
       <div className="container mx-auto px-4 py-8">
         {/* Tab pill bar - Re-designed for Premium Feel */}
-        <div className="bg-card/40 border border-gold/10 rounded-2xl p-1.5 flex overflow-x-auto whitespace-nowrap scrollbar-hide gap-2 mb-10 backdrop-blur-md shadow-inner relative group snap-x snap-mandatory">
-          <div className="absolute inset-0 bg-gold/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const isActive = tab === t.key;
-            const disabled = t.key === 'admin' && !isStaff;
-            if (disabled) return null;
-            
-            return (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key as TabKey)}
-                className={`flex-1 min-w-[120px] snap-center relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-heading text-sm font-semibold transition-all duration-300
-                  ${isActive 
-                    ? 'bg-gold-gradient text-primary-foreground shadow-lg shadow-gold/20 scale-[1.02]' 
-                    : 'text-muted-foreground hover:bg-gold/5 hover:text-gold hover:translate-y-[-1px]'
-                  }`}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-gold-gradient rounded-xl -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <Icon className={`h-4 w-4 ${isActive ? 'animate-pulse' : ''}`} />
-                <span className="font-bangla">{t.label}</span>
-              </button>
-            );
-          })}
+        <div className="relative mb-10">
+          <div className="bg-card/40 border border-gold/10 rounded-2xl p-1.5 flex overflow-x-auto whitespace-nowrap scrollbar-hide gap-2 backdrop-blur-md shadow-inner relative group snap-x snap-mandatory">
+            <div className="absolute inset-0 bg-gold/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const isActive = tab === t.key;
+              const disabled = t.key === 'admin' && !isStaff;
+              if (disabled) return null;
+              
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key as TabKey)}
+                  className={`flex-1 min-w-[120px] snap-center relative flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-heading text-sm font-semibold transition-all duration-300
+                    ${isActive 
+                      ? 'bg-gold-gradient text-primary-foreground shadow-lg shadow-gold/20 scale-[1.02]' 
+                      : 'text-muted-foreground hover:bg-gold/5 hover:text-gold hover:translate-y-[-1px]'
+                    }`}
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-gold-gradient rounded-xl -z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <Icon className={`h-4 w-4 ${isActive ? 'animate-pulse' : ''}`} />
+                  <span className="font-bangla">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-card/90 to-transparent pointer-events-none md:hidden rounded-r-2xl" />
         </div>
 
         {/* SUMMARY */}

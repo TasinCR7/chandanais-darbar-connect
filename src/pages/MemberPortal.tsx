@@ -148,7 +148,7 @@ const MemberPortal = () => {
                   placeholder="যেমন: ০১৭..." 
                   value={authQuery.phone}
                   onChange={(e) => setAuthQuery({...authQuery, phone: e.target.value})}
-                  className="h-12 bg-background/50 border-primary/20 focus:border-primary"
+                  className="h-12 text-base bg-background/50 border-primary/20 focus:border-primary"
                   required
                 />
               </div>
@@ -158,7 +158,7 @@ const MemberPortal = () => {
                   placeholder="যেমন: CDS-001" 
                   value={authQuery.code}
                   onChange={(e) => setAuthQuery({...authQuery, code: e.target.value.toUpperCase()})}
-                  className="h-12 bg-background/50 border-primary/20 focus:border-primary font-mono"
+                  className="h-12 text-base bg-background/50 border-primary/20 focus:border-primary font-mono"
                 />
               </div>
               <Button type="submit" className="w-full h-12 bg-gradient-gold text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
@@ -296,7 +296,7 @@ const MemberPortal = () => {
 
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground ml-1">টাকার পরিমাণ (৳)</Label>
-                    <Input name="amount" type="number" defaultValue={member.monthly_rate} required className="bg-background/50 border-primary/20 h-10" />
+                    <Input name="amount" type="number" defaultValue={member.monthly_rate} required className="bg-background/50 border-primary/20 h-10 text-base" />
                   </div>
 
                   <div className="space-y-1.5">
@@ -314,7 +314,7 @@ const MemberPortal = () => {
 
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground ml-1">TrxID / রেফারেন্স</Label>
-                    <Input name="transaction_ref" placeholder="যেমন: AX782S..." className="bg-background/50 border-primary/20 h-10" />
+                    <Input name="transaction_ref" placeholder="যেমন: AX782S..." className="bg-background/50 border-primary/20 h-10 text-base" />
                   </div>
 
                   <div className="pt-2">

@@ -440,7 +440,7 @@ const Hadia = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-gold">আলহামদুলিল্লাহ!</h3>
                     <p className="text-lg text-foreground mb-4">আপনার হাদিয়া সফলভাবে জমা হয়েছে।</p>
-                    <div className="p-6 bg-background/50 rounded-lg border border-gold/20 w-full max-w-md text-left space-y-2">
+                    <div className="p-4 sm:p-6 bg-background/50 rounded-lg border border-gold/20 w-full max-w-md text-left space-y-2">
                       <p className="text-muted-foreground text-sm border-b border-white/10 pb-2">রিসিপ্ট বিবরণ</p>
                       <div className="flex justify-between text-sm py-1"><span className="text-muted-foreground">নাম:</span> <span className="font-medium text-foreground">{donorName}</span></div>
                       <div className="flex justify-between text-sm py-1"><span className="text-muted-foreground">পরিমাণ:</span> <span className="font-medium text-gold">{amount} ৳</span></div>
@@ -488,7 +488,7 @@ const Hadia = () => {
                             value={donorName}
                             onChange={(e) => setDonorName(e.target.value)}
                             placeholder="সম্পূর্ণ নাম লিখুন"
-                            className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
+                            className="w-full p-3 text-base rounded-lg bg-background/50 border border-gold/20 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
                           />
                         </div>
                         <div>
@@ -498,7 +498,7 @@ const Hadia = () => {
                             value={donorPhone}
                             onChange={(e) => setDonorPhone(e.target.value)}
                             placeholder="01XXXXXXXXX"
-                            className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
+                            className="w-full p-3 text-base rounded-lg bg-background/50 border border-gold/20 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
                           />
                         </div>
                       </div>
@@ -662,7 +662,7 @@ const Hadia = () => {
                               value={transactionId}
                               onChange={(e) => setTransactionId(e.target.value)}
                               placeholder="যেমন: A1B2C3D4E5"
-                              className="w-full p-3 rounded-lg bg-background/50 border border-gold/20 text-foreground uppercase placeholder:normal-case placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
+                              className="w-full p-3 text-base rounded-lg bg-background/50 border border-gold/20 text-foreground uppercase placeholder:normal-case placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold transition-colors outline-none"
                             />
                           </motion.div>
                         )}

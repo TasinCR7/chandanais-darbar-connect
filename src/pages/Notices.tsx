@@ -72,11 +72,17 @@ const Notices = () => {
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                       <div className="flex items-center gap-1.5 text-gold bg-gold/10 px-3 py-1 rounded-full text-xs font-medium border border-gold/20">
                         <Calendar size={14} />
-                        {new Date(notice.created_at).toLocaleDateString("bn-BD", {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                        {(() => {
+                          try {
+                            return new Date(notice.created_at).toLocaleDateString("bn-BD", {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            });
+                          } catch {
+                            return new Date(notice.created_at).toLocaleDateString();
+                          }
+                        })()}
                       </div>
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-gold/10 text-gold border border-gold/20">
                         নোটিশ

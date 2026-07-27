@@ -23,6 +23,7 @@ const Gallery = () => {
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchGallery = async () => {
@@ -122,9 +123,9 @@ const Gallery = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-3 p-4">
-                  <ZoomIn className="text-gold" size={28} />
-                  <p className="text-cream text-sm font-medium text-center">{item.caption || "চন্দনাইশ দরবার শরীফ"}</p>
+                <div className="absolute inset-x-0 bottom-0 bg-background/80 p-2 md:inset-0 md:bg-background/60 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-1 md:gap-3">
+                  <ZoomIn className="text-gold hidden md:block" size={28} />
+                  <p className="text-cream text-xs md:text-sm font-medium text-center line-clamp-2 md:line-clamp-none">{item.caption || "চন্দনাইশ দরবার শরীফ"}</p>
                 </div>
               </motion.div>
             ))}
@@ -140,6 +141,18 @@ const Gallery = () => {
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-background/95 flex items-center justify-center p-4"
               onClick={() => setLightbox(null)}
+              onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+              onTouchEnd={(e) => {
+                if (touchStartX === null) return;
+                const touchEndX = e.changedTouches[0].clientX;
+                const diff = touchStartX - touchEndX;
+                if (diff > 50) {
+                  setLightbox(prev => (prev !== null && prev < filtered.length - 1 ? prev + 1 : prev));
+                } else if (diff < -50) {
+                  setLightbox(prev => (prev !== null && prev > 0 ? prev - 1 : prev));
+                }
+                setTouchStartX(null);
+              }}
             >
               {/* Image counter */}
               <span className="absolute top-6 left-6 text-gold/80 text-sm font-medium bg-background/50 backdrop-blur-sm px-4 py-1.5 rounded-full border border-gold/20">

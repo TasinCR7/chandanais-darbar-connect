@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Volume2, VolumeX, Sparkles, RotateCcw, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -9,7 +9,12 @@ const getAudioCtx = (): AudioContext | null => {
   if (!sharedAudioCtx) {
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (AudioContextClass) {
-      sharedAudioCtx = new AudioContextClass();
+      try {
+        sharedAudioCtx = new AudioContextClass();
+      } catch (e) {
+        console.error("Failed to create AudioContext", e);
+        return null;
+      }
     }
   }
   return sharedAudioCtx;
@@ -22,7 +27,11 @@ const playClickSound = () => {
     
     // Resume context if suspended (browser security policy requirement)
     if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
+      try {
+        audioCtx.resume();
+      } catch (e) {
+        console.error("Failed to resume AudioContext", e);
+      }
     }
 
     const oscillator = audioCtx.createOscillator();
@@ -51,7 +60,11 @@ const playChimeSound = () => {
     if (!audioCtx) return;
 
     if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
+      try {
+        audioCtx.resume();
+      } catch (e) {
+        console.error("Failed to resume AudioContext", e);
+      }
     }
 
     const playNote = (freq: number, delay: number, duration: number) => {
@@ -125,6 +138,21 @@ const TasbihCounter = () => {
     }
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   useEffect(() => {
     try {
@@ -181,7 +209,7 @@ const TasbihCounter = () => {
   const progress = target > 0 ? (count % target) / target : 0;
 
   return (
-    <div className="bg-white/5 border border-gold/20 backdrop-blur-md rounded-3xl p-6 relative overflow-hidden shadow-[0_8px_32px_rgba(212,175,55,0.05)] w-full max-w-sm mx-auto my-4 text-center">
+    <div className="bg-white/5 border border-gold/20 backdrop-blur-md rounded-3xl p-6 relative overflow-visible shadow-[0_8px_32px_rgba(212,175,55,0.05)] w-full max-w-sm mx-auto my-4 text-center">
       {/* Decorative patterns */}
       <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-gold/10 rounded-tr-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-16 h-16 border-b border-l border-gold/10 rounded-bl-3xl pointer-events-none" />
@@ -190,7 +218,7 @@ const TasbihCounter = () => {
       <div className="flex items-center justify-between mb-4 border-b border-gold/10 pb-3">
         <button
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className="text-muted-foreground hover:text-gold transition-colors p-1"
+          className="text-muted-foreground hover:text-gold transition-colors p-2.5 min-w-[44px] min-h-[44px]"
           title={soundEnabled ? "শব্দ বন্ধ করুন" : "শব্দ চালু করুন"}
         >
           {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -202,7 +230,7 @@ const TasbihCounter = () => {
 
         <button
           onClick={handleReset}
-          className="text-muted-foreground hover:text-rose-400 transition-colors p-1 flex items-center gap-1 text-[11px]"
+          className="text-muted-foreground hover:text-rose-400 transition-colors p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 text-[11px]"
           title="রিসেট করুন"
         >
           <RotateCcw className="h-3.5 w-3.5" />
@@ -210,7 +238,7 @@ const TasbihCounter = () => {
       </div>
 
       {/* Zikr Selector */}
-      <div className="relative mb-4">
+      <div ref={menuRef} className="relative mb-4">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="w-full bg-black/40 border border-gold/10 hover:border-gold/30 rounded-xl px-4 py-2 flex items-center justify-between transition-all"

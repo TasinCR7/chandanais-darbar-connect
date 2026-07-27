@@ -45,7 +45,12 @@ export function computeMemberDues(
   payments: PaymentForDues[],
   asOf: Date = new Date(),
 ): MemberDues {
-  const joinedDate = member.joined_date ? new Date(member.joined_date) : new Date();
+  const joinedStr = member.joined_date
+    ? member.joined_date.includes("T")
+      ? member.joined_date
+      : `${member.joined_date}T00:00:00`
+    : "";
+  const joinedDate = joinedStr ? new Date(joinedStr) : new Date();
   const join = isNaN(joinedDate.getTime()) ? new Date() : joinedDate;
   const fromY = join.getFullYear();
   const fromM = join.getMonth() + 1;

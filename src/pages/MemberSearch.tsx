@@ -165,7 +165,9 @@ const MemberSearch = () => {
         new Set([
           ...payments.map((p) => p.for_year),
           new Date().getFullYear(),
-          new Date(member.joined_date).getFullYear(),
+          (member.joined_date
+            ? new Date(member.joined_date.includes("T") ? member.joined_date : `${member.joined_date}T00:00:00`).getFullYear()
+            : new Date().getFullYear()),
         ]),
       ).sort((a, b) => b - a)
     : [];
@@ -279,7 +281,7 @@ const MemberSearch = () => {
                       {member.phone ? ` • 📞 ${member.phone}` : ''}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 no-print">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 no-print">
                     <select
                       value={year}
                       onChange={(e) => setYear(Number(e.target.value))}
@@ -355,58 +357,61 @@ const MemberSearch = () => {
 
               {/* Monthly table */}
               <div className="card-gold pr-card rounded-2xl p-6 mt-3">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
-                        <th className="py-2 px-2">মাস / বছর</th>
-                        <th className="py-2 px-2 text-right">প্রত্যাশিত</th>
-                        <th className="py-2 px-2 text-right">পরিশোধিত</th>
-                        <th className="py-2 px-2 text-right">বকেয়া</th>
-                        <th className="py-2 px-2">অবস্থা</th>
-                      </tr>
-                    </thead>
-                    <tbody className="font-bangla">
-                      {monthly.length === 0 && (
-                        <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">কোনো রেকর্ড নেই</td></tr>
-                      )}
-                      {monthly.map((r) => {
-                        const due = Math.max(0, r.expected - r.paid);
-                        const prClass = r.status === 'paid' ? 'pr-paid' : r.status === 'partial' ? 'pr-partial' : 'pr-due';
+                <div className="relative">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-primary/20 text-left font-bangla text-muted-foreground">
+                          <th className="py-2 px-2">মাস / বছর</th>
+                          <th className="py-2 px-2 text-right">প্রত্যাশিত</th>
+                          <th className="py-2 px-2 text-right">পরিশোধিত</th>
+                          <th className="py-2 px-2 text-right">বকেয়া</th>
+                          <th className="py-2 px-2">অবস্থা</th>
+                        </tr>
+                      </thead>
+                      <tbody className="font-bangla">
+                        {monthly.length === 0 && (
+                          <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">কোনো রেকর্ড নেই</td></tr>
+                        )}
+                        {monthly.map((r) => {
+                          const due = Math.max(0, r.expected - r.paid);
+                          const prClass = r.status === 'paid' ? 'pr-paid' : r.status === 'partial' ? 'pr-partial' : 'pr-due';
+                          return (
+                            <tr key={`${r.year}-${r.month}`} className={`border-b border-border/50 ${rowBg(r.status)} ${prClass}`}>
+                              <td className="py-2 px-2">{monthName(r.month)} {toBanglaNumber(r.year)}</td>
+                              <td className="py-2 px-2 text-right">৳ {toBanglaNumber(r.expected)}</td>
+                              <td className="py-2 px-2 text-right text-primary">৳ {toBanglaNumber(r.paid)}</td>
+                              <td className={`py-2 px-2 text-right font-semibold ${due > 0 ? 'text-destructive' : 'text-green-600'}`}>৳ {toBanglaNumber(due)}</td>
+                              <td className="py-2 px-2">{statusBadge(r.status)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      {monthly.length > 0 && (() => {
+                        const tExp = monthly.reduce((s, r) => s + r.expected, 0);
+                        const tPaid = monthly.reduce((s, r) => s + r.paid, 0);
+                        const tDue = Math.max(0, tExp - tPaid);
                         return (
-                          <tr key={`${r.year}-${r.month}`} className={`border-b border-border/50 ${rowBg(r.status)} ${prClass}`}>
-                            <td className="py-2 px-2">{monthName(r.month)} {toBanglaNumber(r.year)}</td>
-                            <td className="py-2 px-2 text-right">৳ {toBanglaNumber(r.expected)}</td>
-                            <td className="py-2 px-2 text-right text-primary">৳ {toBanglaNumber(r.paid)}</td>
-                            <td className={`py-2 px-2 text-right font-semibold ${due > 0 ? 'text-destructive' : 'text-green-600'}`}>৳ {toBanglaNumber(due)}</td>
-                            <td className="py-2 px-2">{statusBadge(r.status)}</td>
-                          </tr>
+                          <tfoot className="font-bangla">
+                            <tr className="print-recon border-t-2 border-primary/40 bg-primary/10">
+                              <td className="py-3 px-2 font-semibold">
+                                পুনঃমিলন (Reconciliation) — {toBanglaNumber(monthly.length)} মাস
+                              </td>
+                              <td className="py-3 px-2 text-right font-bold">৳ {toBanglaNumber(tExp)}</td>
+                              <td className="py-3 px-2 text-right font-bold text-primary">৳ {toBanglaNumber(tPaid)}</td>
+                              <td className={`py-3 px-2 text-right font-bold ${tDue > 0 ? 'text-destructive' : 'text-green-600'}`}>
+                                ৳ {toBanglaNumber(tDue)}
+                              </td>
+                              <td className="py-3 px-2 text-xs">
+                                {tDue === 0 ? '✓ সম্পূর্ণ পরিশোধিত' : `ব্যালেন্স বাকি`}
+                              </td>
+                            </tr>
+                          </tfoot>
                         );
-                      })}
-                    </tbody>
-                    {monthly.length > 0 && (() => {
-                      const tExp = monthly.reduce((s, r) => s + r.expected, 0);
-                      const tPaid = monthly.reduce((s, r) => s + r.paid, 0);
-                      const tDue = Math.max(0, tExp - tPaid);
-                      return (
-                        <tfoot className="font-bangla">
-                          <tr className="print-recon border-t-2 border-primary/40 bg-primary/10">
-                            <td className="py-3 px-2 font-semibold">
-                              পুনঃমিলন (Reconciliation) — {toBanglaNumber(monthly.length)} মাস
-                            </td>
-                            <td className="py-3 px-2 text-right font-bold">৳ {toBanglaNumber(tExp)}</td>
-                            <td className="py-3 px-2 text-right font-bold text-primary">৳ {toBanglaNumber(tPaid)}</td>
-                            <td className={`py-3 px-2 text-right font-bold ${tDue > 0 ? 'text-destructive' : 'text-green-600'}`}>
-                              ৳ {toBanglaNumber(tDue)}
-                            </td>
-                            <td className="py-3 px-2 text-xs">
-                              {tDue === 0 ? '✓ সম্পূর্ণ পরিশোধিত' : `ব্যালেন্স বাকি`}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      );
-                    })()}
-                  </table>
+                      })()}
+                    </table>
+                  </div>
+                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
                 </div>
                 {/* Quick legend below table */}
                 <div className="mt-3 text-xs font-bangla text-muted-foreground flex flex-wrap gap-3 no-print">
