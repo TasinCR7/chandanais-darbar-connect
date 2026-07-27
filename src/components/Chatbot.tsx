@@ -58,7 +58,7 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-2 left-2 md:left-auto md:right-6 z-[100] flex flex-col items-end md:w-[350px]">
+    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-2 left-2 md:left-auto md:right-6 z-[100] flex flex-col items-end md:w-[350px] pointer-events-none">
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
@@ -74,7 +74,7 @@ const Chatbot: React.FC = () => {
               width: "100%"
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className={`bg-background/80 backdrop-blur-xl border border-gold/30 rounded-2xl shadow-2xl overflow-hidden mb-4 flex flex-col w-full`}
+            className={`bg-background/80 backdrop-blur-xl border border-gold/30 rounded-2xl shadow-2xl overflow-hidden mb-4 flex flex-col w-full pointer-events-auto`}
           >
             {/* Header */}
             <div className="bg-gold-gradient p-4 flex items-center justify-between shadow-md">
@@ -188,7 +188,7 @@ const Chatbot: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         title="এআই চ্যাট ওপেন করুন"
         aria-label="এআই চ্যাট ওপেন করুন"
-        className={`bg-gold-gradient p-3.5 rounded-full shadow-2xl gold-glow-hover transition-all duration-300 ring-2 ring-gold/20 ${isOpen ? 'rotate-90 hidden' : ''}`}
+        className={`bg-gold-gradient p-3.5 rounded-full shadow-2xl gold-glow-hover transition-all duration-300 ring-2 ring-gold/20 pointer-events-auto ${isOpen ? 'rotate-90 hidden' : ''}`}
       >
         <MessageSquare className="text-white w-7 h-7" />
       </motion.button>
