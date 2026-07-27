@@ -6,9 +6,10 @@ interface SectionTitleProps {
   subtitle?: string;
   arabic?: string;
   subtitleClassName?: string;
+  as?: 'h1' | 'h2' | 'h3';
 }
 
-const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName }: SectionTitleProps) => (
+const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName, as: Tag = 'h2' }: SectionTitleProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -38,9 +39,9 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName }:
       </div>
 
       {/* Title with shimmer */}
-      <h2 className="text-3xl md:text-5xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold animate-shimmer">
+      <Tag className="text-3xl md:text-5xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold animate-shimmer">
         {title}
-      </h2>
+      </Tag>
 
       {/* Right ornament */}
       <div className="hidden sm:flex items-center gap-1.5">

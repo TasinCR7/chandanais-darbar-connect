@@ -68,7 +68,9 @@ const DEFAULT_KEYWORDS = [
 ].join(", ");
 
 const SEO = ({ title, description, canonical, keywords, type = "website", faq, events }: SEOProps) => {
+  const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`;
   const DEFAULT_DESCRIPTION = "চন্দনাইশ দরবার শরীফ - ধর্মীয় ইভেন্ট, পাঠ, দান এবং দরবার সম্পর্কিত তথ্যের সর্বোত্তম উৎস।";
+
   const defaultSEOProps = (pageTitle: string, pageDesc?: string) => ({
     title: pageTitle,
     description: pageDesc || DEFAULT_DESCRIPTION,
