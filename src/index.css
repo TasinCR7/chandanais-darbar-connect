@@ -409,25 +409,8 @@
   }
 
   @media (max-width: 768px) {
-    /* TURN OFF ALL ANIMATIONS, TRANSITIONS, AND MOTIONS ON MOBILE FOR 100% INSTANT STATIC PERFORMANCE */
-    *, ::before, ::after {
-      animation: none !important;
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition: none !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-
-    .css-particle,
-    .animate-pulse,
-    .animate-bounce,
-    .animate-shimmer,
-    .animate-glow-pulse,
-    .animate-glow-breathe,
-    .animate-text-shimmer,
-    .btn-shimmer::after {
-      animation: none !important;
+    /* Optimize background particles for performance while keeping UI transitions silky smooth */
+    .css-particle {
       display: none !important;
     }
 
@@ -442,7 +425,7 @@
       -webkit-overflow-scrolling: touch !important;
     }
 
-    /* Disable full-page fixed background image repaints on mobile */
+    /* Disable full-page fixed background image repaints on mobile for smooth scrolling */
     body::before {
       display: none !important;
     }
@@ -456,16 +439,6 @@
     .gold-glow, .gold-glow-hover:hover, 
     .shadow-gold, .premium-shadow {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    }
-
-    /* Disable expensive backdrop-filter on mobile to eliminate GPU compositing stutter & screen shaking */
-    .backdrop-blur-sm,
-    .backdrop-blur-md,
-    .backdrop-blur-lg,
-    .backdrop-blur-xl,
-    .backdrop-blur {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
     }
   }
 
