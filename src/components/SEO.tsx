@@ -92,6 +92,18 @@ const SEO = ({ title, description, canonical, keywords, type = "website", faq, e
       "url": url,
       "logo": `${BASE_URL}/logo.png`,
       "image": `${BASE_URL}/logo.png`,
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 22.2052,
+        "longitude": 91.9542
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "opens": "00:00",
+        "closes": "23:59"
+      },
+      "priceRange": "Free / হাদিয়া",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Chandanaish Darbar Sharif",
@@ -114,6 +126,17 @@ const SEO = ({ title, description, canonical, keywords, type = "website", faq, e
       "url": url,
       "logo": `${BASE_URL}/logo.png`,
       "image": `${BASE_URL}/logo.png`
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": SITE_NAME,
+      "url": BASE_URL,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${BASE_URL}/qna?search={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
     },
     {
       "@context": "https://schema.org",
