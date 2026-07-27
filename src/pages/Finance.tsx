@@ -2074,7 +2074,7 @@ const Finance = () => {
                       {expandedArea === a.area && (
                         <tr>
                           <td colSpan={7} className="p-0">
-                            <div className="bg-background/60 border-l-4 border-primary/40 my-1 mx-2 rounded-lg overflow-hidden">
+                            <div className="bg-background/60 border-l-4 border-primary/40 my-1 mx-2 rounded-lg overflow-x-auto">
                               <table className="w-full text-xs whitespace-nowrap">
                                 <thead>
                                   <tr className="bg-primary/10 text-muted-foreground font-bangla">
