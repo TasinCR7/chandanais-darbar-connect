@@ -12,18 +12,13 @@ export const escapeTelegramHtml = (str: string | number | null | undefined): str
     .replace(/>/g, "&gt;");
 };
 
-export const sendTelegramNotification = async (message: string) => {
+export const sendTelegramNotification = async (message: string): Promise<boolean> => {
   try {
     const botToken = (import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "").trim();
     const chatIdsString = (import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "").trim();
 
-    if (!botToken || botToken.trim() === "") {
-      console.error("❌ Telegram Error: VITE_TELEGRAM_BOT_TOKEN is missing or empty");
-      return false;
-    }
-
-    if (!chatIdsString || chatIdsString.trim() === "") {
-      console.error("❌ Telegram Error: VITE_TELEGRAM_CHAT_ID is missing or empty");
+    if (!botToken || !chatIdsString) {
+      console.warn("⚠️ Telegram Error: VITE_TELEGRAM_BOT_TOKEN or VITE_TELEGRAM_CHAT_ID missing");
       return false;
     }
 
@@ -31,84 +26,93 @@ export const sendTelegramNotification = async (message: string) => {
       .split(",")
       .map((id: string) => id.trim())
       .filter((id: string) => id.length > 0);
-    
+
     if (chatIds.length === 0) {
-      console.error("❌ Telegram Error: No valid Chat IDs found after parsing.");
+      console.warn("⚠️ Telegram Error: No valid Chat IDs found");
       return false;
     }
 
-    // Convert Markdown *bold* tags into HTML <b>bold</b> tags safely
-    const htmlMessage = message
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\*(.*?)\*/g, "<b>$1</b>")
-      .replace(/`/g, "'");
+    // Convert *bold* text per line to <b>bold</b> safely for Telegram HTML parse_mode
+    const htmlLines = message.split("\n").map((line) => {
+      return line.replace(/\*([^*]+)\*/g, "<b>$1</b>");
+    });
+    const htmlMessage = htmlLines.join("\n");
 
-    // Create a plain text fallback version without any formatting tags
-    const plainMessage = message.replace(/[*`_]/g, "");
+    // Clean plain text version without Markdown formatting
+    const plainMessage = message.replace(/\*/g, "").replace(/`/g, "");
 
     const sendPromises = chatIds.map(async (chatId: string) => {
+      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+      // 1. First Attempt: POST with HTML parse_mode
       try {
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-        
-        // Attempt 1: Send with HTML parse_mode
-        let response = await fetch(url, {
+        const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
             text: htmlMessage,
             parse_mode: "HTML",
+            disable_web_page_preview: true,
           }),
         });
 
-        // Attempt 2: If HTML mode fails, retry with Plain Text POST
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.warn(`⚠️ HTML parse failed for Chat ID ${chatId}. Retrying plain text. Error:`, errorData);
-          
-          response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: plainMessage,
-            }),
-          });
+        if (response.ok) {
+          console.log(`✅ Telegram notification sent (HTML) to ${chatId}`);
+          return true;
         }
 
-        // Attempt 3: If POST fails, attempt GET fallback query params
-        if (!response.ok) {
-          console.warn(`⚠️ POST failed for ${chatId}. Trying GET fallback...`);
-          const getUrl = `${url}?chat_id=${encodeURIComponent(chatId)}&text=${encodeURIComponent(plainMessage)}`;
-          response = await fetch(getUrl);
-        }
+        const errorBody = await response.json().catch(() => ({}));
+        console.warn(`⚠️ HTML parse failed for Chat ID ${chatId}:`, errorBody);
+      } catch (postErr) {
+        console.warn(`⚠️ POST HTML network error for Chat ID ${chatId}:`, postErr);
+      }
+
+      // 2. Second Attempt: POST Plain Text fallback
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: plainMessage,
+            disable_web_page_preview: true,
+          }),
+        });
 
         if (response.ok) {
-          console.log(`✅ Telegram notification sent successfully to ${chatId}`);
+          console.log(`✅ Telegram notification sent (Plain Text) to ${chatId}`);
           return true;
-        } else {
-          const finalError = await response.json().catch(() => ({}));
-          console.error(`❌ Telegram send failed for Chat ID ${chatId}:`, finalError);
-          return false;
         }
-      } catch (err) {
-        console.error(`❌ Fetch/Network error sending Telegram notification to ${chatId}:`, err);
-        return false;
+      } catch (postPlainErr) {
+        console.warn(`⚠️ POST Plain network error for Chat ID ${chatId}:`, postPlainErr);
       }
+
+      // 3. Third Attempt: GET query params fallback
+      try {
+        const getUrl = `${url}?chat_id=${encodeURIComponent(chatId)}&text=${encodeURIComponent(plainMessage)}`;
+        const response = await fetch(getUrl);
+        if (response.ok) {
+          console.log(`✅ Telegram notification sent (GET) to ${chatId}`);
+          return true;
+        }
+      } catch (getErr) {
+        console.warn(`⚠️ GET fallback network error for Chat ID ${chatId}:`, getErr);
+      }
+
+      return false;
     });
 
     const results = await Promise.all(sendPromises);
-    const success = results.some((res) => res === true);
-    if (!success) {
-      console.error("❌ All Telegram notifications failed. Please check network/AdBlocker settings.");
+    const hasSuccess = results.some((res) => res === true);
+
+    if (!hasSuccess) {
+      console.error("❌ Telegram Notification Failed: All attempts failed.");
     }
-    return success;
+    return hasSuccess;
 
   } catch (error) {
     console.error("❌ Unexpected error in sendTelegramNotification:", error);
     return false;
   }
 };
-
