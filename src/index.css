@@ -395,9 +395,19 @@
     }
   }
 
+  /* === Disable decorative animations globally as requested by user for instant speed & zero stutter === */
+  *:not(.animate-marquee):not(.animate-marquee-slow):not(.animate-marquee-fast):not(.animate-spin),
+  *:not(.animate-marquee):not(.animate-marquee-slow):not(.animate-marquee-fast):not(.animate-spin)::before,
+  *:not(.animate-marquee):not(.animate-marquee-slow):not(.animate-marquee-fast):not(.animate-spin)::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    animation-delay: 0.001ms !important;
+    transition-delay: 0.001ms !important;
+  }
+
   .css-particle {
-    will-change: transform, opacity;
-    animation: pureCssParticle linear infinite;
+    display: none !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -406,9 +416,6 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
-    }
-    .css-particle {
-      display: none !important;
     }
   }
 

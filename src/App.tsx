@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { MotionConfig } from "framer-motion";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -97,7 +98,9 @@ const App = () => (
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <ScrollToTop />
-              <AppContent />
+              <MotionConfig reducedMotion="always">
+                <AppContent />
+              </MotionConfig>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
