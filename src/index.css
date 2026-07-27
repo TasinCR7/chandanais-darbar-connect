@@ -73,7 +73,6 @@
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
   }
 
   a, button, input, select, textarea, [role="button"], label {
