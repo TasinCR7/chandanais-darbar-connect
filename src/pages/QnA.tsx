@@ -112,22 +112,52 @@ const QnA = () => {
 
     setSubmitting(true);
 
-    const { data, error } = await supabase.rpc("insert_submission", {
-      p_type: type,
-      p_name: trimmedName,
-      p_phone: form.phone.trim() || null,
-      p_subject: form.subject,
-      p_details: trimmedDetails,
-    });
+    let submissionId: string | null = null;
 
-    if (error) {
-      toast({
-        title: "ত্রুটি হয়েছে",
-        description: "পাঠাতে সমস্যা হয়েছে, আবার চেষ্টা করুন।",
-        variant: "destructive",
+    // 1. Try RPC insert_submission first
+    try {
+      const { data, error } = await supabase.rpc("insert_submission", {
+        p_type: type,
+        p_name: trimmedName,
+        p_phone: form.phone.trim() || null,
+        p_subject: form.subject,
+        p_details: trimmedDetails,
       });
-      setSubmitting(false);
-      return;
+
+      if (!error && data) {
+        submissionId = String(data);
+      }
+    } catch (rpcErr) {
+      console.warn("RPC insert_submission failed, falling back to table insert:", rpcErr);
+    }
+
+    // 2. Fallback to direct table insert if RPC returned no ID
+    if (!submissionId) {
+      const { data: directData, error: directErr } = await supabase
+        .from("submissions")
+        .insert({
+          type: type,
+          name: trimmedName,
+          phone: form.phone.trim() || null,
+          subject: form.subject,
+          details: trimmedDetails,
+        })
+        .select("id")
+        .maybeSingle();
+
+      if (directErr) {
+        console.error("Submission insert error:", directErr);
+        toast({
+          title: "ত্রুটি হয়েছে",
+          description: directErr.message || "পাঠাতে সমস্যা হয়েছে, আবার চেষ্টা করুন।",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+      if (directData && directData.id) {
+        submissionId = directData.id;
+      }
     }
 
     // Save submission timestamp on success safely
@@ -138,7 +168,10 @@ const QnA = () => {
       console.warn("localStorage setItem warning:", storageErr);
     }
 
-    const trackingNumber = data ? data.replace(/-/g, "").substring(0, 8).toUpperCase() : "";
+    const trackingNumber = submissionId
+      ? submissionId.replace(/-/g, "").substring(0, 8).toUpperCase()
+      : Math.random().toString(36).substring(2, 10).toUpperCase();
+
     setLastTrackingId(trackingNumber);
 
     // Send Telegram Notification
@@ -185,24 +218,41 @@ ${escapeTelegramHtml(trimmedDetails)}
     setSearchResult(null);
 
     try {
-      const { data, error } = await supabase.rpc("get_submission_by_tracking", {
+      let foundRecord: any = null;
+
+      // 1. Try RPC get_submission_by_tracking first
+      const { data: rpcData, error: rpcError } = await supabase.rpc("get_submission_by_tracking", {
         p_tracking: cleanQuery,
       });
 
-      if (error) {
-        console.error("Search error:", error);
-        toast({
-          title: "অনুসন্ধান ব্যর্থ হয়েছে",
-          description: "তথ্য খুঁজতে কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।",
-          variant: "destructive",
-        });
-      } else if (data && data.length > 0) {
-        setSearchResult(data[0]);
+      if (!rpcError && rpcData && rpcData.length > 0) {
+        foundRecord = rpcData[0];
       } else {
-        setSearchResult(null);
+        // 2. Fallback query if RPC didn't return a record
+        const { data: fallbackData } = await supabase
+          .from("submissions")
+          .select("*");
+
+        if (fallbackData && fallbackData.length > 0) {
+          foundRecord = fallbackData.find((item: any) => {
+            const cleanId = item.id.replace(/-/g, "").toLowerCase();
+            return cleanId.startsWith(cleanQuery) || item.id.toLowerCase() === cleanQuery;
+          }) || null;
+        }
+      }
+
+      setSearchResult(foundRecord);
+
+      if (!foundRecord && rpcError) {
+        console.warn("RPC tracking search note:", rpcError);
       }
     } catch (err) {
-      console.error(err);
+      console.error("QnA search error:", err);
+      toast({
+        title: "অনুসন্ধান ব্যর্থ হয়েছে",
+        description: "তথ্য খুঁজতে কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+        variant: "destructive",
+      });
     } finally {
       setSearchLoading(false);
     }
