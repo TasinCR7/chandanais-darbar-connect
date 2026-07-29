@@ -395,17 +395,6 @@
     }
   }
 
-  /* === Disable decorative animations globally as requested by user for instant speed & zero stutter === */
-  *:not(.animate-marquee):not(.animate-marquee-slow):not(.animate-marquee-fast):not(.animate-spin),
-  *:not(.animate-marquee):not(.animate-marquee-slow):not(.animate-marquee-fast):not(.animate-spin)::before,
-  *:not(.animate-marquee):not(.animate-marquee-slow):not(.animate-marquee-fast):not(.animate-spin)::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    animation-delay: 0.001ms !important;
-    transition-delay: 0.001ms !important;
-  }
-
   .css-particle {
     display: none !important;
   }
@@ -419,8 +408,14 @@
     }
   }
 
+  /* GPU Hardware Acceleration & Smooth Momentum Touch Scrolling for Android and iOS */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
   @media (max-width: 768px) {
-    /* Optimize background particles for performance while keeping UI transitions silky smooth */
+    /* Hide heavy decorative background particle canvas on mobile for maximum frame rate */
     .css-particle {
       display: none !important;
     }
@@ -434,31 +429,26 @@
       backface-visibility: hidden;
     }
 
-    /* Disable full-page fixed background image repaints on mobile for smooth scrolling */
+    /* Disable heavy fixed background repaints on mobile scroll */
     body::before {
       display: none !important;
     }
 
-    /* Eliminate expensive GPU backdrop-filter blurs on mobile for 60fps buttery-smooth scrolling */
-    .backdrop-blur,
-    .backdrop-blur-sm,
-    .backdrop-blur-md,
-    .backdrop-blur-lg,
-    .backdrop-blur-xl,
-    .backdrop-blur-2xl,
-    .backdrop-blur-3xl,
+    /* GPU Hardware-accelerated smooth backdrop blurs for mobile cards */
     .glass-card,
     .glass-morphism,
     .card-gold {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      background-color: rgba(12, 12, 12, 0.96) !important;
+      transform: translateZ(0);
+      will-change: transform;
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      background-color: rgba(12, 12, 12, 0.88);
     }
-    
-    /* Minimize expensive box-shadow rendering on mobile */
+
+    /* Optimized subtle box-shadow rendering for mobile GPUs */
     .gold-glow, .gold-glow-hover:hover, 
     .shadow-gold, .premium-shadow {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
     }
   }
 
@@ -476,7 +466,7 @@
     }
   }
 
-  /* === iOS WebKit (Safari & Chrome on iOS) Compatibility & Fixes === */
+  /* === iOS & Android WebKit Touch & Smooth Scrolling Fixes === */
   @supports (-webkit-touch-callout: none) {
     /* Prevent WebKit Auto Zoom on Input Focus on iOS Safari/Chrome */
     input:not([type="checkbox"]):not([type="radio"]), 
@@ -495,12 +485,14 @@
     .overflow-y-auto,
     .overflow-x-auto {
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     /* Prevent WebKit repainting flicker on fixed elements */
     header, .fixed, .sticky {
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
+      transform: translateZ(0);
     }
 
     /* Fix iOS 100vh Layout Jumping */
@@ -514,6 +506,7 @@
   body.menu-open {
     overflow: hidden !important;
     height: 100% !important;
+    touch-action: none;
   }
   body[data-scroll-locked] {
     overflow: hidden !important;

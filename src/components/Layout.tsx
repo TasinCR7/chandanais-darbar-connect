@@ -201,7 +201,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background shadow-lg shadow-black/30`}>
+      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu`}>
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
