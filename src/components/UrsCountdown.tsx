@@ -65,16 +65,13 @@ function calcTimeLeft(target: Date) {
   };
 }
 
-const toBengaliNum = (n: number): string =>
-  String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+const toBengaliNum = (n: number, padZero = true): string => {
+  const str = padZero && n < 10 ? `0${n}` : String(n);
+  return str.replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+};
 
 const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
-  <motion.div
-    className="flex flex-col items-center shrink-0"
-    initial={{ scale: 0.8, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    transition={{ duration: 0.5 }}
-  >
+  <div className="flex flex-col items-center shrink-0">
     {/* Wrapper with radial glow */}
     <div className="relative">
       {/* Radial glow behind box */}
@@ -84,22 +81,13 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
         <div className="absolute top-0 right-0 w-2 h-2 sm:w-3 sm:h-3 border-t sm:border-t-2 border-r sm:border-r-2 border-gold/50 rounded-tr-xl" />
         <div className="absolute bottom-0 left-0 w-2 h-2 sm:w-3 sm:h-3 border-b sm:border-b-2 border-l sm:border-l-2 border-gold/50 rounded-bl-xl" />
         <div className="absolute bottom-0 right-0 w-2 h-2 sm:w-3 sm:h-3 border-b sm:border-b-2 border-r sm:border-r-2 border-gold/50 rounded-br-xl" />
-        <AnimatePresence mode="popLayout">
-          <motion.span
-            key={value}
-            className="text-base xs:text-2xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)]"
-            initial={{ y: 14, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -14, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            {toBengaliNum(value)}
-          </motion.span>
-        </AnimatePresence>
+        <span className="text-base xs:text-2xl sm:text-4xl font-heading font-bold text-gold drop-shadow-[0_0_8px_hsl(40_45%_56%/0.3)] tabular-nums select-none transition-transform duration-200">
+          {toBengaliNum(value)}
+        </span>
       </div>
     </div>
     <span className="text-gold-light/80 text-[10px] xs:text-xs sm:text-sm mt-1 xs:mt-2 font-bengali">{label}</span>
-  </motion.div>
+  </div>
 ));
 
 const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) => (
@@ -107,18 +95,9 @@ const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) =
     <div className="relative">
       <div className="absolute -inset-1 rounded-xl bg-[radial-gradient(ellipse_at_center,hsl(40_45%_56%/0.08),transparent_70%)] blur-sm pointer-events-none" />
       <div className="relative bg-emerald border border-gold/20 rounded-lg w-9 h-9 xs:w-11 xs:h-11 sm:w-14 sm:h-14 flex items-center justify-center overflow-hidden shadow-[inset_0_1px_4px_rgba(0,0,0,0.35),inset_0_-1px_3px_rgba(0,0,0,0.15)]">
-        <AnimatePresence mode="popLayout">
-          <motion.span
-            key={value}
-            className="text-sm xs:text-lg sm:text-2xl font-heading font-bold text-gold drop-shadow-sm"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-          >
-            {toBengaliNum(value)}
-          </motion.span>
-        </AnimatePresence>
+        <span className="text-sm xs:text-lg sm:text-2xl font-heading font-bold text-gold drop-shadow-sm tabular-nums select-none transition-transform duration-200">
+          {toBengaliNum(value)}
+        </span>
       </div>
     </div>
     <span className="text-gold-light/60 text-[9px] xs:text-[10px] sm:text-xs mt-1 font-bengali">{label}</span>
@@ -126,19 +105,24 @@ const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) =
 ));
 
 const UrsCountdown = () => {
-  const [nextUrs] = useState(getNextUrs);
+  const [nextUrs, setNextUrs] = useState(getNextUrs);
   const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(nextUrs.targetDate));
 
-  const [monthlyTarget] = useState(getNextMonthlyUrs);
+  const [monthlyTarget, setMonthlyTarget] = useState(getNextMonthlyUrs);
   const [monthlyTimeLeft, setMonthlyTimeLeft] = useState(() => calcTimeLeft(monthlyTarget));
 
   useEffect(() => {
     const id = setInterval(() => {
-      setTimeLeft(calcTimeLeft(nextUrs.targetDate));
-      setMonthlyTimeLeft(calcTimeLeft(monthlyTarget));
+      const currentNextUrs = getNextUrs();
+      setNextUrs(currentNextUrs);
+      setTimeLeft(calcTimeLeft(currentNextUrs.targetDate));
+
+      const currentMonthlyTarget = getNextMonthlyUrs();
+      setMonthlyTarget(currentMonthlyTarget);
+      setMonthlyTimeLeft(calcTimeLeft(currentMonthlyTarget));
     }, 1000);
     return () => clearInterval(id);
-  }, [nextUrs.targetDate, monthlyTarget]);
+  }, []);
 
   return (
     <motion.div
