@@ -364,7 +364,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             : 'top-16'
         } left-0 right-0 z-40 bg-background border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
           <div className="bg-gold-gradient text-primary-foreground px-3 md:px-5 h-full flex items-center gap-1 md:gap-2 z-10 shadow-xl font-heading font-black text-[10px] md:text-xs uppercase tracking-wider">
-            <Bell className="h-3 w-3 md:h-3.5 md:w-3.5 animate-bounce" /> নোটিশ
+            <Bell className="h-3 w-3 md:h-3.5 md:w-3.5" /> নোটিশ
           </div>
           <div className="flex-1 whitespace-nowrap overflow-hidden relative">
             <div className="inline-block animate-marquee md:animate-marquee-slow">

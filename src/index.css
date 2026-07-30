@@ -395,6 +395,18 @@
     }
   }
 
+  /* Disable decorative pulsing, bouncing, shimmering, and glow animations as requested */
+  .animate-pulse,
+  .animate-bounce,
+  .animate-ping,
+  .animate-shimmer,
+  .animate-glow-breathe,
+  .animate-glow-pulse,
+  .animate-text-shimmer,
+  .btn-shimmer::after {
+    animation: none !important;
+  }
+
   .css-particle {
     display: none !important;
   }
