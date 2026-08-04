@@ -684,13 +684,37 @@ const Finance = () => {
 
   const handleSearch = (e?: React.FormEvent) => {
     e?.preventDefault();
-    const query = searchCode.trim().toLowerCase();
-    const found = members.find((m) => 
-      m.member_code.toLowerCase() === query || 
-      (m.phone && m.phone.replace(/[^0-9]/g, '').includes(query.replace(/[^0-9]/g, '')))
-    );
+    const rawQuery = searchCode.trim();
+    if (!rawQuery) return;
+    const query = rawQuery.toLowerCase();
+    const normQuery = rawQuery.replace(/[০-৯]/g, (d) => String("০১২৩৪৫۶৭৮৯".indexOf(d))).toLowerCase();
+    const normPhoneQuery = normQuery.replace(/[^0-9]/g, '');
+
+    const found = members.find((m) => {
+      const code = (m.member_code || '').toLowerCase();
+      const normCode = code.replace(/[০-৯]/g, (d) => String("০১২৩৪৫۶৭৮৯".indexOf(d)));
+      const name = (m.full_name || (m as any).name || '').toLowerCase();
+      const phone = (m.phone || '').replace(/[^0-9]/g, '');
+      const area = (m.area || '').toLowerCase();
+
+      return (
+        code === query ||
+        normCode === normQuery ||
+        code.includes(query) ||
+        normCode.includes(normQuery) ||
+        name.includes(query) ||
+        area.includes(query) ||
+        (normPhoneQuery && phone.includes(normPhoneQuery))
+      );
+    });
     setSelectedMember(found ?? null);
-    if (!found && searchCode) toast({ title: 'সদস্য পাওয়া যায়নি', variant: 'destructive' });
+    if (!found) {
+      toast({
+        title: 'সদস্য পাওয়া যায়নি',
+        description: `'${searchCode}' দিয়ে কোনো সদস্য খুঁজে পাওয়া যায়নি। কোড, নাম বা ফোন নম্বর চেষ্টা করুন।`,
+        variant: 'destructive',
+      });
+    }
   };
 
   const submitPayment = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -1630,8 +1654,19 @@ const Finance = () => {
                       })
                       .filter(m => {
                         if (!duesSearch) return true;
-                        const s = duesSearch.toLowerCase();
-                        return m.full_name.toLowerCase().includes(s) || m.member_code.toLowerCase().includes(s);
+                        const s = duesSearch.trim().toLowerCase();
+                        const normS = s.replace(/[০-৯]/g, (d) => String("০১২৩৪৫۶৭৮৯".indexOf(d)));
+                        const code = (m.member_code || '').toLowerCase();
+                        const name = (m.full_name || '').toLowerCase();
+                        const phone = (m.phone || '').replace(/[^0-9]/g, '');
+                        const area = (m.area || '').toLowerCase();
+                        return (
+                          name.includes(s) ||
+                          code.includes(s) ||
+                          code.includes(normS) ||
+                          area.includes(s) ||
+                          (phone && phone.includes(normS.replace(/[^0-9]/g, '')))
+                        );
                       })
                       .sort((a, b) => b.dues - a.dues)
                       .map((m) => (
@@ -1678,8 +1713,19 @@ const Finance = () => {
                   })
                   .filter(m => {
                     if (!duesSearch) return true;
-                    const s = duesSearch.toLowerCase();
-                    return m.full_name.toLowerCase().includes(s) || m.member_code.toLowerCase().includes(s);
+                    const s = duesSearch.trim().toLowerCase();
+                    const normS = s.replace(/[০-৯]/g, (d) => String("০১২৩৪৫۶৭৮৯".indexOf(d)));
+                    const code = (m.member_code || '').toLowerCase();
+                    const name = (m.full_name || '').toLowerCase();
+                    const phone = (m.phone || '').replace(/[^0-9]/g, '');
+                    const area = (m.area || '').toLowerCase();
+                    return (
+                      name.includes(s) ||
+                      code.includes(s) ||
+                      code.includes(normS) ||
+                      area.includes(s) ||
+                      (phone && phone.includes(normS.replace(/[^0-9]/g, '')))
+                    );
                   })
                   .sort((a, b) => b.dues - a.dues)
                   .map((m) => (
