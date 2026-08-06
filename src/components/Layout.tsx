@@ -201,7 +201,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu`}>
+      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu pt-[env(safe-area-inset-top,0px)]`}>
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
@@ -490,7 +490,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       )}
       {/* Admin Maintenance Mode Active Banner */}
       {isBypassed && String(appSettings.maintenance_mode) === 'true' && (
-        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-500 text-black text-[11px] md:text-xs font-bold py-2 px-4 text-center shadow-lg border-t border-amber-600 animate-pulse flex items-center justify-center gap-2">
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-amber-500 text-black text-[11px] md:text-xs font-bold py-2 px-4 text-center shadow-lg border-t border-amber-600 animate-pulse flex items-center justify-center gap-2 pb-safe">
           <span>⚠️ মেইনটেন্যান্স মোড চালু আছে (সাধারণ ভিজিটরদের জন্য সাইটটি বর্তমানে লক করা)</span>
         </div>
       )}

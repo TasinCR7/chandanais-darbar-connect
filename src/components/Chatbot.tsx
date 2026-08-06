@@ -70,7 +70,7 @@ const Chatbot: React.FC = () => {
               opacity: 1, 
               scale: 1, 
               y: 0,
-              height: isMinimized ? "60px" : "min(500px, 80dvh)",
+              height: isMinimized ? "60px" : "min(500px, 65dvh)",
               width: "100%"
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -162,6 +162,7 @@ const Chatbot: React.FC = () => {
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="আপনার প্রশ্ন লিখুন..."
                       className="border-gold/20 focus-visible:ring-gold bg-background/30 backdrop-blur-sm rounded-xl py-5"
+                      style={{ fontSize: 16 }}
                     />
                     <Button 
                       type="submit" 

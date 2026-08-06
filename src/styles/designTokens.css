@@ -16,12 +16,7 @@
   --transition-fast: 0.2s ease;
 }
 
-/* Utility classes */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
+/* Utility classes — .container removed to avoid overriding Tailwind's responsive container */
 
 .btn-primary {
   background: var(--color-primary);
@@ -43,7 +38,12 @@
   padding: 1.5rem;
   transition: var(--transition-fast);
 }
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+
+/* Only apply hover lift on devices that support hover (not mobile touchscreens) */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  }
 }
+

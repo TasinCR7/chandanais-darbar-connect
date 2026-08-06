@@ -395,8 +395,7 @@
     }
   }
 
-  /* Disable decorative pulsing, bouncing, shimmering, and glow animations as requested */
-  .animate-pulse,
+  /* Disable decorative animations (keep functional ones like animate-spin, animate-pulse for loaders) */
   .animate-bounce,
   .animate-ping,
   .animate-shimmer,
@@ -410,6 +409,23 @@
   .css-particle {
     display: none !important;
   }
+
+  /* PremiumLoader keyframes (moved from inline <style> to avoid re-parsing) */
+  @keyframes loader-glow {
+    0%, 100% { opacity: 0.4; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  @keyframes loader-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 1; }
+  }
+  @keyframes loader-letter {
+    0%, 100% { letter-spacing: 0.15em; opacity: 0.6; }
+    50% { letter-spacing: 0.35em; opacity: 1; }
+  }
+  .animate-loader-glow { animation: loader-glow 2.5s ease-in-out infinite; }
+  .animate-loader-pulse { animation: loader-pulse 2s ease-in-out infinite; }
+  .animate-loader-letter { animation: loader-letter 2s ease-in-out infinite; }
 
   @media (prefers-reduced-motion: reduce) {
     *, ::before, ::after {
@@ -451,7 +467,6 @@
     .glass-morphism,
     .card-gold {
       transform: translateZ(0);
-      will-change: transform;
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       background-color: rgba(12, 12, 12, 0.88);
@@ -500,8 +515,8 @@
       overscroll-behavior: contain;
     }
 
-    /* Prevent WebKit repainting flicker on fixed elements */
-    header, .fixed, .sticky {
+    /* Prevent WebKit repainting flicker on sticky header only */
+    header {
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
       transform: translateZ(0);
@@ -518,7 +533,6 @@
   body.menu-open {
     overflow: hidden !important;
     height: 100% !important;
-    touch-action: none;
   }
   body[data-scroll-locked] {
     overflow: hidden !important;

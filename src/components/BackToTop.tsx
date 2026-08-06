@@ -55,8 +55,7 @@ const BackToTop = () => {
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           onClick={scrollToTop}
-          onTouchEnd={scrollToTop}
-          className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-4 sm:left-6 z-[105] w-12 h-12 rounded-full bg-background/90 sm:bg-gold/10 border-2 border-gold/60 text-gold hover:bg-gold/20 active:scale-95 transition-all duration-300 backdrop-blur-md focus-visible:ring-2 focus-visible:ring-gold shadow-xl shadow-black/50 flex items-center justify-center pointer-events-auto cursor-pointer touch-manipulation select-none"
+          className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-4 sm:left-6 z-[45] w-12 h-12 rounded-full bg-background/90 sm:bg-gold/10 border-2 border-gold/60 text-gold hover:bg-gold/20 active:scale-95 transition-all duration-300 backdrop-blur-md focus-visible:ring-2 focus-visible:ring-gold shadow-xl shadow-black/50 flex items-center justify-center pointer-events-auto cursor-pointer touch-manipulation select-none"
           aria-label="উপরে যান"
         >
           <ArrowUp size={22} className="stroke-[2.5]" />
