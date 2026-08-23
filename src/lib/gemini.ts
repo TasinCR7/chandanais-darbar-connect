@@ -41,6 +41,11 @@ export async function getGeminiResponse(userMessage: string, chatHistory: { role
       }),
     });
 
+    if (!response.ok) {
+      console.error("Groq API Error:", response.status, response.statusText);
+      return "দুঃখিত, আমি আপনার প্রশ্নের উত্তর দিতে পারছি না।";
+    }
+
     const data = await response.json();
     if (data.choices && data.choices[0]?.message?.content) {
       return data.choices[0].message.content;

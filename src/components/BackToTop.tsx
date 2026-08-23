@@ -21,27 +21,11 @@ const BackToTop = () => {
     };
   }, []);
 
-  const scrollToTop = (e?: React.SyntheticEvent) => {
-    if (e && e.cancelable) {
-      e.preventDefault();
-    }
-    
+  const scrollToTop = () => {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       window.scrollTo(0, 0);
-    }
-    
-    if (document.documentElement) {
-      try {
-        document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
-      } catch {
-        document.documentElement.scrollTop = 0;
-      }
-    }
-    
-    if (document.body) {
-      document.body.scrollTop = 0;
     }
   };
 

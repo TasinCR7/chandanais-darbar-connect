@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_TELEGRAM_BOT_TOKEN": JSON.stringify(env.VITE_TELEGRAM_BOT_TOKEN || ""),
       "import.meta.env.VITE_TELEGRAM_CHAT_ID": JSON.stringify(env.VITE_TELEGRAM_CHAT_ID || ""),
       "import.meta.env.VITE_SMS_API_KEY": JSON.stringify(env.VITE_SMS_API_KEY || ""),
+      "import.meta.env.VITE_GROQ_API_KEY": JSON.stringify(env.VITE_GROQ_API_KEY || ""),
     },
 
     plugins: [react()],

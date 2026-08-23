@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 
 interface Message {
+  id: string;
   role: "user" | "ai";
   content: string;
 }
@@ -18,10 +19,12 @@ const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "ai", content: "আসসালামু আলাইকুম! আমি চন্দনাইশ দরবার শরীফের এআই এসিস্ট্যান্ট। আমি আপনাকে কীভাবে সাহায্য করতে পারি?" }
+    { id: "msg-0", role: "ai", content: "আসসালামু আলাইকুম! আমি চন্দনাইশ দরবার শরীফের এআই এসিস্ট্যান্ট। আমি আপনাকে কীভাবে সাহায্য করতে পারি?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const msgIdRef = useRef(0);
+  const nextMsgId = () => `msg-${++msgIdRef.current}`;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,22 +39,22 @@ const Chatbot: React.FC = () => {
     const userMsg = input.trim();
     setInput("");
     setMessages(prev => {
-      const updated = [...prev, { role: "user" as const, content: userMsg }];
+      const updated = [...prev, { id: nextMsgId(), role: "user" as const, content: userMsg }];
       return updated.length > MAX_DISPLAY_MESSAGES ? updated.slice(-MAX_DISPLAY_MESSAGES) : updated;
     });
     setIsLoading(true);
 
     try {
-      // Pass limited chat history to avoid token overflow
-      const history = messages.slice(-MAX_API_CONTEXT).map(m => ({ role: m.role, content: m.content }));
+      // Build history including the new user message for context
+      const history = [...messages.slice(-MAX_API_CONTEXT), { role: "user" as const, content: userMsg }].map(m => ({ role: m.role, content: m.content }));
       const aiResponse = await getGeminiResponse(userMsg, history);
       setMessages(prev => {
-        const updated = [...prev, { role: "ai" as const, content: aiResponse }];
+        const updated = [...prev, { id: nextMsgId(), role: "ai" as const, content: aiResponse }];
         return updated.length > MAX_DISPLAY_MESSAGES ? updated.slice(-MAX_DISPLAY_MESSAGES) : updated;
       });
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: "ai", content: "দুঃখিত, সংযোগ বিচ্ছিন্ন হয়েছে। আবার চেষ্টা করুন।" }]);
+      setMessages(prev => [...prev, { id: nextMsgId(), role: "ai", content: "দুঃখিত, সংযোগ বিচ্ছিন্ন হয়েছে। আবার চেষ্টা করুন।" }]);
     } finally {
       setIsLoading(false);
     }
@@ -116,11 +119,11 @@ const Chatbot: React.FC = () => {
                   ref={scrollRef}
                   className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gold/20"
                 >
-                  {messages.map((msg, i) => (
+                  {messages.map((msg) => (
                     <motion.div
                       initial={{ opacity: 0, x: msg.role === "user" ? 10 : -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      key={i}
+                      key={msg.id}
                       className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       <div className={`flex gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
@@ -189,9 +192,9 @@ const Chatbot: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         title="এআই চ্যাট ওপেন করুন"
         aria-label="এআই চ্যাট ওপেন করুন"
-        className={`bg-gold-gradient p-3.5 rounded-full shadow-2xl gold-glow-hover transition-all duration-300 ring-2 ring-gold/20 pointer-events-auto ${isOpen ? 'rotate-90 hidden' : ''}`}
+        className={`bg-gold-gradient p-3.5 rounded-full shadow-2xl gold-glow-hover transition-all duration-300 ring-2 ring-gold/20 pointer-events-auto min-w-[50px] min-h-[50px] flex items-center justify-center touch-manipulation select-none cursor-pointer ${isOpen ? 'rotate-90 hidden' : ''}`}
       >
-        <MessageSquare className="text-white w-7 h-7" />
+        <MessageSquare className="text-white w-6 h-6 sm:w-7 sm:h-7" />
       </motion.button>
     </div>
   );

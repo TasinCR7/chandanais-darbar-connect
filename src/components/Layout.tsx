@@ -83,9 +83,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const isCommitteeMember = typeof window !== 'undefined' && (() => {
+  const [isCommitteeMember, setIsCommitteeMember] = useState(() => {
+    if (typeof window === 'undefined') return false;
     try { return !!localStorage.getItem("committee_auth"); } catch { return false; }
-  })();
+  });
+
+  useEffect(() => {
+    const handleStorage = () => {
+      try { setIsCommitteeMember(!!localStorage.getItem("committee_auth")); } catch { setIsCommitteeMember(false); }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const isBypassed = isStaff || isCommitteeMember;
 
   const [isIdleLoaded, setIsIdleLoaded] = useState(false);
@@ -302,10 +312,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <div className="p-4 flex justify-end border-b border-gold/10 pt-safe">
                 <button
                   onClick={() => setMenuOpen(false)}
-                  className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90"
+                  className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation"
                   aria-label="বন্ধ করুন"
                 >
-                  <X size={28} />
+                  <X size={26} />
                 </button>
               </div>
 

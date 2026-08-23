@@ -68,7 +68,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
 
   // Distribution for combined shahjadas
   const showDistribution = donation.donation_category === 'combined_shahjadas';
-  const perPerson = showDistribution ? donation.amount / SHAHJADAS.length : 0;
+  const perPerson = showDistribution ? (donation.amount ?? 0) / SHAHJADAS.length : 0;
 
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
@@ -392,7 +392,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                   {donation.transaction_id || '-'}
                 </td>
                 <td style={{ padding: '16px', textAlign: 'right', borderRight: '1px solid #e5e7eb', fontSize: '20px', fontWeight: '900', color: '#065f46' }}>
-                  {toBanglaNumber(donation.amount.toLocaleString('en-US'))} ৳
+                  {toBanglaNumber((donation.amount ?? 0).toLocaleString('en-US'))} ৳
                 </td>
               </tr>
             </tbody>
@@ -413,7 +413,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
                 }}
               >
                 <span style={{ fontSize: '15px', fontWeight: '700', letterSpacing: '1px' }}>সর্বমোট / TOTAL</span>
-                <span style={{ fontSize: '26px', fontWeight: '900' }}>{toBanglaNumber(donation.amount.toLocaleString('en-US'))} ৳</span>
+                <span style={{ fontSize: '26px', fontWeight: '900' }}>{toBanglaNumber((donation.amount ?? 0).toLocaleString('en-US'))} ৳</span>
               </div>
             </div>
           </div>

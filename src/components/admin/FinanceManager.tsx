@@ -5,6 +5,7 @@ import { Plus, Trash2, Download, TrendingUp, TrendingDown, Wallet, Calendar, Pen
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { escapeHtml } from "@/utils/security";
 
 interface Finance {
   id: string;
@@ -72,11 +73,18 @@ const FinanceManager = () => {
       toast({ title: "ত্রুটি", description: "সকল ফিল্ড পূরণ করুন।", variant: "destructive" });
       return;
     }
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      toast({ title: 'ত্রুটি', description: 'সঠিক পরিমাণ লিখুন।', variant: 'destructive' });
+      return;
+    }
+
     setLoading(true);
 
     if (editingId) {
       const { error } = await supabase.from("finances").update({
-        type: formType, category, amount: parseFloat(amount),
+        type: formType, category, amount: numAmount,
         description: description || null, date
       }).eq("id", editingId);
       if (!error) {
@@ -88,7 +96,7 @@ const FinanceManager = () => {
       }
     } else {
       const { error } = await supabase.from("finances").insert([{
-        type: formType, category, amount: parseFloat(amount),
+        type: formType, category, amount: numAmount,
         description: description || null, date
       }]);
       if (!error) {
@@ -119,6 +127,7 @@ const FinanceManager = () => {
   };
 
   const deleteFinance = async (id: string) => {
+    if (!window.confirm('আপনি কি নিশ্চিত এই রেকর্ডটি মুছে ফেলতে চান?')) return;
     const { error } = await supabase.from("finances").delete().eq("id", id);
     if (error) {
       toast({ title: "ত্রুটি", description: "লেনদেন মুছে ফেলতে ব্যর্থ হয়েছে", variant: "destructive" });
@@ -161,16 +170,6 @@ const FinanceManager = () => {
 
   // PDF generation
   const generatePDF = async () => {
-    const escapeHtml = (text: string | null | undefined) => {
-      if (!text) return "";
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    };
-
     const title = viewMode === "monthly"
       ? `মাসিক আয়-ব্যয় রিপোর্ট — ${selectedMonth}`
       : `বার্ষিক আয়-ব্যয় রিপোর্ট — ${selectedMonth.slice(0, 4)}`;
@@ -237,9 +236,9 @@ const FinanceManager = () => {
             <div style="text-align:right;">
               <div style="background:linear-gradient(145deg,rgba(255,215,0,0.1),rgba(184,134,11,0.04));border:2px solid rgba(255,215,0,0.18);border-radius:16px;padding:18px 26px;backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,0.15);">
                 <p style="margin:0;font-size:8px;opacity:0.4;text-transform:uppercase;letter-spacing:3px;font-weight:800;">Invoice No.</p>
-                <p style="margin:8px 0 0;font-size:19px;font-weight:900;font-family:'Courier New',monospace;color:#ffd700;letter-spacing:2px;text-shadow:0 1px 8px rgba(255,215,0,0.2);">${invoiceNo}</p>
+                <p style="margin:8px 0 0;font-size:19px;font-weight:900;font-family:'Courier New',monospace;color:#ffd700;letter-spacing:2px;text-shadow:0 1px 8px rgba(255,215,0,0.2);">${escapeHtml(invoiceNo)}</p>
                 <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.25),transparent);margin:10px 0 8px;"></div>
-                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.45);font-weight:600;">${today}</p>
+                <p style="margin:0;font-size:10px;color:rgba(255,255,255,0.45);font-weight:600;">${escapeHtml(today)}</p>
               </div>
             </div>
           </div>
@@ -250,7 +249,7 @@ const FinanceManager = () => {
           <div style="display:flex;gap:40px;align-items:center;">
             <div>
               <span style="font-size:8px;color:#aaa;text-transform:uppercase;letter-spacing:3px;font-weight:800;">রিপোর্ট শিরোনাম</span>
-              <p style="margin:3px 0 0;font-size:16px;font-weight:800;color:#0a3d26;">${title}</p>
+              <p style="margin:3px 0 0;font-size:16px;font-weight:800;color:#0a3d26;">${escapeHtml(title)}</p>
             </div>
             <div style="width:1.5px;height:34px;background:linear-gradient(180deg,transparent,#c0d0c4,transparent);"></div>
             <div>
@@ -374,7 +373,7 @@ const FinanceManager = () => {
                   : filteredFinances.map((f, i) => `
                   <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f8faf9'};">
                     <td style="padding:13px 20px;color:#ccc;font-size:11px;font-weight:800;border-bottom:1px solid #eef2ef;font-family:'Courier New',monospace;">${String(i + 1).padStart(2, '0')}</td>
-                    <td style="padding:13px 20px;font-weight:700;color:#222;border-bottom:1px solid #eef2ef;">${new Date(f.date).toLocaleDateString("bn-BD")}</td>
+                    <td style="padding:13px 20px;font-weight:700;color:#222;border-bottom:1px solid #eef2ef;">${escapeHtml(new Date(f.date).toLocaleDateString("bn-BD"))}</td>
                     <td style="padding:13px 20px;border-bottom:1px solid #eef2ef;">
                       <span style="display:inline-block;background:${f.type === 'income' ? 'linear-gradient(135deg,#e8f5e9,#c8e6c9)' : 'linear-gradient(135deg,#ffebee,#ffcdd2)'};color:${f.type === 'income' ? '#1b5e20' : '#b71c1c'};padding:5px 16px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:0.5px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
                         ${f.type === "income" ? "✦ আয়" : "✦ ব্যয়"}
@@ -410,7 +409,7 @@ const FinanceManager = () => {
               <p style="margin:0 0 0 15px;font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">স্বয়ংক্রিয়ভাবে তৈরি প্রতিবেদন • ম্যানেজমেন্ট সিস্টেম © ${new Date().getFullYear()}</p>
             </div>
             <div style="text-align:right;">
-              <p style="margin:0;font-size:10px;color:rgba(255,215,0,0.4);font-family:'Courier New',monospace;font-weight:700;letter-spacing:1px;">${invoiceNo}</p>
+              <p style="margin:0;font-size:10px;color:rgba(255,215,0,0.4);font-family:'Courier New',monospace;font-weight:700;letter-spacing:1px;">${escapeHtml(invoiceNo)}</p>
               <p style="margin:4px 0 0;font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:2px;text-transform:uppercase;">Verified Document</p>
             </div>
           </div>

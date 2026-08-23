@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+/** Offset to account for visits before counter API integration */
+const LEGACY_VISITOR_OFFSET = 1540;
+
 const VisitorCounter = () => {
   const [count, setCount] = useState<number | null>(null);
 
@@ -18,13 +21,14 @@ const VisitorCounter = () => {
 
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
+        if (!res.ok) return;
         const data = await res.json();
         
         if (data && typeof data.count === 'number') {
           if (!hasVisited) {
             sessionStorage.setItem('hasVisited_v1', 'true');
           }
-          setCount(data.count + 1540); 
+          setCount(data.count + LEGACY_VISITOR_OFFSET); 
         }
       } catch (err) {
         // Silently catch network errors or timeouts to not log noise

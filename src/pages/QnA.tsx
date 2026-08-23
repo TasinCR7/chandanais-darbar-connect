@@ -228,16 +228,16 @@ ${escapeTelegramHtml(trimmedDetails)}
       if (!rpcError && rpcData && rpcData.length > 0) {
         foundRecord = rpcData[0];
       } else {
-        // 2. Fallback query if RPC didn't return a record
+        // 2. Fallback query if RPC didn't return a record (filtered server-side to prevent data leak)
         const { data: fallbackData } = await supabase
           .from("submissions")
-          .select("*");
+          .select("id, type, name, phone, subject, details, reply, replied_at, created_at")
+          .or(`id.eq.${cleanQuery},id.ilike.${cleanQuery}%`)
+          .limit(1)
+          .maybeSingle();
 
-        if (fallbackData && fallbackData.length > 0) {
-          foundRecord = fallbackData.find((item: any) => {
-            const cleanId = item.id.replace(/-/g, "").toLowerCase();
-            return cleanId.startsWith(cleanQuery) || item.id.toLowerCase() === cleanQuery;
-          }) || null;
+        if (fallbackData) {
+          foundRecord = fallbackData;
         }
       }
 

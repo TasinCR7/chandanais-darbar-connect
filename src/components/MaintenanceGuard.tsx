@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
@@ -40,9 +40,19 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
   });
 
   // Committee members log in via phone verification stored in localStorage
-  const isCommitteeMember = typeof window !== 'undefined' && (() => {
+  const [isCommitteeMember, setIsCommitteeMember] = useState(() => {
+    if (typeof window === 'undefined') return false;
     try { return !!localStorage.getItem("committee_auth"); } catch { return false; }
-  })();
+  });
+
+  useEffect(() => {
+    const handleStorage = () => {
+      try { setIsCommitteeMember(!!localStorage.getItem("committee_auth")); } catch { setIsCommitteeMember(false); }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const isBypassed = isStaff || isCommitteeMember;
 
   // Check both .env and Database settings
@@ -56,9 +66,17 @@ const MaintenanceGuard: React.FC<MaintenanceGuardProps> = ({ children }) => {
     !location.pathname.startsWith('/committee-dashboard') &&
     !location.pathname.startsWith('/maintenance');
 
-  // While auth is loading, render children immediately.
-  // The Layout loader already handles the initial loading state.
+  // While auth is loading, render children immediately unless maintenance is active.
   if (authLoading) {
+    // If maintenance mode might be active, show loading instead of flashing content
+    if (dbMaintenance || envMaintenance) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+          <div className="w-14 h-14 rounded-full border-[3px] border-gold/20 border-t-gold animate-spin mb-4" />
+          <p className="text-gold/80 font-heading animate-pulse tracking-widest text-sm">লোড হচ্ছে...</p>
+        </div>
+      );
+    }
     return <>{children}</>;
   }
 

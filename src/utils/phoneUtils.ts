@@ -16,9 +16,9 @@ export const normalizePhoneNumber = (phone: string): string => {
   const converted = convertBanglaToEnglishDigits(phone || "");
   let clean = converted.trim().replace(/\D/g, ""); // Remove non-digits
   
-  // If starts with 880, remove 88
+  // If starts with 880, remove 880
   if (clean.startsWith("880")) {
-    clean = clean.substring(2);
+    clean = clean.substring(3);
   }
   
   // If it's 10 digits and doesn't start with 0, add 0

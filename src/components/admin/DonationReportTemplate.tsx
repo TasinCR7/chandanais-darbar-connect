@@ -19,7 +19,7 @@ const SHAHJADAS = [
 export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationReportProps>(({ donations, totalAmount, periodLabel }, ref) => {
   // Calculate specific totals
   const mosqueTotal = donations
-    .filter(d => d.donation_category === 'mosque')
+    .filter(d => ['mosque', 'mosque_fund'].includes(d.donation_category))
     .reduce((sum, d) => sum + d.amount, 0);
   
   const combinedShahjadasTotal = donations
@@ -38,7 +38,7 @@ export const DonationReportTemplate = React.forwardRef<HTMLDivElement, DonationR
   });
 
   const getCategoryLabel = (category: string, recipientId?: string | null) => {
-    if (category === 'mosque') return 'মসজিদ / দরবার ফান্ড';
+    if (['mosque', 'mosque_fund'].includes(category)) return 'মসজিদ / দরবার ফান্ড';
     if (category === 'combined_shahjadas') return 'সম্মিলিত শাহজাদাগণ';
     if (category === 'specific_shahjada') {
       const map: Record<string, string> = {

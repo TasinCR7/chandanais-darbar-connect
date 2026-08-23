@@ -41,6 +41,7 @@ async function fetchFontBase64(): Promise<string> {
       }
     }
   })();
+  inflight.catch(() => { inflight = null; });
 
   return inflight;
 }

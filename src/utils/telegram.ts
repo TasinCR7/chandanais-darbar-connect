@@ -14,11 +14,8 @@ export const escapeTelegramHtml = (str: string | number | null | undefined): str
 
 export const sendTelegramNotification = async (message: string): Promise<boolean> => {
   try {
-    const DEFAULT_BOT_TOKEN = "8577916741:AAHku7Xh3YpFn3Y2aF4L7swaJcOjKsoZwyg";
-    const DEFAULT_CHAT_IDS = "7484314831,-1003880816949";
-
-    const botToken = (import.meta.env.VITE_TELEGRAM_BOT_TOKEN || DEFAULT_BOT_TOKEN).trim();
-    const chatIdsString = (import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || DEFAULT_CHAT_IDS).trim();
+    const botToken = (import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "").trim();
+    const chatIdsString = (import.meta.env.VITE_TELEGRAM_CHAT_ID || import.meta.env.VITE_TELEGRAM_CHAT_IDS || "").trim();
 
     if (!botToken || !chatIdsString) {
       console.warn("⚠️ Telegram Error: VITE_TELEGRAM_BOT_TOKEN or VITE_TELEGRAM_CHAT_ID missing");

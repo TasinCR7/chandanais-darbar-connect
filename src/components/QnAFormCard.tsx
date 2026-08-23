@@ -154,14 +154,14 @@ const QnAFormCard = ({
               value={form.details}
               onChange={(e) => setForm({ ...form, details: e.target.value })}
               maxLength={2000}
-              rows={4.5}
+              rows={5}
               className="bg-black/20 border-gold/25 focus:border-gold/60 focus:ring-1 focus:ring-gold/30 rounded-xl p-3.5 resize-none"
             />
           </div>
 
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !form.name.trim() || !form.subject || !form.details.trim()}
             className="w-full sm:w-auto bg-gold-gradient text-primary-foreground font-bold text-sm px-8 py-3 rounded-xl shadow-lg gold-glow-hover transition-all duration-300 flex items-center justify-center gap-2 btn-shimmer"
           >
             {submitting ? (

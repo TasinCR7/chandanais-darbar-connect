@@ -5,6 +5,7 @@ import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import PremiumLoader from "@/components/PremiumLoader";
+import { useToast } from "@/hooks/use-toast";
 
 const categories = ["সকল", "দরবার শরীফ", "ওরশ শরীফ", "মাহফিল"];
 
@@ -19,6 +20,7 @@ interface GalleryItem {
 }
 
 const Gallery = () => {
+  const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState("সকল");
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
@@ -27,17 +29,46 @@ const Gallery = () => {
 
   useEffect(() => {
     const fetchGallery = async () => {
-      const { data } = await supabase.from("gallery")
-        .select("id, url, caption, category")
-        .order("created_at", { ascending: false });
-      
-      if (data) {
-        setGalleryItems(data as unknown as GalleryItem[]);
+      try {
+        const { data, error } = await supabase.from("gallery")
+          .select("id, url, caption, category")
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching gallery items:", error);
+          toast({
+            title: "ত্রুটি",
+            description: "গ্যালারির ছবি লোড করতে সমস্যা হয়েছে।",
+            variant: "destructive",
+          });
+        } else if (data) {
+          setGalleryItems(data as unknown as GalleryItem[]);
+        }
+      } catch (err) {
+        console.error("Gallery fetch exception:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchGallery();
-  }, []);
+  }, [toast]);
+
+  // Reset lightbox when active category changes
+  useEffect(() => {
+    setLightbox(null);
+  }, [activeCategory]);
+
+  // Body scroll lock when lightbox is open
+  useEffect(() => {
+    if (lightbox !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [lightbox]);
 
   const filtered =
     activeCategory === "সকল"

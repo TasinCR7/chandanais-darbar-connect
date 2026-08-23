@@ -21,6 +21,7 @@ import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
 import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
 import { fetchSettings } from "@/lib/api";
 import { escapeHtml } from "@/utils/security";
+import { v4 as uuidv4 } from "uuid";
 
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
@@ -33,15 +34,7 @@ const SHAHJADAS = [
   { id: "choto", name: "ছোট শাহজাদা" },
 ];
 
-const generateUUID = () => {
-  if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
-    return window.crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
+const generateUUID = () => uuidv4();
 
 const Hadia = () => {
   const [donationType, setDonationType] = useState<DonationType>("");

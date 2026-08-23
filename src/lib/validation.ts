@@ -72,9 +72,6 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-let issueSeq = 0;
-const nextId = () => `V${(++issueSeq).toString().padStart(4, '0')}`;
-
 /* -------------------------------------------------------------------------- */
 /*                             Main validator                                  */
 /* -------------------------------------------------------------------------- */
@@ -86,7 +83,8 @@ export interface ValidationInput {
 }
 
 export function runValidation(input: ValidationInput): ValidationReport {
-  issueSeq = 0;
+  let issueSeq = 0;
+  const nextId = () => `V${(++issueSeq).toString().padStart(4, '0')}`;
   const issues: ValidationIssue[] = [];
   const today = todayISO();
   const memberById = new Map<string, Member>(input.members.map((m) => [m.id, m]));

@@ -84,4 +84,6 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName, a
   </motion.div>
 ));
 
+SectionTitle.displayName = 'SectionTitle';
+
 export default SectionTitle;

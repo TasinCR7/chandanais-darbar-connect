@@ -395,21 +395,6 @@
     }
   }
 
-  /* Disable decorative animations (keep functional ones like animate-spin, animate-pulse for loaders) */
-  .animate-bounce,
-  .animate-ping,
-  .animate-shimmer,
-  .animate-glow-breathe,
-  .animate-glow-pulse,
-  .animate-text-shimmer,
-  .btn-shimmer::after {
-    animation: none !important;
-  }
-
-  .css-particle {
-    display: none !important;
-  }
-
   /* PremiumLoader keyframes (moved from inline <style> to avoid re-parsing) */
   @keyframes loader-glow {
     0%, 100% { opacity: 0.4; transform: scale(0.95); }
@@ -433,6 +418,21 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    /* Disable decorative animations */
+    .animate-bounce,
+    .animate-ping,
+    .animate-shimmer,
+    .animate-glow-breathe,
+    .animate-glow-pulse,
+    .animate-text-shimmer,
+    .btn-shimmer::after {
+      animation: none !important;
+    }
+
+    .css-particle {
+      display: none !important;
     }
   }
 

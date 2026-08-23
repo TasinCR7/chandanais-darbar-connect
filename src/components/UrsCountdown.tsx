@@ -89,6 +89,7 @@ const TimeBox = memo(({ value, label }: { value: number; label: string }) => (
     <span className="text-gold-light/80 text-[10px] xs:text-xs sm:text-sm mt-1 xs:mt-2 font-bengali">{label}</span>
   </div>
 ));
+TimeBox.displayName = 'TimeBox';
 
 const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center shrink-0">
@@ -103,6 +104,7 @@ const SmallTimeBox = memo(({ value, label }: { value: number; label: string }) =
     <span className="text-gold-light/60 text-[9px] xs:text-[10px] sm:text-xs mt-1 font-bengali">{label}</span>
   </div>
 ));
+SmallTimeBox.displayName = 'SmallTimeBox';
 
 const UrsCountdown = () => {
   const [nextUrs, setNextUrs] = useState(getNextUrs);
@@ -113,16 +115,26 @@ const UrsCountdown = () => {
 
   useEffect(() => {
     const id = setInterval(() => {
-      const currentNextUrs = getNextUrs();
-      setNextUrs(currentNextUrs);
-      setTimeLeft(calcTimeLeft(currentNextUrs.targetDate));
+      const now = new Date();
+      // Only recalculate next event when countdown reaches zero
+      if (nextUrs.targetDate.getTime() <= now.getTime()) {
+        const currentNextUrs = getNextUrs();
+        setNextUrs(currentNextUrs);
+        setTimeLeft(calcTimeLeft(currentNextUrs.targetDate));
+      } else {
+        setTimeLeft(calcTimeLeft(nextUrs.targetDate));
+      }
 
-      const currentMonthlyTarget = getNextMonthlyUrs();
-      setMonthlyTarget(currentMonthlyTarget);
-      setMonthlyTimeLeft(calcTimeLeft(currentMonthlyTarget));
+      if (monthlyTarget.getTime() <= now.getTime()) {
+        const currentMonthlyTarget = getNextMonthlyUrs();
+        setMonthlyTarget(currentMonthlyTarget);
+        setMonthlyTimeLeft(calcTimeLeft(currentMonthlyTarget));
+      } else {
+        setMonthlyTimeLeft(calcTimeLeft(monthlyTarget));
+      }
     }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [nextUrs.targetDate, monthlyTarget]);
 
   return (
     <motion.div
