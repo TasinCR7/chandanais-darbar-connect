@@ -4,6 +4,12 @@ import { motion } from "framer-motion";
 
 let sharedAudioCtx: AudioContext | null = null;
 
+const unlockAudioContext = (ctx: AudioContext) => {
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+};
+
 const getAudioCtx = (): AudioContext | null => {
   if (typeof window === "undefined") return null;
   if (!sharedAudioCtx) {
@@ -17,6 +23,9 @@ const getAudioCtx = (): AudioContext | null => {
       }
     }
   }
+  if (sharedAudioCtx) {
+    unlockAudioContext(sharedAudioCtx);
+  }
   return sharedAudioCtx;
 };
 
@@ -24,15 +33,7 @@ const playClickSound = () => {
   try {
     const audioCtx = getAudioCtx();
     if (!audioCtx) return;
-    
-    // Resume context if suspended (browser security policy requirement)
-    if (audioCtx.state === 'suspended') {
-      try {
-        audioCtx.resume();
-      } catch (e) {
-        console.error("Failed to resume AudioContext", e);
-      }
-    }
+    unlockAudioContext(audioCtx);
 
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();

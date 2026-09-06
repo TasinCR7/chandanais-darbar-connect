@@ -156,15 +156,31 @@
     contain-intrinsic-size: 1px 500px;
   }
 
-  /* Mobile Safe Area Utilities */
-  .mb-safe {
-    margin-bottom: env(safe-area-inset-bottom, 16px);
+  /* Responsive tables for mobile */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
+  /* Safe area inset variables & utilities for iOS */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
   .pt-safe {
     padding-top: env(safe-area-inset-top, 16px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .mt-safe {
+    margin-top: env(safe-area-inset-top, 16px);
   }
 
   /* Universal dvh support */

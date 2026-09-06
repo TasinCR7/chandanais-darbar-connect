@@ -19,10 +19,7 @@ import {
   Megaphone, 
   RefreshCw, 
   LogOut, 
-  ShieldCheck,
-  TrendingUp,
-  Sparkles,
-  Inbox
+  ShieldCheck
 } from "lucide-react";
 
 // Lazy-loaded admin sub-modules
@@ -197,7 +194,7 @@ const Admin = () => {
           phoneVariants = [`+88${rawPhone}`, rawPhone];
         }
 
-        let lastError: unknown = null;
+        let lastError: { message?: string } | null = null;
         let loggedInUser = null;
 
         for (const p of phoneVariants) {
@@ -232,8 +229,8 @@ const Admin = () => {
         }
 
         if (lastError) {
-          let errorMsg = lastError.message;
-          if (lastError.message.includes("Invalid login credentials")) {
+          let errorMsg = lastError.message || "লগইন ব্যর্থ হয়েছে।";
+          if (errorMsg.includes("Invalid login credentials")) {
             errorMsg = "ভুল নম্বর বা পাসওয়ার্ড দেওয়া হয়েছে।";
           }
           toast({ 
@@ -562,7 +559,7 @@ const Admin = () => {
             <AdminSection title="নোটিশ পরিচালনা">
               <Suspense fallback={<PremiumLoader />}>
                 <NoticeManager 
-                  notices={notices as unknown as Record<string, unknown>[]} 
+                  notices={notices} 
                   loading={loading} 
                   onAddNotice={addNotice} 
                   onToggleActive={toggleNotice} 

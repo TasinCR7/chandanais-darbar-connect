@@ -61,7 +61,7 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-2 left-2 md:left-auto md:right-6 z-[100] flex flex-col items-end md:w-[350px] pointer-events-none">
+    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-[calc(0.5rem+env(safe-area-inset-left,0px))] right-[calc(0.5rem+env(safe-area-inset-right,0px))] md:left-auto md:right-[calc(1.5rem+env(safe-area-inset-right,0px))] z-[100] flex flex-col items-end md:w-[350px] pointer-events-none">
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (

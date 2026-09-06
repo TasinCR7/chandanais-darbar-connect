@@ -10,7 +10,7 @@ interface Notice {
   id: string;
   title: string;
   message: string | null;
-  type: 'scrolling' | 'detailed';
+  type: string;
   is_active: boolean;
   created_at: string;
 }

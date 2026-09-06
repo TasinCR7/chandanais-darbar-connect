@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
 
+
 const navLinks = [
   { path: "/", label: "হোম" },
   { path: "/about", label: "দরবার পরিচিতি" },
@@ -59,7 +60,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const { isStaff, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-
+  const [showSearch, setShowSearch] = useState(false);
   const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
     queryKey: ['app_settings'],
     queryFn: async () => {
@@ -205,13 +206,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Maintenance Banner */}
       {String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-rose-600 text-white text-[10px] md:text-xs font-bold py-1 px-4 text-center shadow-md animate-pulse">
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-rose-600 text-white text-[10px] md:text-xs font-bold py-1 px-4 text-center shadow-md animate-pulse pt-[env(safe-area-inset-top,0px)]">
           {appSettings.global_notice_text}
         </div>
       )}
 
       {/* Sticky Navigation */}
-      <header className={`fixed ${String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? 'top-6' : 'top-0'} left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu pt-[env(safe-area-inset-top,0px)]`}>
+      <header className={`fixed ${
+        String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text 
+          ? 'top-[calc(1.75rem+env(safe-area-inset-top,0px))]' 
+          : 'top-0 pt-[env(safe-area-inset-top,0px)]'
+      } left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu`}>
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
@@ -307,9 +312,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               exit={{ x: "100%" }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col overflow-hidden pb-safe"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
             >
-              <div className="p-4 flex justify-end border-b border-gold/10 pt-safe">
+              <div className="p-4 flex justify-end border-b border-gold/10 pt-[calc(1rem+env(safe-area-inset-top,0px))]">
                 <button
                   onClick={() => setMenuOpen(false)}
                   className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation"
@@ -338,7 +343,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4 pb-safe">
+              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
                 <Link
                   to="/hadia"
                   className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-all relative z-50"
@@ -370,8 +375,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {scrollingNotices.length > 0 && (
         <div className={`fixed ${
           String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text
-            ? 'top-[88px]'
-            : 'top-16'
+            ? 'top-[calc(5.75rem+env(safe-area-inset-top,0px))]'
+            : 'top-[calc(4rem+env(safe-area-inset-top,0px))]'
         } left-0 right-0 z-40 bg-background border-b border-gold/10 overflow-hidden shadow-sm h-11 flex items-center`}>
           <div className="bg-gold-gradient text-primary-foreground px-3 md:px-5 h-full flex items-center gap-1 md:gap-2 z-10 shadow-xl font-heading font-black text-[10px] md:text-xs uppercase tracking-wider">
             <Bell className="h-3 w-3 md:h-3.5 md:w-3.5" /> নোটিশ
@@ -400,8 +405,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Main Content */}
       <main id="main-content" className={
         scrollingNotices.length > 0
-          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? "pt-[132px]" : "pt-[108px]")
-          : (String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text ? "pt-[88px]" : "pt-16")
+          ? (String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text 
+              ? "pt-[calc(8.5rem+env(safe-area-inset-top,0px))]" 
+              : "pt-[calc(6.75rem+env(safe-area-inset-top,0px))]")
+          : (String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text 
+              ? "pt-[calc(5.75rem+env(safe-area-inset-top,0px))]" 
+              : "pt-[calc(4rem+env(safe-area-inset-top,0px))]")
       }>{children}</main>
 
       <div className="border-t border-gold/20" />

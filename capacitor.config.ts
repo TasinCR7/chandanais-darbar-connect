@@ -12,6 +12,7 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
       showSpinner: true,
       androidSpinnerStyle: "large",
+      iosSpinnerStyle: "small",
       spinnerColor: "#d4af37",
     },
     StatusBar: {
@@ -23,6 +24,12 @@ const config: CapacitorConfig = {
       resize: "body",
       resizeOnFullScreen: true,
     },
+  },
+  ios: {
+    contentInset: "automatic",
+    preferredContentMode: "mobile",
+    backgroundColor: "#0a0a0a",
+    scrollEnabled: true,
   },
 };
 

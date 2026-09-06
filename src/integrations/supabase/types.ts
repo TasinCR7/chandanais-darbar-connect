@@ -273,6 +273,8 @@ export type Database = {
           name: string
           phone: string | null
           user_id: string | null
+          has_pin?: boolean
+          monthly_due?: number
         }
         Insert: {
           created_at?: string
@@ -284,6 +286,8 @@ export type Database = {
           name: string
           phone?: string | null
           user_id?: string | null
+          has_pin?: boolean
+          monthly_due?: number
         }
         Update: {
           created_at?: string
@@ -295,6 +299,8 @@ export type Database = {
           name?: string
           phone?: string | null
           user_id?: string | null
+          has_pin?: boolean
+          monthly_due?: number
         }
         Relationships: []
       }
@@ -681,6 +687,126 @@ export type Database = {
           m: Database["public"]["Tables"]["committee_members"]["Row"]
         }
         Returns: boolean
+      }
+      is_staff: {
+        Args: {
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      search_member: {
+        Args: {
+          p_code?: string | null
+          p_phone?: string | null
+        }
+        Returns: {
+          id: string
+          member_code: string
+          full_name: string
+          phone: string
+          area?: string | null
+          joined_date: string
+          monthly_rate: number
+          is_active: boolean
+        }[]
+      }
+      get_member_payments: {
+        Args: {
+          p_member_id: string
+        }
+        Returns: {
+          id: string
+          amount: number
+          for_year: number
+          for_month: number
+          payment_date: string
+          method: string
+          transaction_ref: string | null
+          status: string
+        }[]
+      }
+      submit_member_payment: {
+        Args: {
+          p_member_id: string
+          p_amount: number
+          p_for_year: number
+          p_for_month: number
+          p_payment_date?: string | null
+          p_method: string
+          p_transaction_ref?: string | null
+          p_note?: string | null
+        }
+        Returns: string
+      }
+      get_transparency_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_income: number
+          total_expense: number
+          active_members: number
+        }[]
+      }
+      get_transparency_chart: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month_key: string
+          income: number
+          expense: number
+        }[]
+      }
+      get_recent_payments: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          amount: number
+          for_year: number
+          for_month: number
+          payment_date: string
+          method: string
+          transaction_ref: string | null
+          member_name: string
+          member_code: string
+        }[]
+      }
+      get_recent_expenses: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          amount: number
+          title: string
+          expense_date: string
+          category: string | null
+          note: string | null
+        }[]
+      }
+      insert_submission: {
+        Args: {
+          p_type: string
+          p_name: string
+          p_phone?: string | null
+          p_subject: string
+          p_details: string
+          p_address?: string | null
+        }
+        Returns: string
+      }
+      get_submission_by_tracking: {
+        Args: {
+          p_tracking: string
+        }
+        Returns: {
+          id: string
+          created_at: string
+          type: string
+          name: string
+          phone: string | null
+          subject: string
+          address: string | null
+          details: string
+          is_read: boolean
+          reply: string | null
+          replied_at: string | null
+        }[]
       }
     }
     Enums: {

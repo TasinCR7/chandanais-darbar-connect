@@ -47,11 +47,11 @@ const MemberPortal = () => {
         return;
       }
 
-      setMember(data);
+      setMember(data as unknown as Member);
       const { data: pData } = await supabase
         .rpc('get_member_payments', { p_member_id: data.id });
       
-      setPayments(pData || []);
+      setPayments((pData as unknown as Payment[]) || []);
       setIsLoggedIn(true);
       toast({ title: "স্বাগতম", description: `${data.full_name}, আপনার পোর্টালে স্বাগতম।` });
     } catch (err: any) {

@@ -37,10 +37,10 @@ export interface Expense {
   amount: number;
   category: string | null;
   expense_date: string;
-  approved_by: string | null;
+  approved_by?: string | null;
   note: string | null;
-  recorded_by: string | null;
-  created_at: string;
+  recorded_by?: string | null;
+  created_at?: string;
   area?: string | null;
 }
 

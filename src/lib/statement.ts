@@ -240,6 +240,7 @@ export interface MemberLite {
   monthly_rate: number;
   is_active?: boolean;
   area?: string | null;
+  status?: string;
 }
 
 /** Format a number as BDT with thousand separators (en-IN style ##,##,###). */
@@ -251,6 +252,8 @@ export function formatBDT(n: number): string {
 
 
 export interface PaymentLite {
+  id?: string;
+  member_id?: string;
   amount: number;
   for_year: number;
   for_month: number;
@@ -258,6 +261,7 @@ export interface PaymentLite {
   method: string;
   transaction_ref: string | null;
   status?: string;
+  note?: string | null;
 }
 
 /** Complete payment record with joined member data. */
