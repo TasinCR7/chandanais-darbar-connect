@@ -17,7 +17,7 @@
   "dependencies": {
     "@capacitor/android": "^8.2.0",
     "@capacitor/cli": "^8.2.0",
-    "@capacitor/core": "^8.2.0",
+    "@capacitor/core": "^8.3.4",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@codesigntheory/bnunicode2ansi": "^1.6.1",
