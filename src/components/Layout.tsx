@@ -216,21 +216,32 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text 
           ? 'top-[calc(1.75rem+env(safe-area-inset-top,0px))]' 
           : 'top-0 pt-[env(safe-area-inset-top,0px)]'
-      } left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu`}>
+      } left-0 right-0 z-50 border-b border-gold/25 bg-background/90 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] transform-gpu`}>
+        {/* Subtle top royal gold accent line */}
+        <div className="h-[1.5px] w-full bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
-            <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
-              {appSettings.site_logo_url && (
-                <img src={appSettings.site_logo_url} alt="Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain shrink-0" />
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0 group" aria-label="হোম পেজ">
+              {appSettings.site_logo_url ? (
+                <img src={appSettings.site_logo_url} alt="Logo" className="h-8 w-8 sm:h-9 sm:w-9 object-contain shrink-0 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]" />
+              ) : (
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-light to-emerald border border-gold/40 flex items-center justify-center shrink-0 shadow-[0_0_12px_hsl(40_45%_56%/0.2)] group-hover:border-gold transition-colors">
+                  <Sparkles size={15} className="text-gold" />
+                </div>
               )}
-              <span className="text-gold font-heading font-bold text-xs xs:text-sm md:text-lg leading-tight truncate max-w-[140px] xs:max-w-[190px] sm:max-w-none">
-                {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-gold-gradient font-heading font-bold text-xs xs:text-sm md:text-lg leading-tight truncate max-w-[140px] xs:max-w-[190px] sm:max-w-none">
+                  {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}
+                </span>
+                <span className="hidden sm:block text-[10px] text-gold/60 tracking-wider font-medium leading-none mt-0.5">
+                  সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
+                </span>
+              </div>
             </Link>
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-2 xl:gap-3 2xl:gap-4 overflow-x-auto no-scrollbar">
+          <nav className="hidden xl:flex items-center gap-1 2xl:gap-1.5 overflow-x-auto no-scrollbar">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -247,25 +258,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     routeImports[route]().catch(() => {});
                   }
                 }}
-                className={`relative whitespace-nowrap text-[11px] 2xl:text-xs font-medium transition-colors duration-300 hover:text-gold py-1 ${location.pathname === link.path
-                  ? "text-gold"
-                  : "text-muted-foreground"
+                className={`relative whitespace-nowrap text-[11px] 2xl:text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all duration-300 ${location.pathname === link.path
+                  ? "text-gold bg-gold/10 border border-gold/25 shadow-[0_0_12px_hsl(40_45%_56%/0.12)]"
+                  : "text-cream/80 hover:text-gold hover:bg-white/[0.03]"
                   }`}
               >
                 {link.label}
-                {location.pathname === link.path && (
-                  <div
-                    className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent rounded-full"
-                  />
-                )}
               </Link>
             ))}
             <Link
               to="/admin"
-              className="text-muted-foreground hover:text-gold transition-colors duration-300 p-2"
+              className="text-muted-foreground hover:text-gold hover:bg-gold/10 rounded-lg transition-colors duration-300 p-2 ml-1"
               aria-label="এডমিন"
             >
-              <Settings size={18} />
+              <Settings size={17} />
             </Link>
           </nav>
 
@@ -280,7 +286,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <Link
               to="/hadia"
-              className="bg-gold-gradient text-primary-foreground px-2.5 py-1.5 xs:px-3 rounded-md text-[10px] xs:text-[11px] font-bold shadow-lg shadow-gold/10 mr-0.5 xs:mr-1 min-h-[44px] flex items-center justify-center shrink-0"
+              className="bg-gold-gradient text-primary-foreground px-2.5 py-1.5 xs:px-3 rounded-lg text-[10px] xs:text-[11px] font-bold shadow-lg shadow-gold/15 mr-0.5 xs:mr-1 min-h-[38px] flex items-center justify-center shrink-0 btn-shimmer"
             >
               হাদিয়া
             </Link>
@@ -417,30 +423,35 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {isIdleLoaded && <Suspense fallback={null}><DeveloperTeam /></Suspense>}
 
       {/* Footer */}
-      <footer className="border-t border-gold/20 bg-card islamic-pattern content-visibility-auto relative overflow-hidden">
-        {/* SVG Wave Divider */}
-        <div className="absolute top-0 left-0 right-0 -translate-y-[calc(100%-1px)]" aria-hidden="true">
-          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block" preserveAspectRatio="none">
-            <path d="M0 60L48 53C96 46 192 32 288 26C384 20 480 22 576 28C672 34 768 44 864 46C960 48 1056 42 1152 36C1248 30 1344 24 1392 21L1440 18V60H0Z" fill="hsl(var(--card))" />
-          </svg>
-        </div>
+      <footer className="border-t border-gold/25 bg-card islamic-pattern content-visibility-auto relative overflow-hidden">
+        {/* Top ambient radial glow */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[500px] h-48 rounded-full bg-gold/5 blur-3xl pointer-events-none" />
 
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-gold font-heading font-bold text-lg mb-4">
-                চন্দনাইশ দরবার শরীফ
-              </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+        <div className="container mx-auto px-4 py-14 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+            {/* Column 1: Brand & Spiritual Identity */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-light to-emerald border border-gold/40 flex items-center justify-center shrink-0">
+                  <Sparkles size={16} className="text-gold" />
+                </div>
+                <h3 className="text-gold-gradient font-heading font-bold text-lg">
+                  চন্দনাইশ দরবার শরীফ
+                </h3>
+              </div>
+              <p className="text-gold/80 text-xs font-semibold tracking-wide">
                 সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া
               </p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                গাউছে জামান হযরত ছৈয়দ মাওলানা আবদুল লতিফ শাহ্ চন্দনাইশী মাইজভান্ডারী (রাঃ) এর পবিত্র আধ্যাত্মিক কেন্দ্র।
+              </p>
               {/* Social Links */}
-              <div className="flex items-center gap-3 mt-4">
+              <div className="flex items-center gap-3 pt-2">
                 <a
                   href="https://www.facebook.com/Torikaye.Chandanaishi.Al.Maijvandri"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/40 transition-colors duration-300"
+                  className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/50 hover:-translate-y-0.5 transition-all duration-300"
                   aria-label="Facebook"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
@@ -449,48 +460,81 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   href="https://www.youtube.com/@chandanaishdarbar"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/40 transition-colors duration-300"
+                  className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-gold hover:bg-gold/20 hover:border-gold/50 hover:-translate-y-0.5 transition-all duration-300"
                   aria-label="YouTube"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                 </a>
               </div>
             </div>
+
+            {/* Column 2: Quick Links */}
             <div>
-              <h4 className="text-gold font-heading font-semibold mb-4">দ্রুত লিংক</h4>
-              <div className="flex flex-col gap-2">
-                {navLinks.slice(0, 4).map((link) => (
+              <h4 className="text-gold font-heading font-semibold mb-4 text-sm uppercase tracking-wider">দরবার সম্পর্কিত</h4>
+              <div className="flex flex-col gap-2.5">
+                {navLinks.slice(0, 5).map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
                     className="text-muted-foreground text-sm hover:text-gold transition-colors duration-300 inline-flex items-center gap-1.5 group"
                   >
-                    <span className="w-0 group-hover:w-2 h-px bg-gold transition-[width] duration-300" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold/40 group-hover:bg-gold transition-colors" />
                     {link.label}
                   </Link>
                 ))}
               </div>
             </div>
+
+            {/* Column 3: Spiritual & Financial Services */}
             <div>
-              <h4 className="text-gold font-heading font-semibold mb-4">যোগাযোগ</h4>
+              <h4 className="text-gold font-heading font-semibold mb-4 text-sm uppercase tracking-wider">আধ্যাত্মিক ও সেবা</h4>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { path: "/hadia", label: "হাদিয়া ও নজরানা" },
+                  { path: "/doa", label: "দোয়া আবেদন" },
+                  { path: "/qna", label: "প্রশ্ন ও অভিযোগ" },
+                  { path: "/transparency", label: "তহবিল স্বচ্ছতা" },
+                  { path: "/notices", label: "সকল নোটিশ" },
+                ].map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="text-muted-foreground text-sm hover:text-gold transition-colors duration-300 inline-flex items-center gap-1.5 group"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold/40 group-hover:bg-gold transition-colors" />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Column 4: Contact Info */}
+            <div>
+              <h4 className="text-gold font-heading font-semibold mb-4 text-sm uppercase tracking-wider">যোগাযোগ ও ঠিকানা</h4>
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Phone size={14} className="text-gold" />
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  চন্দনাইশ দরবার শরীফ, চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ।
+                </p>
+                <a
+                  href="tel:+8801622721996"
+                  className="flex items-center gap-2 text-cream/90 hover:text-gold text-sm transition-colors"
+                >
+                  <Phone size={14} className="text-gold shrink-0" />
                   <span>০১৬২২-৭২১৯৯৬</span>
-                </div>
+                </a>
                 <a
                   href="https://maps.app.goo.gl/pWk7MFAWh51PiMeX6"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground text-sm hover:text-gold transition-colors"
+                  className="inline-flex items-center gap-2 text-gold text-xs font-semibold px-3.5 py-2 rounded-lg bg-gold/10 border border-gold/25 hover:bg-gold/20 transition-colors w-fit mt-1"
                 >
-                  <MapPin size={14} className="text-gold" />
-                  <span>ম্যাপে দেখুন</span>
+                  <MapPin size={14} className="text-gold shrink-0" />
+                  <span>গুগল ম্যাপে লোকেশন দেখুন</span>
                 </a>
               </div>
             </div>
           </div>
-          <div className="section-divider mt-8 mb-4" />
+          <div className="section-divider mt-10 mb-6" />
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-muted-foreground text-xs text-center sm:text-left">
               © {new Date().getFullYear()} চন্দনাইশ দরবার শরীফ। সর্বস্বত্ব সংরক্ষিত।
