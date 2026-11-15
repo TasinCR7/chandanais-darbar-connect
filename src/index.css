@@ -114,31 +114,30 @@
   }
 
   .bg-gold-gradient {
-    background: linear-gradient(135deg, hsl(var(--gold-light)) 0%, hsl(var(--gold)) 50%, hsl(var(--gold-dark)) 100%);
+    background: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-dark)));
   }
 
   .gold-glow {
-    box-shadow: 0 0 24px hsl(var(--gold) / 0.32), inset 0 1px 0 hsl(var(--gold-light) / 0.35);
+    box-shadow: 0 0 20px hsl(var(--gold) / 0.3);
   }
 
   .gold-glow-hover:hover {
-    box-shadow: 0 0 32px hsl(var(--gold) / 0.55), 0 4px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 30px hsl(var(--gold) / 0.5);
   }
 
   .islamic-pattern {
     background-image:
-      radial-gradient(circle at 20% 20%, hsl(var(--gold) / 0.045) 0%, transparent 45%),
-      radial-gradient(circle at 80% 80%, hsl(var(--emerald-light) / 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, hsl(var(--gold) / 0.025) 0%, transparent 65%);
+      radial-gradient(circle at 25% 25%, hsl(var(--gold) / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(var(--gold) / 0.03) 0%, transparent 50%);
   }
 
   .section-divider {
-    @apply w-32 h-px mx-auto relative;
-    background: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.7), transparent);
+    @apply w-24 h-px mx-auto;
+    background: linear-gradient(90deg, transparent, hsl(var(--gold)), transparent);
   }
 
   .glass-card {
-    @apply bg-black/50 backdrop-blur-xl border border-gold/20 shadow-[0_8px_32px_rgba(0,0,0,0.45)];
+    @apply bg-black/40 backdrop-blur-md border border-white/10;
   }
 
   .glass-morphism {

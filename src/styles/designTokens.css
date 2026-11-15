@@ -1,54 +1,49 @@
-/* designTokens.css — Royal Islamic Gold & Emerald Theme Tokens */
+/* designTokens.css */
 :root {
   /* Color palette (HSL) */
-  --color-primary-h: 40;
-  --color-primary-s: 45%;
-  --color-primary-l: 56%;
+  --color-primary-h: 35;   /* Gold-like */
+  --color-primary-s: 55%;
+  --color-primary-l: 55%;
   --color-primary: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l));
-  --color-primary-dark: hsl(var(--color-primary-h), 40%, 40%);
-  --color-primary-light: hsl(38, 55%, 72%);
-  --color-bg: hsl(0, 0%, 4%);
-  --color-bg-dark: hsl(0, 0%, 3%);
-  --color-text: hsl(36, 33%, 95%);
-  --color-text-light: hsl(0, 0%, 90%);
-  --border-radius: 12px;
-  --shadow-elev-1: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.08);
-  --transition-fast: 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  --color-primary-dark: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) - 10%));
+  --color-primary-light: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) + 10%));
+  --color-bg: hsl(210, 10%, 96%);
+  --color-bg-dark: hsl(210, 10%, 12%);
+  --color-text: hsl(210, 15%, 20%);
+  --color-text-light: hsl(210, 15%, 90%);
+  --border-radius: 8px;
+  --shadow-elev-1: 0 2px 4px rgba(0,0,0,0.1);
+  --transition-fast: 0.2s ease;
 }
+
+/* Utility classes — .container removed to avoid overriding Tailwind's responsive container */
 
 .btn-primary {
-  background: linear-gradient(135deg, hsl(var(--gold-light)), hsl(var(--gold)), hsl(var(--gold-dark)));
-  color: hsl(var(--primary-foreground));
-  border: 1px solid hsl(var(--gold-light) / 0.4);
-  padding: 0.65rem 1.4rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
   border-radius: var(--border-radius);
-  font-weight: 600;
   cursor: pointer;
   transition: var(--transition-fast);
-  box-shadow: 0 4px 20px hsl(var(--gold) / 0.25);
 }
-
 .btn-primary:hover {
-  box-shadow: 0 6px 28px hsl(var(--gold) / 0.45);
-  transform: translateY(-1px);
+  background: var(--color-primary-dark);
 }
 
-.royal-card {
-  position: relative;
-  background: linear-gradient(165deg, rgba(20, 26, 22, 0.78) 0%, rgba(12, 12, 12, 0.92) 55%, rgba(18, 16, 12, 0.88) 100%);
-  border: 1px solid hsl(var(--gold) / 0.22);
-  border-radius: 1rem;
-  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 hsl(var(--gold-light) / 0.15);
-  backdrop-filter: blur(14px);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-elev-1);
+  padding: 1.5rem;
+  transition: var(--transition-fast);
 }
 
+/* Only apply hover lift on devices that support hover (not mobile touchscreens) */
 @media (hover: hover) {
-  .royal-card:hover {
-    border-color: hsl(var(--gold) / 0.45);
-    box-shadow: 0 16px 44px -8px rgba(0, 0, 0, 0.7), 0 0 28px hsl(var(--gold) / 0.14), inset 0 1px 0 0 hsl(var(--gold-light) / 0.25);
+  .card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
   }
 }
-
 
