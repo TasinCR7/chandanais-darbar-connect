@@ -38,8 +38,8 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName, a
         <span className="text-gold/60 text-sm">★</span>
       </div>
 
-      {/* Title with shimmer */}
-      <Tag className="text-3xl md:text-5xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold animate-shimmer">
+      {/* Title */}
+      <Tag className="text-3xl md:text-5xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-cream to-gold">
         {title}
       </Tag>
 
@@ -58,29 +58,6 @@ const SectionTitle = React.memo(({ title, subtitle, arabic, subtitleClassName, a
       </p>
     )}
     <div className="section-divider mt-6" />
-
-    {/* Shimmer keyframes */}
-    <style>{`
-      @keyframes shimmer {
-        0% { background-position: -200% center; }
-        100% { background-position: 200% center; }
-      }
-      .animate-shimmer {
-        background-size: 200% auto;
-        background-image: linear-gradient(
-          90deg,
-          hsl(0 0% 100%) 0%,
-          hsl(36 33% 95%) 25%,
-          hsl(40 45% 56%) 50%,
-          hsl(36 33% 95%) 75%,
-          hsl(0 0% 100%) 100%
-        );
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: shimmer 5s linear infinite;
-      }
-    `}</style>
   </motion.div>
 ));
 

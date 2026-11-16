@@ -59,13 +59,14 @@
   }
 
   html {
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    overflow-x: clip;
   }
 
   body {
-    @apply bg-background text-foreground font-bengali overflow-x-hidden;
+    @apply bg-background text-foreground font-bengali;
+    overflow-x: clip;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     text-rendering: optimizeLegibility;
@@ -77,19 +78,6 @@
 
   a, button, input, select, textarea, [role="button"], label {
     touch-action: manipulation;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url('/darbar-mazar.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.08;
-    z-index: -1;
-    pointer-events: none;
   }
 
   h1,
@@ -152,8 +140,7 @@
   }
 
   .content-visibility-auto {
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 500px;
+    /* Disabled content-visibility: auto to prevent layout pop-in and tile tearing during fast mobile scrolling */
   }
 
   /* Responsive tables for mobile */
@@ -189,17 +176,14 @@
     min-height: 100dvh;
   }
 
-  /* Smooth GPU-accelerated transitions */
+  /* Smooth transitions without 3D perspective/will-change layer allocation that causes mobile GPU tile tearing */
   .gpu-smooth {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-    will-change: transform, opacity;
+    /* Kept as a clean marker class without forcing huge 3D offscreen textures */
   }
 
   /* Finance bundle utility classes */
   .card-gold {
-    @apply bg-card/60 backdrop-blur-xl border border-gold/15 shadow-xl;
+    @apply bg-card/85 border border-gold/15 shadow-xl;
   }
 
   .gold-text {
@@ -261,46 +245,19 @@
     scrollbar-color: hsl(var(--gold) / 0.2) transparent;
   }
 
-  /* === Premium Animations === */
+  /* === Premium Animations (Optimized for 60fps Zero-Repaint Scrolling) === */
 
-  /* Shimmer sweep effect for CTA buttons */
-  @keyframes shimmer-sweep {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
   .animate-shimmer {
-    background-size: 200% auto;
-    animation: shimmer-sweep 3s linear infinite;
+    /* Static gradient — avoids 60fps CPU background-clip:text rasterization lag during scroll */
   }
   .btn-shimmer {
     position: relative;
     overflow: hidden;
   }
-  .btn-shimmer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      105deg,
-      transparent 40%,
-      rgba(255, 255, 255, 0.15) 45%,
-      rgba(255, 255, 255, 0.25) 50%,
-      rgba(255, 255, 255, 0.15) 55%,
-      transparent 60%
-    );
-    background-size: 200% 100%;
-    animation: shimmer-sweep 4s ease-in-out infinite;
-    pointer-events: none;
-    border-radius: inherit;
-  }
 
   /* Glow breathe for important sections */
-  @keyframes glow-breathe {
-    0%, 100% { box-shadow: 0 0 20px hsl(40 45% 56% / 0.08), inset 0 0 20px hsl(40 45% 56% / 0.03); }
-    50% { box-shadow: 0 0 40px hsl(40 45% 56% / 0.15), inset 0 0 30px hsl(40 45% 56% / 0.06); }
-  }
   .animate-glow-breathe {
-    animation: glow-breathe 4s ease-in-out infinite;
+    box-shadow: 0 0 24px hsl(40 45% 56% / 0.1), inset 0 0 20px hsl(40 45% 56% / 0.04);
   }
 
   /* Floating particles */
@@ -316,15 +273,8 @@
     text-shadow: 0 0 20px hsl(40 45% 56% / 0.3), 0 0 40px hsl(40 45% 56% / 0.15);
   }
 
-  /* Gradient text shimmer */
-  @keyframes text-shimmer {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
   .animate-text-shimmer {
-    background-size: 200% auto;
-    animation: text-shimmer 4s ease-in-out infinite;
+    /* Static gradient — avoids CPU text bitmap repaint on every scroll frame */
   }
 
   /* Skeleton shimmer for loading states */
@@ -452,40 +402,30 @@
     }
   }
 
-  /* GPU Hardware Acceleration & Smooth Momentum Touch Scrolling for Android and iOS */
-  html, body {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-  }
-
   @media (max-width: 768px) {
     /* Hide heavy decorative background particle canvas on mobile for maximum frame rate */
     .css-particle {
       display: none !important;
     }
 
-    /* Ensure GPU-accelerated smooth marquee scrolling on mobile */
-    .animate-marquee,
-    .animate-marquee-slow,
-    .animate-marquee-fast {
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
-      backface-visibility: hidden;
-    }
-
-    /* Disable heavy fixed background repaints on mobile scroll */
-    body::before {
-      display: none !important;
-    }
-
-    /* GPU Hardware-accelerated smooth backdrop blurs for mobile cards */
+    /* Disable heavy backdrop-filter blur overdraw on mobile scrolling cards to prevent tile tearing ("ফাটা ফাটা পেজ") */
+    .backdrop-blur,
+    .backdrop-blur-sm,
+    .backdrop-blur-md,
+    .backdrop-blur-lg,
+    .backdrop-blur-xl,
+    .backdrop-blur-2xl,
     .glass-card,
     .glass-morphism,
     .card-gold {
-      transform: translateZ(0);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
-      background-color: rgba(12, 12, 12, 0.88);
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+
+    .glass-card,
+    .glass-morphism,
+    .card-gold {
+      background-color: rgba(16, 16, 16, 0.96) !important;
     }
 
     /* Optimized subtle box-shadow rendering for mobile GPUs */
@@ -531,24 +471,15 @@
       overscroll-behavior: contain;
     }
 
-    /* Prevent WebKit repainting flicker on sticky header only */
-    header {
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      transform: translateZ(0);
-    }
-
     /* Fix iOS 100vh Layout Jumping */
     .min-h-screen {
       min-height: 100dvh !important;
     }
   }
 
-  /* Prevent screen shaking & layout shifts when mobile menu or modals open */
-  html.menu-open,
+  /* Lock body scroll cleanly when mobile menu or modals open — WITHOUT height:100% which tears the viewport */
   body.menu-open {
     overflow: hidden !important;
-    height: 100% !important;
   }
   body[data-scroll-locked] {
     overflow: hidden !important;

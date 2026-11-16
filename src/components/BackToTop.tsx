@@ -6,18 +6,26 @@ const BackToTop = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      setVisible(scrollY > 250);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+          setVisible((prev) => {
+            const next = scrollY > 250;
+            return prev === next ? prev : next;
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("touchmove", handleScroll, { passive: true });
     handleScroll();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("touchmove", handleScroll);
     };
   }, []);
 

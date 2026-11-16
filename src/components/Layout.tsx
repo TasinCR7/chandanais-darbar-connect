@@ -160,14 +160,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (menuOpen) {
-      document.documentElement.classList.add("menu-open");
       document.body.classList.add("menu-open");
     } else {
-      document.documentElement.classList.remove("menu-open");
       document.body.classList.remove("menu-open");
     }
     return () => {
-      document.documentElement.classList.remove("menu-open");
       document.body.classList.remove("menu-open");
     };
   }, [menuOpen]);
@@ -216,7 +213,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         String(appSettings.show_maintenance_banner) === 'true' && appSettings.global_notice_text 
           ? 'top-[calc(1.75rem+env(safe-area-inset-top,0px))]' 
           : 'top-0 pt-[env(safe-area-inset-top,0px)]'
-      } left-0 right-0 z-50 border-b border-gold/20 bg-background/95 backdrop-blur-md shadow-lg shadow-black/30 transform-gpu`}>
+      } left-0 right-0 z-50 border-b border-gold/20 bg-background md:bg-background/95 md:backdrop-blur-md shadow-lg shadow-black/30`}>
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
@@ -295,81 +292,82 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
       </header>
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[70] bg-black/80 xl:hidden touch-none"
-              onClick={() => setMenuOpen(false)}
-            />
-            <motion.nav
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              onClick={(e) => e.stopPropagation()}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
-            >
-              <div className="p-4 flex justify-end border-b border-gold/10 pt-[calc(1rem+env(safe-area-inset-top,0px))]">
-                <button
-                  onClick={() => setMenuOpen(false)}
-                  className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation"
-                  aria-label="বন্ধ করুন"
-                >
-                  <X size={26} />
-                </button>
-              </div>
 
-              <div className="flex-1 overflow-y-auto overscroll-contain ios-touch-scroll py-6 px-6">
-                <div className="flex flex-col gap-1">
-                  {navLinks.map((link) => (
-                    <div key={link.path}>
-                      <Link
-                        to={link.path}
-                        onClick={() => setMenuOpen(false)}
-                        className={`w-full text-left text-sm font-medium py-3 px-4 block transition-all active:bg-gold/10 active:scale-[0.98] rounded-lg ${location.pathname === link.path
-                          ? "text-gold bg-gold/5 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
-                          : "text-muted-foreground hover:text-gold"
-                          }`}
-                      >
-                        {link.label}
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      {/* Tear-Free Pure CSS Mobile Menu Drawer */}
+      <div
+        className={`fixed inset-0 z-[70] bg-black/80 xl:hidden transition-opacity duration-200 ${
+          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMenuOpen(false)}
+        aria-hidden={!menuOpen}
+      />
+      <nav
+        onClick={(e) => e.stopPropagation()}
+        aria-hidden={!menuOpen}
+        className={`fixed inset-y-0 right-0 w-[85%] max-w-[320px] z-[80] bg-background border-l border-gold/20 xl:hidden shadow-2xl flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))] transition-transform duration-200 ease-out ${
+          menuOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
+        }`}
+      >
+        <div className="p-4 flex justify-end border-b border-gold/10 pt-[calc(1rem+env(safe-area-inset-top,0px))]">
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="text-gold p-2 hover:bg-gold/10 rounded-full transition-colors active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation"
+            aria-label="বন্ধ করুন"
+          >
+            <X size={26} />
+          </button>
+        </div>
 
-              <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto overscroll-contain ios-touch-scroll py-6 px-6">
+          <div className="flex flex-col gap-1">
+            {navLinks.map((link) => (
+              <div key={link.path}>
                 <Link
-                  to="/hadia"
-                  className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-all relative z-50"
+                  to={link.path}
+                  onPointerDown={() => {
+                    const route = link.path;
+                    if (route !== location.pathname && routeImports[route]) {
+                      routeImports[route]().catch(() => {});
+                    }
+                  }}
+                  onClick={() => setMenuOpen(false)}
+                  className={`w-full text-left text-sm font-medium py-3 px-4 block transition-colors active:bg-gold/10 rounded-lg ${location.pathname === link.path
+                    ? "text-gold bg-gold/5 shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]"
+                    : "text-muted-foreground hover:text-gold"
+                    }`}
                 >
-                  হাদিয়া দিন
+                  {link.label}
                 </Link>
-                <div className="flex flex-col gap-2 pt-2">
-                  <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
-                  <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
-                    <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
-                  </a>
-                </div>
-                <div className="flex flex-col gap-2 pt-2 border-t border-gold/10">
-                  <Link
-                    to="/admin"
-                    className="text-muted-foreground hover:text-gold transition-colors flex items-center gap-2 text-xs font-semibold"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Settings size={14} className="text-gold" /> এডমিন প্যানেল
-                  </Link>
-                </div>
               </div>
-            </motion.nav>
-          </>
-        )}
-      </AnimatePresence>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gold/10 bg-gold/5 space-y-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+          <Link
+            to="/hadia"
+            onClick={() => setMenuOpen(false)}
+            className="bg-gold-gradient text-primary-foreground px-4 py-3.5 rounded-2xl text-sm font-bold text-center block shadow-lg shadow-gold/20 active:scale-95 transition-transform relative z-50"
+          >
+            হাদিয়া দিন
+          </Link>
+          <div className="flex flex-col gap-2 pt-2">
+            <p className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold opacity-70">জরুরি যোগাযোগ</p>
+            <a href="tel:01622721996" className="text-white font-bold flex items-center gap-2 text-sm">
+              <Phone size={14} className="text-gold" /> ০১৬২২-৭২১৯৯৬
+            </a>
+          </div>
+          <div className="flex flex-col gap-2 pt-2 border-t border-gold/10">
+            <Link
+              to="/admin"
+              className="text-muted-foreground hover:text-gold transition-colors flex items-center gap-2 text-xs font-semibold"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Settings size={14} className="text-gold" /> এডমিন প্যানেল
+            </Link>
+          </div>
+        </div>
+      </nav>
 
       {/* Premium Scrolling Marquee */}
       {scrollingNotices.length > 0 && (
