@@ -13,7 +13,7 @@ export function computeFinancialSummary(
   const safeMembers = members || [];
 
   const totalIncome = safePayments
-    .filter(p => p && p.status !== 'rejected')
+    .filter(p => p && (p.status === 'approved' || !p.status))
     .reduce((s, p) => s + Number(p.amount || 0), 0);
   const totalExpense = safeExpenses.reduce((s, e) => s + Number(e?.amount || 0), 0);
   const balance = totalIncome - totalExpense;
@@ -31,7 +31,7 @@ export function computeMemberStats(members: Member[] = [], payments: Payment[] =
   const payMap = new Map<string, any[]>();
   
   safePayments
-    .filter(p => p && p.status !== 'rejected')
+    .filter(p => p && (p.status === 'approved' || !p.status))
     .forEach(p => {
       if (!payMap.has(p.member_id)) payMap.set(p.member_id, []);
       payMap.get(p.member_id)!.push({

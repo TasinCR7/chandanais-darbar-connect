@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HandHeart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
+import { sendStructuredTelegramNotification } from "@/utils/telegram";
 import SuccessOverlay from "@/components/SuccessOverlay";
 
 const doaSubjects = [
@@ -114,23 +114,15 @@ const Doa = () => {
         console.warn("localStorage quota/privacy error:", storageErr);
       }
 
-      // Send Telegram Notification
-      const textMessage = `
-🤲 *নতুন দোয়া আবেদন জমা হয়েছে!*
-━━━━━━━━━━━━━━━━━━
-👤 *নাম:* ${escapeTelegramHtml(trimmedName)}
-📱 *মোবাইল:* ${escapeTelegramHtml(formData.phone.trim() || "দেওয়া হয়নি")}
-📌 *বিষয়:* ${escapeTelegramHtml(formData.subject)}
-📍 *ঠিকানা:* ${escapeTelegramHtml(formData.address.trim() || "দেওয়া হয়নি")}
-📝 *বিস্তারিত:*
-${escapeTelegramHtml(trimmedDetails)}
-━━━━━━━━━━━━━━━━━━
-পীর সাহেব হুজুরকে দোয়ার জন্য অবগত করুন।
-      `;
-      
-      // Send Telegram Notification in background
-      sendTelegramNotification(textMessage)
-        .catch((err) => console.error("Failed to send Telegram notification from Doa page:", err));
+      // Send Telegram Notification in background via serverless proxy
+      sendStructuredTelegramNotification({
+        type: "doa",
+        name: trimmedName,
+        phone: formData.phone.trim() || undefined,
+        subject: formData.subject,
+        address: formData.address.trim() || undefined,
+        details: trimmedDetails,
+      }).catch((err) => console.error("Failed to send Telegram notification from Doa page:", err));
 
       toast({
         title: "দোয়া আবেদন পাঠানো হয়েছে ✅",

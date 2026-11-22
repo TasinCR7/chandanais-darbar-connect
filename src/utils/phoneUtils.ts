@@ -39,3 +39,16 @@ export const isValidPhoneNumber = (phone: string): boolean => {
   const bdPhoneRegex = /^01[3-9]\d{8}$/;
   return bdPhoneRegex.test(normalized);
 };
+
+/**
+ * Format Bangladeshi phone number with international `88` prefix (no leading `+`) for wa.me / SMS gateways.
+ */
+export const formatBangladeshIntlPhone = (phone: string): string => {
+  const normalized = normalizePhoneNumber(phone);
+  if (/^01[3-9]\d{8}$/.test(normalized)) {
+    return `88${normalized}`;
+  }
+  const digits = convertBanglaToEnglishDigits(phone || "").replace(/\D/g, "");
+  if (digits.startsWith("8801") && digits.length === 13) return digits;
+  return digits;
+};

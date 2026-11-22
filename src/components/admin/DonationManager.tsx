@@ -22,7 +22,7 @@ async function getFontBase64(): Promise<string> {
 import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { DonationReportTemplate } from "@/components/admin/DonationReportTemplate";
-import { escapeHtml } from "@/utils/security";
+import { escapeHtml, sanitizeFilenameSegment } from "@/utils/security";
 
 interface Donation extends InvoiceData {
   id: string;
@@ -125,7 +125,7 @@ const DonationManager = () => {
             </div>
             <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">
               <thead><tr style="background:linear-gradient(135deg,#065f46,#047857);color:#fff;"><th style="padding:12px 16px;text-align:left;font-weight:700;">বিবরণ (খাত)</th><th style="padding:12px 16px;text-align:left;font-weight:700;">পেমেন্ট মাধ্যম</th><th style="padding:12px 16px;text-align:left;font-weight:700;">ট্রানজেকশন আইডি</th><th style="padding:12px 16px;text-align:right;font-weight:700;">পরিমাণ (৳)</th></tr></thead>
-              <tbody><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;"><td style="padding:16px;font-size:15px;font-weight:600;color:#065f46;">${getCategoryLabel(d.donation_category, d.recipient_id)}</td><td style="padding:16px;"><span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px;">${payMethodLabelEscaped}</span></td><td style="padding:16px;font-family:monospace;font-size:13px;color:#374151;letter-spacing:1px;">${transactionIdEscaped}</td><td style="padding:16px;text-align:right;font-size:20px;font-weight:900;color:#065f46;">${d.amount.toLocaleString('en-US')} ৳</td></tr></tbody>
+              <tbody><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;"><td style="padding:16px;font-size:15px;font-weight:600;color:#065f46;">${escapeHtml(getCategoryLabel(d.donation_category, d.recipient_id))}</td><td style="padding:16px;"><span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px;">${payMethodLabelEscaped}</span></td><td style="padding:16px;font-family:monospace;font-size:13px;color:#374151;letter-spacing:1px;">${transactionIdEscaped}</td><td style="padding:16px;text-align:right;font-size:20px;font-weight:900;color:#065f46;">${d.amount.toLocaleString('en-US')} ৳</td></tr></tbody>
             </table>
             <div style="text-align:right;margin-bottom:20px;"><div style="display:inline-block;background:linear-gradient(135deg,#065f46,#047857);color:#fff;padding:14px 20px;border-radius:6px;width:340px;"><table style="width:100%;border-collapse:collapse;"><tr><td style="font-size:15px;font-weight:700;letter-spacing:1px;color:white;">সর্বমোট / TOTAL</td><td style="font-size:26px;font-weight:900;text-align:right;color:white;">${d.amount.toLocaleString('en-US')} ৳</td></tr></table></div></div>
             <table style="width:100%;border-collapse:collapse;margin-top:32px;margin-bottom:28px;"><tr>
@@ -147,11 +147,15 @@ const DonationManager = () => {
       document.body.appendChild(container);
       
       try {
+        if (typeof document !== 'undefined' && document.fonts) {
+          await document.fonts.ready;
+        }
         await doc.html(container, {
           callback: function (doc) {
-            const invoiceId = donation.id.substring(0, 6).toUpperCase();
+            const invoiceId = sanitizeFilenameSegment(donation.id.substring(0, 6).toUpperCase(), 'INV');
+            const safeDonor = sanitizeFilenameSegment(donation.donor_name, 'Donor');
             const dateStr = new Date().toISOString().slice(0, 10);
-            doc.save(`Rashid-${donation.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
+            doc.save(`Rashid-${safeDonor}-${invoiceId}-${dateStr}.pdf`);
           },
           x: 0, y: 0, width: 210, windowWidth: 794
         });

@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import QRCode from 'qrcode';
 import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
-import { escapeHtml } from '@/utils/security';
+import { escapeHtml, sanitizeCsvCell } from '@/utils/security';
 // Lazy load the font base64 to avoid 267KB being in the main bundle
 let _fontBase64Cache: string | null = null;
 async function getFontBase64(): Promise<string> {
@@ -498,8 +498,8 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
             const expVal = row[1] as string;
             const paidVal = row[2] as string;
             const status = row[3] as string;
-            const dateVal = row[4] as string;
-            const refVal = row[5] as string;
+            const dateValEscaped = escapeHtml(toBanglaNumber(row[4] as string));
+            const refValEscaped = escapeHtml(row[5] as string);
             const badgeClass = status === 'PAID' ? 'status-paid' : status === 'PARTIAL' ? 'status-partial' : 'status-due';
             
             return `
@@ -507,9 +507,9 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
                 <td style="padding: 8px 10px; font-weight: bold; font-family: 'Noto Sans Bengali';">${monthBn} (${row[0]})</td>
                 <td style="padding: 8px 10px; text-align: right;">${toBanglaNumber(expVal.replace('BDT ', ''))} ৳</td>
                 <td style="padding: 8px 10px; text-align: right; font-weight: bold;">${toBanglaNumber(paidVal.replace('BDT ', ''))} ৳</td>
-                <td style="padding: 8px 10px; text-align: center;"><span class="status-badge ${badgeClass}">${status}</span></td>
-                <td style="padding: 8px 10px; text-align: center; font-family: monospace;">${toBanglaNumber(dateVal)}</td>
-                <td style="padding: 8px 10px; color: #64748b;">${refVal}</td>
+                <td style="padding: 8px 10px; text-align: center;"><span class="status-badge ${badgeClass}">${escapeHtml(status)}</span></td>
+                <td style="padding: 8px 10px; text-align: center; font-family: monospace;">${dateValEscaped}</td>
+                <td style="padding: 8px 10px; color: #64748b;">${refValEscaped}</td>
               </tr>
             `;
           }).join('')}
@@ -554,7 +554,7 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
           এটি চন্দনাইশ দরবার শরীফ ফিন্যান্স সিস্টেমের একটি অফিসিয়াল জেনারেটেড বার্ষিক হিসাব বিবরণী।
         </p>
         <p style="font-size: 8px; color: #cbd5e1; margin: 3px 0 0 0; font-family: monospace;">
-          ID: CD-STAT-${member.member_code}-${targetYear} | Generated: ${new Date().toLocaleString()}
+          ID: CD-STAT-${memberCodeEscaped}-${targetYear} | Generated: ${new Date().toLocaleString()}
         </p>
       </div>
     </div>
@@ -580,7 +580,7 @@ export async function downloadAnnualStatementPDF(member: MemberLite, payments: P
         windowWidth: 794,
       },
       callback: function (doc) {
-        doc.save(`statement-${member.member_code}-${targetYear}.pdf`);
+        doc.save(safeFilename(`statement-${member.member_code}-${targetYear}`, 'statement'));
       },
       x: 0,
       y: 0,
@@ -967,7 +967,7 @@ export async function downloadReceiptPDF(
         windowWidth: 794,
       },
       callback: function (doc) {
-        doc.save(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}.pdf`);
+        doc.save(safeFilename(`receipt-${member.member_code}-${payment.for_year}-${payment.for_month}`, 'receipt'));
       },
       x: 0,
       y: 0,
@@ -1779,9 +1779,7 @@ export async function downloadOrgAnnualReportPDF(
    =========================================================== */
 
 function csvEscape(val: unknown): string {
-  if (val === null || val === undefined) return '';
-  const s = String(val);
-  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return sanitizeCsvCell(val);
 }
 
 function downloadCSV(rows: (string | number)[][], filename: string) {

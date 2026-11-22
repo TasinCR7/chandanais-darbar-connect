@@ -30,8 +30,10 @@ const Chatbot = lazy(() => import("./Chatbot"));
 const VisitorCounter = lazy(() => import("./VisitorCounter"));
 const BackToTop = lazy(() => import("./BackToTop"));
 import { useAuth } from "@/hooks/useAuth";
+import { useAppSettings } from "@/hooks/useAppSettings";
+import { useCommitteeSession } from "@/hooks/useCommitteeSession";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchSettings } from "@/lib/api";
+import { sanitizeSafeUrl } from "@/utils/security";
 
 
 const navLinks = [
@@ -61,41 +63,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { isStaff, user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [showSearch, setShowSearch] = useState(false);
-  const { data: appSettings = {}, isLoading: settingsLoading } = useQuery({
-    queryKey: ['app_settings'],
-    queryFn: async () => {
-      const settings = await fetchSettings();
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('app_settings_cache', JSON.stringify(settings));
-        } catch (e) { console.warn('Cache write warning', e); }
-      }
-      return settings;
-    },
-    initialData: () => {
-      if (typeof window !== 'undefined') {
-        try {
-          const cached = localStorage.getItem('app_settings_cache');
-          if (cached) return JSON.parse(cached);
-        } catch (e) { return undefined; }
-      }
-      return undefined;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: appSettings = {} } = useAppSettings();
 
-  const [isCommitteeMember, setIsCommitteeMember] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try { return !!localStorage.getItem("committee_auth"); } catch { return false; }
-  });
-
-  useEffect(() => {
-    const handleStorage = () => {
-      try { setIsCommitteeMember(!!localStorage.getItem("committee_auth")); } catch { setIsCommitteeMember(false); }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  const isMaintenanceActive = String(appSettings.maintenance_mode) === 'true';
+  const { isCommitteeMember } = useCommitteeSession(isMaintenanceActive);
 
   const isBypassed = isStaff || isCommitteeMember;
 
@@ -217,8 +188,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container mx-auto px-2.5 sm:px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 mr-1 sm:mr-2">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0" aria-label="হোম পেজ">
-              {appSettings.site_logo_url && (
-                <img src={appSettings.site_logo_url} alt="Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain shrink-0" />
+              {sanitizeSafeUrl(appSettings.site_logo_url, { allowRelative: true }) && (
+                <img src={sanitizeSafeUrl(appSettings.site_logo_url, { allowRelative: true })} alt="Logo" className="h-7 w-7 sm:h-9 sm:w-9 object-contain shrink-0" />
               )}
               <span className="text-gold font-heading font-bold text-xs xs:text-sm md:text-lg leading-tight truncate max-w-[140px] xs:max-w-[190px] sm:max-w-none">
                 {appSettings.site_title_bn || "চন্দনাইশ দরবার শরীফ"}

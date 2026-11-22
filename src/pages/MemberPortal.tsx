@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { normalizePhoneNumber } from "@/utils/phoneUtils";
 import type { Member, Payment } from "@/types/finance";
 
 const MemberPortal = () => {
@@ -21,13 +22,19 @@ const MemberPortal = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [payMonth, setPayMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [payAmount, setPayAmount] = useState<string>("");
+  const [payMethod, setPayMethod] = useState<string>("bkash");
+  const [payRef, setPayRef] = useState<string>("");
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const phone = authQuery.phone.trim();
-    if (!phone) {
-      toast({ title: "তথ্য দিন", description: "আপনার ফোন নম্বর প্রদান করুন।", variant: "destructive" });
+    const rawPhone = authQuery.phone.trim();
+    const normalizedPhone = normalizePhoneNumber(rawPhone);
+    const cleanCode = authQuery.code.trim().toUpperCase();
+    if (!normalizedPhone || normalizedPhone.length < 10) {
+      toast({ title: "তথ্য দিন", description: "সঠিক মোবাইল নম্বর প্রদান করুন।", variant: "destructive" });
       return;
     }
     
@@ -35,27 +42,37 @@ const MemberPortal = () => {
     try {
       const { data, error } = await supabase
         .rpc('search_member', { 
-          p_phone: phone, 
-          p_code: authQuery.code.trim() ? authQuery.code.trim().toUpperCase() : null 
-        })
-        .maybeSingle();
+          p_phone: normalizedPhone, 
+          p_code: cleanCode || null 
+        });
         
       if (error) throw error;
-      if (!data) {
-        toast({ title: "তথ্য পাওয়া যায়নি", description: "এই ফোন নম্বরে কোনো সদস্য নিবন্ধিত নেই।", variant: "destructive" });
+      const rows = (Array.isArray(data) ? data : data ? [data] : []) as unknown as Member[];
+      const matched = rows.find((row) => {
+        const codeMatches = !cleanCode || row.member_code?.toUpperCase() === cleanCode;
+        const rowPhone = row.phone || "";
+        const phoneMatches = rowPhone.includes("*")
+          ? true
+          : normalizePhoneNumber(rowPhone) === normalizedPhone;
+        return codeMatches && phoneMatches;
+      });
+
+      if (!matched) {
+        toast({ title: "তথ্য পাওয়া যায়নি", description: "প্রদত্ত ফোন নম্বর ও কোডের সাথে মিলছে না।", variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      setMember(data as unknown as Member);
+      setMember(matched);
+      setPayAmount(String(matched.monthly_rate || ""));
       const { data: pData } = await supabase
-        .rpc('get_member_payments', { p_member_id: data.id });
+        .rpc('get_member_payments', { p_member_id: matched.id });
       
       setPayments((pData as unknown as Payment[]) || []);
       setIsLoggedIn(true);
-      toast({ title: "স্বাগতম", description: `${data.full_name}, আপনার পোর্টালে স্বাগতম।` });
+      toast({ title: "স্বাগতম", description: `${matched.full_name}, আপনার পোর্টালে স্বাগতম।` });
     } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+      toast({ title: "ত্রুটি", description: err.message || "লগইন করতে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -66,6 +83,8 @@ const MemberPortal = () => {
     setMember(null);
     setPayments([]);
     setAuthQuery({ code: "", phone: "" });
+    setPayAmount("");
+    setPayRef("");
   };
 
   const duesData = useMemo(() => {
@@ -93,13 +112,23 @@ const MemberPortal = () => {
   const handleSubmitPayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!member) return;
-    const fd = new FormData(e.currentTarget);
-    const amount = Number(fd.get("amount"));
-    const month = Number(fd.get("for_month"));
-    const method = fd.get("method") as string;
-    const ref = fd.get("transaction_ref") as string;
+    const amount = Number(payAmount);
+    const month = Number(payMonth);
+    const method = payMethod;
+    const ref = payRef.trim();
 
-    if (!amount || amount <= 0) return;
+    if (!Number.isFinite(amount) || amount < 1 || amount > 1000000) {
+      toast({ title: "সঠিক পরিমাণ দিন", description: "১ থেকে ১০,০০,০০০ টাকার মধ্যে অঙ্ক দিন।", variant: "destructive" });
+      return;
+    }
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      toast({ title: "মাস নির্বাচন করুন", variant: "destructive" });
+      return;
+    }
+    if (!ref || ref.length < 3 || ref.length > 100) {
+      toast({ title: "রেফারেন্স দিন", description: "কমপক্ষে ৩ অক্ষরের TrxID বা রেফারেন্স লিখুন।", variant: "destructive" });
+      return;
+    }
 
     setPaymentBusy(true);
     try {
@@ -108,16 +137,24 @@ const MemberPortal = () => {
         p_amount: amount,
         p_for_month: month,
         p_for_year: new Date().getFullYear(),
+        p_payment_date: new Date().toISOString().slice(0, 10),
         p_method: method,
         p_transaction_ref: ref,
         p_note: 'সদস্য নিজে এন্ট্রি করেছেন (Online)'
       });
 
       if (error) throw error;
+
+      const { data: refreshedPayments } = await supabase
+        .rpc('get_member_payments', { p_member_id: member.id });
+      if (refreshedPayments) {
+        setPayments(refreshedPayments as unknown as Payment[]);
+      }
+
+      setPayRef("");
       toast({ title: "পেমেন্ট জমা হয়েছে", description: "অ্যাডমিন অনুমোদনের পর এটি আপনার স্টেটমেন্টে যোগ হবে।" });
-      e.currentTarget.reset();
     } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+      toast({ title: "ত্রুটি", description: err.message || "পেমেন্ট জমা দিতে সমস্যা হয়েছে।", variant: "destructive" });
     } finally {
       setPaymentBusy(false);
     }
@@ -284,7 +321,7 @@ const MemberPortal = () => {
                 <form onSubmit={handleSubmitPayment} className="space-y-4 font-bangla">
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground ml-1">মাস নির্বাচন করুন</Label>
-                    <Select name="for_month" defaultValue={String(new Date().getMonth() + 1)} required>
+                    <Select value={payMonth} onValueChange={setPayMonth} required>
                       <SelectTrigger className="bg-background/50 border-primary/20 h-10"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {BANGLA_MONTHS.map((m, i) => (
@@ -296,12 +333,20 @@ const MemberPortal = () => {
 
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground ml-1">টাকার পরিমাণ (৳)</Label>
-                    <Input name="amount" type="number" defaultValue={member.monthly_rate} required className="bg-background/50 border-primary/20 h-10 text-base" />
+                    <Input
+                      type="number"
+                      min={1}
+                      max={1000000}
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(e.target.value)}
+                      required
+                      className="bg-background/50 border-primary/20 h-10 text-base"
+                    />
                   </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground ml-1">পেমেন্ট মাধ্যম</Label>
-                    <Select name="method" defaultValue="bkash" required>
+                    <Select value={payMethod} onValueChange={setPayMethod} required>
                       <SelectTrigger className="bg-background/50 border-primary/20 h-10"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="bkash">বিকাশ (bKash)</SelectItem>
@@ -314,7 +359,14 @@ const MemberPortal = () => {
 
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground ml-1">TrxID / রেফারেন্স</Label>
-                    <Input name="transaction_ref" placeholder="যেমন: AX782S..." className="bg-background/50 border-primary/20 h-10 text-base" />
+                    <Input
+                      value={payRef}
+                      onChange={(e) => setPayRef(e.target.value)}
+                      placeholder="যেমন: AX782S..."
+                      maxLength={100}
+                      required
+                      className="bg-background/50 border-primary/20 h-10 text-base"
+                    />
                   </div>
 
                   <div className="pt-2">

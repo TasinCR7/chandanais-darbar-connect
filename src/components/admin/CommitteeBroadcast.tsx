@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import React from "react";
+import { getApiBase } from "@/lib/apiBase";
+import { formatBangladeshIntlPhone } from "@/utils/phoneUtils";
 
 interface Member {
   id: string;
@@ -82,9 +84,14 @@ const CommitteeBroadcast = () => {
   const [smsLogs, setSmsLogs] = useState<{name: string, status: 'success' | 'error'}[]>([]);
   const { toast } = useToast();
 
-  const [apiKey, setApiKey] = useState(localStorage.getItem("sms_api_key") || import.meta.env.VITE_SMS_API_KEY || "");
-  const [senderId, setSenderId] = useState(localStorage.getItem("sms_sender_id") || "");
-  const [contentId, setContentId] = useState(localStorage.getItem("sms_content_id") || "");
+  const [apiKey, setApiKey] = useState("");
+  const [serverConfigured, setServerConfigured] = useState(false);
+  const [senderId, setSenderId] = useState(() => {
+    try { return localStorage.getItem("sms_sender_id") || ""; } catch { return ""; }
+  });
+  const [contentId, setContentId] = useState(() => {
+    try { return localStorage.getItem("sms_content_id") || ""; } catch { return ""; }
+  });
 
   const [currentWaIndex, setCurrentWaIndex] = useState<number | null>(null);
 
@@ -92,20 +99,50 @@ const CommitteeBroadcast = () => {
     return members.filter(m => selectedIds.includes(m.id) && m.phone);
   }, [members, selectedIds]);
 
-  const fetchBalance = async (key: string) => {
-    if (!key) return;
+  const callSmsEndpoint = useCallback(async (payload: Record<string, unknown>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Admin authentication required");
+    }
+    const res = await fetch(`${getApiBase()}/api/sms`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.error || `HTTP ${res.status}`);
+    }
+    return data;
+  }, []);
+
+  const fetchBalance = useCallback(async (overrideKey?: string) => {
+    const keyToUse = (overrideKey ?? apiKey).trim();
     try {
-      const res = await fetch(`https://api.sms.net.bd/user/balance?api_key=${key}`);
-      const data = await res.json();
-      if (data && data.balance) {
-        setSmsBalance(`${data.balance} ${data.currency || 'BDT'}`);
+      const data = await callSmsEndpoint({
+        action: "balance",
+        ...(keyToUse ? { apiKey: keyToUse } : {}),
+      });
+      if (data && data.balance !== undefined && data.balance !== null) {
+        setSmsBalance(`${data.balance} BDT`);
+      }
+      if (typeof data?.configured === "boolean") {
+        setServerConfigured(data.configured);
       }
     } catch (err) {
-      console.error("Balance fetch failed", err);
+      console.warn("Balance fetch unavailable:", err);
     }
-  };
+  }, [apiKey, callSmsEndpoint]);
 
   useEffect(() => {
+    try {
+      localStorage.removeItem("sms_api_key");
+    } catch {
+      // ignore storage access issues
+    }
     const init = async () => {
       const { data } = await supabase
         .from("committee_members")
@@ -115,10 +152,19 @@ const CommitteeBroadcast = () => {
         setMembers(data as Member[]);
         setSelectedIds(data.map(m => m.id));
       }
-      if (apiKey) fetchBalance(apiKey);
+      try {
+        const statusData = await callSmsEndpoint({ action: "status" });
+        const hasServerKey = Boolean(statusData?.configured);
+        setServerConfigured(hasServerKey);
+        if (hasServerKey) {
+          await fetchBalance();
+        }
+      } catch (err) {
+        console.warn("SMS status check skipped:", err);
+      }
     };
     init();
-  }, [apiKey]);
+  }, [callSmsEndpoint, fetchBalance]);
 
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -145,12 +191,12 @@ const CommitteeBroadcast = () => {
 
   const saveSettings = () => {
     try {
-      localStorage.setItem("sms_api_key", apiKey);
-      localStorage.setItem("sms_sender_id", senderId);
-      localStorage.setItem("sms_content_id", contentId);
+      localStorage.removeItem("sms_api_key");
+      localStorage.setItem("sms_sender_id", senderId.trim());
+      localStorage.setItem("sms_content_id", contentId.trim());
     } catch (e) { console.warn("localStorage error", e); }
     fetchBalance(apiKey);
-    toast({ title: "সফল", description: "SMS এপিআই সেটিংস সেভ করা হয়েছে।" });
+    toast({ title: "সফল", description: "SMS সেটিংস আপডেট করা হয়েছে।" });
   };
 
   const sendInternalNotice = async () => {
@@ -176,45 +222,64 @@ const CommitteeBroadcast = () => {
     }
   };
 
+  const hasSmsAuth = serverConfigured || Boolean(apiKey.trim());
+
   const sendBulkSms = async () => {
-    if (!apiKey || !message.trim() || selectedIds.length === 0) {
-      toast({ title: "ত্রুটি", description: "API তথ্য এবং মেসেজ নিশ্চিত করুন।", variant: "destructive" });
+    if (!hasSmsAuth || !message.trim() || selectedIds.length === 0) {
+      toast({ title: "ত্রুটি", description: "সার্ভার API Key এবং মেসেজ নিশ্চিত করুন।", variant: "destructive" });
       return;
     }
 
     setSendingSms(true);
-    setSendProgress(0);
+    setSendProgress(15);
     setSmsLogs([]);
-    
-    const selectedMembers = members.filter(m => selectedIds.includes(m.id) && m.phone);
-    let successCount = 0;
-    const total = selectedMembers.length;
-    
-    for (let i = 0; i < total; i++) {
-      const member = selectedMembers[i];
-      try {
-        const phone = member.phone?.replace(/[^0-9]/g, "");
-        if (!phone) continue;
-        
-        const url = `https://api.sms.net.bd/sendsms?api_key=${apiKey}&msg=${encodeURIComponent(message)}&to=${phone}${senderId ? `&sender_id=${senderId}` : ""}${contentId ? `&content_id=${contentId}` : ""}`;
-        
-        await fetch(url, { method: "GET", mode: "no-cors", cache: 'no-cache' });
-        
-        successCount++;
-        setSmsLogs(prev => [{name: member.name, status: 'success' as const}, ...prev].slice(0, 15));
-      } catch (err) {
-        setSmsLogs(prev => [{name: member.name, status: 'error' as const}, ...prev].slice(0, 15));
-      }
-      setSendProgress(Math.round(((i + 1) / total) * 100));
-      if (i < total - 1) await new Promise(r => setTimeout(r, 800)); // Increased delay for security
+
+    const selectedMembers = members
+      .filter(m => selectedIds.includes(m.id) && m.phone)
+      .map(m => ({ name: m.name, phone: m.phone! }));
+
+    if (selectedMembers.length === 0) {
+      setSendingSms(false);
+      toast({ title: "ত্রুটি", description: "সিলেক্ট করা মেম্বারদের বৈধ ফোন নম্বর নেই।", variant: "destructive" });
+      return;
     }
 
-    setSendingSms(false);
-    fetchBalance(apiKey);
-    toast({ 
-      title: "SMS সেন্ড প্রসেস শেষ", 
-      description: `${successCount} জন সদস্যকে মেসেজ পাঠানোর রিকোয়েস্ট করা হয়েছে।`,
-    });
+    try {
+      const data = await callSmsEndpoint({
+        action: "send",
+        recipients: selectedMembers,
+        message: message.trim(),
+        senderId: senderId.trim() || undefined,
+        contentId: contentId.trim() || undefined,
+        ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+      });
+
+      const logs = Array.isArray(data?.logs)
+        ? data.logs.map((l: { name: string; status: string }) => ({
+            name: l.name,
+            status: l.status === "success" ? ("success" as const) : ("error" as const),
+          }))
+        : [];
+
+      setSmsLogs(logs.slice(0, 15));
+      setSendProgress(100);
+      fetchBalance(apiKey);
+
+      toast({
+        title: "SMS সেন্ড সম্পন্ন",
+        description: `${data?.sentCount || 0} জনকে পাঠানো হয়েছে${data?.failedCount ? `, ${data.failedCount}টি ব্যর্থ` : ""}।`,
+        variant: data?.sentCount > 0 ? "default" : "destructive",
+      });
+    } catch (err) {
+      console.error("Bulk SMS error:", err);
+      toast({
+        title: "SMS ব্যর্থ",
+        description: err instanceof Error ? err.message : "SMS পাঠানো সম্ভব হয়নি।",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingSms(false);
+    }
   };
 
   const startWhatsAppQueue = () => {
@@ -233,19 +298,10 @@ const CommitteeBroadcast = () => {
   };
 
   const openWhatsApp = (member: Member) => {
-    let phone = member.phone?.replace(/[^0-9]/g, "");
+    const phone = formatBangladeshIntlPhone(member.phone || "");
     if (!phone) {
       toast({ title: "ত্রুটি", description: `মেম্বার ${member.name} এর কোনো ফোন নম্বর নেই।`, variant: "destructive" });
       return;
-    }
-    
-    // Ensure Bangladesh country code (88) is present for wa.me
-    if (phone.length === 11 && phone.startsWith("0")) {
-      phone = "88" + phone;
-    } else if (phone.length === 10 && !phone.startsWith("88") && !phone.startsWith("0")) {
-      phone = "880" + phone;
-    } else if (phone.length === 11 && !phone.startsWith("0") && !phone.startsWith("88")) {
-      phone = "88" + phone;
     }
 
     const encodedMessage = encodeURIComponent(message.trim());
@@ -396,7 +452,7 @@ const CommitteeBroadcast = () => {
                   <h3 className="text-lg font-bold text-blue-400 flex items-center gap-2">
                     <Send size={20} /> Bulk SMS (পেইড API)
                   </h3>
-                  {apiKey && (
+                  {hasSmsAuth && (
                     <Button variant="ghost" size="sm" onClick={() => fetchBalance(apiKey)} className="text-blue-400 h-8 gap-1 hover:bg-blue-500/10">
                       <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> রিফ্রেশ ব্যালেন্স
                     </Button>
@@ -431,7 +487,7 @@ const CommitteeBroadcast = () => {
                 ) : (
                   <Button 
                     onClick={sendBulkSms}
-                    disabled={sendingSms || selectedMembersCount === 0 || !message.trim() || !apiKey}
+                    disabled={sendingSms || selectedMembersCount === 0 || !message.trim() || !hasSmsAuth}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl"
                   >
                     {sendingSms ? <Loader2 className="animate-spin mr-2" /> : <Send size={18} className="mr-2" />}
@@ -465,8 +521,17 @@ const CommitteeBroadcast = () => {
                   <SettingsIcon size={20} /> গেটওয়ে সেটিংস (sms.net.bd)
                 </h3>
                 <div className="space-y-2">
-                  <Label>API Key</Label>
-                  <Input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password" placeholder="Key..." className="bg-black/20" />
+                  <Label>
+                    API Key {serverConfigured ? <span className="text-xs text-emerald-400">(সার্ভারে সংরক্ষিত ✓ — চাইলে সাময়িক Key দিন)</span> : "(সাময়িক সেশন Key)"}
+                  </Label>
+                  <Input
+                    value={apiKey}
+                    onChange={e => setApiKey(e.target.value)}
+                    type="password"
+                    autoComplete="off"
+                    placeholder={serverConfigured ? "সার্ভার SMS_API_KEY সচল আছে (ঐচ্ছিক ওভাররাইড)..." : "শুধুমাত্র এই সেশনের জন্য সাময়িক API Key দিন..."}
+                    className="bg-black/20"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Sender ID (Optional)</Label>

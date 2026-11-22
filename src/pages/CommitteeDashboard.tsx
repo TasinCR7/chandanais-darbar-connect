@@ -12,7 +12,8 @@ import PremiumLoader from "@/components/PremiumLoader";
 import { Download, Share2 } from "lucide-react";
 // jsPDF + autoTable lazy-loaded only when generating receipt PDF
 const getJsPDF = () => import("jspdf").then(m => m.default);
-import { escapeHtml } from "@/utils/security";
+import { escapeHtml, sanitizeFilenameSegment } from "@/utils/security";
+import { notifyCommitteeAuthChanged } from "@/hooks/useCommitteeSession";
 // Lazy load font to avoid 267KB in main bundle
 let _fontBase64Cache: string | null = null;
 async function getFontBase64(): Promise<string> {
@@ -103,7 +104,15 @@ export default function CommitteeDashboard() {
   }, [navigate]);
 
   const handleLogout = () => {
+    const token = localStorage.getItem("committee_auth");
     localStorage.removeItem("committee_auth");
+    notifyCommitteeAuthChanged();
+    if (token) {
+      void supabase.rpc("logout_committee_session", { p_session_token: token }).then(
+        () => undefined,
+        () => undefined
+      );
+    }
     navigate("/committee-login");
   };
 
@@ -284,7 +293,7 @@ export default function CommitteeDashboard() {
               </div>
               <div class="data-row">
                 <div class="data-col"><span class="label">সংগ্রহের মাস / Contribution Month</span></div>
-                <div class="data-col" style="text-align: right;"><span class="value">${formatMonthBn(c.target_month)}</span></div>
+                <div class="data-col" style="text-align: right;"><span class="value">${escapeHtml(formatMonthBn(c.target_month))}</span></div>
               </div>
               <div class="data-row">
                 <div class="data-col"><span class="label">পেমেন্ট মাধ্যম / Method</span></div>
@@ -345,18 +354,23 @@ export default function CommitteeDashboard() {
       container.style.top = '-9999px';
       document.body.appendChild(container);
 
-      await doc.html(container, {
-        callback: function (doc) {
-          doc.save(`Invoice_${c.target_month}.pdf`);
-        },
-        x: 0,
-        y: 0,
-        width: W,
-        windowWidth: 794
-      });
-
-      if (container.parentNode) {
-        document.body.removeChild(container);
+      try {
+        if (typeof document !== 'undefined' && document.fonts) {
+          await document.fonts.ready;
+        }
+        await doc.html(container, {
+          callback: function (doc) {
+            doc.save(`Invoice_${sanitizeFilenameSegment(c.target_month, 'month')}.pdf`);
+          },
+          x: 0,
+          y: 0,
+          width: W,
+          windowWidth: 794
+        });
+      } finally {
+        if (container.parentNode) {
+          document.body.removeChild(container);
+        }
       }
     } catch (e) {
       toast({ title: "ত্রুটি", description: "পিডিএফ তৈরি করা সম্ভব হয়নি।", variant: "destructive" });

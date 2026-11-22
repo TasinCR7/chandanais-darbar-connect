@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams, Navigate } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useLocation, Navigate } from 'react-router-dom';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toBanglaNumber } from '@/lib/bangla';
 import { monthName } from '@/lib/months';
 import { computeMemberDues } from '@/lib/dues';
@@ -12,37 +13,114 @@ import { downloadAnnualStatementPDF, formatBDT } from '@/lib/statement';
 import { ArrowLeft, Download, Phone, MapPin, Calendar, Wallet, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function maskPhoneForPublic(phone: string | null | undefined): string {
+  if (!phone) return '';
+  const clean = phone.trim();
+  if (clean.includes('*')) return clean;
+  if (clean.length <= 6) return '****';
+  return `${clean.slice(0, 3)}****${clean.slice(-3)}`;
+}
+
 const MemberProfile = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const { isStaff, loading: authLoading } = useAuth();
   const [member, setMember] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || authLoading) return;
+    if (!UUID_REGEX.test(id)) {
+      setMember(null);
+      setPayments([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: m }, { data: p }] = await Promise.all([
-        supabase.from('members').select('*').eq('id', id).maybeSingle(),
-        supabase.from('payments').select('*').eq('member_id', id).order('payment_date', { ascending: false }),
-      ]);
-      setMember(m);
-      setPayments(p ?? []);
-      setLoading(false);
+      try {
+        if (isStaff) {
+          const [{ data: m }, { data: p }] = await Promise.all([
+            supabase.from('members').select('*').eq('id', id).maybeSingle(),
+            supabase.from('payments').select('*').eq('member_id', id).order('payment_date', { ascending: false }),
+          ]);
+          if (!cancelled) {
+            setMember(m);
+            setPayments(p ?? []);
+          }
+          return;
+        }
+
+        // Public visitors cannot query members/payments tables directly due to RLS; use SECURITY DEFINER RPCs
+        const [{ data: rpcMember, error: rpcMemberErr }, { data: rpcPayments }] = await Promise.all([
+          supabase.rpc('get_member_by_id', { p_member_id: id }),
+          supabase.rpc('get_member_payments', { p_member_id: id }),
+        ]);
+
+        let resolvedMember = !rpcMemberErr && rpcMember && rpcMember.length > 0 ? rpcMember[0] : null;
+
+        // Fallback before migration applies if member_code was passed via query/router state
+        if (!resolvedMember) {
+          const codeHint = searchParams.get('code') || (location.state as { member?: { member_code?: string } } | null)?.member?.member_code;
+          if (codeHint) {
+            const { data: searched } = await supabase.rpc('search_member', {
+              p_code: codeHint.trim().toUpperCase(),
+              p_phone: null,
+            });
+            resolvedMember = (searched || []).find((row: any) => row.id === id) || null;
+          }
+        }
+
+        if (resolvedMember) {
+          resolvedMember = {
+            ...resolvedMember,
+            phone: maskPhoneForPublic(resolvedMember.phone),
+            address: null,
+          };
+        }
+
+        if (!cancelled) {
+          setMember(resolvedMember);
+          setPayments(rpcPayments ?? []);
+        }
+      } catch (err) {
+        console.error('MemberProfile load error:', err);
+        if (!cancelled) {
+          setMember(null);
+          setPayments([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
-  }, [id]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isStaff, authLoading, searchParams, location.state]);
+
+  const approvedPayments = useMemo(
+    () => payments.filter((p) => p.status === 'approved' || !p.status),
+    [payments],
+  );
 
   const dues = useMemo(() => {
     if (!member) return null;
-    return computeMemberDues(member, payments.map((p) => ({
-      member_id: p.member_id, amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
+    return computeMemberDues(member, approvedPayments.map((p) => ({
+      member_id: p.member_id || member.id, amount: Number(p.amount), for_year: p.for_year, for_month: p.for_month,
     })));
-  }, [member, payments]);
+  }, [member, approvedPayments]);
 
   const yearlyPayments = useMemo(
-    () => payments.filter((p) => p.for_year === year),
-    [payments, year],
+    () => approvedPayments.filter((p) => p.for_year === year),
+    [approvedPayments, year],
   );
 
   const yearTotal = yearlyPayments.reduce((s, p) => s + Number(p.amount || 0), 0);

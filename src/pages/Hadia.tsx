@@ -17,10 +17,10 @@ async function getFontBase64(): Promise<string> {
 }
 import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
-import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
-import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
+import { sendStructuredTelegramNotification } from "@/utils/telegram";
+import { normalizePhoneNumber, isValidPhoneNumber, formatBangladeshIntlPhone } from "@/utils/phoneUtils";
 import { fetchSettings } from "@/lib/api";
-import { escapeHtml } from "@/utils/security";
+import { escapeHtml, sanitizeFilenameSegment } from "@/utils/security";
 import { v4 as uuidv4 } from "uuid";
 
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
@@ -66,9 +66,11 @@ const Hadia = () => {
   }, []);
 
   // Auto-calculate visibility based on inputs
-  const canCalculate = Boolean(amount && amount > 0 && donationType && (donationType !== "specific_shahjada" || specificShahjada));
+  const amountNum = Number(amount);
+  const isAmountValid = Number.isFinite(amountNum) && amountNum >= 1 && amountNum <= 10000000;
+  const canCalculate = Boolean(isAmountValid && donationType && (donationType !== "specific_shahjada" || specificShahjada));
   const isPhoneValid = isValidPhoneNumber(donorPhone);
-  const canDonate = canCalculate && donorName.trim() && isPhoneValid && paymentMethod && transactionId.trim();
+  const canDonate = canCalculate && donorName.trim() && isPhoneValid && paymentMethod && transactionId.trim().length >= 3;
 
   const handleDonate = async () => {
     if (!canDonate) return;
@@ -81,7 +83,7 @@ const Hadia = () => {
     let submissionTimes: number[] = [];
     try {
       submissionTimes = JSON.parse(localStorage.getItem("last_donation_submissions") || "[]");
-    } catch (e) {
+    } catch {
       submissionTimes = [];
     }
     
@@ -95,42 +97,45 @@ const Hadia = () => {
     }
 
     setIsSubmitting(true);
-
-    // Save submission timestamp safely
-    try {
-      submissionTimes.push(nowTime);
-      localStorage.setItem("last_donation_submissions", JSON.stringify(submissionTimes));
-    } catch (storageErr) {
-      console.warn("localStorage setItem warning:", storageErr);
-    }
     
     const donationId = generateUUID();
+    const cleanDonorName = donorName.trim().slice(0, 100);
+    const cleanPhone = normalizePhoneNumber(donorPhone);
+    const cleanTrxId = transactionId.trim().slice(0, 100);
     
     try {
       const { error } = await supabase
         .from('donations')
         .insert({
           id: donationId,
-          donor_name: donorName.trim(),
-          donor_phone: normalizePhoneNumber(donorPhone),
-          amount: Number(amount),
+          donor_name: cleanDonorName,
+          donor_phone: cleanPhone,
+          amount: amountNum,
           donation_category: donationType,
           recipient_id: donationType === 'specific_shahjada' ? specificShahjada : null,
           payment_method: paymentMethod,
-          transaction_id: transactionId,
+          transaction_id: cleanTrxId,
         });
 
       if (error) throw error;
+
+      // Save submission timestamp only after successful DB insert
+      try {
+        submissionTimes.push(nowTime);
+        localStorage.setItem("last_donation_submissions", JSON.stringify(submissionTimes));
+      } catch (storageErr) {
+        console.warn("localStorage setItem warning:", storageErr);
+      }
       
       const completedData: InvoiceData = {
         id: donationId,
-        donor_name: donorName.trim(),
-        donor_phone: normalizePhoneNumber(donorPhone),
-        amount: Number(amount),
+        donor_name: cleanDonorName,
+        donor_phone: cleanPhone,
+        amount: amountNum,
         donation_category: donationType,
         recipient_id: donationType === 'specific_shahjada' ? specificShahjada : null,
         payment_method: paymentMethod,
-        transaction_id: transactionId,
+        transaction_id: cleanTrxId,
         status: 'pending',
         created_at: new Date().toISOString(),
       };
@@ -139,26 +144,21 @@ const Hadia = () => {
       setIsSuccess(true);
       toast.success("আপনার হাদিয়া সফলভাবে গৃহীত হয়েছে!");
       
-      // Send Telegram Notification
+      // Send Telegram Notification via serverless proxy
       const categoryText = donationType === "mosque_fund" ? "মসজিদ ফান্ড" :
                            donationType === "darbar_fund" ? "দরবার ফান্ড" :
                            donationType === "combined_shahjadas" ? "সম্মিলিত শাহজাদাগণ" :
                            (SHAHJADAS.find(s => s.id === specificShahjada)?.name || "নির্দিষ্ট শাহজাদা");
 
-      const textMessage = `
-🟢 *নতুন হাদিয়া/নজরানা জমা হয়েছে!*
-━━━━━━━━━━━━━━━━━━
-👤 *নাম:* ${escapeTelegramHtml(donorName)}
-📱 *মোবাইল:* ${escapeTelegramHtml(donorPhone)}
-🎯 *খাত:* ${escapeTelegramHtml(categoryText)}
-💰 *পরিমাণ:* ${escapeTelegramHtml(amount)} ৳
-💳 *পেমেন্ট:* ${escapeTelegramHtml(paymentMethod)}
-🔑 *TrxID:* ${escapeTelegramHtml(transactionId)}
-━━━━━━━━━━━━━━━━━━
-অনুগ্রহ করে প্যানেল থেকে ট্রানজেকশনটি যাচাই করুন।
-      `;
-      
-      sendTelegramNotification(textMessage).catch(err => {
+      sendStructuredTelegramNotification({
+        type: "donation",
+        donorName: cleanDonorName,
+        donorPhone: cleanPhone,
+        categoryLabel: categoryText,
+        amount: amountNum,
+        paymentMethod,
+        transactionId: cleanTrxId,
+      }).catch(err => {
         console.error("Telegram notification error:", err);
       });
       
@@ -275,7 +275,7 @@ const Hadia = () => {
                 <th style="padding:12px 16px;text-align:right;font-weight:700;">পরিমাণ (৳)</th>
               </tr></thead>
               <tbody><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
-                <td style="padding:16px;font-size:15px;font-weight:600;color:#065f46;">${getCategoryLabel(d.donation_category, d.recipient_id)}</td>
+                <td style="padding:16px;font-size:15px;font-weight:600;color:#065f46;">${escapeHtml(getCategoryLabel(d.donation_category, d.recipient_id))}</td>
                 <td style="padding:16px;"><span style="background:#dbeafe;color:#1e40af;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px;">${payMethodLabelEscaped}</span></td>
                 <td style="padding:16px;font-family:monospace;font-size:13px;color:#374151;letter-spacing:1px;">${transactionIdEscaped}</td>
                 <td style="padding:16px;text-align:right;font-size:20px;font-weight:900;color:#065f46;">${d.amount.toLocaleString('en-US')} ৳</td>
@@ -320,11 +320,15 @@ const Hadia = () => {
       document.body.appendChild(container);
       
       try {
+        if (typeof document !== 'undefined' && document.fonts) {
+          await document.fonts.ready;
+        }
         await doc.html(container, {
           callback: function (doc) {
-            const invoiceId = d.id?.substring(0, 6).toUpperCase() || 'N';
+            const invoiceId = sanitizeFilenameSegment(d.id?.substring(0, 6).toUpperCase(), 'INV');
+            const safeDonor = sanitizeFilenameSegment(d.donor_name, 'Donor');
             const dateStr = new Date().toISOString().slice(0, 10);
-            doc.save(`Rashid-${d.donor_name.replace(/\s+/g, '-')}-${invoiceId}-${dateStr}.pdf`);
+            doc.save(`Rashid-${safeDonor}-${invoiceId}-${dateStr}.pdf`);
           },
           x: 0, y: 0, width: 210, windowWidth: 794
         });
@@ -725,7 +729,7 @@ const Hadia = () => {
                   </div>
                   
                   <a
-                    href={`https://wa.me/${appSettings.hadia_whatsapp_number || "8801700000000"}`}
+                    href={`https://wa.me/${formatBangladeshIntlPhone(appSettings.hadia_whatsapp_number || "01700000000") || "8801700000000"}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 bg-emerald/20 hover:bg-emerald/30 text-emerald-light border border-emerald/50 rounded-lg p-4 transition-all duration-300 relative overflow-hidden group mt-4"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { notifyCommitteeAuthChanged } from "@/hooks/useCommitteeSession";
 import { motion } from "framer-motion";
 import { Phone, ArrowRight, ShieldCheck, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,6 +143,7 @@ const CommitteeLogin = () => {
         localStorage.setItem("committee_auth", result.session_token);
         localStorage.removeItem("committee_login_attempts");
         localStorage.removeItem("committee_login_lockout_until");
+        notifyCommitteeAuthChanged();
       } catch (e) { console.warn("localStorage auth write warning", e); }
 
       if (result.is_new_pin) {

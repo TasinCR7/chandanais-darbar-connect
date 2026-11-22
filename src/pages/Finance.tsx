@@ -20,6 +20,8 @@ import { fetchMembers, fetchPayments, fetchExpenses, fetchTargets, fetchSettings
 import { toBanglaNumber } from '@/lib/bangla';
 import { monthName, BANGLA_MONTHS } from '@/lib/months';
 import { computeFinancialSummary, computeTotalDues, computeMemberStats } from '@/utils/calculations';
+import { sanitizeCsvCell } from '@/utils/security';
+import { formatBangladeshIntlPhone, normalizePhoneNumber } from '@/utils/phoneUtils';
 import {
   buildMonthlyStatement, calculateDues, downloadAnnualStatementPDF,
   downloadMemberBankStatementPDF, downloadOrganizationStatementPDF,
@@ -56,6 +58,39 @@ import { cn } from '@/lib/utils';
 
 type TabKey = 'summary' | 'personal' | 'dues' | 'transparency' | 'ranking' | 'admin' | 'audit' | 'settings';
 
+function parseDateSafe(raw: string | null | undefined): Date | null {
+  if (!raw) return null;
+  const trimmed = String(raw).trim();
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? new Date(`${trimmed}T00:00:00`) : new Date(trimmed);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      out.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  out.push(current.trim());
+  return out;
+}
+
+const VALID_PAYMENT_METHODS = new Set(['bkash', 'nagad', 'rocket', 'bank', 'cash', 'other']);
+
 
 const paymentSchema = z.object({
   member_id: z.string().uuid(),
@@ -85,6 +120,8 @@ const Finance = () => {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
+  const [publicStats, setPublicStats] = useState<{ total_income: number; total_expense: number; active_members: number } | null>(null);
+  const [publicChart, setPublicChart] = useState<{ month_key: string; income: number; expense: number }[]>([]);
   const [isDark, setIsDark] = useState(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -140,21 +177,51 @@ const Finance = () => {
   const loadAll = async () => {
     setBusy(true);
     try {
-      const [m, p, e, t, s, al] = await Promise.all([
-        fetchMembers(),
-        fetchPayments(),
-        fetchExpenses(),
-        fetchTargets(),
-        fetchSettings(),
-        isStaff ? supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100) : Promise.resolve({ data: [] })
-      ]);
-      setMembers(m);
-      setPayments(p);
-      setExpenses(e);
-      setTargets(t);
-      setSettings(s);
-      setAuditLogs(al.data || []);
-      setPendingPayments(p.filter(pay => pay.status === 'pending'));
+      if (isStaff) {
+        const [m, p, e, t, s, al] = await Promise.all([
+          fetchMembers(),
+          fetchPayments(),
+          fetchExpenses(),
+          fetchTargets(),
+          fetchSettings(),
+          supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100),
+        ]);
+        setMembers(m);
+        setPayments(p);
+        setExpenses(e);
+        setTargets(t);
+        setSettings(s);
+        setAuditLogs(al.data || []);
+        setPendingPayments(p.filter(pay => pay.status === 'pending'));
+      } else {
+        const [t, s, statsRes, chartRes] = await Promise.all([
+          fetchTargets(),
+          fetchSettings(),
+          supabase.rpc('get_transparency_stats'),
+          supabase.rpc('get_transparency_chart'),
+        ]);
+        setMembers([]);
+        setPayments([]);
+        setExpenses([]);
+        setAuditLogs([]);
+        setPendingPayments([]);
+        setTargets(t);
+        setSettings(s);
+        if (statsRes.data && statsRes.data.length > 0) {
+          setPublicStats({
+            total_income: Number(statsRes.data[0].total_income || 0),
+            total_expense: Number(statsRes.data[0].total_expense || 0),
+            active_members: Number(statsRes.data[0].active_members || 0),
+          });
+        }
+        setPublicChart(
+          (chartRes.data || []).map((row) => ({
+            month_key: row.month_key,
+            income: Number(row.income || 0),
+            expense: Number(row.expense || 0),
+          }))
+        );
+      }
     } catch (err: unknown) {
       toast({ title: err instanceof Error ? err.message : 'ডাটা লোড ব্যর্থ', variant: 'destructive' });
     } finally {
@@ -162,11 +229,25 @@ const Finance = () => {
     }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    if (!loading) {
+      void loadAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isStaff]);
 
-  // Aggregates - ONLY approved and pending payments count towards income
-  const { totalIncome, totalExpense, balance, activeMembers } = useMemo(() => computeFinancialSummary(payments, expenses, members), [payments, expenses, members]);
+  // Aggregates - ONLY approved payments count towards realized income
+  const { totalIncome, totalExpense, balance, activeMembers } = useMemo(() => {
+    if (!isStaff && publicStats) {
+      return {
+        totalIncome: publicStats.total_income,
+        totalExpense: publicStats.total_expense,
+        balance: publicStats.total_income - publicStats.total_expense,
+        activeMembers: publicStats.active_members,
+      };
+    }
+    return computeFinancialSummary(payments, expenses, members);
+  }, [isStaff, publicStats, payments, expenses, members]);
 
   // Per-member dues / paid
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -189,29 +270,99 @@ const Finance = () => {
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'members' | 'payments') => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'ফাইল অনেক বড়', description: 'সর্বোচ্চ ২ মেগাবাইট CSV ফাইল অনুমোদিত।', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
     setBusy(true);
     try {
-      const text = await file.text();
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-      const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
-      const rows = lines.slice(1).map(l => {
-        const values = l.split(',').map(v => v.replace(/"/g, ''));
-        return headers.reduce((obj, h, i) => ({ ...obj, [h]: values[i] }), {});
+      const text = (await file.text()).replace(/^\uFEFF/, '');
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        throw new Error('CSV ফাইলে কোনো ডেটা সারি পাওয়া যায়নি।');
+      }
+      const headers = parseCsvLine(lines[0]);
+      const rawRows = lines.slice(1).map((line) => {
+        const values = parseCsvLine(line);
+        return headers.reduce<Record<string, string>>((obj, h, i) => {
+          obj[h] = values[i] ?? '';
+          return obj;
+        }, {});
       });
 
       if (type === 'members') {
-        const { error } = await supabase.from('members').insert(rows as any);
+        const cleanMembers = rawRows
+          .map((row) => {
+            const member_code = (row.member_code || '').trim().slice(0, 40);
+            const full_name = (row.full_name || '').trim().slice(0, 120);
+            const phone = row.phone ? normalizePhoneNumber(row.phone) : '';
+            const monthly_rate = Number(row.monthly_rate);
+            const joined_date = row.joined_date && /^\d{4}-\d{2}-\d{2}$/.test(row.joined_date.trim())
+              ? row.joined_date.trim()
+              : new Date().toISOString().split('T')[0];
+            if (!member_code || !full_name || !Number.isFinite(monthly_rate) || monthly_rate <= 0) {
+              return null;
+            }
+            return {
+              member_code,
+              full_name,
+              phone: phone || null,
+              area: row.area ? row.area.trim().slice(0, 80) : null,
+              address: row.address ? row.address.trim().slice(0, 200) : null,
+              monthly_rate,
+              joined_date,
+              is_active: row.is_active === 'false' ? false : true,
+            };
+          })
+          .filter((r): r is NonNullable<typeof r> => Boolean(r));
+
+        if (cleanMembers.length === 0) {
+          throw new Error('কোনো বৈধ সদস্য তথ্য পাওয়া যায়নি।');
+        }
+        const { error } = await supabase.from('members').insert(cleanMembers as any);
         if (error) throw error;
-        toast({ title: `${rows.length} জন সদস্য যোগ হয়েছে` });
+        toast({ title: `${cleanMembers.length} জন সদস্য যোগ হয়েছে` });
       } else {
-        // Resolve member_code to member_id for convenience
-        const resolvedRows = [];
-        for (const row of rows as any) {
-          if (row.member_code && !row.member_id) {
-            const m = members.find(mem => mem.member_code === row.member_code);
-            if (m) row.member_id = m.id;
-          }
-          if (row.member_id) resolvedRows.push(row);
+        const resolvedRows = rawRows
+          .map((row) => {
+            const memberId = row.member_id || members.find(mem => mem.member_code === (row.member_code || '').trim())?.id;
+            const amount = Number(row.amount);
+            const for_month = Number(row.for_month);
+            const for_year = Number(row.for_year);
+            const rawMethod = (row.method || 'cash').trim().toLowerCase();
+            const method = VALID_PAYMENT_METHODS.has(rawMethod) ? rawMethod : 'other';
+            const payment_date = row.payment_date && /^\d{4}-\d{2}-\d{2}$/.test(row.payment_date.trim())
+              ? row.payment_date.trim()
+              : new Date().toISOString().split('T')[0];
+            if (
+              !memberId ||
+              !Number.isFinite(amount) ||
+              amount <= 0 ||
+              !Number.isInteger(for_month) ||
+              for_month < 1 ||
+              for_month > 12 ||
+              !Number.isInteger(for_year) ||
+              for_year < 2000 ||
+              for_year > 2100
+            ) {
+              return null;
+            }
+            return {
+              member_id: memberId,
+              amount,
+              for_month,
+              for_year,
+              method,
+              transaction_ref: row.transaction_ref ? row.transaction_ref.trim().slice(0, 100) : null,
+              payment_date,
+              recorded_by: user?.id ?? null,
+            };
+          })
+          .filter((r): r is NonNullable<typeof r> => Boolean(r));
+
+        if (resolvedRows.length === 0) {
+          throw new Error('কোনো বৈধ পেমেন্ট তথ্য পাওয়া যায়নি।');
         }
         const { error } = await supabase.from('payments').insert(resolvedRows as any);
         if (error) throw error;
@@ -228,19 +379,32 @@ const Finance = () => {
 
   // 6-month chart (income vs expense)
   const chart = useMemo(() => {
+    if (!isStaff && publicChart.length > 0) {
+      return publicChart.map((row) => {
+        const mNum = Number(row.month_key.split('-')[1] || 1);
+        return {
+          label: monthName(mNum).slice(0, 3),
+          income: row.income,
+          expense: row.expense,
+          balance: row.income - row.expense,
+        };
+      });
+    }
     const now = new Date();
     const buckets: Record<string, { income: number; expense: number }> = {};
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       buckets[`${d.getFullYear()}-${d.getMonth() + 1}`] = { income: 0, expense: 0 };
     }
-    payments.filter(p => p.status !== 'rejected').forEach((p) => {
-      const d = new Date(p.payment_date);
+    payments.filter(p => p.status === 'approved' || !p.status).forEach((p) => {
+      const d = parseDateSafe(p.payment_date);
+      if (!d) return;
       const k = `${d.getFullYear()}-${d.getMonth() + 1}`;
       if (buckets[k]) buckets[k].income += Number(p.amount);
     });
     expenses.forEach((e) => {
-      const d = new Date(e.expense_date);
+      const d = parseDateSafe(e.expense_date);
+      if (!d) return;
       const k = `${d.getFullYear()}-${d.getMonth() + 1}`;
       if (buckets[k]) buckets[k].expense += Number(e.amount);
     });
@@ -249,7 +413,7 @@ const Finance = () => {
       income: v.income, expense: v.expense,
       balance: v.income - v.expense,
     }));
-  }, [payments, expenses]);
+  }, [isStaff, publicChart, payments, expenses]);
 
   // 12-month trend for current report year (income, expense, cumulative balance)
   const yearTrend = useMemo(() => {
@@ -257,13 +421,13 @@ const Finance = () => {
       label: monthName(i + 1).slice(0, 3),
       income: 0, expense: 0, balance: 0, cumulative: 0,
     }));
-    payments.filter(p => p.status !== 'rejected').forEach((p) => {
-      const d = new Date(p.payment_date);
-      if (d.getFullYear() === reportYear) rows[d.getMonth()].income += Number(p.amount);
+    payments.filter(p => p.status === 'approved' || !p.status).forEach((p) => {
+      const d = parseDateSafe(p.payment_date);
+      if (d && d.getFullYear() === reportYear) rows[d.getMonth()].income += Number(p.amount);
     });
     expenses.forEach((e) => {
-      const d = new Date(e.expense_date);
-      if (d.getFullYear() === reportYear) rows[d.getMonth()].expense += Number(e.amount);
+      const d = parseDateSafe(e.expense_date);
+      if (d && d.getFullYear() === reportYear) rows[d.getMonth()].expense += Number(e.amount);
     });
     let cum = 0;
     rows.forEach((r) => { r.balance = r.income - r.expense; cum += r.balance; r.cumulative = cum; });
@@ -279,15 +443,15 @@ const Finance = () => {
       const cutoff = new Date(reportYear, m, 0); // last day of month
       for (const mem of activeMembers) {
         if (!mem.joined_date) continue;
-        const join = new Date(mem.joined_date);
-        if (isNaN(join.getTime())) continue;
+        const join = parseDateSafe(mem.joined_date);
+        if (!join) continue;
         if (join > cutoff) continue;
         // months expected from join to cutoff
         const months = (cutoff.getFullYear() - join.getFullYear()) * 12
           + (cutoff.getMonth() - join.getMonth()) + 1;
         const expected = months * Number(mem.monthly_rate || 0);
         const paid = payments
-          .filter((p) => p.member_id === mem.id && p.status !== 'rejected')
+          .filter((p) => p.member_id === mem.id && (p.status === 'approved' || !p.status))
           .filter((p) => {
             const py = p.for_year, pm = p.for_month;
             return py < reportYear || (py === reportYear && pm <= m);
@@ -304,7 +468,7 @@ const Finance = () => {
   const categoryBreakdown = useMemo(() => {
     const map = new Map<string, number>();
     expenses
-      .filter((e) => new Date(e.expense_date).getFullYear() === reportYear)
+      .filter((e) => parseDateSafe(e.expense_date)?.getFullYear() === reportYear)
       .forEach((e) => {
         const cat = (e.category || 'অন্যান্য').trim();
         map.set(cat, (map.get(cat) ?? 0) + Number(e.amount || 0));
@@ -321,7 +485,7 @@ const Finance = () => {
     };
     const map = new Map<string, number>();
     payments
-      .filter((p) => new Date(p.payment_date).getFullYear() === reportYear)
+      .filter((p) => (p.status === 'approved' || !p.status) && parseDateSafe(p.payment_date)?.getFullYear() === reportYear)
       .forEach((p) => {
         const k = labels[p.method] || p.method || 'অন্যান্য';
         map.set(k, (map.get(k) ?? 0) + Number(p.amount || 0));
@@ -337,7 +501,7 @@ const Finance = () => {
     (members as Member[]).forEach((m) => memberArea.set(m.id, (m.area || 'অজানা').trim() || 'অজানা'));
     const map = new Map<string, number>();
     payments
-      .filter((p) => p.for_year === reportYear)
+      .filter((p) => (p.status === 'approved' || !p.status) && p.for_year === reportYear)
       .forEach((p) => {
         const a = memberArea.get(p.member_id) || 'অজানা';
         map.set(a, (map.get(a) ?? 0) + Number(p.amount || 0));
@@ -426,7 +590,7 @@ const Finance = () => {
   const expenseByCategory = useMemo(() => {
     const map = new Map<string, number>();
     expenses
-      .filter((e) => new Date(e.expense_date).getFullYear() === reportYear)
+      .filter((e) => parseDateSafe(e.expense_date)?.getFullYear() === reportYear)
       .forEach((e) => {
         const k = (e.category && String(e.category).trim()) || 'অন্যান্য / Other';
         map.set(k, (map.get(k) ?? 0) + Number(e.amount));
@@ -438,12 +602,12 @@ const Finance = () => {
 
   // Net balance for selected year (income - expense filtered by payment_date / expense_date year)
   const yearIncome = useMemo(
-    () => payments.filter((p) => p.status !== 'rejected' && new Date(p.payment_date).getFullYear() === reportYear)
+    () => payments.filter((p) => (p.status === 'approved' || !p.status) && parseDateSafe(p.payment_date)?.getFullYear() === reportYear)
       .reduce((s, p) => s + Number(p.amount), 0),
     [payments, reportYear],
   );
   const yearExpense = useMemo(
-    () => expenses.filter((e) => new Date(e.expense_date).getFullYear() === reportYear)
+    () => expenses.filter((e) => parseDateSafe(e.expense_date)?.getFullYear() === reportYear)
       .reduce((s, e) => s + Number(e.amount), 0),
     [expenses, reportYear],
   );
@@ -459,19 +623,19 @@ const Finance = () => {
     [targets, reportYear, reportMonth],
   );
   const monthIncome = useMemo(
-    () => payments.filter((p) => p.status !== 'rejected' && p.for_year === reportYear && p.for_month === reportMonth)
+    () => payments.filter((p) => (p.status === 'approved' || !p.status) && p.for_year === reportYear && p.for_month === reportMonth)
       .reduce((s, p) => s + Number(p.amount), 0),
     [payments, reportYear, reportMonth],
   );
 
   const todayIncome = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    return payments.filter(p => (p.status === 'approved' || !p.status) && p.payment_date.startsWith(today)).reduce((s, p) => s + Number(p.amount), 0);
+    return payments.filter(p => (p.status === 'approved' || !p.status) && Boolean(p.payment_date?.startsWith(today))).reduce((s, p) => s + Number(p.amount), 0);
   }, [payments]);
 
   const todayExpense = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    return expenses.filter(e => e.expense_date.startsWith(today)).reduce((s, e) => s + Number(e.amount), 0);
+    return expenses.filter(e => Boolean(e.expense_date?.startsWith(today))).reduce((s, e) => s + Number(e.amount), 0);
   }, [expenses]);
 
   const targetAchievement = useMemo(() => {
@@ -721,13 +885,26 @@ const Finance = () => {
     e.preventDefault();
     if (!user || !selectedMemberId) return;
     const fd = new FormData(e.currentTarget);
-    const amountPerMonth = Number(fd.get('amount'));
-    const method = fd.get('method') as any;
-    const transaction_ref = fd.get('transaction_ref') as string;
-    const for_year = Number(fd.get('for_year') || currentYear);
+    const parsed = paymentSchema.safeParse({
+      member_id: selectedMemberId,
+      amount: fd.get('amount'),
+      for_year: fd.get('for_year') || currentYear,
+      for_month: selectedMonths[0] || 1,
+      method: fd.get('method'),
+      transaction_ref: (fd.get('transaction_ref') as string) || undefined,
+    });
+    if (!parsed.success) {
+      toast({ title: 'সঠিক তথ্য দিন', description: 'অনুগ্রহ করে পরিমাণ, মাধ্যম ও বছর সঠিকভাবে যাচাই করুন।', variant: 'destructive' });
+      return;
+    }
+
+    const amountPerMonth = parsed.data.amount;
+    const method = parsed.data.method;
+    const transaction_ref = parsed.data.transaction_ref || '';
+    const for_year = parsed.data.for_year;
     const payment_date = (fd.get('payment_date') as string) || new Date().toISOString().split('T')[0];
 
-    if (selectedMonths.length === 0) {
+    if (selectedMonths.length === 0 || selectedMonths.some(m => !Number.isInteger(m) || m < 1 || m > 12)) {
       toast({ title: 'মাস নির্বাচন করুন', variant: 'destructive' });
       return;
     }
@@ -843,7 +1020,7 @@ const Finance = () => {
       m.member_code, m.full_name, m.phone ?? '', m.joined_date,
       String(m.monthly_rate), String(m.totalPaid), String(m.dues), String(m.dueMonths),
     ]));
-    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const csv = '\uFEFF' + rows.map((r) => r.map((c) => sanitizeCsvCell(c)).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1328,23 +1505,25 @@ const Finance = () => {
                   </div>
                 </div>
 
-                <div className="card-gold rounded-2xl p-4 sm:p-6">
-                  <h3 className="font-display text-sm gold-text mb-4 flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4" /> রিসেন্ট অ্যাক্টিভিটি
-                  </h3>
-                  <div className="space-y-3">
-                    {auditLogs.slice(0, 5).map((log, i) => (
-                      <div key={i} className="flex gap-3 items-start text-[11px] border-l-2 border-primary/20 pl-3 py-0.5">
-                        <div className="flex-1">
-                          <p className="font-bangla leading-tight">{log.action}</p>
-                          <p className="text-muted-foreground mt-0.5">{new Date(log.created_at).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</p>
+                {isStaff && (
+                  <div className="card-gold rounded-2xl p-4 sm:p-6">
+                    <h3 className="font-display text-sm gold-text mb-4 flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" /> রিসেন্ট অ্যাক্টিভিটি
+                    </h3>
+                    <div className="space-y-3">
+                      {auditLogs.slice(0, 5).map((log, i) => (
+                        <div key={i} className="flex gap-3 items-start text-[11px] border-l-2 border-primary/20 pl-3 py-0.5">
+                          <div className="flex-1">
+                            <p className="font-bangla leading-tight">{log.action}</p>
+                            <p className="text-muted-foreground mt-0.5">{new Date(log.created_at).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    {auditLogs.length === 0 && <p className="text-[11px] text-muted-foreground text-center py-4 font-bangla">কোনো লগ নেই</p>}
+                      ))}
+                      {auditLogs.length === 0 && <p className="text-[11px] text-muted-foreground text-center py-4 font-bangla">কোনো লগ নেই</p>}
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-full mt-4 text-[11px] font-bangla h-7" onClick={() => setTab('audit')}>সব অডিট লগ →</Button>
                   </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-4 text-[11px] font-bangla h-7" onClick={() => setTab('audit')}>সব অডিট লগ →</Button>
-                </div>
+                )}
               </div>
             </div>
 
@@ -1690,8 +1869,13 @@ const Finance = () => {
                               variant="outline" 
                               className="h-8 text-[11px] border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
                               onClick={() => {
+                                const intlPhone = formatBangladeshIntlPhone(m.phone || '');
+                                if (!intlPhone) {
+                                  toast({ title: 'ফোন নম্বর নেই', variant: 'destructive' });
+                                  return;
+                                }
                                 const msg = `আসসালামু আলাইকুম ${m.full_name}, চন্দনাইশ দরবার শরীফ কমিটি ফান্ডে আপনার ${toBanglaNumber(m.dueMonths)} মাসের চাঁদা (৳${toBanglaNumber(m.dues.toFixed(0))}) বকেয়া আছে। অনুগ্রহ করে দ্রুত পরিশোধ করার অনুরোধ রইল।`;
-                                window.open(`https://wa.me/88${m.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`);
+                                window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                               }}
                             >
                               রিমাইন্ডার
@@ -1763,8 +1947,13 @@ const Finance = () => {
                           variant="outline" 
                           className="h-8 text-[10px] border-emerald-500/30 text-emerald-600"
                           onClick={() => {
+                            const intlPhone = formatBangladeshIntlPhone(m.phone || '');
+                            if (!intlPhone) {
+                              toast({ title: 'ফোন নম্বর নেই', variant: 'destructive' });
+                              return;
+                            }
                             const msg = `আসসালামু আলাইকুম ${m.full_name}, চন্দনাইশ দরবার শরীফ কমিটি ফান্ডে আপনার ${toBanglaNumber(m.dueMonths)} মাসের চাঁদা (৳${toBanglaNumber(m.dues.toFixed(0))}) বকেয়া আছে। অনুগ্রহ করে দ্রুত পরিশোধ করার অনুরোধ রইল।`;
-                            window.open(`https://wa.me/88${m.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`);
+                            window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
                           }}
                         >
                           রিমাইন্ডার (WhatsApp)

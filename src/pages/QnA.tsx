@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { sendTelegramNotification, escapeTelegramHtml } from "@/utils/telegram";
+import { sendStructuredTelegramNotification } from "@/utils/telegram";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -174,27 +174,15 @@ const QnA = () => {
 
     setLastTrackingId(trackingNumber);
 
-    // Send Telegram Notification
-    const isComplaint = type === "complaint";
-    const icon = isComplaint ? "🔴" : "🔵";
-    const titleText = isComplaint ? "নতুন অভিযোগ জমা হয়েছে!" : "নতুন প্রশ্ন জমা হয়েছে!";
-
-    const textMessage = `
-${icon} *${titleText}*
-━━━━━━━━━━━━━━━━━━
-🆔 *ট্র্যাকিং নম্বর:* ${trackingNumber}
-👤 *নাম:* ${escapeTelegramHtml(trimmedName)}
-📱 *মোবাইল:* ${escapeTelegramHtml(form.phone.trim() || "দেওয়া হয়নি")}
-📌 *বিষয়:* ${escapeTelegramHtml(form.subject)}
-📝 *বিস্তারিত:*
-${escapeTelegramHtml(trimmedDetails)}
-━━━━━━━━━━━━━━━━━━
-অনুগ্রহ করে প্যানেল থেকে ব্যবস্থা নিন।
-    `;
-
-    // Send Telegram Notification in background to avoid blocking the UI
-    sendTelegramNotification(textMessage)
-      .catch((err) => console.error("Failed to send Telegram notification from QnA page:", err));
+    // Send Telegram Notification in background via serverless proxy
+    sendStructuredTelegramNotification({
+      type: type === "complaint" ? "complaint" : "question",
+      trackingNumber,
+      name: trimmedName,
+      phone: form.phone.trim() || undefined,
+      subject: form.subject,
+      details: trimmedDetails,
+    }).catch((err) => console.error("Failed to send Telegram notification from QnA page:", err));
 
     setForm({ ...initialForm });
     setSubmitting(false);
@@ -213,6 +201,15 @@ ${escapeTelegramHtml(trimmedDetails)}
       return;
     }
 
+    if (!/^[0-9a-f]{8,32}$/.test(cleanQuery)) {
+      toast({
+        title: "সঠিক ট্র্যাকিং নম্বর দিন",
+        description: "ট্র্যাকিং নম্বরে কমপক্ষে ৮টি বৈধ অক্ষর (0-9, A-F) থাকতে হবে।",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSearchLoading(true);
     setSearchAttempted(true);
     setSearchResult(null);
@@ -220,32 +217,17 @@ ${escapeTelegramHtml(trimmedDetails)}
     try {
       let foundRecord: any = null;
 
-      // 1. Try RPC get_submission_by_tracking first
       const { data: rpcData, error: rpcError } = await supabase.rpc("get_submission_by_tracking", {
         p_tracking: cleanQuery,
       });
 
       if (!rpcError && rpcData && rpcData.length > 0) {
         foundRecord = rpcData[0];
-      } else {
-        // 2. Fallback query if RPC didn't return a record (filtered server-side to prevent data leak)
-        const { data: fallbackData } = await supabase
-          .from("submissions")
-          .select("id, type, name, phone, subject, details, reply, replied_at, created_at")
-          .or(`id.eq.${cleanQuery},id.ilike.${cleanQuery}%`)
-          .limit(1)
-          .maybeSingle();
-
-        if (fallbackData) {
-          foundRecord = fallbackData;
-        }
+      } else if (rpcError) {
+        console.warn("RPC tracking search note:", rpcError);
       }
 
       setSearchResult(foundRecord);
-
-      if (!foundRecord && rpcError) {
-        console.warn("RPC tracking search note:", rpcError);
-      }
     } catch (err) {
       console.error("QnA search error:", err);
       toast({

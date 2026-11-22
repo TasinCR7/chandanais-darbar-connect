@@ -667,6 +667,18 @@ export type Database = {
         }
         Returns: unknown
       }
+      validate_committee_session: {
+        Args: {
+          p_session_token: string
+        }
+        Returns: boolean
+      }
+      logout_committee_session: {
+        Args: {
+          p_session_token: string
+        }
+        Returns: boolean
+      }
       cast_committee_vote: {
         Args: {
           p_session_token: string
@@ -703,8 +715,23 @@ export type Database = {
           id: string
           member_code: string
           full_name: string
-          phone: string
-          area?: string | null
+          phone: string | null
+          area: string | null
+          joined_date: string
+          monthly_rate: number
+          is_active: boolean
+        }[]
+      }
+      get_member_by_id: {
+        Args: {
+          p_member_id: string
+        }
+        Returns: {
+          id: string
+          member_code: string
+          full_name: string
+          phone: string | null
+          area: string | null
           joined_date: string
           monthly_rate: number
           is_active: boolean

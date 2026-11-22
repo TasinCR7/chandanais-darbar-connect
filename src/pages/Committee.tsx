@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import PremiumLoader from "@/components/PremiumLoader";
+import { sanitizeSafeUrl } from "@/utils/security";
 
 interface CommitteeMember {
   id: string;
@@ -77,11 +78,11 @@ const Committee = () => {
                 >
                   {/* Avatar */}
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gold/30 bg-muted relative">
-                    {member.image_url && imageStatus[member.id] !== "error" ? (
+                    {sanitizeSafeUrl(member.image_url, { allowRelative: true }) && imageStatus[member.id] !== "error" ? (
                       <>
                         <div className={`absolute inset-0 bg-gold/20 animate-pulse transition-opacity duration-300 ${imageStatus[member.id] === 'loaded' ? 'opacity-0 z-0' : 'opacity-100 z-10'}`} />
                         <img
-                          src={member.image_url}
+                          src={sanitizeSafeUrl(member.image_url, { allowRelative: true })}
                           alt={member.name}
                           loading="lazy"
                           decoding="async"
@@ -107,9 +108,9 @@ const Committee = () => {
                     {member.designation}
                   </p>
 
-                  {member.phone && (
+                  {member.phone && sanitizeSafeUrl(`tel:${member.phone.replace(/[^+\d]/g, "")}`, { allowTel: true }) && (
                     <a
-                      href={`tel:${member.phone}`}
+                      href={sanitizeSafeUrl(`tel:${member.phone.replace(/[^+\d]/g, "")}`, { allowTel: true })}
                       className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-gold bg-gold/10 hover:bg-gold/20 border border-gold/20 px-3 py-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] w-full mt-2"
                     >
                       <Phone size={14} />

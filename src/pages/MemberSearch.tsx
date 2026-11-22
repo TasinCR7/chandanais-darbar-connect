@@ -296,7 +296,12 @@ const MemberSearch = () => {
                       <Printer className="h-4 w-4 mr-1" /> প্রিন্ট
                     </Button>
                     <Button asChild size="sm" variant="outline" className="font-bangla">
-                      <Link to={`/member/${member.id}`}><User className="h-4 w-4 mr-1" /> প্রোফাইল</Link>
+                      <Link
+                        to={`/member/${member.id}?code=${encodeURIComponent(member.member_code)}`}
+                        state={{ member }}
+                      >
+                        <User className="h-4 w-4 mr-1" /> প্রোফাইল
+                      </Link>
                     </Button>
                     <Button onClick={handleSelfTest} size="sm" variant="ghost" className="font-bangla">
                       <FlaskConical className="h-4 w-4 mr-1" /> টেস্ট

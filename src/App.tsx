@@ -10,6 +10,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import PremiumLoader from "./components/PremiumLoader";
 import ScrollToTop from "./components/ScrollToTop";
+import WelcomePopupBanner from "./components/WelcomePopupBanner";
 import { AuthProvider } from "@/hooks/useAuth";
 import RouteProgressBar from "./components/RouteProgressBar";
 
@@ -55,6 +56,7 @@ const AppContent = () => {
   return (
     <Layout>
       <RouteProgressBar />
+      <WelcomePopupBanner />
       <Suspense fallback={<PremiumLoader />}>
         <MaintenanceGuard>
           <Routes>
