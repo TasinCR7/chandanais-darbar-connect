@@ -915,6 +915,15 @@ CREATE POLICY "Admins can manage login attempts" ON public.committee_login_attem
 DROP POLICY IF EXISTS "Admins can manage sessions" ON public.committee_sessions;
 CREATE POLICY "Admins can manage sessions" ON public.committee_sessions FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
 
+DROP POLICY IF EXISTS "Staff manage votes" ON public.votes;
+CREATE POLICY "Staff manage votes" ON public.votes FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+DROP POLICY IF EXISTS "Staff manage committee_comments" ON public.committee_comments;
+CREATE POLICY "Staff manage committee_comments" ON public.committee_comments FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+DROP POLICY IF EXISTS "Staff manage vote_topics" ON public.vote_topics;
+CREATE POLICY "Staff manage vote_topics" ON public.vote_topics FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
 -- submissions
 DROP POLICY IF EXISTS "Allow admins to manage submissions" ON public.submissions;
 DROP POLICY IF EXISTS "Anyone can insert submissions" ON public.submissions;
@@ -1000,3 +1009,18 @@ GRANT EXECUTE ON FUNCTION public.verify_committee_member(text[], text) TO anon, 
 GRANT EXECUTE ON FUNCTION public.get_committee_dashboard_data(uuid) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.cast_committee_vote(uuid, uuid, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.add_committee_comment(uuid, text) TO anon, authenticated;
+
+-- Fix trigger function search_path and lock down unused/internal helper RPCs
+DO $$
+BEGIN
+    IF to_regprocedure('public.handle_auto_assign_admin_role()') IS NOT NULL THEN
+        EXECUTE 'ALTER FUNCTION public.handle_auto_assign_admin_role() SET search_path = public, auth';
+        EXECUTE 'REVOKE ALL ON FUNCTION public.handle_auto_assign_admin_role() FROM PUBLIC, anon, authenticated';
+    END IF;
+    IF to_regprocedure('public.rls_auto_enable()') IS NOT NULL THEN
+        EXECUTE 'REVOKE ALL ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated';
+    END IF;
+    IF to_regprocedure('public.get_submission_by_id(uuid)') IS NOT NULL THEN
+        EXECUTE 'REVOKE ALL ON FUNCTION public.get_submission_by_id(uuid) FROM PUBLIC, anon, authenticated';
+    END IF;
+END $$;
