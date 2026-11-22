@@ -1,6 +1,73 @@
--- Comprehensive Security, Privacy & RPC Hardening Migration
+-- Comprehensive Security, Schema Parity, Privacy & RPC Hardening Migration
 
--- 0. Phone normalization helper (returns last 11 digits starting with 01 when possible)
+-- 0. Ensure missing columns/tables exist safely before creating functions/policies
+ALTER TABLE public.payments
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'approved';
+
+CREATE TABLE IF NOT EXISTS public.committee_notices (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    title text NOT NULL,
+    message text NOT NULL,
+    type text CHECK (type IN ('sms', 'whatsapp', 'internal')),
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    created_by uuid REFERENCES auth.users(id)
+);
+
+CREATE TABLE IF NOT EXISTS public.committee_member_auth (
+    member_id uuid REFERENCES public.committee_members(id) ON DELETE CASCADE PRIMARY KEY,
+    pin_hash text NOT NULL
+);
+
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'committee_members'
+          AND column_name = 'pin_hash'
+    ) THEN
+        INSERT INTO public.committee_member_auth (member_id, pin_hash)
+        SELECT id, pin_hash
+        FROM public.committee_members
+        WHERE pin_hash IS NOT NULL AND length(trim(pin_hash)) > 0
+        ON CONFLICT (member_id) DO UPDATE SET pin_hash = EXCLUDED.pin_hash;
+
+        ALTER TABLE public.committee_members DROP COLUMN IF EXISTS pin_hash;
+    END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS public.committee_login_attempts (
+    phone text PRIMARY KEY,
+    attempts integer DEFAULT 0,
+    locked_until timestamp with time zone NULL,
+    last_attempt_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.committee_sessions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    member_id uuid REFERENCES public.committee_members(id) ON DELETE CASCADE,
+    created_at timestamp with time zone DEFAULT now(),
+    expires_at timestamp with time zone DEFAULT now() + interval '30 days'
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS votes_topic_user_unique_idx
+  ON public.votes (topic_id, user_id);
+
+CREATE OR REPLACE FUNCTION public.has_pin(m public.committee_members)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.committee_member_auth WHERE member_id = m.id
+  );
+$$;
+
+-- 1. Phone normalization helper (returns standard 11-digit 01XXXXXXXXX when Bangladeshi mobile)
 CREATE OR REPLACE FUNCTION public.normalize_bd_phone(p_phone text)
 RETURNS text
 LANGUAGE sql
@@ -15,7 +82,7 @@ AS $$
   END;
 $$;
 
--- 1. Harden tracking lookup: disallow LIKE wildcards, require >= 8 hex chars, limit 1, mask PII for non-staff
+-- 2. Harden tracking lookup: disallow LIKE wildcards, require >= 8 hex chars, limit 1, mask PII for non-staff
 CREATE OR REPLACE FUNCTION public.get_submission_by_tracking(p_tracking text)
 RETURNS TABLE (
     id uuid,
@@ -125,7 +192,7 @@ BEGIN
 END;
 $$;
 
--- 2. Harden member lookup (AND logic when both code & phone provided, include area, mask phone for non-staff)
+-- 3. Harden member lookup (AND logic when both code & phone provided, include area, mask phone for non-staff)
 DROP FUNCTION IF EXISTS public.search_member(text, text);
 
 CREATE OR REPLACE FUNCTION public.search_member(p_code text DEFAULT NULL, p_phone text DEFAULT NULL)
@@ -180,7 +247,6 @@ BEGIN
 END;
 $$;
 
--- Safe single-member public lookup by UUID for /member/:id profile page
 CREATE OR REPLACE FUNCTION public.get_member_by_id(p_member_id uuid)
 RETURNS TABLE (
     id uuid,
@@ -224,7 +290,7 @@ BEGIN
 END;
 $$;
 
--- 3. Harden online member payment submission with strict validation & default date
+-- 4. Harden online member payment submission with strict validation & default date
 DROP FUNCTION IF EXISTS public.submit_member_payment(uuid, numeric, int, int, date, text, text, text);
 
 CREATE OR REPLACE FUNCTION public.submit_member_payment(
@@ -299,7 +365,7 @@ BEGIN
 END;
 $$;
 
--- 4. Count ONLY approved payments in public transparency endpoints
+-- 5. Count ONLY approved payments in public transparency endpoints
 CREATE OR REPLACE FUNCTION public.get_transparency_stats()
 RETURNS TABLE (
     total_income numeric,
@@ -408,7 +474,7 @@ BEGIN
 END;
 $$;
 
--- 5. Committee session validation, logout, and expired-lockout reset fix
+-- 6. Committee auth, session validation, logout, dashboard data & expired-lockout reset fix
 CREATE OR REPLACE FUNCTION public.validate_committee_session(p_session_token uuid)
 RETURNS boolean
 LANGUAGE sql
@@ -439,6 +505,8 @@ BEGIN
   RETURN FOUND;
 END;
 $$;
+
+DROP FUNCTION IF EXISTS public.verify_committee_member(text[], text);
 
 CREATE OR REPLACE FUNCTION public.verify_committee_member(
     p_phone_variants text[],
@@ -489,7 +557,6 @@ BEGIN
             RETURN QUERY SELECT NULL::uuid, NULL::text, NULL::text, FALSE, FALSE, v_lockout_seconds, NULL::uuid;
             RETURN;
         ELSE
-            -- Expired lockout must reset attempts back to zero
             DELETE FROM public.committee_login_attempts WHERE phone = v_phone;
         END IF;
     END IF;
@@ -558,51 +625,367 @@ BEGIN
 END;
 $$;
 
--- 6. Tighten legacy permissive RLS policies
+CREATE OR REPLACE FUNCTION public.get_committee_dashboard_data(
+    p_session_token uuid
+)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_member_id uuid;
+    v_member_name text;
+    v_member_designation text;
+    v_member_json json;
+    v_topics_json json;
+    v_votes_json json;
+    v_comments_json json;
+    v_notices_json json;
+    v_contributions_json json;
+BEGIN
+    SELECT member_id INTO v_member_id
+    FROM public.committee_sessions
+    WHERE id = p_session_token AND expires_at > now();
 
--- donations: disallow public inserting pre-verified rows or invalid negative amounts
-DROP POLICY IF EXISTS "Public insert donations" ON public.donations;
-DROP POLICY IF EXISTS "Allow public insert on donations" ON public.donations;
-CREATE POLICY "Public insert donations" ON public.donations
-    FOR INSERT TO public
-    WITH CHECK (
-        (status IS NULL OR status = 'pending')
-        AND amount > 0
-        AND amount <= 10000000
-        AND length(trim(donor_name)) BETWEEN 1 AND 120
-        AND length(trim(donor_phone)) BETWEEN 6 AND 30
-        AND length(trim(transaction_id)) BETWEEN 1 AND 120
+    IF v_member_id IS NULL THEN
+        RETURN json_build_object('error', 'Invalid or expired session');
+    END IF;
+
+    SELECT name, designation INTO v_member_name, v_member_designation
+    FROM public.committee_members
+    WHERE id = v_member_id AND is_active = true;
+
+    IF v_member_name IS NULL THEN
+        RETURN json_build_object('error', 'Member is inactive or not found');
+    END IF;
+
+    v_member_json := json_build_object(
+        'id', v_member_id,
+        'name', v_member_name,
+        'designation', v_member_designation
     );
 
--- submissions: disallow public injecting replies/read flags directly
+    SELECT coalesce(json_agg(t), '[]'::json) INTO v_topics_json
+    FROM (
+        SELECT id, created_at, title, description, type, is_active
+        FROM public.vote_topics
+        WHERE is_active = true
+        ORDER BY created_at DESC
+    ) t;
+
+    SELECT coalesce(json_agg(v), '[]'::json) INTO v_votes_json
+    FROM (
+        SELECT id, created_at, topic_id, user_id, vote
+        FROM public.votes
+    ) v;
+
+    SELECT coalesce(json_agg(c), '[]'::json) INTO v_comments_json
+    FROM (
+        SELECT id, created_at, user_id, message
+        FROM public.committee_comments
+        ORDER BY created_at DESC
+    ) c;
+
+    SELECT coalesce(json_agg(n), '[]'::json) INTO v_notices_json
+    FROM (
+        SELECT id, created_at, title, message, type, is_active
+        FROM public.committee_notices
+        WHERE is_active = true
+        ORDER BY created_at DESC
+    ) n;
+
+    SELECT coalesce(json_agg(co), '[]'::json) INTO v_contributions_json
+    FROM (
+        SELECT id, created_at, name, amount, target_month, note, area, payment_method, transaction_id
+        FROM public.committee_contributions
+        WHERE name = v_member_name
+        ORDER BY created_at DESC
+    ) co;
+
+    RETURN json_build_object(
+        'member', v_member_json,
+        'topics', v_topics_json,
+        'votes', v_votes_json,
+        'comments', v_comments_json,
+        'notices', v_notices_json,
+        'contributions', v_contributions_json
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.cast_committee_vote(
+    p_session_token uuid,
+    p_topic_id uuid,
+    p_vote text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_member_id uuid;
+    v_vote text := trim(coalesce(p_vote, ''));
+BEGIN
+    SELECT s.member_id INTO v_member_id
+    FROM public.committee_sessions s
+    JOIN public.committee_members m ON m.id = s.member_id
+    WHERE s.id = p_session_token AND s.expires_at > now() AND m.is_active = true;
+
+    IF v_member_id IS NULL THEN
+        RAISE EXCEPTION 'Invalid or expired session';
+    END IF;
+
+    IF length(v_vote) < 1 OR length(v_vote) > 100 THEN
+        RAISE EXCEPTION 'Invalid vote option';
+    END IF;
+
+    INSERT INTO public.votes (topic_id, user_id, vote)
+    VALUES (p_topic_id, v_member_id, v_vote)
+    ON CONFLICT (topic_id, user_id)
+    DO UPDATE SET vote = EXCLUDED.vote;
+
+    RETURN TRUE;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.add_committee_comment(
+    p_session_token uuid,
+    p_message text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_member_id uuid;
+    v_msg text := trim(coalesce(p_message, ''));
+BEGIN
+    SELECT s.member_id INTO v_member_id
+    FROM public.committee_sessions s
+    JOIN public.committee_members m ON m.id = s.member_id
+    WHERE s.id = p_session_token AND s.expires_at > now() AND m.is_active = true;
+
+    IF v_member_id IS NULL THEN
+        RAISE EXCEPTION 'Invalid or expired session';
+    END IF;
+
+    IF length(v_msg) < 1 OR length(v_msg) > 1500 THEN
+        RAISE EXCEPTION 'Invalid comment length';
+    END IF;
+
+    INSERT INTO public.committee_comments (user_id, message)
+    VALUES (v_member_id, v_msg);
+
+    RETURN TRUE;
+END;
+$$;
+
+-- 7. Remove legacy open policies and apply strict RLS everywhere
+
+-- Enable RLS across tables
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.monthly_targets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.finances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.donations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.gallery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_contributions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_notices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_member_auth ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_login_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vote_topics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.votes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.committee_comments ENABLE ROW LEVEL SECURITY;
+
+-- app_settings
+DROP POLICY IF EXISTS "admin manage settings" ON public.app_settings;
+DROP POLICY IF EXISTS "anyone reads settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Public read app_settings" ON public.app_settings;
+DROP POLICY IF EXISTS "Staff manage app_settings" ON public.app_settings;
+CREATE POLICY "Public read app_settings" ON public.app_settings FOR SELECT TO public USING (true);
+CREATE POLICY "Staff manage app_settings" ON public.app_settings FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- audit_logs
+DROP POLICY IF EXISTS "anyone can read audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Staff manage audit_logs" ON public.audit_logs;
+CREATE POLICY "Staff manage audit_logs" ON public.audit_logs FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- members
+DROP POLICY IF EXISTS "admin manage members" ON public.members;
+DROP POLICY IF EXISTS "anyone reads members" ON public.members;
+DROP POLICY IF EXISTS "Staff manage members" ON public.members;
+CREATE POLICY "Staff manage members" ON public.members FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- payments
+DROP POLICY IF EXISTS "admin manage payments" ON public.payments;
+DROP POLICY IF EXISTS "anyone reads payments" ON public.payments;
+DROP POLICY IF EXISTS "Staff manage payments" ON public.payments;
+CREATE POLICY "Staff manage payments" ON public.payments FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- expenses
+DROP POLICY IF EXISTS "admin manage expenses" ON public.expenses;
+DROP POLICY IF EXISTS "anyone reads expenses" ON public.expenses;
+DROP POLICY IF EXISTS "Staff manage expenses" ON public.expenses;
+CREATE POLICY "Staff manage expenses" ON public.expenses FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- monthly_targets
+DROP POLICY IF EXISTS "admin manage targets" ON public.monthly_targets;
+DROP POLICY IF EXISTS "anyone reads targets" ON public.monthly_targets;
+DROP POLICY IF EXISTS "Staff manage monthly_targets" ON public.monthly_targets;
+CREATE POLICY "Staff manage monthly_targets" ON public.monthly_targets FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- finances
+DROP POLICY IF EXISTS "Enable all access for authenticated users" ON public.finances;
+DROP POLICY IF EXISTS "Staff manage finances" ON public.finances;
+CREATE POLICY "Staff manage finances" ON public.finances FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- donations
+DROP POLICY IF EXISTS "Allow logged in admins to access donations" ON public.donations;
+DROP POLICY IF EXISTS "Allow public insert on donations" ON public.donations;
+DROP POLICY IF EXISTS "Public insert donations" ON public.donations;
+DROP POLICY IF EXISTS "Staff manage donations" ON public.donations;
+CREATE POLICY "Staff manage donations" ON public.donations FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+CREATE POLICY "Public insert donations" ON public.donations FOR INSERT TO public WITH CHECK (
+    (status IS NULL OR status = 'pending')
+    AND amount > 0
+    AND amount <= 10000000
+    AND length(trim(donor_name)) BETWEEN 1 AND 120
+    AND length(trim(donor_phone)) BETWEEN 6 AND 30
+    AND length(trim(transaction_id)) BETWEEN 1 AND 120
+);
+
+-- gallery
+DROP POLICY IF EXISTS "Allow admin all access on gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Allow admins to manage gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Allow public insert gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Allow public read on gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Allow public select gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Anyone can view gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Authenticated users can manage gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Public read gallery" ON public.gallery;
+DROP POLICY IF EXISTS "Staff manage gallery" ON public.gallery;
+CREATE POLICY "Public read gallery" ON public.gallery FOR SELECT TO public USING (true);
+CREATE POLICY "Staff manage gallery" ON public.gallery FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- notices
+DROP POLICY IF EXISTS "Allow admins to manage notices" ON public.notices;
+DROP POLICY IF EXISTS "Allow public read on active notices" ON public.notices;
+DROP POLICY IF EXISTS "Public read notices" ON public.notices;
+DROP POLICY IF EXISTS "Staff manage notices" ON public.notices;
+CREATE POLICY "Public read active notices" ON public.notices FOR SELECT TO public USING (is_active = true OR public.is_staff(auth.uid()));
+CREATE POLICY "Staff manage notices" ON public.notices FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- committee_members
+DROP POLICY IF EXISTS "Admins can manage committee members" ON public.committee_members;
+DROP POLICY IF EXISTS "Anyone can read active committee members" ON public.committee_members;
+DROP POLICY IF EXISTS "Public read committee_members" ON public.committee_members;
+DROP POLICY IF EXISTS "Staff manage committee_members" ON public.committee_members;
+CREATE POLICY "Public read committee_members" ON public.committee_members FOR SELECT TO public USING (is_active = true OR public.is_staff(auth.uid()));
+CREATE POLICY "Staff manage committee_members" ON public.committee_members FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- committee_contributions & private committee tables
+DROP POLICY IF EXISTS "Anyone can read committee contributions" ON public.committee_contributions;
+DROP POLICY IF EXISTS "Authenticated users can insert contributions" ON public.committee_contributions;
+DROP POLICY IF EXISTS "Admins can manage committee contributions" ON public.committee_contributions;
+DROP POLICY IF EXISTS "Staff manage committee_contributions" ON public.committee_contributions;
+CREATE POLICY "Staff manage committee_contributions" ON public.committee_contributions FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage committee notices" ON public.committee_notices;
+DROP POLICY IF EXISTS "Committee members can view active notices" ON public.committee_notices;
+DROP POLICY IF EXISTS "Staff manage committee_notices" ON public.committee_notices;
+CREATE POLICY "Staff manage committee_notices" ON public.committee_notices FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage auth entries" ON public.committee_member_auth;
+CREATE POLICY "Admins can manage auth entries" ON public.committee_member_auth FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage login attempts" ON public.committee_login_attempts;
+CREATE POLICY "Admins can manage login attempts" ON public.committee_login_attempts FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage sessions" ON public.committee_sessions;
+CREATE POLICY "Admins can manage sessions" ON public.committee_sessions FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+
+-- submissions
+DROP POLICY IF EXISTS "Allow admins to manage submissions" ON public.submissions;
 DROP POLICY IF EXISTS "Anyone can insert submissions" ON public.submissions;
 DROP POLICY IF EXISTS "Allow public insert on submissions" ON public.submissions;
-CREATE POLICY "Anyone can insert submissions" ON public.submissions
-    FOR INSERT TO public
-    WITH CHECK (
-        type IN ('doa', 'question', 'complaint')
-        AND (is_read IS NULL OR is_read = false)
-        AND reply IS NULL
-        AND replied_at IS NULL
-        AND length(trim(name)) BETWEEN 1 AND 120
-        AND length(trim(subject)) BETWEEN 1 AND 250
-        AND length(trim(details)) BETWEEN 1 AND 3000
-    );
+CREATE POLICY "Staff manage submissions" ON public.submissions FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()));
+CREATE POLICY "Anyone can insert submissions" ON public.submissions FOR INSERT TO public WITH CHECK (
+    type IN ('doa', 'question', 'complaint')
+    AND (is_read IS NULL OR is_read = false)
+    AND reply IS NULL
+    AND replied_at IS NULL
+    AND length(trim(name)) BETWEEN 1 AND 120
+    AND length(trim(subject)) BETWEEN 1 AND 250
+    AND length(trim(details)) BETWEEN 1 AND 3000
+);
 
--- committee_members: public reads only active members
-DROP POLICY IF EXISTS "Public read committee_members" ON public.committee_members;
-CREATE POLICY "Public read committee_members" ON public.committee_members
-    FOR SELECT TO public
-    USING (is_active = true OR public.is_staff(auth.uid()));
-
--- user_roles: users see only their own roles (or staff/admin)
+-- user_roles
 DROP POLICY IF EXISTS "Allow authenticated users to read roles" ON public.user_roles;
 DROP POLICY IF EXISTS "Users can read own roles" ON public.user_roles;
-CREATE POLICY "Users can read own roles" ON public.user_roles
-    FOR SELECT TO authenticated
-    USING (auth.uid() = user_id OR public.is_staff(auth.uid()));
+CREATE POLICY "Users can read own roles" ON public.user_roles FOR SELECT TO authenticated USING (auth.uid() = user_id OR public.is_staff(auth.uid()));
 
--- Explicit grants for anon/authenticated clients on public RPCs
+-- Unused template tables: revoke wide-open public/anon policies so sensitive data is never exposed
+DO $$
+DECLARE
+    tbl text;
+BEGIN
+    FOREACH tbl IN ARRAY ARRAY[
+        'vault', 'events', 'polls', 'poll_options', 'tasks',
+        'notifications', 'land_records', 'chanda_members', 'chanda_payments',
+        'chanda_expenses', 'member_dues_adjustments'
+    ]
+    LOOP
+        IF to_regclass('public.' || tbl) IS NOT NULL THEN
+            EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Allow public insert %s" ON public.%I', tbl, tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Allow public select %s" ON public.%I', tbl, tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Allow anon insert %s" ON public.%I', tbl, tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Allow authenticated manage %s" ON public.%I', tbl, tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Allow public read %s" ON public.%I', tbl, tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Enable all access for admins" ON public.%I', tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Enable read access for all users" ON public.%I', tbl);
+            EXECUTE format('DROP POLICY IF EXISTS "Staff manage %s" ON public.%I', tbl, tbl);
+            EXECUTE format(
+                'CREATE POLICY "Staff manage %s" ON public.%I FOR ALL TO authenticated USING (public.is_staff(auth.uid())) WITH CHECK (public.is_staff(auth.uid()))',
+                tbl, tbl
+            );
+        END IF;
+    END LOOP;
+END $$;
+
+-- Lock down gallery storage bucket (public read only, staff-only upload/delete)
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+    DROP POLICY IF EXISTS "Public Upload" ON storage.objects;
+    DROP POLICY IF EXISTS "Public Read Gallery Objects" ON storage.objects;
+    DROP POLICY IF EXISTS "Staff Manage Gallery Objects" ON storage.objects;
+
+    CREATE POLICY "Public Read Gallery Objects" ON storage.objects
+        FOR SELECT TO public
+        USING (bucket_id = 'gallery');
+
+    CREATE POLICY "Staff Manage Gallery Objects" ON storage.objects
+        FOR ALL TO authenticated
+        USING (bucket_id = 'gallery' AND public.is_staff(auth.uid()))
+        WITH CHECK (bucket_id = 'gallery' AND public.is_staff(auth.uid()));
+EXCEPTION
+    WHEN insufficient_privilege THEN
+        RAISE NOTICE 'Insufficient privilege to alter storage.objects policies; update via Storage UI if needed.';
+END $$;
+
+-- Explicit RPC execute grants
 GRANT EXECUTE ON FUNCTION public.get_submission_by_tracking(text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.insert_submission(text, text, text, text, text, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.search_member(text, text) TO anon, authenticated;
@@ -614,3 +997,6 @@ GRANT EXECUTE ON FUNCTION public.get_recent_payments() TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.validate_committee_session(uuid) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.logout_committee_session(uuid) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.verify_committee_member(text[], text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_committee_dashboard_data(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.cast_committee_vote(uuid, uuid, text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.add_committee_comment(uuid, text) TO anon, authenticated;
