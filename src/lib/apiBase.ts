@@ -13,7 +13,7 @@ export function getApiBase(): string {
       (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()
     );
     if (isCapacitorNative || protocol === "capacitor:" || protocol === "file:") {
-      return "https://chandanaish-darbar.com";
+      return "https://www.chandanaishdarbarsharif.com";
     }
   }
 

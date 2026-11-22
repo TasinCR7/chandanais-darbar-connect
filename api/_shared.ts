@@ -23,8 +23,8 @@ export class PayloadTooLargeError extends Error {
 }
 
 const EXACT_ALLOWED_ORIGINS = new Set([
-  "https://chandanaish-darbar.com",
-  "https://www.chandanaish-darbar.com",
+  "https://www.chandanaishdarbarsharif.com",
+  "https://chandanaishdarbarsharif.com",
   "https://chandanais-darbar-connect.vercel.app",
   "https://localhost",
   "http://localhost",
