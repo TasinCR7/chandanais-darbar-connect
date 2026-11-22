@@ -88,37 +88,55 @@ export async function handleChat(
     { role: "user" as const, content: userMessage },
   ];
 
-  try {
-    const upstream = await fetch(GROQ_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages,
-        temperature: 0.7,
-        max_tokens: 800,
-      }),
-    });
+  const preferredModel = getEnv(env, "GROQ_MODEL");
+  const candidateModels = Array.from(
+    new Set(
+      [
+        preferredModel,
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.8-27b",
+        "llama-3.1-8b-instant",
+      ].filter(Boolean)
+    )
+  );
 
-    if (!upstream.ok) {
-      sendJson(res, 502, {
-        error: "Upstream AI error",
-        reply: "দুঃখিত, আমি আপনার প্রশ্নের উত্তর দিতে পারছি না।",
+  try {
+    let reply = "";
+    let lastStatus = 502;
+
+    for (const model of candidateModels) {
+      const upstream = await fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.7,
+          max_tokens: 800,
+        }),
       });
-      return;
+
+      lastStatus = upstream.status;
+
+      if (upstream.ok) {
+        const data = (await upstream.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        reply = data?.choices?.[0]?.message?.content?.trim() || "";
+        if (reply) break;
+      }
+
+      if (upstream.status !== 404 && upstream.status !== 400) {
+        break;
+      }
     }
 
-    const data = (await upstream.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const reply = data?.choices?.[0]?.message?.content;
-
     if (!reply) {
-      sendJson(res, 502, {
-        error: "Empty AI response",
+      sendJson(res, lastStatus === 429 ? 429 : 502, {
+        error: "Upstream AI error",
         reply: "দুঃখিত, আমি আপনার প্রশ্নের উত্তর দিতে পারছি না।",
       });
       return;
