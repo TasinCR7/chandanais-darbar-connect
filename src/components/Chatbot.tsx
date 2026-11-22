@@ -130,7 +130,7 @@ const Chatbot: React.FC = () => {
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 border border-gold/20 ${msg.role === "user" ? "bg-gold/10" : "bg-primary/10"}`}>
                           {msg.role === "user" ? <User size={14} className="text-gold" /> : <Bot size={14} className="text-primary" />}
                         </div>
-                        <div className={`p-3 rounded-2xl text-sm leading-relaxed ${
+                        <div className={`p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
                           msg.role === "user" 
                           ? "bg-gold text-white rounded-tr-none shadow-lg shadow-gold/10" 
                           : "bg-card border border-gold/10 rounded-tl-none text-foreground shadow-sm"
