@@ -22,24 +22,32 @@ const CommitteeLogin = () => {
 
   useEffect(() => {
     // If already logged in, redirect to dashboard
-    const auth = localStorage.getItem("committee_auth");
-    if (auth) {
-      navigate("/committee-dashboard");
+    try {
+      const auth = localStorage.getItem("committee_auth");
+      if (auth) {
+        navigate("/committee-dashboard");
+      }
+    } catch {
+      // Ignore storage access errors in restricted privacy modes
     }
   }, [navigate]);
 
   // Handle lockout countdown timer
   useEffect(() => {
-    const lockoutUntilStr = localStorage.getItem("committee_login_lockout_until");
-    if (lockoutUntilStr) {
-      const lockoutUntil = parseInt(lockoutUntilStr, 10);
-      if (Date.now() < lockoutUntil) {
-        setLockoutTime(lockoutUntil);
-        setRemainingTime(Math.ceil((lockoutUntil - Date.now()) / 1000));
-      } else {
-        localStorage.removeItem("committee_login_lockout_until");
-        localStorage.removeItem("committee_login_attempts");
+    try {
+      const lockoutUntilStr = localStorage.getItem("committee_login_lockout_until");
+      if (lockoutUntilStr) {
+        const lockoutUntil = parseInt(lockoutUntilStr, 10);
+        if (Date.now() < lockoutUntil) {
+          setLockoutTime(lockoutUntil);
+          setRemainingTime(Math.ceil((lockoutUntil - Date.now()) / 1000));
+        } else {
+          localStorage.removeItem("committee_login_lockout_until");
+          localStorage.removeItem("committee_login_attempts");
+        }
       }
+    } catch {
+      // Ignore storage access errors in restricted privacy modes
     }
   }, []);
 
@@ -50,8 +58,12 @@ const CommitteeLogin = () => {
       if (remaining <= 0) {
         setLockoutTime(null);
         setRemainingTime(0);
-        localStorage.removeItem("committee_login_lockout_until");
-        localStorage.removeItem("committee_login_attempts");
+        try {
+          localStorage.removeItem("committee_login_lockout_until");
+          localStorage.removeItem("committee_login_attempts");
+        } catch {
+          // Ignore storage access errors
+        }
         clearInterval(interval);
       } else {
         setRemainingTime(remaining);
@@ -168,6 +180,7 @@ const CommitteeLogin = () => {
       <SEO 
         title="কমিটি লগইন - চন্দনাইশ দরবার শরীফ" 
         description="শুধুমাত্র চন্দনাইশ দরবার শরীফ পরিচালনা কমিটির সম্মানিত সদস্যদের জন্য সুরক্ষিত পোর্টাল।" 
+        canonical="/committee-login"
       />
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-0" />
 

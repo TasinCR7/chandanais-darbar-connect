@@ -88,9 +88,16 @@ export async function handleChat(
     return;
   }
 
+  // Guard against callers that already include the current userMessage as the last history entry
+  const lastHist = sanitizedHistory[sanitizedHistory.length - 1];
+  const dedupedHistory =
+    lastHist && lastHist.role === "user" && lastHist.content === userMessage
+      ? sanitizedHistory.slice(0, -1)
+      : sanitizedHistory;
+
   const messages = [
     { role: "system" as const, content: SYSTEM_PROMPT },
-    ...sanitizedHistory,
+    ...dedupedHistory,
     { role: "user" as const, content: userMessage },
   ];
 

@@ -164,7 +164,7 @@ const MemberPortal = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 font-bengali">
-      <SEO title="সদস্য পোর্টাল - চন্দনাইশ দরবার শরীফ" description="চাঁদার বিবরণী ও অনলাইন পেমেন্ট" />
+      <SEO title="সদস্য পোর্টাল - চন্দনাইশ দরবার শরীফ" description="চাঁদার বিবরণী ও অনলাইন পেমেন্ট" canonical="/member-portal" />
       
       {!isLoggedIn ? (
         <div className="container mx-auto px-4 py-20 flex justify-center">
@@ -291,13 +291,26 @@ const MemberPortal = () => {
                 <div className="mt-8 flex gap-3">
                   <Button 
                     className="flex-1 bg-gradient-gold text-primary-foreground font-bold"
-                    onClick={() => downloadAnnualStatementPDF({
-                      member_code: member.member_code,
-                      full_name: member.full_name,
-                      phone: member.phone,
-                      joined_date: member.joined_date,
-                      monthly_rate: member.monthly_rate
-                    }, payments, selectedYear)}
+                    onClick={async () => {
+                      if (!member) return;
+                      try {
+                        const approvedOnly = payments.filter(p => p.status === 'approved' || !p.status);
+                        await downloadAnnualStatementPDF({
+                          member_code: member.member_code,
+                          full_name: member.full_name,
+                          phone: member.phone,
+                          joined_date: member.joined_date,
+                          monthly_rate: member.monthly_rate
+                        }, approvedOnly, selectedYear);
+                        toast({ title: "PDF ডাউনলোড শুরু হয়েছে" });
+                      } catch (err: unknown) {
+                        toast({
+                          title: "PDF তৈরি ব্যর্থ",
+                          description: err instanceof Error ? err.message : "অজানা ত্রুটি",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
                   >
                     <Download className="h-4 w-4 mr-2" /> বার্ষিক PDF রিপোর্ট
                   </Button>

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Bot, User, Loader2, Minimize2, Maximize2 } from "lucide-react";
 import { getGeminiResponse } from "@/lib/gemini";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 
 interface Message {
@@ -45,8 +44,8 @@ const Chatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Build history including the new user message for context
-      const history = [...messages.slice(-MAX_API_CONTEXT), { role: "user" as const, content: userMsg }].map(m => ({ role: m.role, content: m.content }));
+      // Pass previous conversation history; the API appends userMsg as the latest user turn
+      const history = messages.slice(-MAX_API_CONTEXT).map(m => ({ role: m.role, content: m.content }));
       const aiResponse = await getGeminiResponse(userMsg, history);
       setMessages(prev => {
         const updated = [...prev, { id: nextMsgId(), role: "ai" as const, content: aiResponse }];

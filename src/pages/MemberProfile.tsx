@@ -127,14 +127,14 @@ const MemberProfile = () => {
 
   const years = useMemo(() => {
     const ys = new Set<number>([new Date().getFullYear()]);
-    payments.forEach((p) => ys.add(p.for_year));
+    approvedPayments.forEach((p) => ys.add(p.for_year));
     return Array.from(ys).sort((a, b) => b - a);
-  }, [payments]);
+  }, [approvedPayments]);
 
   const handleDownload = async () => {
     if (!member) return;
     try {
-      await downloadAnnualStatementPDF(member, payments, year);
+      await downloadAnnualStatementPDF(member, approvedPayments, year);
       toast({ title: 'PDF ডাউনলোড হয়েছে' });
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
