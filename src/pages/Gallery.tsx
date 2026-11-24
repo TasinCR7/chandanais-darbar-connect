@@ -4,7 +4,6 @@ import { X, Image as ImageIcon, ChevronLeft, ChevronRight, ZoomIn } from "lucide
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
-import PremiumLoader from "@/components/PremiumLoader";
 import { useToast } from "@/hooks/use-toast";
 
 const categories = ["সকল", "দরবার শরীফ", "ওরশ শরীফ", "মাহফিল"];
@@ -165,7 +164,7 @@ const Gallery = () => {
 
         {/* Lightbox */}
         <AnimatePresence>
-          {lightbox !== null && (
+          {lightbox !== null && filtered[lightbox] && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

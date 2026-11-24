@@ -47,7 +47,7 @@ const BookReader = () => {
   }, []);
 
   const openInNewTab = () => {
-    window.open(PDF_URL, "_blank");
+    window.open(PDF_URL, "_blank", "noopener,noreferrer");
   };
 
   // On mobile, show a simple page with open/download buttons since embedded PDF is unreliable
@@ -210,37 +210,13 @@ const BookReader = () => {
               }}
             >
               {!pdfError ? (
-                <object
-                  data={PDF_URL}
-                  type="application/pdf"
+                <iframe
+                  src={PDF_URL}
+                  title="জীবনী বই PDF"
                   className="w-full rounded-lg border border-border bg-card shadow-lg"
                   style={{ height: "calc(100vh - 60px)", minHeight: "600px" }}
                   onError={() => setPdfError(true)}
-                >
-                  {/* Fallback if object tag doesn't work */}
-                  <div className="flex flex-col items-center justify-center p-10 gap-4 text-center">
-                    <p className="text-muted-foreground">
-                      আপনার ব্রাউজারে PDF দেখানো যাচ্ছে না।
-                    </p>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={openInNewTab}
-                        className="inline-flex items-center gap-2 bg-gold-gradient text-primary-foreground font-semibold px-6 py-3 rounded-xl"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        নতুন ট্যাবে খুলুন
-                      </button>
-                      <a
-                        href={PDF_URL}
-                        download
-                        className="inline-flex items-center gap-2 bg-muted border border-border text-foreground font-semibold px-6 py-3 rounded-xl"
-                      >
-                        <Download className="w-4 h-4" />
-                        ডাউনলোড
-                      </a>
-                    </div>
-                  </div>
-                </object>
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center p-10 gap-4 text-center bg-card rounded-lg border border-border" style={{ height: "calc(100vh - 60px)" }}>
                   <p className="text-muted-foreground">PDF লোড করতে সমস্যা হচ্ছে।</p>

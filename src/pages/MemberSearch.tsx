@@ -35,17 +35,25 @@ type SortKey = 'due-desc' | 'due-asc' | 'month-desc';
 const STORAGE_KEY = 'member-search-prefs-v1';
 
 const readPrefs = () => {
+  const currentYear = new Date().getFullYear();
   try {
     const url = new URLSearchParams(window.location.search);
     const ls = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const rawYear = Number(url.get('year') || ls.year || currentYear);
+    const year = Number.isFinite(rawYear) && rawYear >= 2000 && rawYear <= 2100 ? rawYear : currentYear;
+    const rawSort = url.get('sort') || ls.sortKey || 'due-desc';
+    const sortKey: SortKey = rawSort === 'due-asc' || rawSort === 'month-desc' ? rawSort : 'due-desc';
+    const rawStatus = url.get('status') || ls.statusFilter || 'all';
+    const statusFilter: 'all' | 'paid' | 'partial' | 'due' =
+      rawStatus === 'paid' || rawStatus === 'partial' || rawStatus === 'due' ? rawStatus : 'all';
     return {
-      year: Number(url.get('year') || ls.year || new Date().getFullYear()),
-      sortKey: (url.get('sort') || ls.sortKey || 'due-desc') as SortKey,
-      statusFilter: (url.get('status') || ls.statusFilter || 'all') as 'all' | 'paid' | 'partial' | 'due',
+      year,
+      sortKey,
+      statusFilter,
       code: url.get('code') || ls.code || '',
     };
   } catch {
-    return { year: new Date().getFullYear(), sortKey: 'due-desc' as SortKey, statusFilter: 'all' as const, code: '' };
+    return { year: currentYear, sortKey: 'due-desc' as SortKey, statusFilter: 'all' as const, code: '' };
   }
 };
 
@@ -83,21 +91,37 @@ const MemberSearch = () => {
 
   const search = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!code.trim()) return;
+    const trimmed = code.trim();
+    if (!trimmed) return;
     setBusy(true);
     setSearched(true);
-    const { data: m } = await supabase
-      .rpc('search_member', { p_code: code.trim() })
-      .maybeSingle();
-    setMember(m as Member | null);
-    if (m) {
-      const { data: p } = await supabase
-        .rpc('get_member_payments', { p_member_id: m.id });
-      setPayments((p as Payment[]) ?? []);
-    } else {
+    try {
+      const { data: rawMember, error: memberError } = await supabase
+        .rpc('search_member', { p_code: trimmed });
+      if (memberError) throw memberError;
+
+      const m = (Array.isArray(rawMember) ? rawMember[0] : rawMember) as Member | null;
+      setMember(m ?? null);
+
+      if (m) {
+        const { data: p, error: payError } = await supabase
+          .rpc('get_member_payments', { p_member_id: m.id });
+        if (payError) throw payError;
+        setPayments((p as Payment[]) ?? []);
+      } else {
+        setPayments([]);
+      }
+    } catch (err: unknown) {
+      setMember(null);
       setPayments([]);
+      toast({
+        title: 'অনুসন্ধান ব্যর্থ',
+        description: err instanceof Error ? err.message : 'সদস্যের তথ্য আনতে সমস্যা হয়েছে',
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   const stats = member ? calculateDues(member, payments) : null;
@@ -197,6 +221,7 @@ const MemberSearch = () => {
       <SEO
         title="সদস্য তালাশ - চন্দনাইশ দরবার শরীফ"
         description="আপনার সদস্য কোড লিখে চাঁদার পূর্ণ বিবরণী দেখুন। লগইন প্রয়োজন নেই।"
+        canonical="/member-search"
       />
       {/* Print-only styles */}
       <style>{`

@@ -11,6 +11,7 @@ import { BANGLA_MONTHS } from '@/lib/months';
 export interface QuickPaymentEntryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 interface RowData {
@@ -23,41 +24,45 @@ interface RowData {
   note?: string;
 }
 
-export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOpenChange }) => {
+export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOpenChange, onSuccess }) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rows, setRows] = useState<RowData[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!open) return;
+    let isMounted = true;
     const load = async () => {
       try {
         const data = await fetchMembers();
-        setMembers(data);
-      } catch (e) {
-        toast({ title: 'সদস্য লোড ব্যর্থ', variant: 'destructive' });
+        if (isMounted) setMembers(data);
+      } catch {
+        if (isMounted) toast({ title: 'সদস্য লোড ব্যর্থ', variant: 'destructive' });
       }
     };
     load();
-  }, []);
+    return () => { isMounted = false; };
+  }, [open]);
 
   useEffect(() => {
     setRows((prevRows) =>
       selectedIds.map((id) => {
         const existing = prevRows.find((r) => r.member_id === id);
-        return (
-          existing || {
-            member_id: id,
-            amount: 0,
-            payment_date: new Date().toISOString().split('T')[0],
-            for_year: new Date().getFullYear(),
-            for_month: new Date().getMonth() + 1,
-            method: 'cash',
-            note: '',
-          }
-        );
+        if (existing) return existing;
+        const member = members.find((m) => m.id === id);
+        return {
+          member_id: id,
+          amount: Number(member?.monthly_rate) || 0,
+          payment_date: new Date().toISOString().split('T')[0],
+          for_year: new Date().getFullYear(),
+          for_month: new Date().getMonth() + 1,
+          method: 'cash',
+          note: '',
+        };
       })
     );
-  }, [selectedIds]);
+  }, [selectedIds, members]);
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const options = Array.from(e.target.selectedOptions);
@@ -72,6 +77,11 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
+    if (rows.length === 0) {
+      toast({ title: 'কমপক্ষে একজন সদস্য নির্বাচন করুন', variant: 'destructive' });
+      return;
+    }
     // Simple validation
     for (const r of rows) {
       if (!r.amount || r.amount <= 0) {
@@ -83,6 +93,7 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
         return;
       }
     }
+    setSubmitting(true);
     try {
       const { error } = await supabase.from('payments').insert(rows as any);
       if (error) throw error;
@@ -90,9 +101,16 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
       // Reset
       setSelectedIds([]);
       setRows([]);
+      onSuccess?.();
       onOpenChange(false);
-    } catch (e: any) {
-      toast({ title: 'পেমেন্ট যোগ ব্যর্থ', description: e.message, variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({
+        title: 'পেমেন্ট যোগ ব্যর্থ',
+        description: e instanceof Error ? e.message : 'অজানা ত্রুটি',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -204,8 +222,8 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             বাতিল
           </Button>
-          <Button onClick={handleSubmit} className="bg-gold-gradient text-white hover:scale-105 transition-transform">
-            সংরক্ষণ করুন
+          <Button onClick={handleSubmit} disabled={submitting || rows.length === 0} className="bg-gold-gradient text-white hover:scale-105 transition-transform">
+            {submitting ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
           </Button>
         </DialogFooter>
       </DialogContent>

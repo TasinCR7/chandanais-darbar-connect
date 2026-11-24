@@ -303,7 +303,7 @@ const Hadia = () => {
             </div>
             <div style="background:#065f46;color:#fff;border-radius:6px;padding:12px 24px;font-size:11px;">
               <table style="width:100%;border-collapse:collapse;"><tr>
-                <td style="color:white;"><div style="font-weight:700;font-size:12px;margin-bottom:2px;color:white;">চন্দনাইশ দরবার শরীফ</div><div style="opacity:0.75;color:white;">chandanais-darbar-connect.vercel.app</div></td>
+                <td style="color:white;"><div style="font-weight:700;font-size:12px;margin-bottom:2px;color:white;">চন্দনাইশ দরবার শরীফ</div><div style="opacity:0.75;color:white;">www.chandanaishdarbarsharif.com</div></td>
                 <td style="text-align:center;opacity:0.7;color:white;">এটি একটি কম্পিউটার জেনারেটেড রশিদ।<br/>This is a computer-generated receipt.</td>
                 <td style="text-align:right;color:white;"><div style="font-weight:700;font-size:12px;margin-bottom:2px;color:white;">যাচাই কোড</div><div style="font-family:monospace;opacity:0.85;color:white;">${verificationCode}</div></td>
               </tr></table>

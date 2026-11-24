@@ -73,12 +73,16 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
   useEffect(() => {
-    if (verificationCode !== 'N/A') {
-      const qrText = `DONATION:${verificationCode}|AMOUNT:${donation.amount}|DATE:${donation.created_at || new Date().toISOString()}`;
-      QRCode.toDataURL(qrText, { width: 120, margin: 1, color: { dark: '#065f46', light: '#ffffff' } })
-        .then(setQrCodeUrl)
-        .catch(console.error);
+    let active = true;
+    if (verificationCode === 'N/A') {
+      setQrCodeUrl('');
+      return () => { active = false; };
     }
+    const qrText = `DONATION:${verificationCode}|AMOUNT:${donation.amount}|DATE:${donation.created_at || new Date().toISOString()}`;
+    QRCode.toDataURL(qrText, { width: 120, margin: 1, color: { dark: '#065f46', light: '#ffffff' } })
+      .then((url) => { if (active) setQrCodeUrl(url); })
+      .catch(console.error);
+    return () => { active = false; };
   }, [verificationCode, donation.amount, donation.created_at]);
 
   const getStatusDisplay = (status: string) => {
@@ -256,7 +260,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
               }}
             >
               <div style={{ fontSize: '10px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>রশিদ নম্বর / Invoice No.</div>
-              <div style={{ fontSize: '20px', fontWeight: '900', color: '#065f46', fontFamily: 'monospace' }}>#{toBanglaNumber(invoiceNo.replace(/\D/g, ''))}{invoiceNo.replace(/[0-9]/g, '')}</div>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#065f46', fontFamily: 'monospace' }}>#{toBanglaNumber(invoiceNo)}</div>
             </div>
 
             {/* Middle: Date */}
@@ -543,7 +547,7 @@ export const DonationInvoiceTemplate = React.forwardRef<HTMLDivElement, InvoiceP
           >
             <div>
               <div style={{ fontWeight: '700', fontSize: '12px', marginBottom: '2px' }}>চন্দনাইশ দরবার শরীফ</div>
-              <div style={{ opacity: 0.75 }}>chandanais-darbar-connect.vercel.app</div>
+              <div style={{ opacity: 0.75 }}>www.chandanaishdarbarsharif.com</div>
             </div>
             <div style={{ textAlign: 'center', opacity: 0.7 }}>
               এটি একটি কম্পিউটার জেনারেটেড রশিদ।<br />

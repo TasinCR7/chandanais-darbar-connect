@@ -115,7 +115,11 @@ const TasbihCounter = () => {
   const [zikrIndex, setZikrIndex] = useState<number>(() => {
     try {
       const saved = localStorage.getItem("tasbih_zikr_index");
-      return saved ? parseInt(saved, 10) || 0 : 0;
+      const parsed = saved !== null ? parseInt(saved, 10) : 0;
+      if (!Number.isNaN(parsed) && parsed >= 0 && parsed < zikrOptions.length) {
+        return parsed;
+      }
+      return 0;
     } catch {
       return 0;
     }
@@ -124,7 +128,10 @@ const TasbihCounter = () => {
   const [target, setTarget] = useState<number>(() => {
     try {
       const saved = localStorage.getItem("tasbih_target");
-      return saved ? parseInt(saved, 10) || 33 : 33;
+      if (saved === null) return 33;
+      const parsed = parseInt(saved, 10);
+      if (parsed === 0 || parsed === 33 || parsed === 100) return parsed;
+      return 33;
     } catch {
       return 33;
     }
@@ -179,7 +186,7 @@ const TasbihCounter = () => {
     } catch (e) { console.warn("localStorage error", e); }
   }, [soundEnabled]);
 
-  const currentZikr = zikrOptions[zikrIndex];
+  const currentZikr = zikrOptions[zikrIndex] ?? zikrOptions[0];
 
   const handleIncrement = () => {
     const newCount = count + 1;
@@ -207,10 +214,15 @@ const TasbihCounter = () => {
     else setTarget(33);
   };
 
-  const progress = target > 0 ? (count % target) / target : 0;
+  const progress =
+    target > 0
+      ? count > 0 && count % target === 0
+        ? 1
+        : (count % target) / target
+      : 0;
 
   return (
-    <div className="bg-white/5 border border-gold/20 backdrop-blur-md rounded-3xl p-6 relative overflow-visible shadow-[0_8px_32px_rgba(212,175,55,0.05)] w-full max-w-sm mx-auto my-4 text-center">
+    <div className="bg-white/5 border border-gold/20 md:backdrop-blur-md rounded-3xl p-6 relative overflow-visible shadow-[0_8px_32px_rgba(212,175,55,0.05)] w-full max-w-sm mx-auto my-4 text-center">
       {/* Decorative patterns */}
       <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-gold/10 rounded-tr-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-16 h-16 border-b border-l border-gold/10 rounded-bl-3xl pointer-events-none" />

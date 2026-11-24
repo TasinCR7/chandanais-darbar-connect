@@ -9,33 +9,40 @@ const VisitorCounter = () => {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+
     const fetchCount = async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
-
         const hasVisited = sessionStorage.getItem('hasVisited_v1');
         const url = hasVisited
           ? 'https://api.counterapi.dev/v1/chandanish-dorbar/website'
           : 'https://api.counterapi.dev/v1/chandanish-dorbar/website/up';
 
         const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
         if (!res.ok) return;
         const data = await res.json();
         
-        if (data && typeof data.count === 'number') {
+        if (isMounted && data && typeof data.count === 'number') {
           if (!hasVisited) {
             sessionStorage.setItem('hasVisited_v1', 'true');
           }
           setCount(data.count + LEGACY_VISITOR_OFFSET); 
         }
-      } catch (err) {
+      } catch {
         // Silently catch network errors or timeouts to not log noise
+      } finally {
+        clearTimeout(timeoutId);
       }
     };
 
     fetchCount();
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   if (count === null) return null;

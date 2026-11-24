@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,7 @@ const CommitteeManager = () => {
   const [designation, setDesignation] = useState("");
   const [phone, setPhone] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchMembers = async () => {
     const { data, error } = await supabase
@@ -111,6 +112,7 @@ const CommitteeManager = () => {
       setDesignation("");
       setPhone("");
       setImageFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       fetchMembers();
      
     } catch (err: any) {
@@ -189,7 +191,7 @@ const CommitteeManager = () => {
           </div>
           <div>
             <Label className="text-cream/80">ছবি</Label>
-            <Input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="mt-1" />
+            <Input ref={fileInputRef} type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="mt-1" />
           </div>
         </div>
         <Button onClick={handleAdd} disabled={loading || uploading} className="bg-gold-gradient text-primary-foreground font-bold">

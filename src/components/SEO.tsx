@@ -24,7 +24,7 @@ interface SEOProps {
 }
 
 const SITE_NAME = "চন্দনাইশ দরবার শরীফ";
-const BASE_URL = "https://chandanaish-darbar.com";
+const BASE_URL = "https://www.chandanaishdarbarsharif.com";
 
 const DEFAULT_KEYWORDS = [
   "দরবার শরীফ",

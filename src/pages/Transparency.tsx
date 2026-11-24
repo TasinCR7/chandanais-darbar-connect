@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toBanglaNumber } from '@/lib/bangla';
 import { monthName } from '@/lib/months';
 import { TrendingUp, TrendingDown, Wallet, Users } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 import type { Payment, Expense } from '@/types/finance';
 import PremiumLoader from '@/components/PremiumLoader';
 
@@ -16,8 +15,10 @@ const Transparency = () => {
   const [chart, setChart] = useState<{ label: string; income: number; expense: number }[]>([]);
   const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
   const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
-  const { isStaff, loading } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
+
   useEffect(() => {
+    let isMounted = true;
     (async () => {
       try {
         const [statsRes, chartRes, paysRes, expRes] = await Promise.all([
@@ -26,6 +27,8 @@ const Transparency = () => {
           supabase.rpc('get_recent_payments'),
           supabase.rpc('get_recent_expenses')
         ]);
+
+        if (!isMounted) return;
 
         if (statsRes.data && statsRes.data.length > 0) {
           const stats = statsRes.data[0];
@@ -63,19 +66,23 @@ const Transparency = () => {
         }
       } catch (err) {
         console.error("Error fetching transparency data:", err);
+      } finally {
+        if (isMounted) setDataLoading(false);
       }
     })();
+    return () => { isMounted = false; };
   }, []);
 
   const balance = income - expense;
 
-  if (loading) return <PremiumLoader />;
+  if (dataLoading) return <PremiumLoader />;
 
   return (
     <div className="min-h-screen bg-background pb-20 font-bengali">
       <SEO
         title="স্বচ্ছতা ও হিসাব - চন্দনাইশ দরবার শরীফ"
         description="দরবারের সব আয় ও খরচ এখানে উন্মুক্ত।"
+        canonical="/transparency"
       />
       <header className="relative py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gold-gradient opacity-10" />
@@ -138,7 +145,7 @@ const Transparency = () => {
               ) : (
                 <ul className="space-y-2 font-bangla text-sm">
                   {recentPayments.map((p, i) => (
-                    <li key={i} className="flex justify-between border-b border-border/50 pb-2">
+                    <li key={p.id || i} className="flex justify-between border-b border-border/50 pb-2">
                       <span>
                         {p.members?.full_name ?? '-'} ({p.members?.member_code})
                         <span className="block text-xs text-muted-foreground">{monthName(p.for_month)} {toBanglaNumber(p.for_year)}</span>

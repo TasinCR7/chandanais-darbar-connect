@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bell, Calendar, ChevronRight } from "lucide-react";
+import { Bell, Calendar } from "lucide-react";
 import SectionTitle from "@/components/SectionTitle";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,20 +19,27 @@ const Notices = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchNotices = async () => {
-      const { data } = await supabase
-        .from("notices")
-        .select("id, title, message, created_at, is_active")
-        .eq("is_active", true)
-        .not("title", "ilike", "%test%")
-        .order("created_at", { ascending: false });
-      
-      if (data) {
-        setNotices(data as Notice[]);
+      try {
+        const { data } = await supabase
+          .from("notices")
+          .select("id, title, message, created_at, is_active")
+          .eq("is_active", true)
+          .not("title", "ilike", "%test%")
+          .order("created_at", { ascending: false });
+        
+        if (isMounted && data) {
+          setNotices(data as Notice[]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notices:", err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     };
     fetchNotices();
+    return () => { isMounted = false; };
   }, []);
 
   return (

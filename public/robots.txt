@@ -8,4 +8,4 @@ Disallow: /member-portal
 Disallow: /member-search
 Disallow: /member/
 
-Sitemap: https://chandanaish-darbar.com/sitemap.xml
+Sitemap: https://www.chandanaishdarbarsharif.com/sitemap.xml

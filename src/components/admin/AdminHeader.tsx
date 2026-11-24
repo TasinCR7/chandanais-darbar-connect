@@ -24,11 +24,13 @@ export default function AdminHeader({ adminInfo }: AdminHeaderProps) {
           <div className="absolute -inset-0.5 bg-gradient-to-r from-gold to-amber-500 rounded-full blur opacity-50 group-hover:opacity-100 transition duration-500" />
           <div className="w-16 h-16 rounded-full overflow-hidden bg-background relative border-2 border-gold/40 flex items-center justify-center">
             <img
-              src={image ?? '/default-avatar.png'}
+              src={image || '/logo.png'}
               alt="Admin avatar"
               className="w-full h-full object-cover"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + name;
+                const img = e.currentTarget;
+                img.onerror = null;
+                img.src = '/logo.png';
               }}
             />
           </div>

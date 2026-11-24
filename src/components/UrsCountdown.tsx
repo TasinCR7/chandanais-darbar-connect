@@ -1,58 +1,7 @@
 import { useState, useEffect, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Moon, Star, Calendar, Sparkles } from "lucide-react";
-
-interface UrsEvent {
-  title: string;
-  bengaliDate: string;
-  arabicTitle: string;
-  gregorianDate: string;
-}
-
-const ursEvents: UrsEvent[] = [
-  { title: "মেজ শাহজাদার ওরশ", arabicTitle: "عُرْسِ شَاهزَادَه أَوْسَط", bengaliDate: "জ্যৈষ্ঠ ১১", gregorianDate: "2026-05-25" },
-  { title: "বড় শাহজাদার ওরশ", arabicTitle: "عُرْسِ شَاهزَادَه أَكْبَر", bengaliDate: "শ্রাবণ ১৪", gregorianDate: "2026-07-29" },
-  { title: "বাবাজান কেবলা চন্দনাইশী পবিত্র জন্মদিন", arabicTitle: "مِيلَاد بَابَاجَان قِبْلَه", bengaliDate: "আশ্বিন ২২", gregorianDate: "2026-10-07" },
-  { title: "বাবাজান কেবলা চন্দনাইশী সহধর্মিণীর ওরশ", arabicTitle: "عُرْسِ زَوْجَة بَابَاجَان قِبْلَه", bengaliDate: "পৌষ ৩০", gregorianDate: "2027-01-14" },
-  { title: "গাউছে জামান মাইজভান্ডারী ওরশ", arabicTitle: "عُرْسِ غَوْثِ الزَّمَان مَائِجْبھَانْدَارِی", bengaliDate: "মাঘ ২২", gregorianDate: "2027-02-05" },
-  { title: "বার্ষিক ওরশ", arabicTitle: "العُرْسُ السَّنَوِي", bengaliDate: "ফাল্গুন ১৬", gregorianDate: "2027-03-01" },
-  { title: "পীর বাবা ভান্ডারীর ওরশ", arabicTitle: "عُرْسِ پِیر بَابَا بھَانْدَارِی", bengaliDate: "চৈত্র ১", gregorianDate: "2027-03-15" },
-];
-
-function getNextUrs(): UrsEvent & { targetDate: Date } {
-  const now = new Date();
-  for (const event of ursEvents) {
-    const target = new Date(event.gregorianDate + "T00:00:00");
-    if (target > now) {
-      return { ...event, targetDate: target };
-    }
-  }
-  // All events have passed — recycle event list for next year
-  const first = ursEvents[0];
-  const nextYearDate = first.gregorianDate.replace(/^\d{4}/, String(now.getFullYear() + 1));
-  const target = new Date(nextYearDate + "T00:00:00");
-  return { ...first, targetDate: target };
-}
-
-const monthlyUrsDates = [
-  "2026-03-23", "2026-04-22", "2026-05-21", "2026-06-19",
-  "2026-07-19", "2026-08-17", "2026-09-18", "2026-10-18",
-  "2026-11-17", "2026-12-17", "2027-01-15", "2027-02-14"
-];
-
-function getNextMonthlyUrs(): Date {
-  const now = new Date();
-  for (const dateStr of monthlyUrsDates) {
-    const target = new Date(dateStr + "T00:00:00");
-    if (target > now) {
-      return target;
-    }
-  }
-  // All dates passed — use first date of next year cycle
-  const firstDate = monthlyUrsDates[0];
-  const nextYearDate = firstDate.replace(/^\d{4}/, String(now.getFullYear() + 1));
-  return new Date(nextYearDate + "T00:00:00");
-}
+import { getNextUrs, getNextMonthlyUrs } from "@/lib/ursDates";
 
 function calcTimeLeft(target: Date) {
   const diff = target.getTime() - Date.now();
@@ -163,7 +112,7 @@ const UrsCountdown = () => {
         <p className="font-arabic text-gold/60 text-sm mb-3">{nextUrs.arabicTitle}</p>
         
         {/* Premium Glowing Dual Date Badge */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8 px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-gradient-to-r from-gold/15 via-emerald-950/80 to-gold/15 border border-gold/30 backdrop-blur-md shadow-[0_4px_20px_rgba(180,142,73,0.18)] group hover:border-gold/60 transition-all duration-300">
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8 px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-full bg-gradient-to-r from-gold/15 via-emerald-950/80 to-gold/15 border border-gold/30 md:backdrop-blur-md shadow-[0_4px_20px_rgba(180,142,73,0.18)] group hover:border-gold/60 transition-all duration-300">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gold/20 text-gold font-bengali text-xs sm:text-sm font-bold border border-gold/40 shadow-inner">
             <Calendar className="h-3.5 w-3.5 text-gold animate-pulse" />
             <span>বাংলা: {nextUrs.bengaliDate}</span>
@@ -171,7 +120,7 @@ const UrsCountdown = () => {
           <span className="text-gold/40 text-xs hidden xs:inline">•</span>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald/70 text-cream/90 font-bengali text-xs sm:text-sm font-medium border border-gold/20">
             <Sparkles className="h-3.5 w-3.5 text-gold-light" />
-            <span>ইংরেজি: {new Date(nextUrs.gregorianDate + "T00:00:00").toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span>ইংরেজি: {nextUrs.targetDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
         </div>
 
