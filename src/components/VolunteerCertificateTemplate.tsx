@@ -31,12 +31,14 @@ function formatCertificateDate(dateStr?: string | null, isEn = false): string {
 
 /**
  * Full-resolution A4 Landscape (1123 x 794 px) Volunteer Certificate of Appreciation.
- * Supports both Bangla ("bn") and English ("en") layouts with inline styles for pixel-perfect PDF/PNG export.
+ * Supports Bilingual ("bilingual": Bangla + English together), pure Bangla ("bn"), and pure English ("en").
  */
 export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Props>(
   ({ certificate }, ref) => {
     const [qrDataUrl, setQrDataUrl] = useState<string>("");
-    const isEn = certificate.language === "en";
+    const lang = certificate.language || "bilingual";
+    const isEn = lang === "en";
+    const isBilingual = lang === "bilingual";
 
     useEffect(() => {
       let active = true;
@@ -65,13 +67,15 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
     }, [certificate.certificate_code]);
 
     const volunteerName =
-      certificate.volunteer_name?.trim() || (isEn ? "Volunteer Name" : "স্বেচ্ছাসেবকের নাম");
+      certificate.volunteer_name?.trim() ||
+      (isEn ? "Volunteer Name" : isBilingual ? "স্বেচ্ছাসেবকের নাম / Volunteer Name" : "স্বেচ্ছাসেবকের নাম");
     const roleTitle =
       certificate.role_title?.trim() || (isEn ? "Volunteer" : "স্বেচ্ছাসেবক");
     const eventName =
       certificate.event_name?.trim() ||
       (isEn ? "Annual Urs Sharif & Darbar Khidmat" : "পবিত্র ওরশ শরীফ ও দরবার খিদমত");
-    const formattedIssueDate = formatCertificateDate(certificate.issue_date, isEn);
+    const formattedDateBn = formatCertificateDate(certificate.issue_date, false);
+    const formattedDateEn = formatCertificateDate(certificate.issue_date, true);
 
     return (
       <div
@@ -99,7 +103,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%) rotate(-18deg)",
-            fontSize: isEn ? "64px" : "88px",
+            fontSize: isEn ? "64px" : "82px",
             fontWeight: 900,
             color: "rgba(6, 78, 59, 0.035)",
             whiteSpace: "nowrap",
@@ -178,7 +182,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             position: "relative",
             zIndex: 3,
             height: "100%",
-            padding: "46px 68px 42px",
+            padding: "42px 64px 38px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -193,27 +197,36 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                fontSize: "12px",
+                fontSize: "11.5px",
                 color: "#4b5563",
                 marginBottom: "4px",
               }}
             >
               <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#064e3b" }}>
-                {isEn ? "Certificate No:" : "সনদ নং:"} {certificate.certificate_code}
+                {isEn
+                  ? "Certificate No:"
+                  : isBilingual
+                  ? "সনদ নং / Cert No:"
+                  : "সনদ নং:"}{" "}
+                {certificate.certificate_code}
               </div>
               <div style={{ fontWeight: 600, color: "#064e3b" }}>
-                {isEn ? "Date of Issue:" : "ইস্যু তারিখ:"} {formattedIssueDate}
+                {isEn
+                  ? `Date of Issue: ${formattedDateEn}`
+                  : isBilingual
+                  ? `তারিখ / Date: ${formattedDateBn} (${formattedDateEn})`
+                  : `ইস্যু তারিখ: ${formattedDateBn}`}
               </div>
             </div>
 
             {/* Bismillah */}
             <div
               style={{
-                fontSize: "24px",
+                fontSize: "22px",
                 color: "#064e3b",
                 fontFamily: "'Amiri', serif",
                 letterSpacing: "1px",
-                marginBottom: "4px",
+                marginBottom: "2px",
               }}
             >
               بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
@@ -234,8 +247,8 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 alt="Darbar Logo"
                 crossOrigin="anonymous"
                 style={{
-                  width: "54px",
-                  height: "54px",
+                  width: "52px",
+                  height: "52px",
                   borderRadius: "50%",
                   border: "2px solid #b8860b",
                   objectFit: "cover",
@@ -245,24 +258,30 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
               <div style={{ textAlign: "left" }}>
                 <div
                   style={{
-                    fontSize: isEn ? "28px" : "30px",
+                    fontSize: isBilingual ? "24px" : isEn ? "28px" : "30px",
                     fontWeight: 900,
                     color: "#064e3b",
                     lineHeight: 1.15,
-                    letterSpacing: isEn ? "1.5px" : "0px",
+                    letterSpacing: isEn ? "1.5px" : "0.3px",
                   }}
                 >
-                  {isEn ? "CHANDANAISH DARBAR SHARIF" : "চন্দনাইশ দরবার শরীফ"}
+                  {isBilingual
+                    ? "চন্দনাইশ দরবার শরীফ • CHANDANAISH DARBAR SHARIF"
+                    : isEn
+                    ? "CHANDANAISH DARBAR SHARIF"
+                    : "চন্দনাইশ দরবার শরীফ"}
                 </div>
                 <div
                   style={{
-                    fontSize: "12px",
+                    fontSize: "11.5px",
                     fontWeight: 700,
                     color: "#92400e",
-                    letterSpacing: isEn ? "1.2px" : "1.5px",
+                    letterSpacing: "0.8px",
                   }}
                 >
-                  {isEn
+                  {isBilingual
+                    ? "সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া • Silsila-e-Tariqaye Maizbhandaria • Chandanaish, Chattogram"
+                    : isEn
                     ? "Silsila-e-Tariqaye Maizbhandaria • Chandanaish, Chattogram, Bangladesh"
                     : "সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া • চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ"}
                 </div>
@@ -272,12 +291,12 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             {/* Ribbon Banner */}
             <div
               style={{
-                marginTop: "10px",
+                marginTop: "8px",
                 display: "inline-block",
                 background:
                   "linear-gradient(135deg, #064e3b 0%, #047857 50%, #064e3b 100%)",
                 color: "#fef3c7",
-                padding: "8px 38px",
+                padding: "7px 36px",
                 borderRadius: "999px",
                 border: "2px solid #d4af37",
                 boxShadow: "0 4px 12px rgba(6, 78, 59, 0.2)",
@@ -297,8 +316,8 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
               </div>
               <div
                 style={{
-                  fontSize: "10px",
-                  letterSpacing: isEn ? "1.5px" : "3px",
+                  fontSize: "10.5px",
+                  letterSpacing: isEn ? "1.5px" : "2.5px",
                   textTransform: isEn ? "none" : "uppercase",
                   color: "#fde68a",
                   marginTop: "1px",
@@ -312,17 +331,19 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
           </div>
 
           {/* Middle Body: Recipient & Citation */}
-          <div style={{ textAlign: "center", padding: "0 24px" }}>
+          <div style={{ textAlign: "center", padding: "0 20px" }}>
             <div
               style={{
-                fontSize: "14px",
+                fontSize: isBilingual ? "13px" : "14px",
                 color: "#4b5563",
                 fontWeight: 600,
-                marginBottom: "8px",
+                marginBottom: "6px",
                 fontStyle: isEn ? "italic" : "normal",
               }}
             >
-              {isEn
+              {isBilingual
+                ? "এই মর্মে সাদর সম্মাননা ও কৃতজ্ঞতা জ্ঞাপন করা যাচ্ছে যে / This certificate is proudly presented to"
+                : isEn
                 ? "This certificate is proudly presented with sincere gratitude to"
                 : "এই মর্মে সাদর সম্মাননা ও কৃতজ্ঞতা জ্ঞাপন করা যাচ্ছে যে,"}
             </div>
@@ -330,13 +351,13 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             {/* Volunteer Name */}
             <div
               style={{
-                fontSize: "38px",
+                fontSize: isBilingual ? "34px" : "38px",
                 fontWeight: 900,
                 color: "#064e3b",
                 lineHeight: 1.2,
-                paddingBottom: "8px",
-                margin: "0 auto 10px",
-                maxWidth: "760px",
+                paddingBottom: "6px",
+                margin: "0 auto 8px",
+                maxWidth: "780px",
                 borderBottom: "2px solid #d4af37",
               }}
             >
@@ -347,15 +368,15 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             {(certificate.father_name?.trim() || certificate.address?.trim()) && (
               <div
                 style={{
-                  fontSize: "14px",
+                  fontSize: "13px",
                   color: "#374151",
                   fontWeight: 600,
-                  marginBottom: "10px",
+                  marginBottom: "8px",
                 }}
               >
                 {certificate.father_name?.trim() && (
                   <span>
-                    {isEn ? "S/O / D/O: " : "পিতা: "}
+                    {isEn ? "S/O / D/O: " : isBilingual ? "পিতা / S/O: " : "পিতা: "}
                     {certificate.father_name.trim()}
                   </span>
                 )}
@@ -364,7 +385,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 )}
                 {certificate.address?.trim() && (
                   <span>
-                    {isEn ? "Address: " : "ঠিকানা: "}
+                    {isEn ? "Address: " : isBilingual ? "ঠিকানা / Address: " : "ঠিকানা: "}
                     {certificate.address.trim()}
                   </span>
                 )}
@@ -372,7 +393,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             )}
 
             {/* Role Pill */}
-            <div style={{ marginBottom: "12px" }}>
+            <div style={{ marginBottom: "10px" }}>
               <span
                 style={{
                   display: "inline-block",
@@ -380,17 +401,59 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                   color: "#92400e",
                   border: "1px solid #d4af37",
                   borderRadius: "999px",
-                  padding: "4px 20px",
-                  fontSize: "14px",
+                  padding: "3px 18px",
+                  fontSize: "13.5px",
                   fontWeight: 800,
                 }}
               >
-                {isEn ? `Role: ${roleTitle}` : `দায়িত্ব: ${roleTitle}`}
+                {isBilingual
+                  ? `দায়িত্ব / Role: ${roleTitle}`
+                  : isEn
+                  ? `Role: ${roleTitle}`
+                  : `দায়িত্ব: ${roleTitle}`}
               </span>
             </div>
 
-            {/* Citation Paragraph */}
-            {isEn ? (
+            {/* Citation Paragraph(s) */}
+            {isBilingual ? (
+              <div style={{ maxWidth: "880px", margin: "0 auto" }}>
+                <p
+                  style={{
+                    fontSize: "14.5px",
+                    lineHeight: 1.6,
+                    color: "#1f2937",
+                    margin: "0 0 6px 0",
+                    fontWeight: 500,
+                  }}
+                >
+                  চন্দনাইশ দরবার শরীফের{" "}
+                  <strong style={{ color: "#064e3b", fontWeight: 800 }}>“{eventName}”</strong>
+                  {certificate.service_period?.trim() ? (
+                    <> ({certificate.service_period.trim()})</>
+                  ) : null}{" "}
+                  সফলভাবে সম্পন্ন করতে নিষ্ঠা, আন্তরিকতা ও নিঃস্বার্থ খেদমতের মাধ্যমে অসামান্য অবদান
+                  রাখার স্বীকৃতিস্বরূপ এই সম্মাননা সনদপত্র প্রদান করা হলো।
+                </p>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    lineHeight: 1.55,
+                    color: "#374151",
+                    margin: 0,
+                    fontStyle: "italic",
+                    fontFamily: "'Georgia', 'Noto Sans Bengali', serif",
+                  }}
+                >
+                  In sincere recognition of dedicated, selfless service and valuable contribution
+                  during{" "}
+                  <strong style={{ color: "#064e3b", fontStyle: "normal" }}>“{eventName}”</strong>
+                  {certificate.service_period?.trim() ? (
+                    <> ({certificate.service_period.trim()})</>
+                  ) : null}{" "}
+                  at Chandanaish Darbar Sharif. We pray for continued blessings and spiritual elevation.
+                </p>
+              </div>
+            ) : isEn ? (
               <p
                 style={{
                   fontSize: "16px",
@@ -441,24 +504,30 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
               gridTemplateColumns: "1fr 140px 1fr 110px",
               alignItems: "end",
               gap: "16px",
-              paddingTop: "8px",
+              paddingTop: "6px",
             }}
           >
             {/* Left Signature: Committee */}
             <div style={{ textAlign: "center" }}>
               <div
                 style={{
-                  height: "36px",
+                  height: "32px",
                   borderBottom: "1.5px solid #064e3b",
                   width: "220px",
                   margin: "0 auto 6px",
                 }}
               />
-              <div style={{ fontSize: "13px", fontWeight: 800, color: "#064e3b" }}>
-                {isEn ? "Managing Committee" : "পরিচালনা কমিটি"}
+              <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#064e3b" }}>
+                {isBilingual
+                  ? "পরিচালনা কমিটি / Managing Committee"
+                  : isEn
+                  ? "Managing Committee"
+                  : "পরিচালনা কমিটি"}
               </div>
-              <div style={{ fontSize: "11px", color: "#6b7280" }}>
-                {isEn
+              <div style={{ fontSize: "10.5px", color: "#6b7280" }}>
+                {isBilingual
+                  ? "চন্দনাইশ দরবার শরীফ • Chandanaish Darbar Sharif"
+                  : isEn
                   ? "Chandanaish Darbar Sharif, Chattogram"
                   : "চন্দনাইশ দরবার শরীফ, চট্টগ্রাম"}
               </div>
@@ -468,8 +537,8 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             <div style={{ display: "flex", justifyContent: "center" }}>
               <div
                 style={{
-                  width: "96px",
-                  height: "96px",
+                  width: "94px",
+                  height: "94px",
                   borderRadius: "50%",
                   background:
                     "radial-gradient(circle, #fef3c7 0%, #f59e0b 60%, #b45309 100%)",
@@ -485,12 +554,20 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                   boxSizing: "border-box",
                 }}
               >
-                <div style={{ fontSize: isEn ? "9px" : "10px", fontWeight: 900, lineHeight: 1.2 }}>
-                  {isEn ? "OFFICIAL SEAL" : "অফিসিয়াল সিল"}
+                <div style={{ fontSize: "8.5px", fontWeight: 900, lineHeight: 1.2 }}>
+                  {isBilingual
+                    ? "অফিসিয়াল সিল"
+                    : isEn
+                    ? "OFFICIAL SEAL"
+                    : "অফিসিয়াল সিল"}
                 </div>
-                <div style={{ fontSize: "14px", margin: "2px 0" }}>✦</div>
-                <div style={{ fontSize: isEn ? "8px" : "9px", fontWeight: 800, lineHeight: 1.15 }}>
-                  {isEn ? "CHANDANAISH DARBAR SHARIF" : "চন্দনাইশ দরবার শরীফ"}
+                <div style={{ fontSize: "12px", margin: "1px 0" }}>✦</div>
+                <div style={{ fontSize: "8px", fontWeight: 800, lineHeight: 1.15 }}>
+                  {isBilingual
+                    ? "OFFICIAL SEAL"
+                    : isEn
+                    ? "CHANDANAISH DARBAR SHARIF"
+                    : "চন্দনাইশ দরবার শরীফ"}
                 </div>
               </div>
             </div>
@@ -499,17 +576,17 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             <div style={{ textAlign: "center" }}>
               <div
                 style={{
-                  height: "36px",
+                  height: "32px",
                   borderBottom: "1.5px solid #064e3b",
                   width: "240px",
                   margin: "0 auto 6px",
                 }}
               />
-              <div style={{ fontSize: "13px", fontWeight: 800, color: "#064e3b" }}>
+              <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#064e3b" }}>
                 {certificate.signatory_name?.trim() ||
                   (isEn ? "Chief Khadim" : "প্রধান খেদমতকারী")}
               </div>
-              <div style={{ fontSize: "11px", color: "#6b7280" }}>
+              <div style={{ fontSize: "10.5px", color: "#6b7280" }}>
                 {certificate.signatory_title?.trim() ||
                   (isEn ? "Chandanaish Darbar Sharif" : "চন্দনাইশ দরবার শরীফ")}
               </div>
@@ -519,9 +596,9 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             <div style={{ textAlign: "center" }}>
               <div
                 style={{
-                  width: "84px",
-                  height: "84px",
-                  margin: "0 auto 4px",
+                  width: "82px",
+                  height: "82px",
+                  margin: "0 auto 3px",
                   padding: "4px",
                   backgroundColor: "#fdfbf4",
                   border: "1px solid #d4af37",
@@ -541,8 +618,12 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                   <span style={{ fontSize: "9px", color: "#6b7280" }}>QR</span>
                 )}
               </div>
-              <div style={{ fontSize: "9px", color: "#6b7280", fontWeight: 700 }}>
-                {isEn ? "Scan to Verify" : "যাচাই করতে স্ক্যান করুন"}
+              <div style={{ fontSize: "8.5px", color: "#6b7280", fontWeight: 700 }}>
+                {isBilingual
+                  ? "যাচাই / Scan QR"
+                  : isEn
+                  ? "Scan to Verify"
+                  : "যাচাই করতে স্ক্যান করুন"}
               </div>
             </div>
           </div>

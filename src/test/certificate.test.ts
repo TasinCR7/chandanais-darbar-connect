@@ -20,9 +20,12 @@ describe("Volunteer Certificate helpers", () => {
     );
   });
 
-  it("creates an empty certificate with valid defaults in Bangla and English", () => {
+  it("creates an empty certificate with valid defaults in Bilingual, Bangla, and English", () => {
+    const certBi = createEmptyCertificate();
+    expect(certBi.language).toBe("bilingual");
+    expect(certBi.certificate_code).toMatch(/^CDS-VOL-\d{4}-[A-Z0-9]{5}$/);
+
     const certBn = createEmptyCertificate("bn");
-    expect(certBn.certificate_code).toMatch(/^CDS-VOL-\d{4}-[A-Z0-9]{5}$/);
     expect(certBn.issue_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(certBn.language).toBe("bn");
     expect(certBn.role_title).toBe("স্বেচ্ছাসেবক");

@@ -389,33 +389,44 @@ const Certificates = () => {
                     </Button>
                   </div>
 
-                  {/* Certificate Language Switcher */}
+                    {/* Certificate Language Switcher */}
                   <div className="space-y-1.5">
                     <Label className="text-xs text-gold/80 flex items-center gap-1.5">
                       <Languages className="w-3.5 h-3.5" /> সার্টিফিকেটের ভাষা / Certificate Language
                     </Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5">
                       <button
                         type="button"
-                        onClick={() => handleLanguageSwitch("bn")}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                          !isEn
+                        onClick={() => handleLanguageSwitch("bilingual")}
+                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
+                          (form.language || "bilingual") === "bilingual"
                             ? "bg-gold-gradient text-primary-foreground border-gold shadow-sm"
                             : "bg-background/50 border-gold/20 text-muted-foreground hover:text-cream"
                         }`}
                       >
-                        বাংলা (Bangla)
+                        বাংলা + EN
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLanguageSwitch("bn")}
+                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
+                          form.language === "bn"
+                            ? "bg-gold-gradient text-primary-foreground border-gold shadow-sm"
+                            : "bg-background/50 border-gold/20 text-muted-foreground hover:text-cream"
+                        }`}
+                      >
+                        শুধু বাংলা
                       </button>
                       <button
                         type="button"
                         onClick={() => handleLanguageSwitch("en")}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                          isEn
+                        className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
+                          form.language === "en"
                             ? "bg-gold-gradient text-primary-foreground border-gold shadow-sm"
                             : "bg-background/50 border-gold/20 text-muted-foreground hover:text-cream"
                         }`}
                       >
-                        English (ইংরেজি)
+                        English
                       </button>
                     </div>
                   </div>
@@ -834,32 +845,28 @@ const Certificates = () => {
 
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="inline-flex rounded-lg border border-gold/25 overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedVerified({ ...selectedVerified, language: "bn" })
-                          }
-                          className={`px-2.5 py-1 text-xs font-bold transition-colors ${
-                            (selectedVerified.language || "bn") === "bn"
-                              ? "bg-gold text-primary-foreground"
-                              : "bg-background/60 text-muted-foreground hover:text-cream"
-                          }`}
-                        >
-                          বাংলা
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedVerified({ ...selectedVerified, language: "en" })
-                          }
-                          className={`px-2.5 py-1 text-xs font-bold transition-colors ${
-                            selectedVerified.language === "en"
-                              ? "bg-gold text-primary-foreground"
-                              : "bg-background/60 text-muted-foreground hover:text-cream"
-                          }`}
-                        >
-                          English
-                        </button>
+                        {(
+                          [
+                            { id: "bilingual", label: "বাংলা+EN" },
+                            { id: "bn", label: "বাংলা" },
+                            { id: "en", label: "English" },
+                          ] as const
+                        ).map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedVerified({ ...selectedVerified, language: opt.id })
+                            }
+                            className={`px-2.5 py-1 text-xs font-bold transition-colors ${
+                              (selectedVerified.language || "bilingual") === opt.id
+                                ? "bg-gold text-primary-foreground"
+                                : "bg-background/60 text-muted-foreground hover:text-cream"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
                       </div>
                       <Button
                         type="button"

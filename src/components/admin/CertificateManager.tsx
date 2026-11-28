@@ -200,18 +200,24 @@ const CertificateManager: React.FC = () => {
           </h3>
           <div className="flex items-center gap-3">
             <div className="inline-flex rounded-lg border border-gold/25 overflow-hidden">
-              {(["bn", "en"] as CertificateLanguage[]).map((lang) => (
+              {(
+                [
+                  { id: "bilingual", label: "বাংলা+EN" },
+                  { id: "bn", label: "বাংলা" },
+                  { id: "en", label: "English" },
+                ] as { id: CertificateLanguage; label: string }[]
+              ).map((lang) => (
                 <button
-                  key={lang}
+                  key={lang.id}
                   type="button"
-                  onClick={() => setForm(createEmptyCertificate(lang))}
-                  className={`px-3 py-1 text-xs font-bold transition-colors ${
-                    (form.language || "bn") === lang
+                  onClick={() => setForm(createEmptyCertificate(lang.id))}
+                  className={`px-2.5 py-1 text-xs font-bold transition-colors ${
+                    (form.language || "bilingual") === lang.id
                       ? "bg-gold text-primary-foreground"
                       : "bg-background/60 text-muted-foreground hover:text-cream"
                   }`}
                 >
-                  {lang === "bn" ? "বাংলা" : "English"}
+                  {lang.label}
                 </button>
               ))}
             </div>

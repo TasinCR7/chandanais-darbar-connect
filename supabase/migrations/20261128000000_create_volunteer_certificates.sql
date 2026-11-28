@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.volunteer_certificates (
   issue_date date NOT NULL DEFAULT current_date,
   signatory_name text NOT NULL DEFAULT 'শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী',
   signatory_title text NOT NULL DEFAULT 'গদ্দীনশীন পীর ও প্রধান খেদমতকারী',
-  language text NOT NULL DEFAULT 'bn' CHECK (language IN ('bn', 'en')),
+  language text NOT NULL DEFAULT 'bilingual' CHECK (language IN ('bilingual', 'bn', 'en')),
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
   notes text,
   created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.volunteer_certificates (
 );
 
 ALTER TABLE public.volunteer_certificates
-  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'bn' CHECK (language IN ('bn', 'en'));
+  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'bilingual' CHECK (language IN ('bilingual', 'bn', 'en'));
 
 CREATE INDEX IF NOT EXISTS idx_volunteer_certificates_code_upper
   ON public.volunteer_certificates (upper(certificate_code));

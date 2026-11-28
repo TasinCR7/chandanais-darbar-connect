@@ -1,7 +1,7 @@
 import { toLocalISODate } from "@/lib/localDate";
 import { sanitizeFilenameSegment } from "@/utils/security";
 
-export type CertificateLanguage = "bn" | "en";
+export type CertificateLanguage = "bilingual" | "bn" | "en";
 
 export interface VolunteerCertificate {
   id?: string;
@@ -94,7 +94,7 @@ export function getCertificateVerifyUrl(code: string): string {
 }
 
 export function createEmptyCertificate(
-  language: CertificateLanguage = "bn"
+  language: CertificateLanguage = "bilingual"
 ): VolunteerCertificate {
   const isEn = language === "en";
   return {
