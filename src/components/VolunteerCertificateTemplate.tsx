@@ -10,30 +10,33 @@ interface Props {
   certificate: VolunteerCertificate;
 }
 
-function formatBanglaDate(dateStr?: string | null): string {
+function formatCertificateDate(dateStr?: string | null, isEn = false): string {
   if (!dateStr) return "—";
   try {
     const parsed = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
       ? new Date(`${dateStr}T00:00:00`)
       : new Date(dateStr);
-    if (Number.isNaN(parsed.getTime())) return toBanglaNumber(dateStr);
-    return parsed.toLocaleDateString("bn-BD", {
+    if (Number.isNaN(parsed.getTime())) {
+      return isEn ? dateStr : toBanglaNumber(dateStr);
+    }
+    return parsed.toLocaleDateString(isEn ? "en-GB" : "bn-BD", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
   } catch {
-    return toBanglaNumber(dateStr);
+    return isEn ? dateStr : toBanglaNumber(dateStr);
   }
 }
 
 /**
  * Full-resolution A4 Landscape (1123 x 794 px) Volunteer Certificate of Appreciation.
- * Designed with inline styles so html2canvas renders identical output across all browsers.
+ * Supports both Bangla ("bn") and English ("en") layouts with inline styles for pixel-perfect PDF/PNG export.
  */
 export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Props>(
   ({ certificate }, ref) => {
     const [qrDataUrl, setQrDataUrl] = useState<string>("");
+    const isEn = certificate.language === "en";
 
     useEffect(() => {
       let active = true;
@@ -61,10 +64,14 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
       };
     }, [certificate.certificate_code]);
 
-    const volunteerName = certificate.volunteer_name?.trim() || "স্বেচ্ছাসেবকের নাম";
-    const roleTitle = certificate.role_title?.trim() || "স্বেচ্ছাসেবক";
-    const eventName = certificate.event_name?.trim() || "পবিত্র ওরশ শরীফ ও দরবার খিদমত";
-    const formattedIssueDate = formatBanglaDate(certificate.issue_date);
+    const volunteerName =
+      certificate.volunteer_name?.trim() || (isEn ? "Volunteer Name" : "স্বেচ্ছাসেবকের নাম");
+    const roleTitle =
+      certificate.role_title?.trim() || (isEn ? "Volunteer" : "স্বেচ্ছাসেবক");
+    const eventName =
+      certificate.event_name?.trim() ||
+      (isEn ? "Annual Urs Sharif & Darbar Khidmat" : "পবিত্র ওরশ শরীফ ও দরবার খিদমত");
+    const formattedIssueDate = formatCertificateDate(certificate.issue_date, isEn);
 
     return (
       <div
@@ -76,7 +83,9 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
           backgroundImage:
             "radial-gradient(circle at 50% 45%, rgba(212, 175, 55, 0.08) 0%, rgba(6, 78, 59, 0.03) 65%, rgba(6, 78, 59, 0.07) 100%)",
           color: "#1a1a1a",
-          fontFamily: "'Noto Sans Bengali', 'Hind Siliguri', 'Segoe UI', sans-serif",
+          fontFamily: isEn
+            ? "'Georgia', 'Noto Sans Bengali', 'Segoe UI', serif"
+            : "'Noto Sans Bengali', 'Hind Siliguri', 'Segoe UI', sans-serif",
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
@@ -90,7 +99,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%) rotate(-18deg)",
-            fontSize: "88px",
+            fontSize: isEn ? "64px" : "88px",
             fontWeight: 900,
             color: "rgba(6, 78, 59, 0.035)",
             whiteSpace: "nowrap",
@@ -99,7 +108,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             zIndex: 0,
           }}
         >
-          চন্দনাইশ দরবার শরীফ
+          {isEn ? "CHANDANAISH DARBAR SHARIF" : "চন্দনাইশ দরবার শরীফ"}
         </div>
 
         {/* Outer Emerald Frame */}
@@ -190,10 +199,10 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
               }}
             >
               <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#064e3b" }}>
-                সনদ নং: {certificate.certificate_code}
+                {isEn ? "Certificate No:" : "সনদ নং:"} {certificate.certificate_code}
               </div>
               <div style={{ fontWeight: 600, color: "#064e3b" }}>
-                ইস্যু তারিখ: {formattedIssueDate}
+                {isEn ? "Date of Issue:" : "ইস্যু তারিখ:"} {formattedIssueDate}
               </div>
             </div>
 
@@ -222,7 +231,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
             >
               <img
                 src="/logo.png"
-                alt="দরবার লোগো"
+                alt="Darbar Logo"
                 crossOrigin="anonymous"
                 style={{
                   width: "54px",
@@ -236,23 +245,26 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
               <div style={{ textAlign: "left" }}>
                 <div
                   style={{
-                    fontSize: "30px",
+                    fontSize: isEn ? "28px" : "30px",
                     fontWeight: 900,
                     color: "#064e3b",
                     lineHeight: 1.15,
+                    letterSpacing: isEn ? "1.5px" : "0px",
                   }}
                 >
-                  চন্দনাইশ দরবার শরীফ
+                  {isEn ? "CHANDANAISH DARBAR SHARIF" : "চন্দনাইশ দরবার শরীফ"}
                 </div>
                 <div
                   style={{
                     fontSize: "12px",
                     fontWeight: 700,
                     color: "#92400e",
-                    letterSpacing: "1.5px",
+                    letterSpacing: isEn ? "1.2px" : "1.5px",
                   }}
                 >
-                  সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া • চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ
+                  {isEn
+                    ? "Silsila-e-Tariqaye Maizbhandaria • Chandanaish, Chattogram, Bangladesh"
+                    : "সিলসিলা-ই-তরিকায়ে মাইজভান্ডারিয়া • চন্দনাইশ, চট্টগ্রাম, বাংলাদেশ"}
                 </div>
               </div>
             </div>
@@ -271,19 +283,30 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 boxShadow: "0 4px 12px rgba(6, 78, 59, 0.2)",
               }}
             >
-              <div style={{ fontSize: "18px", fontWeight: 800, letterSpacing: "1px" }}>
-                স্বেচ্ছাসেবক সম্মাননা সনদপত্র
+              <div
+                style={{
+                  fontSize: isEn ? "17px" : "18px",
+                  fontWeight: 800,
+                  letterSpacing: isEn ? "2px" : "1px",
+                  textTransform: isEn ? "uppercase" : "none",
+                }}
+              >
+                {isEn
+                  ? "Certificate of Volunteer Appreciation"
+                  : "স্বেচ্ছাসেবক সম্মাননা সনদপত্র"}
               </div>
               <div
                 style={{
                   fontSize: "10px",
-                  letterSpacing: "3px",
-                  textTransform: "uppercase",
+                  letterSpacing: isEn ? "1.5px" : "3px",
+                  textTransform: isEn ? "none" : "uppercase",
                   color: "#fde68a",
                   marginTop: "1px",
                 }}
               >
-                Certificate of Volunteer Appreciation
+                {isEn
+                  ? "স্বেচ্ছাসেবক সম্মাননা সনদপত্র"
+                  : "Certificate of Volunteer Appreciation"}
               </div>
             </div>
           </div>
@@ -296,9 +319,12 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 color: "#4b5563",
                 fontWeight: 600,
                 marginBottom: "8px",
+                fontStyle: isEn ? "italic" : "normal",
               }}
             >
-              এই মর্মে সাদর সম্মাননা ও কৃতজ্ঞতা জ্ঞাপন করা যাচ্ছে যে,
+              {isEn
+                ? "This certificate is proudly presented with sincere gratitude to"
+                : "এই মর্মে সাদর সম্মাননা ও কৃতজ্ঞতা জ্ঞাপন করা যাচ্ছে যে,"}
             </div>
 
             {/* Volunteer Name */}
@@ -328,13 +354,19 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 }}
               >
                 {certificate.father_name?.trim() && (
-                  <span>পিতা: {certificate.father_name.trim()}</span>
+                  <span>
+                    {isEn ? "S/O / D/O: " : "পিতা: "}
+                    {certificate.father_name.trim()}
+                  </span>
                 )}
                 {certificate.father_name?.trim() && certificate.address?.trim() && (
                   <span style={{ margin: "0 10px", color: "#b8860b" }}>•</span>
                 )}
                 {certificate.address?.trim() && (
-                  <span>ঠিকানা: {certificate.address.trim()}</span>
+                  <span>
+                    {isEn ? "Address: " : "ঠিকানা: "}
+                    {certificate.address.trim()}
+                  </span>
                 )}
               </div>
             )}
@@ -353,31 +385,53 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                   fontWeight: 800,
                 }}
               >
-                দায়িত্ব: {roleTitle}
+                {isEn ? `Role: ${roleTitle}` : `দায়িত্ব: ${roleTitle}`}
               </span>
             </div>
 
             {/* Citation Paragraph */}
-            <p
-              style={{
-                fontSize: "16px",
-                lineHeight: 1.75,
-                color: "#1f2937",
-                maxWidth: "860px",
-                margin: "0 auto",
-                fontWeight: 500,
-              }}
-            >
-              চন্দনাইশ দরবার শরীফের{" "}
-              <strong style={{ color: "#064e3b", fontWeight: 800 }}>“{eventName}”</strong>
-              {certificate.service_period?.trim() ? (
-                <> ({certificate.service_period.trim()})</>
-              ) : null}{" "}
-              সফলভাবে সম্পন্ন করতে নিষ্ঠা, আন্তরিকতা ও নিঃস্বার্থ খেদমতের মাধ্যমে অসামান্য অবদান
-              রেখেছেন। তাঁর এই মহৎ সেবার স্বীকৃতিস্বরূপ চন্দনাইশ দরবার শরীফের পক্ষ থেকে এই
-              সম্মাননা সনদপত্র প্রদান করা হলো। আমরা তাঁর সর্বাঙ্গীণ মঙ্গল ও রূহানী উন্নতি কামনা
-              করি।
-            </p>
+            {isEn ? (
+              <p
+                style={{
+                  fontSize: "16px",
+                  lineHeight: 1.75,
+                  color: "#1f2937",
+                  maxWidth: "860px",
+                  margin: "0 auto",
+                  fontWeight: 500,
+                }}
+              >
+                In heartfelt recognition of outstanding dedication, sincerity, and selfless
+                service rendered during{" "}
+                <strong style={{ color: "#064e3b", fontWeight: 800 }}>“{eventName}”</strong>
+                {certificate.service_period?.trim() ? (
+                  <> ({certificate.service_period.trim()})</>
+                ) : null}{" "}
+                at Chandanaish Darbar Sharif. We deeply appreciate this noble contribution
+                and pray for continued blessings, well-being, and spiritual elevation.
+              </p>
+            ) : (
+              <p
+                style={{
+                  fontSize: "16px",
+                  lineHeight: 1.75,
+                  color: "#1f2937",
+                  maxWidth: "860px",
+                  margin: "0 auto",
+                  fontWeight: 500,
+                }}
+              >
+                চন্দনাইশ দরবার শরীফের{" "}
+                <strong style={{ color: "#064e3b", fontWeight: 800 }}>“{eventName}”</strong>
+                {certificate.service_period?.trim() ? (
+                  <> ({certificate.service_period.trim()})</>
+                ) : null}{" "}
+                সফলভাবে সম্পন্ন করতে নিষ্ঠা, আন্তরিকতা ও নিঃস্বার্থ খেদমতের মাধ্যমে অসামান্য অবদান
+                রেখেছেন। তাঁর এই মহৎ সেবার স্বীকৃতিস্বরূপ চন্দনাইশ দরবার শরীফের পক্ষ থেকে এই
+                সম্মাননা সনদপত্র প্রদান করা হলো। আমরা তাঁর সর্বাঙ্গীণ মঙ্গল ও রূহানী উন্নতি কামনা
+                করি।
+              </p>
+            )}
           </div>
 
           {/* Bottom Row: Signatures + Official Seal + QR */}
@@ -401,10 +455,12 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 }}
               />
               <div style={{ fontSize: "13px", fontWeight: 800, color: "#064e3b" }}>
-                পরিচালনা কমিটি
+                {isEn ? "Managing Committee" : "পরিচালনা কমিটি"}
               </div>
               <div style={{ fontSize: "11px", color: "#6b7280" }}>
-                চন্দনাইশ দরবার শরীফ, চট্টগ্রাম
+                {isEn
+                  ? "Chandanaish Darbar Sharif, Chattogram"
+                  : "চন্দনাইশ দরবার শরীফ, চট্টগ্রাম"}
               </div>
             </div>
 
@@ -429,12 +485,12 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                   boxSizing: "border-box",
                 }}
               >
-                <div style={{ fontSize: "10px", fontWeight: 900, lineHeight: 1.2 }}>
-                  অফিসিয়াল সিল
+                <div style={{ fontSize: isEn ? "9px" : "10px", fontWeight: 900, lineHeight: 1.2 }}>
+                  {isEn ? "OFFICIAL SEAL" : "অফিসিয়াল সিল"}
                 </div>
                 <div style={{ fontSize: "14px", margin: "2px 0" }}>✦</div>
-                <div style={{ fontSize: "9px", fontWeight: 800, lineHeight: 1.15 }}>
-                  চন্দনাইশ দরবার শরীফ
+                <div style={{ fontSize: isEn ? "8px" : "9px", fontWeight: 800, lineHeight: 1.15 }}>
+                  {isEn ? "CHANDANAISH DARBAR SHARIF" : "চন্দনাইশ দরবার শরীফ"}
                 </div>
               </div>
             </div>
@@ -450,10 +506,12 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 }}
               />
               <div style={{ fontSize: "13px", fontWeight: 800, color: "#064e3b" }}>
-                {certificate.signatory_name?.trim() || "প্রধান খেদমতকারী"}
+                {certificate.signatory_name?.trim() ||
+                  (isEn ? "Chief Khadim" : "প্রধান খেদমতকারী")}
               </div>
               <div style={{ fontSize: "11px", color: "#6b7280" }}>
-                {certificate.signatory_title?.trim() || "চন্দনাইশ দরবার শরীফ"}
+                {certificate.signatory_title?.trim() ||
+                  (isEn ? "Chandanaish Darbar Sharif" : "চন্দনাইশ দরবার শরীফ")}
               </div>
             </div>
 
@@ -484,7 +542,7 @@ export const VolunteerCertificateTemplate = React.forwardRef<HTMLDivElement, Pro
                 )}
               </div>
               <div style={{ fontSize: "9px", color: "#6b7280", fontWeight: 700 }}>
-                যাচাই করতে স্ক্যান করুন
+                {isEn ? "Scan to Verify" : "যাচাই করতে স্ক্যান করুন"}
               </div>
             </div>
           </div>

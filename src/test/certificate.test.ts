@@ -20,12 +20,17 @@ describe("Volunteer Certificate helpers", () => {
     );
   });
 
-  it("creates an empty certificate with valid defaults", () => {
-    const cert = createEmptyCertificate();
-    expect(cert.certificate_code).toMatch(/^CDS-VOL-\d{4}-[A-Z0-9]{5}$/);
-    expect(cert.issue_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(cert.role_title.length).toBeGreaterThan(0);
-    expect(cert.event_name.length).toBeGreaterThan(0);
-    expect(cert.status).toBe("active");
+  it("creates an empty certificate with valid defaults in Bangla and English", () => {
+    const certBn = createEmptyCertificate("bn");
+    expect(certBn.certificate_code).toMatch(/^CDS-VOL-\d{4}-[A-Z0-9]{5}$/);
+    expect(certBn.issue_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(certBn.language).toBe("bn");
+    expect(certBn.role_title).toBe("স্বেচ্ছাসেবক");
+    expect(certBn.status).toBe("active");
+
+    const certEn = createEmptyCertificate("en");
+    expect(certEn.language).toBe("en");
+    expect(certEn.role_title).toBe("Volunteer");
+    expect(certEn.event_name).toContain("Urs Sharif");
   });
 });

@@ -26,9 +26,12 @@ import {
   downloadCertificatePDF,
   downloadCertificatePNG,
   EVENT_PRESETS,
+  EVENT_PRESETS_EN,
   generateCertificateCode,
   getCertificateVerifyUrl,
   VOLUNTEER_ROLE_PRESETS,
+  VOLUNTEER_ROLE_PRESETS_EN,
+  type CertificateLanguage,
   type VolunteerCertificate,
 } from "@/lib/certificate";
 
@@ -95,6 +98,7 @@ const CertificateManager: React.FC = () => {
         issue_date: form.issue_date,
         signatory_name: form.signatory_name.trim(),
         signatory_title: form.signatory_title.trim(),
+        language: form.language || "bn",
         status: "active",
         created_by: userData.user?.id ?? null,
       };
@@ -194,12 +198,30 @@ const CertificateManager: React.FC = () => {
           <h3 className="text-lg font-heading font-bold text-gold flex items-center gap-2">
             <Award className="w-5 h-5" /> নতুন স্বেচ্ছাসেবক সনদ ইস্যু করুন
           </h3>
-          <Link
-            to="/certificates"
-            className="text-xs text-gold hover:underline inline-flex items-center gap-1 font-semibold"
-          >
-            লাইভ প্রিভিউ পোর্টাল খুলুন <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <div className="inline-flex rounded-lg border border-gold/25 overflow-hidden">
+              {(["bn", "en"] as CertificateLanguage[]).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setForm(createEmptyCertificate(lang))}
+                  className={`px-3 py-1 text-xs font-bold transition-colors ${
+                    (form.language || "bn") === lang
+                      ? "bg-gold text-primary-foreground"
+                      : "bg-background/60 text-muted-foreground hover:text-cream"
+                  }`}
+                >
+                  {lang === "bn" ? "বাংলা" : "English"}
+                </button>
+              ))}
+            </div>
+            <Link
+              to="/certificates"
+              className="text-xs text-gold hover:underline inline-flex items-center gap-1 font-semibold"
+            >
+              লাইভ প্রিভিউ পোর্টাল খুলুন <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -238,7 +260,7 @@ const CertificateManager: React.FC = () => {
               onChange={(e) => setForm({ ...form, role_title: e.target.value })}
               className="w-full mt-1 h-10 px-3 rounded-md bg-background border border-input text-sm"
             >
-              {VOLUNTEER_ROLE_PRESETS.map((r) => (
+              {(form.language === "en" ? VOLUNTEER_ROLE_PRESETS_EN : VOLUNTEER_ROLE_PRESETS).map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
@@ -255,7 +277,7 @@ const CertificateManager: React.FC = () => {
               required
             />
             <datalist id="admin-cert-events">
-              {EVENT_PRESETS.map((ev) => (
+              {(form.language === "en" ? EVENT_PRESETS_EN : EVENT_PRESETS).map((ev) => (
                 <option key={ev} value={ev} />
               ))}
             </datalist>

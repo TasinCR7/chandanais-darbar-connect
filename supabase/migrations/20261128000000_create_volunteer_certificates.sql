@@ -14,11 +14,15 @@ CREATE TABLE IF NOT EXISTS public.volunteer_certificates (
   issue_date date NOT NULL DEFAULT current_date,
   signatory_name text NOT NULL DEFAULT 'শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী',
   signatory_title text NOT NULL DEFAULT 'গদ্দীনশীন পীর ও প্রধান খেদমতকারী',
+  language text NOT NULL DEFAULT 'bn' CHECK (language IN ('bn', 'en')),
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
   notes text,
   created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.volunteer_certificates
+  ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'bn' CHECK (language IN ('bn', 'en'));
 
 CREATE INDEX IF NOT EXISTS idx_volunteer_certificates_code_upper
   ON public.volunteer_certificates (upper(certificate_code));
@@ -53,6 +57,7 @@ RETURNS TABLE (
   issue_date date,
   signatory_name text,
   signatory_title text,
+  language text,
   status text,
   created_at timestamptz
 )
@@ -73,6 +78,7 @@ AS $$
     vc.issue_date,
     vc.signatory_name,
     vc.signatory_title,
+    vc.language,
     vc.status,
     vc.created_at
   FROM public.volunteer_certificates vc
@@ -93,6 +99,7 @@ RETURNS TABLE (
   issue_date date,
   signatory_name text,
   signatory_title text,
+  language text,
   status text,
   created_at timestamptz
 )
@@ -116,6 +123,7 @@ AS $$
     vc.issue_date,
     vc.signatory_name,
     vc.signatory_title,
+    vc.language,
     vc.status,
     vc.created_at
   FROM public.volunteer_certificates vc, cleaned c

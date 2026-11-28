@@ -1,6 +1,8 @@
 import { toLocalISODate } from "@/lib/localDate";
 import { sanitizeFilenameSegment } from "@/utils/security";
 
+export type CertificateLanguage = "bn" | "en";
+
 export interface VolunteerCertificate {
   id?: string;
   certificate_code: string;
@@ -14,6 +16,7 @@ export interface VolunteerCertificate {
   issue_date: string;
   signatory_name: string;
   signatory_title: string;
+  language?: CertificateLanguage;
   status?: "active" | "revoked";
   notes?: string | null;
   created_at?: string;
@@ -30,6 +33,17 @@ export const VOLUNTEER_ROLE_PRESETS = [
   "পরিষ্কার-পরিচ্ছন্নতা স্বেচ্ছাসেবক",
 ];
 
+export const VOLUNTEER_ROLE_PRESETS_EN = [
+  "Volunteer",
+  "Lead Volunteer",
+  "Discipline & Security Volunteer",
+  "Hospitality & Tabarruk Distribution Volunteer",
+  "Medical & First Aid Volunteer",
+  "Media, Publicity & Information Volunteer",
+  "Stage & Sound Management Volunteer",
+  "Cleanliness & Sanitation Volunteer",
+];
+
 export const EVENT_PRESETS = [
   "পবিত্র বার্ষিক ওরশ শরীফ ২০২৬",
   "গাউছে জামান মাইজভান্ডারী ওরশ শরীফ",
@@ -39,9 +53,22 @@ export const EVENT_PRESETS = [
   "দরবার শরীফের নিয়মিত খিদমত ও সেবাকার্যক্রম",
 ];
 
+export const EVENT_PRESETS_EN = [
+  "Annual Urs Sharif 2026",
+  "Ghaus-e-Zaman Maizbhandari Urs Sharif",
+  "Pir Baba Bhandari Urs Sharif",
+  "Babajan Qibla Chandanaishi Birth Anniversary Mahfil",
+  "Monthly 3rd Arabic Date Urs & Fateha Sharif",
+  "Regular Khidmat & Volunteer Service at Darbar Sharif",
+];
+
 export const DEFAULT_SIGNATORY_NAME =
   "শাহজাদা ছৈয়দ মোহাম্মদ মকছুদুল আলম শাহ আল্ চন্দনাইশী";
 export const DEFAULT_SIGNATORY_TITLE = "গদ্দীনশীন পীর ও প্রধান খেদমতকারী";
+
+export const DEFAULT_SIGNATORY_NAME_EN =
+  "Shahzada Syed Mohammad Moksudul Alam Shah Al-Chandanaishi";
+export const DEFAULT_SIGNATORY_TITLE_EN = "Gaddinashin Pir & Chief Khadim";
 
 export const VERIFY_BASE_URL = "https://www.chandanaishdarbarsharif.com/certificates";
 
@@ -66,19 +93,23 @@ export function getCertificateVerifyUrl(code: string): string {
   return `${VERIFY_BASE_URL}?code=${encodeURIComponent(code.trim().toUpperCase())}`;
 }
 
-export function createEmptyCertificate(): VolunteerCertificate {
+export function createEmptyCertificate(
+  language: CertificateLanguage = "bn"
+): VolunteerCertificate {
+  const isEn = language === "en";
   return {
     certificate_code: generateCertificateCode(),
     volunteer_name: "",
     father_name: "",
     phone: "",
     address: "",
-    role_title: VOLUNTEER_ROLE_PRESETS[0],
-    event_name: EVENT_PRESETS[0],
+    role_title: isEn ? VOLUNTEER_ROLE_PRESETS_EN[0] : VOLUNTEER_ROLE_PRESETS[0],
+    event_name: isEn ? EVENT_PRESETS_EN[0] : EVENT_PRESETS[0],
     service_period: "",
     issue_date: toLocalISODate(),
-    signatory_name: DEFAULT_SIGNATORY_NAME,
-    signatory_title: DEFAULT_SIGNATORY_TITLE,
+    signatory_name: isEn ? DEFAULT_SIGNATORY_NAME_EN : DEFAULT_SIGNATORY_NAME,
+    signatory_title: isEn ? DEFAULT_SIGNATORY_TITLE_EN : DEFAULT_SIGNATORY_TITLE,
+    language,
     status: "active",
   };
 }

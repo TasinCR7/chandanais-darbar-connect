@@ -16,6 +16,7 @@ import {
   Loader2,
   Phone,
   Hash,
+  Languages,
 } from "lucide-react";
 import SEO from "@/components/SEO";
 import SectionTitle from "@/components/SectionTitle";
@@ -30,12 +31,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { normalizePhoneNumber } from "@/utils/phoneUtils";
 import {
   createEmptyCertificate,
+  DEFAULT_SIGNATORY_NAME,
+  DEFAULT_SIGNATORY_NAME_EN,
+  DEFAULT_SIGNATORY_TITLE,
+  DEFAULT_SIGNATORY_TITLE_EN,
   downloadCertificatePDF,
   downloadCertificatePNG,
   EVENT_PRESETS,
+  EVENT_PRESETS_EN,
   generateCertificateCode,
   getCertificateVerifyUrl,
   VOLUNTEER_ROLE_PRESETS,
+  VOLUNTEER_ROLE_PRESETS_EN,
+  type CertificateLanguage,
   type VolunteerCertificate,
 } from "@/lib/certificate";
 
@@ -108,6 +116,47 @@ const Certificates = () => {
     setForm((prev) => ({ ...prev, [key]: value }));
     if (savedCode) setSavedCode(null);
   };
+
+  const handleLanguageSwitch = (nextLang: CertificateLanguage) => {
+    setForm((prev) => {
+      const toEn = nextLang === "en";
+      const fromRoles = toEn ? VOLUNTEER_ROLE_PRESETS : VOLUNTEER_ROLE_PRESETS_EN;
+      const toRoles = toEn ? VOLUNTEER_ROLE_PRESETS_EN : VOLUNTEER_ROLE_PRESETS;
+      const fromEvents = toEn ? EVENT_PRESETS : EVENT_PRESETS_EN;
+      const toEvents = toEn ? EVENT_PRESETS_EN : EVENT_PRESETS;
+
+      const roleIdx = fromRoles.indexOf(prev.role_title);
+      const eventIdx = fromEvents.indexOf(prev.event_name);
+
+      const nextSignatoryName =
+        prev.signatory_name === (toEn ? DEFAULT_SIGNATORY_NAME : DEFAULT_SIGNATORY_NAME_EN)
+          ? toEn
+            ? DEFAULT_SIGNATORY_NAME_EN
+            : DEFAULT_SIGNATORY_NAME
+          : prev.signatory_name;
+
+      const nextSignatoryTitle =
+        prev.signatory_title === (toEn ? DEFAULT_SIGNATORY_TITLE : DEFAULT_SIGNATORY_TITLE_EN)
+          ? toEn
+            ? DEFAULT_SIGNATORY_TITLE_EN
+            : DEFAULT_SIGNATORY_TITLE
+          : prev.signatory_title;
+
+      return {
+        ...prev,
+        language: nextLang,
+        role_title: roleIdx >= 0 ? toRoles[roleIdx] : prev.role_title,
+        event_name: eventIdx >= 0 ? toEvents[eventIdx] : prev.event_name,
+        signatory_name: nextSignatoryName,
+        signatory_title: nextSignatoryTitle,
+      };
+    });
+    if (savedCode) setSavedCode(null);
+  };
+
+  const isEn = form.language === "en";
+  const rolePresets = isEn ? VOLUNTEER_ROLE_PRESETS_EN : VOLUNTEER_ROLE_PRESETS;
+  const eventPresets = isEn ? EVENT_PRESETS_EN : EVENT_PRESETS;
 
   const handleRegenerateCode = () => {
     setForm((prev) => ({ ...prev, certificate_code: generateCertificateCode() }));
@@ -186,6 +235,7 @@ const Certificates = () => {
         issue_date: form.issue_date,
         signatory_name: form.signatory_name.trim(),
         signatory_title: form.signatory_title.trim(),
+        language: form.language || "bn",
         status: "active",
         created_by: user?.id ?? null,
       };
@@ -322,7 +372,7 @@ const Certificates = () => {
                     <div className="flex items-center gap-2">
                       <Award className="w-5 h-5 text-gold" />
                       <h2 className="text-lg font-heading font-bold text-cream">
-                        স্বেচ্ছাসেবকের তথ্য দিন
+                        {isEn ? "Volunteer Details" : "স্বেচ্ছাসেবকের তথ্য দিন"}
                       </h2>
                     </div>
                     <Button
@@ -330,13 +380,44 @@ const Certificates = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setForm(createEmptyCertificate());
+                        setForm(createEmptyCertificate(form.language || "bn"));
                         setSavedCode(null);
                       }}
                       className="text-xs text-gold/70 hover:text-gold"
                     >
-                      রিসেট
+                      {isEn ? "Reset" : "রিসেট"}
                     </Button>
+                  </div>
+
+                  {/* Certificate Language Switcher */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-gold/80 flex items-center gap-1.5">
+                      <Languages className="w-3.5 h-3.5" /> সার্টিফিকেটের ভাষা / Certificate Language
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleLanguageSwitch("bn")}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                          !isEn
+                            ? "bg-gold-gradient text-primary-foreground border-gold shadow-sm"
+                            : "bg-background/50 border-gold/20 text-muted-foreground hover:text-cream"
+                        }`}
+                      >
+                        বাংলা (Bangla)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLanguageSwitch("en")}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                          isEn
+                            ? "bg-gold-gradient text-primary-foreground border-gold shadow-sm"
+                            : "bg-background/50 border-gold/20 text-muted-foreground hover:text-cream"
+                        }`}
+                      >
+                        English (ইংরেজি)
+                      </button>
+                    </div>
                   </div>
 
                   {/* Certificate Code */}
@@ -414,10 +495,12 @@ const Certificates = () => {
 
                   {/* Role Title */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gold/80">দায়িত্ব / পদবী *</Label>
+                    <Label className="text-xs text-gold/80">
+                      {isEn ? "Role / Designation *" : "দায়িত্ব / পদবী *"}
+                    </Label>
                     <select
                       value={
-                        VOLUNTEER_ROLE_PRESETS.includes(form.role_title)
+                        rolePresets.includes(form.role_title)
                           ? form.role_title
                           : "__custom__"
                       }
@@ -428,17 +511,19 @@ const Certificates = () => {
                       }}
                       className="w-full h-10 px-3 rounded-md bg-background/60 border border-gold/20 text-sm text-foreground"
                     >
-                      {VOLUNTEER_ROLE_PRESETS.map((r) => (
+                      {rolePresets.map((r) => (
                         <option key={r} value={r}>
                           {r}
                         </option>
                       ))}
-                      <option value="__custom__">অন্যান্য (নিচে লিখুন)</option>
+                      <option value="__custom__">
+                        {isEn ? "Other (Type below)" : "অন্যান্য (নিচে লিখুন)"}
+                      </option>
                     </select>
                     <Input
                       value={form.role_title}
                       onChange={(e) => handleFieldChange("role_title", e.target.value)}
-                      placeholder="দায়িত্ব লিখুন"
+                      placeholder={isEn ? "Enter role title" : "দায়িত্ব লিখুন"}
                       className="bg-background/60 border-gold/20 text-sm"
                       maxLength={80}
                     />
@@ -446,10 +531,12 @@ const Certificates = () => {
 
                   {/* Event Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gold/80">অনুষ্ঠান / উপলক্ষ *</Label>
+                    <Label className="text-xs text-gold/80">
+                      {isEn ? "Event / Occasion *" : "অনুষ্ঠান / উপলক্ষ *"}
+                    </Label>
                     <select
                       value={
-                        EVENT_PRESETS.includes(form.event_name)
+                        eventPresets.includes(form.event_name)
                           ? form.event_name
                           : "__custom__"
                       }
@@ -460,17 +547,19 @@ const Certificates = () => {
                       }}
                       className="w-full h-10 px-3 rounded-md bg-background/60 border border-gold/20 text-sm text-foreground"
                     >
-                      {EVENT_PRESETS.map((ev) => (
+                      {eventPresets.map((ev) => (
                         <option key={ev} value={ev}>
                           {ev}
                         </option>
                       ))}
-                      <option value="__custom__">অন্যান্য (নিচে লিখুন)</option>
+                      <option value="__custom__">
+                        {isEn ? "Other (Type below)" : "অন্যান্য (নিচে লিখুন)"}
+                      </option>
                     </select>
                     <Input
                       value={form.event_name}
                       onChange={(e) => handleFieldChange("event_name", e.target.value)}
-                      placeholder="অনুষ্ঠানের নাম লিখুন"
+                      placeholder={isEn ? "Enter event name" : "অনুষ্ঠানের নাম লিখুন"}
                       className="bg-background/60 border-gold/20 text-sm"
                       maxLength={140}
                     />
@@ -743,7 +832,35 @@ const Certificates = () => {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="inline-flex rounded-lg border border-gold/25 overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedVerified({ ...selectedVerified, language: "bn" })
+                          }
+                          className={`px-2.5 py-1 text-xs font-bold transition-colors ${
+                            (selectedVerified.language || "bn") === "bn"
+                              ? "bg-gold text-primary-foreground"
+                              : "bg-background/60 text-muted-foreground hover:text-cream"
+                          }`}
+                        >
+                          বাংলা
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedVerified({ ...selectedVerified, language: "en" })
+                          }
+                          className={`px-2.5 py-1 text-xs font-bold transition-colors ${
+                            selectedVerified.language === "en"
+                              ? "bg-gold text-primary-foreground"
+                              : "bg-background/60 text-muted-foreground hover:text-cream"
+                          }`}
+                        >
+                          English
+                        </button>
+                      </div>
                       <Button
                         type="button"
                         size="sm"
