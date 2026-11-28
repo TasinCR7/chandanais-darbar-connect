@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Member } from '@/types/finance';
 import { BANGLA_MONTHS } from '@/lib/months';
 
+import { toLocalISODate } from '@/lib/localDate';
 export interface QuickPaymentEntryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,7 +55,7 @@ export const QuickPaymentEntry: React.FC<QuickPaymentEntryProps> = ({ open, onOp
         return {
           member_id: id,
           amount: Number(member?.monthly_rate) || 0,
-          payment_date: new Date().toISOString().split('T')[0],
+          payment_date: toLocalISODate(),
           for_year: new Date().getFullYear(),
           for_month: new Date().getMonth() + 1,
           method: 'cash',

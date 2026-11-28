@@ -20,7 +20,7 @@ const mainContact = [
 
 const phoneContacts = [
   {
-    name: "শাহজাদা বাহদুর শাহ",
+    name: "শাহজাদা বাহাদুর শাহ",
     phone: "+8801714338533",
     label: "যোগাযোগ"
   },

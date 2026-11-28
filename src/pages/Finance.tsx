@@ -55,7 +55,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
-
+
+import { toLocalISODate } from '@/lib/localDate';
 type TabKey = 'summary' | 'personal' | 'dues' | 'transparency' | 'ranking' | 'admin' | 'audit' | 'settings';
 
 function parseDateSafe(raw: string | null | undefined): Date | null {
@@ -137,10 +138,10 @@ const Finance = () => {
   const [methodFilter, setMethodFilter] = useState<string>('all');
   const [customRangeOpen, setCustomRangeOpen] = useState<boolean>(false);
   const [customStartDate, setCustomStartDate] = useState<string>(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    toLocalISODate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
   );
   const [customEndDate, setCustomEndDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    toLocalISODate()
   );
   const [duesFilter, setDuesFilter] = useState<'all' | '3plus'>('all');
   const [duesSearch, setDuesSearch] = useState('');
@@ -300,7 +301,7 @@ const Finance = () => {
             const monthly_rate = Number(row.monthly_rate);
             const joined_date = row.joined_date && /^\d{4}-\d{2}-\d{2}$/.test(row.joined_date.trim())
               ? row.joined_date.trim()
-              : new Date().toISOString().split('T')[0];
+              : toLocalISODate();
             if (!member_code || !full_name || !Number.isFinite(monthly_rate) || monthly_rate <= 0) {
               return null;
             }
@@ -334,7 +335,7 @@ const Finance = () => {
             const method = VALID_PAYMENT_METHODS.has(rawMethod) ? rawMethod : 'other';
             const payment_date = row.payment_date && /^\d{4}-\d{2}-\d{2}$/.test(row.payment_date.trim())
               ? row.payment_date.trim()
-              : new Date().toISOString().split('T')[0];
+              : toLocalISODate();
             if (
               !memberId ||
               !Number.isFinite(amount) ||
@@ -629,12 +630,12 @@ const Finance = () => {
   );
 
   const todayIncome = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalISODate();
     return payments.filter(p => (p.status === 'approved' || !p.status) && Boolean(p.payment_date?.startsWith(today))).reduce((s, p) => s + Number(p.amount), 0);
   }, [payments]);
 
   const todayExpense = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalISODate();
     return expenses.filter(e => Boolean(e.expense_date?.startsWith(today))).reduce((s, e) => s + Number(e.amount), 0);
   }, [expenses]);
 
@@ -711,7 +712,7 @@ const Finance = () => {
         amount: Number(p.amount),
         for_year: p.for_year,
         for_month: p.for_month,
-        payment_date: p.payment_date || new Date().toISOString().split('T')[0],
+        payment_date: p.payment_date || toLocalISODate(),
         method: p.method,
         transaction_ref: p.transaction_ref,
       };
@@ -902,7 +903,7 @@ const Finance = () => {
     const method = parsed.data.method;
     const transaction_ref = parsed.data.transaction_ref || '';
     const for_year = parsed.data.for_year;
-    const payment_date = (fd.get('payment_date') as string) || new Date().toISOString().split('T')[0];
+    const payment_date = (fd.get('payment_date') as string) || toLocalISODate();
 
     if (selectedMonths.length === 0 || selectedMonths.some(m => !Number.isInteger(m) || m < 1 || m > 12)) {
       toast({ title: 'মাস নির্বাচন করুন', variant: 'destructive' });
@@ -2025,7 +2026,7 @@ const Finance = () => {
                     for (let i = 59; i >= 0; i--) {
                       const d = new Date();
                       d.setDate(now.getDate() - i);
-                      const dayStr = d.toISOString().split('T')[0];
+                      const dayStr = toLocalISODate(d);
                       const total = payments.filter(p => (p.status === 'approved' || !p.status) && p.payment_date.startsWith(dayStr)).reduce((s, p) => s + Number(p.amount), 0);
                       days.push({ day: dayStr, total });
                     }
@@ -3166,7 +3167,7 @@ const Finance = () => {
                     <Input 
                       name="payment_date" 
                       type="date" 
-                      defaultValue={new Date().toISOString().split('T')[0]} 
+                      defaultValue={toLocalISODate()} 
                       className="h-11 bg-background/50 border-gold/30 rounded-xl font-mono text-xs" 
                     />
                   </div>
@@ -3219,7 +3220,7 @@ const Finance = () => {
                       <Input 
                         name="expense_date" 
                         type="date" 
-                        defaultValue={new Date().toISOString().split('T')[0]} 
+                        defaultValue={toLocalISODate()} 
                         required 
                         className="h-11 bg-background/50 border-rose-500/30 focus:border-rose-500 rounded-xl font-mono text-xs" 
                       />
@@ -3634,7 +3635,7 @@ const Finance = () => {
               phone: fd.phone,
               area: fd.area,
               monthly_rate: Number(fd.monthly_rate) || 500,
-              joined_date: fd.joined_date || new Date().toISOString().split('T')[0],
+              joined_date: fd.joined_date || toLocalISODate(),
             } as any).select().single();
             setBusy(false);
             if (error) return toast({ title: 'ব্যর্থ', description: error.message, variant: 'destructive' });
@@ -3653,7 +3654,7 @@ const Finance = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label className="text-xs">মাসিক চাঁদা</Label><Input name="monthly_rate" type="number" defaultValue={500} /></div>
-              <div className="space-y-1.5"><Label className="text-xs">যোগদানের তারিখ</Label><Input name="joined_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+              <div className="space-y-1.5"><Label className="text-xs">যোগদানের তারিখ</Label><Input name="joined_date" type="date" defaultValue={toLocalISODate()} /></div>
             </div>
             <Button disabled={busy} className="w-full bg-gradient-gold text-primary-foreground font-bold h-11">সদস্য নিশ্চিত করুন</Button>
           </form>
@@ -3724,10 +3725,10 @@ const Finance = () => {
             <form onSubmit={updateMember} className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label className="text-xs">নাম *</Label><Input name="full_name" defaultValue={editingMember.full_name} required /></div>
-                <div className="space-y-1.5"><Label className="text-xs">ফোন</Label><Input name="phone" defaultValue={editingMember.phone} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">ফোন</Label><Input name="phone" defaultValue={editingMember.phone ?? ''} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">এলাকা</Label><Input name="area" defaultValue={editingMember.area} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">এলাকা</Label><Input name="area" defaultValue={editingMember.area ?? ''} /></div>
                 <div className="space-y-1.5"><Label className="text-xs">মাসিক চাঁদা</Label><Input name="monthly_rate" type="number" defaultValue={editingMember.monthly_rate} required /></div>
               </div>
               <div className="space-y-1.5"><Label className="text-xs">যোগদানের তারিখ</Label><Input name="joined_date" type="date" defaultValue={editingMember.joined_date} required /></div>

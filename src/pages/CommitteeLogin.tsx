@@ -151,6 +151,10 @@ const CommitteeLogin = () => {
       }
 
       // Success
+      if (!result.session_token) {
+        toast({ title: "ত্রুটি", description: "সেশন তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।", variant: "destructive" });
+        return;
+      }
       try {
         localStorage.setItem("committee_auth", result.session_token);
         localStorage.removeItem("committee_login_attempts");

@@ -38,6 +38,7 @@ const MemberSearch = lazy(() => import("./pages/MemberSearch"));
 const MemberProfile = lazy(() => import("./pages/MemberProfile"));
 const MemberPortal = lazy(() => import("./pages/MemberPortal"));
 const TransparencyNew = lazy(() => import("./pages/Transparency"));
+const Certificates = lazy(() => import("./pages/Certificates"));
 
 
 const queryClient = new QueryClient({
@@ -82,6 +83,7 @@ const AppContent = () => {
             <Route path="/member/:id" element={<MemberProfile />} />
             <Route path="/transparency" element={<TransparencyNew />} />
             <Route path="/member-portal" element={<MemberPortal />} />
+            <Route path="/certificates" element={<Certificates />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MaintenanceGuard>

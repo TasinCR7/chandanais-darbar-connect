@@ -6,7 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { escapeHtml } from "@/utils/security";
-
+
+import { toLocalISODate, toLocalISOMonth } from '@/lib/localDate';
 interface Finance {
   id: string;
   type: string;
@@ -31,9 +32,9 @@ const FinanceManager = () => {
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(toLocalISODate());
   const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(toLocalISOMonth());
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -112,7 +113,7 @@ const FinanceManager = () => {
 
   const resetForm = () => {
     setCategory(""); setAmount(""); setDescription("");
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(toLocalISODate());
     setFormType("income");
     setEditingId(null);
   };

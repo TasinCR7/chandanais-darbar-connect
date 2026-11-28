@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { normalizePhoneNumber } from "@/utils/phoneUtils";
 import type { Member, Payment } from "@/types/finance";
-
+
+import { toLocalISODate } from '@/lib/localDate';
 const MemberPortal = () => {
   const [authQuery, setAuthQuery] = useState({ code: "", phone: "" });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -137,7 +138,7 @@ const MemberPortal = () => {
         p_amount: amount,
         p_for_month: month,
         p_for_year: new Date().getFullYear(),
-        p_payment_date: new Date().toISOString().slice(0, 10),
+        p_payment_date: toLocalISODate(),
         p_method: method,
         p_transaction_ref: ref,
         p_note: 'সদস্য নিজে এন্ট্রি করেছেন (Online)'

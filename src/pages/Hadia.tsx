@@ -22,7 +22,8 @@ import { normalizePhoneNumber, isValidPhoneNumber, formatBangladeshIntlPhone } f
 import { fetchSettings } from "@/lib/api";
 import { escapeHtml, sanitizeFilenameSegment } from "@/utils/security";
 import { v4 as uuidv4 } from "uuid";
-
+
+import { toLocalISODate } from '@/lib/localDate';
 type DonationType = "mosque_fund" | "darbar_fund" | "combined_shahjadas" | "specific_shahjada" | "";
 type SpecificShahjada = "boro" | "mej" | "sej" | "choto" | "";
 type PaymentMethod = "bkash" | "nagad" | "rocket" | "card" | "";
@@ -327,7 +328,7 @@ const Hadia = () => {
           callback: function (doc) {
             const invoiceId = sanitizeFilenameSegment(d.id?.substring(0, 6).toUpperCase(), 'INV');
             const safeDonor = sanitizeFilenameSegment(d.donor_name, 'Donor');
-            const dateStr = new Date().toISOString().slice(0, 10);
+            const dateStr = toLocalISODate();
             doc.save(`Rashid-${safeDonor}-${invoiceId}-${dateStr}.pdf`);
           },
           x: 0, y: 0, width: 210, windowWidth: 794

@@ -20,6 +20,7 @@ const routeImports: Record<string, () => Promise<unknown>> = {
   "/finance": () => import("../pages/Finance"),
   "/transparency": () => import("../pages/Transparency"),
   "/member-portal": () => import("../pages/MemberPortal"),
+  "/certificates": () => import("../pages/Certificates"),
 };
 import { Menu, X, Phone, Bell, Settings, MapPin, Lock, RotateCcw, Volume2, VolumeX, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,6 +49,7 @@ const navLinks = [
   { path: "/gallery", label: "গ্যালারি" },
   { path: "/notices", label: "নোটিশ" },
   { path: "/committee", label: "কমিটি" },
+  { path: "/certificates", label: "স্বেচ্ছাসেবক সনদ" },
   { path: "/contact", label: "যোগাযোগ" },
   { path: "/finance", label: "অর্থ সংগ্রহ ও ফাইন্যান্স" },
   { path: "/transparency", label: "তহবিল স্বচ্ছতা" },

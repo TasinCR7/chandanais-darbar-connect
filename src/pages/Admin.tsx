@@ -19,7 +19,8 @@ import {
   Megaphone, 
   RefreshCw, 
   LogOut, 
-  ShieldCheck
+  ShieldCheck,
+  Award
 } from "lucide-react";
 
 // Lazy-loaded admin sub-modules
@@ -33,6 +34,7 @@ const DonationManager = lazy(() => import("@/components/admin/DonationManager"))
 const CommitteeBroadcast = lazy(() => import("@/components/admin/CommitteeBroadcast"));
 const SettingsManager = lazy(() => import("@/components/admin/SettingsManager"));
 const FinanceManager = lazy(() => import("@/components/admin/FinanceManager"));
+const CertificateManager = lazy(() => import("@/components/admin/CertificateManager"));
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -543,6 +545,9 @@ const Admin = () => {
               <TabsTrigger value="committee" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" /> কমিটি
               </TabsTrigger>
+              <TabsTrigger value="certificates" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5" /> স্বেচ্ছাসেবক সনদ
+              </TabsTrigger>
               <TabsTrigger value="voting" className="data-[state=active]:bg-gold-gradient data-[state=active]:text-primary-foreground px-3.5 py-2.5 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5">
                 <Vote className="w-3.5 h-3.5" /> ভোটিং
               </TabsTrigger>
@@ -612,6 +617,14 @@ const Admin = () => {
             <AdminSection title="কমিটি সদস্য তালিকা">
               <Suspense fallback={<PremiumLoader />}>
                 <CommitteeManager />
+              </Suspense>
+            </AdminSection>
+          </TabsContent>
+
+          <TabsContent value="certificates">
+            <AdminSection title="স্বেচ্ছাসেবক সম্মাননা সনদ পরিচালনা">
+              <Suspense fallback={<PremiumLoader />}>
+                <CertificateManager />
               </Suspense>
             </AdminSection>
           </TabsContent>

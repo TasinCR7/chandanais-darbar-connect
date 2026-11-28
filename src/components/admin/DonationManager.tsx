@@ -23,7 +23,8 @@ import type { InvoiceData } from "@/components/DonationInvoiceTemplate";
 import { DonationInvoiceTemplate } from "@/components/DonationInvoiceTemplate";
 import { DonationReportTemplate } from "@/components/admin/DonationReportTemplate";
 import { escapeHtml, sanitizeFilenameSegment } from "@/utils/security";
-
+
+import { toLocalISODate, toLocalISOMonth } from '@/lib/localDate';
 interface Donation extends InvoiceData {
   id: string;
   created_at: string;
@@ -38,7 +39,7 @@ const DonationManager = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [viewMode, setViewMode] = useState<"all" | "monthly" | "yearly">("all");
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [selectedDate, setSelectedDate] = useState(toLocalISOMonth()); // YYYY-MM
   const invoiceRef = useRef<HTMLDivElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -154,7 +155,7 @@ const DonationManager = () => {
           callback: function (doc) {
             const invoiceId = sanitizeFilenameSegment(donation.id.substring(0, 6).toUpperCase(), 'INV');
             const safeDonor = sanitizeFilenameSegment(donation.donor_name, 'Donor');
-            const dateStr = new Date().toISOString().slice(0, 10);
+            const dateStr = toLocalISODate();
             doc.save(`Rashid-${safeDonor}-${invoiceId}-${dateStr}.pdf`);
           },
           x: 0, y: 0, width: 210, windowWidth: 794

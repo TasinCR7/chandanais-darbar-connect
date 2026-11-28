@@ -208,7 +208,8 @@ function addPdfFooter(doc: jsPDF) {
 
 import { toBanglaNumber } from './bangla';
 import { BANGLA_MONTHS } from './months';
-
+
+import { toLocalISODate } from '@/lib/localDate';
 /** Method labels in English. */
 const METHOD_EN: Record<string, string> = {
   cash: 'Cash', bkash: 'bKash', nagad: 'Nagad', rocket: 'Rocket', bank: 'Bank Transfer', other: 'Other',
@@ -615,7 +616,7 @@ export async function downloadMemberBankStatementPDF(member: MemberLite, payment
   const infoY = 60;
   const stats = calculateDues(member, payments);
   const isCleared = stats.dues <= 0;
-  const qrDataS = `Bank Statement: ${member.member_code}\nAccount Holder: ${member.full_name}\nTotal Paid: BDT ${stats.totalPaid}\nOutstanding Due: BDT ${stats.dues}\nStatus: ${isCleared ? 'CLEARED' : 'PENDING'}\nDate: ${new Date().toISOString().slice(0, 10)}`;
+  const qrDataS = `Bank Statement: ${member.member_code}\nAccount Holder: ${member.full_name}\nTotal Paid: BDT ${stats.totalPaid}\nOutstanding Due: BDT ${stats.dues}\nStatus: ${isCleared ? 'CLEARED' : 'PENDING'}\nDate: ${toLocalISODate()}`;
   
   try {
     const qrDataUrlS = await QRCode.toDataURL(qrDataS, { margin: 1, width: 120, errorCorrectionLevel: 'M' });

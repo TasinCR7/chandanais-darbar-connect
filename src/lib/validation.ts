@@ -14,6 +14,7 @@ import { ensureBanglaFont, BANGLA_FONT_NAME } from './pdfFont';
 import { computeMemberDues, type MemberForDues, type PaymentForDues } from './dues';
 import type { Member, Payment, Expense } from '@/types/finance';
 
+import { toLocalISODate } from '@/lib/localDate';
 export type Severity = 'error' | 'warning' | 'info';
 
 export interface ValidationIssue {
@@ -69,7 +70,7 @@ function isFiniteNonNeg(n: unknown): boolean {
 }
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -440,7 +441,7 @@ export async function downloadValidationReportPDF(report: ValidationReport) {
       'No discrepancies detected in members, payments, or expenses.',
       pageWidth / 2, 110, { align: 'center' },
     );
-    doc.save(`validation-report-${report.generatedAt.toISOString().slice(0, 10)}.pdf`);
+    doc.save(`validation-report-${toLocalISODate(report.generatedAt)}.pdf`);
     return;
   }
 
@@ -530,5 +531,5 @@ export async function downloadValidationReportPDF(report: ValidationReport) {
     });
   }
 
-  doc.save(`validation-report-${report.generatedAt.toISOString().slice(0, 10)}.pdf`);
+  doc.save(`validation-report-${toLocalISODate(report.generatedAt)}.pdf`);
 }

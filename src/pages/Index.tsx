@@ -33,14 +33,21 @@ const Index = () => {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
       const list = (data as Tables<"notices">[]) ?? [];
-      if (typeof window !== 'undefined' && list.length > 0) {
+      if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('detailed_notices_cache', JSON.stringify(list));
+          if (list.length > 0) {
+            localStorage.setItem('detailed_notices_cache', JSON.stringify(list));
+          } else {
+            // Clear stale cache so deactivated/deleted notices stop showing
+            localStorage.removeItem('detailed_notices_cache');
+          }
         } catch (e) { console.warn("Cache write warning", e); }
       }
       return list;
     },
-    initialData: () => {
+    // placeholderData (not initialData) so the cached list is shown instantly
+    // but a fresh network fetch still runs on every page load
+    placeholderData: () => {
       if (typeof window !== 'undefined') {
         try {
           const cached = localStorage.getItem('detailed_notices_cache');
